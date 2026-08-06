@@ -1,0 +1,162 @@
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: var(--green-700);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.company-profile {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.company-profile h1 {
+  margin-bottom: 0.55rem;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+}
+
+.company-profile .industry {
+  margin-bottom: 1.5rem;
+  color: var(--green-700);
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.profile-meta {
+  margin: 0 0 1.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.profile-meta span {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  color: var(--green-900);
+  background: var(--green-100);
+  font-size: 0.9rem;
+}
+
+.company-description {
+  max-width: 800px;
+  margin-bottom: 0;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+
+.company-website {
+  display: inline-block;
+  margin-top: 1.2rem;
+  color: var(--green-700);
+  font-weight: 700;
+}
+
+.detail-section {
+  padding-top: 3.5rem;
+}
+
+.section-heading {
+  margin-bottom: 1.25rem;
+}
+
+.section-heading h2 {
+  margin-bottom: 0;
+  font-size: 1.75rem;
+}
+
+.benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.benefit-card,
+.salary-card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--surface);
+}
+
+.benefit-card h3,
+.salary-card h3 {
+  margin-bottom: 0.45rem;
+  font-size: 1.1rem;
+}
+
+.benefit-category {
+  margin-bottom: 0.8rem;
+  color: var(--green-700);
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.benefit-card p:last-child {
+  margin-bottom: 0;
+}
+
+.benefit-detail {
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.salary-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.salary-card {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.2fr) repeat(4, minmax(110px, 0.7fr));
+  align-items: center;
+  gap: 1rem;
+}
+
+.salary-metric {
+  margin: 0;
+}
+
+.salary-metric span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.salary-metric strong {
+  color: var(--green-900);
+}
+
+@media (max-width: 850px) {
+  .benefit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .salary-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .salary-card h3 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .benefit-grid,
+  .salary-card {
+    grid-template-columns: 1fr;
+  }
+
+  .salary-card h3 {
+    grid-column: auto;
+  }
+}

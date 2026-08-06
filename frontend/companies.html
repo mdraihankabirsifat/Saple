@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse and search companies available on Saple.">
+  <title>Companies | Saple</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/companies.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Saple home">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>Saple</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a class="active" href="companies.html" aria-current="page">Companies</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="page-main">
+    <section class="container" aria-labelledby="companies-heading">
+      <div class="page-heading">
+        <p class="eyebrow">Company directory</p>
+        <h1 id="companies-heading">Find a company</h1>
+        <p>Search by company name, industry, city, or country.</p>
+      </div>
+
+      <form id="company-search-form" class="search-form" role="search">
+        <label class="sr-only" for="company-search">Search companies</label>
+        <input
+          id="company-search"
+          name="search"
+          type="search"
+          maxlength="100"
+          placeholder="Search companies"
+          autocomplete="off"
+        >
+        <button class="button button-primary" type="submit">Search</button>
+        <button id="clear-search" class="button button-secondary" type="button" hidden>Clear</button>
+      </form>
+
+      <p id="company-status" class="status-message" role="status" aria-live="polite">Loading companies…</p>
+      <div id="company-list" class="company-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Saple — a BUET CSE database project.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/companies.js"></script>
+</body>
+</html>
