@@ -1,107 +1,50 @@
 # Saple Relational Schema
 
-## USERS
+This document reflects the Oracle 19c implementation in `database/02_create_tables.sql`. Primary keys are marked **PK**, foreign keys **FK**, and unique candidate keys **UK**.
 
-USERS(user_id PK, name, email UK, password_hash, user_type, created_at)
+## Account and employee relations
 
-## COMPANIES
+- `users` (`user_id` **PK**, `full_name`, `email` **UK**, `password_hash`, `user_type`, `account_role`, `account_status`, `created_at`, `updated_at`)
+- `employees` (`employee_id` **PK**, `user_id` **FK/UK**, `employment_status`, `created_at`)
 
-COMPANIES(company_id PK, company_name, industry, location, website, created_at)
+`user_type` distinguishes NORMAL accounts from EMPLOYEE accounts. `account_role` independently represents USER or ADMIN authorization. An employee profile belongs to exactly one user; the application must ensure that user has `user_type = 'EMPLOYEE'`.
 
-## JOB_ROLES
+## Company reference relations
 
-JOB_ROLES(role_id PK, role_name UK)
+- `companies` (`company_id` **PK**, `company_name` **UK**, `industry`, `headquarters_city`, `country`, `website`, `company_size`, `description`, `created_at`, `updated_at`)
+- `job_roles` (`role_id` **PK**, `role_name` **UK**, `role_category`, `description`)
+- `benefits` (`benefit_id` **PK**, `benefit_name` **UK**, `benefit_category`, `description`)
+- `company_benefits` (`company_id` **PK/FK**, `benefit_id` **PK/FK**, `details`, `eligibility`, `last_updated`)
 
-## BENEFITS
+`company_benefits` resolves the many-to-many relationship between companies and benefits.
 
-BENEFITS(benefit_id PK, benefit_name UK)
+## Employment verification relation
 
-## USER_COMPANY_VERIFICATIONS
+- `employment_verifications` (`verification_id` **PK**, `employee_id` **FK**, `company_id` **FK**, `verification_method`, `company_email`, `proof_type`, `proof_reference`, `verification_status`, `requested_at`, `reviewed_at`, `expires_at`, `rejection_reason`, `reviewed_by` **FK**)
 
-USER_COMPANY_VERIFICATIONS(
-verification_id PK,
-user_id FK,
-company_id FK,
-employment_status,
-verification_method,
-company_email,
-document_type,
-verification_status,
-submitted_at,
-verified_at
-)
+Verification is company-specific and preserves request history. Company email, safe proof reference, and rejection reason are private. Raw OTP values, document contents, and national identifiers are never stored.
 
-## SALARY_SUBMISSIONS
+## Submission supertype and subtypes
 
-SALARY_SUBMISSIONS(
-salary_id PK,
-user_id FK,
-company_id FK,
-role_id FK,
-min_salary,
-max_salary,
-experience_level,
-verification_status,
-submission_status,
-created_at
-)
+- `submissions` (`submission_id` **PK**, `user_id` **FK**, `company_id` **FK**, `submission_type`, `is_anonymous`, `submission_status`, `verification_status`, `submitted_at`, `approved_at`, `updated_at`)
+- `salary_submissions` (`submission_id` **PK/FK**, `role_id` **FK**, `base_salary`, `additional_compensation`, `currency`, `pay_period`, `years_of_experience`, `employment_type`, `work_mode`, `salary_year`)
+- `company_reviews` (`submission_id` **PK/FK**, `role_id` **FK**, `review_title`, five rating columns, `pros`, `cons`, `advice_to_management`, `employment_status`, `review_date`)
+- `interview_experiences` (`submission_id` **PK/FK**, `role_id` **FK**, `interview_date`, `difficulty_level`, `rounds_count`, `interview_mode`, `result_status`, `duration_days`, `process_description`, `questions_summary`)
 
-## COMPANY_REVIEWS
+Every subtype uses the parent `submission_id` as both its primary key and foreign key. Anonymous submissions retain an internal user link, but public views never expose it. Subtype-to-`submission_type` consistency is enforced by the application because a normal Oracle check constraint cannot inspect another table.
 
-COMPANY_REVIEWS(
-review_id PK,
-user_id FK,
-company_id FK,
-rating,
-work_life_balance,
-career_growth,
-management_rating,
-pros,
-cons,
-verification_status,
-submission_status,
-created_at
-)
+## Reporting and moderation relations
 
-## INTERVIEW_EXPERIENCES
+- `reports` (`report_id` **PK**, `reporter_user_id` **FK**, `submission_id` **FK**, `reason_category`, `report_description`, `report_status`, `reported_at`, `resolved_at`, `resolution_note`, `resolved_by` **FK**), with (`reporter_user_id`, `submission_id`) **UK**
+- `moderation_actions` (`action_id` **PK**, `submission_id` **FK**, `moderator_user_id` **FK**, `action_type`, `previous_status`, `new_status`, `action_note`, `action_at`)
 
-INTERVIEW_EXPERIENCES(
-interview_id PK,
-user_id FK,
-company_id FK,
-role_id FK,
-difficulty_level,
-interview_rounds,
-experience_text,
-result_status,
-submission_status,
-created_at
-)
+Reports point directly to a submission. Moderation actions form append-only audit history during normal application use. Admin authorization for reviewers, resolvers, and moderators remains an application-level rule.
 
-## COMPANY_BENEFITS
+## Safe public and analytical views
 
-COMPANY_BENEFITS(company_id FK, benefit_id FK)
+- `vw_public_companies`
+- `vw_public_approved_reviews`
+- `vw_verified_salary_summary`
+- `vw_community_salary_summary`
 
-## SUBMISSION_REPORTS
-
-SUBMISSION_REPORTS(
-report_id PK,
-reporter_user_id FK,
-submission_type,
-submission_id,
-reason,
-report_status,
-created_at
-)
-
-## ADMIN_ACTIONS
-
-ADMIN_ACTIONS(
-action_id PK,
-admin_id FK,
-target_type,
-target_id,
-action_type,
-action_note,
-created_at
-)
+The salary views calculate ranges and contribution counts rather than storing derived values. Verified ranges use approved, verified submissions; community ranges use all approved salary submissions. Public views omit passwords, account identity, company verification email, proof references, rejection reasons, reporter identity, and internal moderation notes.
