@@ -76,7 +76,7 @@ The term "Community Range" is used instead of "Unverified Range" because this ra
 
 ## 7. Main Entities
 
-1. USERS
+1. USERS 
 2. COMPANIES
 3. JOB_ROLES
 4. BENEFITS

@@ -1,4 +1,4 @@
-# Saple Project Notes
+# Saple Project Notes 
 
 ## Project Idea
 

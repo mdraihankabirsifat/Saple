@@ -1,4 +1,4 @@
-# Saple Relational Schema
+# Saple Relational Schema 
 
 This document reflects the Oracle 19c implementation in `database/02_create_tables.sql`. Primary keys are marked **PK**, foreign keys **FK**, and unique candidate keys **UK**.
 
