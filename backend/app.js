@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const healthRoutes = require('./routes/health.routes');
 const companyRoutes = require('./routes/company.routes');
+const authRoutes = require('./routes/auth.routes');
+const jobRoleRoutes = require('./routes/job-role.routes');
+const salaryRoutes = require('./routes/salary.routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
 const { sendSuccess } = require('./utils/apiResponse');
@@ -17,6 +20,9 @@ app.get('/', (request, response) => {
 });
 
 app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/job-roles', jobRoleRoutes);
+app.use('/api/companies', salaryRoutes);
 app.use('/api/companies', companyRoutes);
 
 app.use(notFound);

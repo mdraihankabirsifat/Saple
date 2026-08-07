@@ -1,179 +1,214 @@
 # Saple Backend
 
-The Saple backend is the current read-only API milestone. It connects Express to the existing Oracle 19c schema and provides health checks plus public company, benefit, and salary-summary data for the frontend.
-
-Authentication, contribution, verification, reporting, and moderation routes are not implemented yet.
+The Saple backend connects Express 5 to Oracle 19c. It preserves the existing public company GET API and adds registration, JWT login, current-user lookup, public job-role lookup, and an authenticated transactional salary-submission endpoint.
 
 ## Prerequisites
 
 - Node.js 18 or newer
 - npm
-- Oracle Database 19c with the Saple schema already created
+- Oracle Database 19c with the Saple schema and sample-data identity synchronization applied
 - Network access from Node.js to the Oracle listener
 
-The backend uses node-oracledb Thin mode, so Oracle Instant Client is not required for the current endpoints.
+node-oracledb uses Thin mode, so Oracle Instant Client is not required.
 
-## Install Packages
+## Install and Configure
 
-From the `backend` directory:
+From `backend/`:
 
 ```bash
 npm install
 ```
 
-## Environment Setup
-
-Copy `.env.example` to `.env` and enter the local Oracle credentials:
+Copy `.env.example` to `.env` and provide local values:
 
 ```env
 PORT=3000
 DB_USER=SAPLE
 DB_PASSWORD=your_local_password
-DB_CONNECT_STRING=localhost:1521/ORCLPDB1
+DB_CONNECT_STRING=localhost:1521/ORCLPDB
 DB_POOL_MIN=1
 DB_POOL_MAX=5
 DB_POOL_INCREMENT=1
+JWT_SECRET=replace_with_a_long_random_secret
+JWT_EXPIRES_IN=1d
 ```
 
-Never commit `.env` or share its password. The repository `.gitignore` excludes `.env`, `node_modules`, and log files.
-
-`DB_CONNECT_STRING` must match the configured host, listener port, and Oracle service name. The configured database user must own or have access to the Saple tables and views.
+`JWT_SECRET` is required for login and protected routes. Use a long, unpredictable value and never commit it. `JWT_EXPIRES_IN` accepts a jsonwebtoken duration such as `1d`.
 
 ## Start the API
 
-Development mode with automatic restart:
-
 ```bash
 npm run dev
-```
-
-Normal start:
-
-```bash
+# or
 npm start
 ```
 
-The Oracle pool is initialized before the HTTP server starts. The default API address is `http://localhost:3000`.
+The Oracle pool initializes before the HTTP server. The default address is `http://localhost:3000`.
 
 ## Available Endpoints
 
-| Method | Endpoint | Purpose | Frontend consumer |
+| Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/` | API welcome response | Manual diagnostics |
-| GET | `/api/health` | Express process health; does not query Oracle | Manual diagnostics |
-| GET | `/api/health/database` | Oracle connection health | Manual diagnostics |
-| GET | `/api/companies` | List public companies | Company directory and salary form |
-| GET | `/api/companies?search=software` | Search public companies in the backend | Homepage/directory search |
-| GET | `/api/companies/:companyId` | Get one public company | Company profile |
-| GET | `/api/companies/:companyId/benefits` | Get a company's benefits | Company profile |
-| GET | `/api/companies/:companyId/salary-summary` | Get verified and community summaries | Company profile |
+| GET | `/` | Public | API welcome response |
+| GET | `/api/health` | Public | Express process health |
+| GET | `/api/health/database` | Public | Oracle connection health |
+| GET | `/api/companies` | Public | List/search companies (`?search=term`) |
+| GET | `/api/companies/:companyId` | Public | Get one company |
+| GET | `/api/companies/:companyId/benefits` | Public | Get company benefits |
+| GET | `/api/companies/:companyId/salary-summary` | Public | Get verified and community summaries |
+| POST | `/api/auth/register` | Public | Create a `NORMAL` or `EMPLOYEE` account |
+| POST | `/api/auth/login` | Public | Return a signed JWT and safe user object |
+| GET | `/api/auth/me` | Bearer token | Return the active current user |
+| GET | `/api/job-roles` | Public | List controlled job-role values |
+| POST | `/api/companies/:companyId/salaries` | Bearer token | Create a pending salary contribution |
 
-All current endpoints are GET-only and return JSON. No write action should be inferred from the frontend's prepared forms.
+Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors use a safe public message without raw Oracle details.
 
-## Response Envelope
+## Authentication Contracts
 
-Successful data responses use this general shape:
-
-```json
-{
-  "success": true,
-  "message": "Request completed successfully",
-  "data": {}
-}
-```
-
-Public error responses use a safe message and do not expose raw Oracle details.
-
-The salary-summary endpoint returns both data populations:
+Register a job seeker:
 
 ```json
 {
-  "success": true,
-  "message": "Salary summary retrieved successfully",
-  "data": {
-    "companyId": 1,
-    "verified": [],
-    "community": []
-  }
+  "fullName": "Sample User",
+  "email": "sample@example.com",
+  "password": "example123",
+  "userType": "NORMAL"
 }
 ```
 
-`verified` contains only approved, verified salary submissions. `community` contains every approved salary submission, including verified and unverified approved records.
+For `userType: "EMPLOYEE"`, also send `employmentStatus: "CURRENT"` or `"FORMER"`. Registration lowercases and trims email, rejects duplicate email with `409`, hashes the password with BCrypt (12 rounds), creates employee metadata in the same transaction when required, and never accepts a public administrator role.
 
-## Test with curl
+Login accepts `email` and `password`. Invalid credentials and unavailable accounts return the same `401` message. A successful response includes a minimal HS256 JWT containing `userId` and `role`, plus a safe user object without `password_hash`. The token is restricted by issuer, audience, algorithm, and expiry.
+
+Use the token on protected routes:
+
+```text
+Authorization: Bearer <token>
+```
+
+## Salary Submission Contract
+
+`POST /api/companies/:companyId/salaries` accepts:
+
+```json
+{
+  "roleId": 1,
+  "baseSalary": 85000,
+  "additionalCompensation": 5000,
+  "currency": "BDT",
+  "payPeriod": "MONTHLY",
+  "yearsOfExperience": 2.5,
+  "employmentType": "FULL_TIME",
+  "workMode": "HYBRID",
+  "salaryYear": 2026,
+  "isAnonymous": true
+}
+```
+
+The service validates database-compatible IDs, numeric ranges/precision, uppercase currency, enumerated values, salary year, and the boolean anonymous flag. Missing companies or roles return `404`; invalid input returns `400`; a missing/invalid token returns `401`.
+
+### Transaction boundary
+
+The repository acquires one Oracle connection and performs this atomic unit:
+
+```text
+validate active user/company/role
+              |
+              v
+insert SUBMISSIONS parent (type SALARY, status PENDING)
+              |
+              v
+insert SALARY_SUBMISSIONS child with the returned submission_id
+              |
+              v
+            COMMIT
+```
+
+Any failure rolls back the complete unit, so an orphan parent cannot remain. The same connection is always closed in `finally`, and SQL uses bind variables. Verification is `VERIFIED` only when an active, non-expired, company-specific verified-employment record exists; otherwise it is `UNVERIFIED`. The endpoint never self-approves a submission.
+
+## Identity Synchronization
+
+The sample script inserts explicit identity values. After its sample-data `COMMIT`, it runs Oracle `START WITH LIMIT VALUE` for:
+
+- `USERS.USER_ID`
+- `EMPLOYEES.EMPLOYEE_ID`
+- `SUBMISSIONS.SUBMISSION_ID`
+
+This is the only schema-related correction in this milestone. It advances each generator beyond its existing maximum, preventing generated-ID collisions without changing table definitions.
+
+## Architecture
+
+Application flow is `routes -> controllers -> services -> repositories`. Controllers translate HTTP input/output, services own validation and application rules, and repositories contain all Oracle SQL and transaction/connection handling.
+
+```text
+backend/
+|-- config/          # Oracle pool and JWT settings
+|-- controllers/     # HTTP request/response handling
+|-- middleware/      # Authentication, 404, and centralized errors
+|-- repositories/    # All Oracle SQL and transaction handling
+|-- routes/          # Express endpoints
+|-- services/        # Validation and application rules
+|-- tests/           # Unit and opt-in live Oracle integration tests
+|-- utils/           # Response and HTTP-error helpers
+|-- app.js           # Express configuration and mounted routes
+`-- server.js        # Pool initialization and process lifecycle
+```
+
+## Tests
+
+Run unit tests:
 
 ```bash
-curl http://localhost:3000/
-curl http://localhost:3000/api/health
-curl http://localhost:3000/api/health/database
+npm test
+```
+
+Run the real HTTP + Oracle workflow test with a configured `.env`:
+
+```bash
+npm run test:integration
+```
+
+The integration test creates uniquely named test accounts, cleans them afterward, and verifies:
+
+- generated user, employee, and submission IDs exceed sample-data maximums;
+- password hashes are not plaintext;
+- normal/employee registration, duplicate and validation errors, login, and `/me`;
+- job-role lookup and authenticated salary submission;
+- matching parent/child submission IDs and exact `PENDING`/verification state;
+- a forced child insert failure rolls back its parent;
+- pending submissions do not change public salary aggregates;
+- all pre-existing health, company, search, detail, benefit, and summary GETs still work.
+
+## curl Examples
+
+```bash
 curl http://localhost:3000/api/companies
-curl "http://localhost:3000/api/companies?search=software"
-curl http://localhost:3000/api/companies/1
-curl http://localhost:3000/api/companies/1/benefits
-curl http://localhost:3000/api/companies/1/salary-summary
+curl http://localhost:3000/api/job-roles
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"sample@example.com","password":"example123"}'
+curl http://localhost:3000/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
-
-An invalid company ID returns HTTP 400, a missing company returns HTTP 404, and an unknown endpoint returns HTTP 404.
-
-## Frontend Integration
-
-The frontend expects this API on `http://localhost:3000`, configured in `frontend/js/api.js`. CORS is currently enabled in Express so a separately served frontend can access the API during development.
-
-To run the frontend from the repository root:
-
-```bash
-python -m http.server 5500 --directory frontend
-```
-
-Then open `http://localhost:5500/index.html` while this backend is running.
-
-The frontend preserves backend-powered company search; it does not download the full directory and replace API search with client-only filtering.
-
-## Endpoints Not Yet Implemented
-
-The frontend is prepared for future contracts approximately like:
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- A job-role lookup endpoint, such as `GET /api/job-roles`
-- `POST /api/companies/:companyId/salaries`
-
-These are future contracts, not currently mounted routes. Review, interview, employee-verification, report, and moderation endpoints also remain future work.
 
 ## Common Oracle Connection Problems
 
 - `ORA-01017`: Check `DB_USER` and `DB_PASSWORD`.
-- `ORA-12154`: Check the connect-string format and Oracle service name.
+- `ORA-12154`: Check the connect-string format and service name.
 - `ORA-12514`: Confirm the requested service is registered with the listener.
-- `ORA-12541`: Confirm Oracle is running and the listener host and port are correct.
-- Missing database configuration: Set every required value in `.env`; an empty password is treated as missing.
-- Invalid pool configuration: Ensure the minimum is not greater than the maximum and increments are positive.
-- Table or view not found: Confirm the API connected as the schema owner or a user with the required grants.
-
-Raw Oracle errors are logged only on the server and are not returned to API clients.
-
-## Backend Structure
-
-```text
-backend/
-|-- config/          # Oracle pool management
-|-- controllers/     # HTTP request and response handling
-|-- middleware/      # 404 and centralized error handling
-|-- repositories/    # Oracle SQL and connection release
-|-- routes/          # Express endpoint definitions
-|-- services/        # Validation and application rules
-|-- utils/           # Response helpers
-|-- app.js           # Express configuration and mounted routes
-|-- server.js        # Database initialization and process lifecycle
-|-- package.json     # Runtime and development scripts
-`-- README.md        # Backend setup and API reference
-```
+- `ORA-12541`: Confirm Oracle and its listener are running.
+- Table or view not found: Connect as the schema owner or grant the required access.
 
 ## Security Notes
 
-- Keep `backend/.env` local and untracked.
-- Do not log or return database passwords.
-- Do not expose raw Oracle errors through HTTP responses.
-- Add authentication and authorization before introducing write routes.
-- Preserve the database's privacy-safe public views when expanding read endpoints.
+- Keep `.env`, database credentials, and the JWT secret local and untracked.
+- Password hashes are never selected for public responses.
+- Generic login errors reduce account-enumeration leakage.
+- Protected routes verify the Bearer token before controller execution.
+- SQL uses bind parameters; raw Oracle errors are not returned to clients.
+- Public registration cannot create an administrator.
+
+## Deferred Scope
+
+Admin moderation, review submission, interview submission, employee-verification workflows, reporting, ML, and deployment are intentionally outside this milestone.
