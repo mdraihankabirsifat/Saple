@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +9,33 @@
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/company-details.css">
 </head>
+
 <body>
   <header class="site-header">
     <nav class="navbar container" aria-label="Main navigation">
-      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark"
+          aria-hidden="true">S</span><span>Saple</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines"
+          aria-hidden="true"></span></button>
       <div id="main-menu" class="nav-menu" data-nav-menu>
-        <ul class="nav-links"><li><a class="active" href="companies.html" aria-current="page">Companies</a></li><li><a href="index.html#salary-insights">Salaries</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul>
-        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a class="button button-secondary button-small" href="register.html">Create account</a><details class="contribute-menu"><summary class="button button-primary button-small">+ Contribute</summary><ul class="contribute-options"><li><a href="submit-salary.html">Submit salary</a></li><li><a href="submit-review.html">Write a review</a></li><li><a href="interview-experience.html">Share interview experience</a></li></ul></details></div>
+        <ul class="nav-links">
+          <li><a class="active" href="companies.html" aria-current="page">Companies</a></li>
+          <li><a href="index.html#salary-insights">Salaries</a></li>
+          <li><a href="submit-review.html">Reviews</a></li>
+          <li><a href="interview-experience.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+            class="button button-secondary button-small" href="register.html">Create account</a>
+          <details class="contribute-menu">
+            <summary class="button button-primary button-small">+ Contribute</summary>
+            <ul class="contribute-options">
+              <li><a href="submit-salary.html">Submit salary</a></li>
+              <li><a href="submit-review.html">Write a review</a></li>
+              <li><a href="interview-experience.html">Share interview experience</a></li>
+            </ul>
+          </details>
+        </div>
       </div>
     </nav>
   </header>
@@ -27,35 +47,131 @@
 
       <div id="company-content" hidden aria-busy="true">
         <section id="overview" class="company-profile" aria-labelledby="company-name"></section>
-        <nav aria-label="Company profile sections"><ul class="profile-nav"><li><a href="#overview">Overview</a></li><li><a href="#salaries">Salaries</a></li><li><a href="#benefits">Benefits</a></li><li><a href="#reviews">Reviews</a></li><li><a href="#interviews">Interviews</a></li></ul></nav>
+        <nav aria-label="Company profile sections">
+          <ul class="profile-nav">
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#salaries">Salaries</a></li>
+            <li><a href="#benefits">Benefits</a></li>
+            <li><a href="#reviews">Reviews</a></li>
+            <li><a href="#interviews">Interviews</a></li>
+          </ul>
+        </nav>
 
         <section id="salaries" class="detail-section" aria-labelledby="salary-heading">
-          <div class="section-heading"><p class="eyebrow">Compensation context</p><h2 id="salary-heading">Salary insights</h2><p>Compare approved verified data with the wider approved community range. Contribution counts help indicate how much data supports each result.</p></div>
+          <div class="section-heading">
+            <p class="eyebrow">Compensation context</p>
+            <h2 id="salary-heading">Salary insights</h2>
+            <p>Compare approved verified data with the wider approved community range. Contribution counts help indicate
+              how much data supports each result.</p>
+          </div>
           <div class="salary-groups">
-            <section class="salary-panel" aria-labelledby="verified-salary-heading"><div class="salary-panel-heading"><div><h3 id="verified-salary-heading">Verified Salary Range</h3><p>Approved submissions with verified contributor status.</p></div><span class="badge">Verified</span></div><div id="verified-salary-list" class="salary-list"></div></section>
-            <section class="salary-panel community" aria-labelledby="community-salary-heading"><div class="salary-panel-heading"><div><h3 id="community-salary-heading">Community Salary Range</h3><p>All approved submissions, both verified and unverified.</p></div><span class="badge">Community</span></div><div id="community-salary-list" class="salary-list"></div></section>
+            <section class="salary-panel" aria-labelledby="verified-salary-heading">
+              <div class="salary-panel-heading">
+                <div>
+                  <h3 id="verified-salary-heading">Verified Salary Range</h3>
+                  <p>Approved submissions with verified contributor status.</p>
+                </div><span class="badge">Verified</span>
+              </div>
+              <div id="verified-salary-list" class="salary-list"></div>
+            </section>
+            <section class="salary-panel community" aria-labelledby="community-salary-heading">
+              <div class="salary-panel-heading">
+                <div>
+                  <h3 id="community-salary-heading">Community Salary Range</h3>
+                  <p>All approved submissions, both verified and unverified.</p>
+                </div><span class="badge">Community</span>
+              </div>
+              <div id="community-salary-list" class="salary-list"></div>
+            </section>
           </div>
         </section>
 
-        <section id="benefits" class="detail-section" aria-labelledby="benefits-heading"><div class="section-heading"><p class="eyebrow">Workplace support</p><h2 id="benefits-heading">Benefits</h2><p>Benefits currently recorded for this company in Saple.</p></div><div id="benefits-list" class="benefit-grid"></div></section>
+        <section id="benefits" class="detail-section" aria-labelledby="benefits-heading">
+          <div class="section-heading">
+            <p class="eyebrow">Workplace support</p>
+            <h2 id="benefits-heading">Benefits</h2>
+            <p>Benefits currently recorded for this company in Saple.</p>
+          </div>
+          <div id="benefits-list" class="benefit-grid"></div>
+        </section>
 
-        <div class="future-grid">
-          <section id="reviews" class="detail-section" aria-labelledby="reviews-heading"><div class="placeholder-panel"><p class="eyebrow">Reviews</p><h2 id="reviews-heading">Employee perspectives</h2><p>Employee reviews will appear here once the review workflow is enabled.</p></div></section>
-          <section id="interviews" class="detail-section" aria-labelledby="interviews-heading"><div class="placeholder-panel"><p class="eyebrow">Interviews</p><h2 id="interviews-heading">Candidate experiences</h2><p>Interview experiences will appear here once interview submissions are enabled.</p></div></section>
-        </div>
+        <section id="reviews" class="detail-section" aria-labelledby="reviews-heading">
+          <div class="section-heading">
+            <p class="eyebrow">Approved reviews</p>
+            <h2 id="reviews-heading">Employee perspectives</h2>
+            <p>Only administrator-approved reviews appear here.</p>
+          </div>
+          <div id="review-summary"></div>
+          <div id="reviews-list" class="experience-list"></div>
+        </section>
+        <section id="interviews" class="detail-section" aria-labelledby="interviews-heading">
+          <div class="section-heading">
+            <p class="eyebrow">Approved interviews</p>
+            <h2 id="interviews-heading">Candidate experiences</h2>
+            <p>Only administrator-approved interview submissions appear here.</p>
+          </div>
+          <div id="interviews-list" class="experience-list"></div>
+        </section>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-main container">
-      <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html" aria-label="Saple home"><span class="footer-logo-mark" aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a><p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.</p><div class="project-tags" aria-label="Project technologies"><span>Oracle 19c</span><span>Express</span><span>Vanilla JS</span></div></section>
-      <nav class="footer-column" aria-labelledby="footer-explore-heading"><h2 id="footer-explore-heading">Explore</h2><ul><li><a href="companies.html">Companies</a></li><li><a href="index.html#salary-insights">Salary methodology</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul></nav>
-      <nav class="footer-column" aria-labelledby="footer-contribute-heading"><h2 id="footer-contribute-heading">Account &amp; contribute</h2><ul><li><a href="login.html">Sign in</a></li><li><a href="register.html">Create account</a></li><li><a href="submit-salary.html">Submit salary</a></li><li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li></ul></nav>
+      <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html"
+          aria-label="Saple home"><span class="footer-logo-mark" aria-hidden="true">S</span><span
+            id="footer-brand-heading">Saple</span></a>
+        <p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.
+        </p>
+        <div class="project-tags" aria-label="Project technologies"><span>Oracle
+            19c</span><span>Express</span><span>Vanilla JS</span></div>
+      </section>
+      <nav class="footer-column" aria-labelledby="footer-explore-heading">
+        <h2 id="footer-explore-heading">Explore</h2>
+        <ul>
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="index.html#salary-insights">Salary methodology</a></li>
+          <li><a href="submit-review.html">Reviews</a></li>
+          <li><a href="interview-experience.html">Interviews</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-column" aria-labelledby="footer-contribute-heading">
+        <h2 id="footer-contribute-heading">Account &amp; contribute</h2>
+        <ul>
+          <li><a href="login.html">Sign in</a></li>
+          <li><a href="register.html">Create account</a></li>
+          <li><a href="submit-salary.html">Submit salary</a></li>
+          <li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li>
+        </ul>
+      </nav>
     </div>
-    <div class="footer-bottom"><div class="footer-bottom-content container"><p>&copy; 2026 Saple. BUET CSE Database Project.</p><p>Built for informed career decisions.</p></div></div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+        <p>Built for informed career decisions.</p>
+      </div>
+    </div>
   </footer>
+  <dialog id="report-dialog" class="report-dialog" aria-labelledby="report-dialog-title">
+    <form id="report-form" method="dialog">
+      <h2 id="report-dialog-title">Report this submission</h2>
+      <div class="form-group"><label for="report-reason">Reason</label><select id="report-reason" required>
+          <option value="">Select a reason</option>
+          <option value="FAKE_DATA">Fake data</option>
+          <option value="DEFAMATION">Defamation</option>
+          <option value="SPAM">Spam</option>
+          <option value="PRIVACY">Privacy</option>
+          <option value="OTHER">Other</option>
+        </select></div>
+      <div class="form-group"><label for="report-description">Description</label><textarea id="report-description"
+          maxlength="1000"></textarea></div>
+      <p id="report-status" class="state-message" role="status" hidden></p>
+      <div class="dialog-actions"><button class="button button-secondary" value="cancel">Cancel</button><button
+          id="submit-report" class="button button-primary" type="button">Submit report</button></div>
+    </form>
+  </dialog>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/company-details.js"></script>
 </body>
+
 </html>

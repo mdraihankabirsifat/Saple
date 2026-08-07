@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,23 +9,47 @@
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body>
   <header class="site-header">
     <nav class="navbar container" aria-label="Main navigation">
-      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark"
+          aria-hidden="true">S</span><span>Saple</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines"
+          aria-hidden="true"></span></button>
       <div id="main-menu" class="nav-menu" data-nav-menu>
-        <ul class="nav-links"><li><a href="companies.html">Companies</a></li><li><a href="index.html#salary-insights">Salaries</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul>
-        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a class="button button-secondary button-small" href="register.html">Create account</a><details class="contribute-menu"><summary class="button button-primary button-small">+ Contribute</summary><ul class="contribute-options"><li><a href="submit-salary.html">Submit salary</a></li><li><a href="submit-review.html">Write a review</a></li><li><a href="interview-experience.html">Share interview experience</a></li></ul></details></div>
+        <ul class="nav-links">
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="index.html#salary-insights">Salaries</a></li>
+          <li><a href="submit-review.html">Reviews</a></li>
+          <li><a href="interview-experience.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+            class="button button-secondary button-small" href="register.html">Create account</a>
+          <details class="contribute-menu">
+            <summary class="button button-primary button-small">+ Contribute</summary>
+            <ul class="contribute-options">
+              <li><a href="submit-salary.html">Submit salary</a></li>
+              <li><a href="submit-review.html">Write a review</a></li>
+              <li><a href="interview-experience.html">Share interview experience</a></li>
+            </ul>
+          </details>
+        </div>
       </div>
     </nav>
   </header>
 
   <main class="page-main">
     <section class="container" aria-labelledby="admin-heading">
-      <div class="page-header"><p class="eyebrow">Administrator workspace</p><h1 id="admin-heading">Admin moderation</h1><p>Review pending community submissions and record every decision in the immutable moderation history.</p></div>
+      <div class="page-header">
+        <p class="eyebrow">Administrator workspace</p>
+        <h1 id="admin-heading">Admin moderation</h1>
+        <p>Review pending community submissions and record every decision in the immutable moderation history.</p>
+      </div>
 
-      <p id="admin-loading" class="state-message" role="status" aria-live="polite">Checking administrator access&hellip;</p>
+      <p id="admin-loading" class="state-message" role="status" aria-live="polite">Checking administrator access&hellip;
+      </p>
       <section id="admin-access-denied" class="placeholder-panel" aria-labelledby="access-denied-heading" hidden>
         <h2 id="access-denied-heading">Administrator access required</h2>
         <p>This account cannot access the moderation dashboard.</p>
@@ -33,49 +58,138 @@
 
       <div id="admin-dashboard" hidden>
         <section class="admin-summary" aria-labelledby="queue-summary-heading">
-          <div class="card summary-card"><p class="eyebrow">Current queue</p><h2 id="queue-summary-heading"><span id="pending-count">0</span> pending</h2><p>Oldest submissions appear first.</p></div>
-          <div class="trust-note"><strong>Atomic decisions</strong><span>Status changes and audit records commit together or roll back together.</span></div>
+          <div class="card summary-card">
+            <p class="eyebrow">Current queue</p>
+            <h2 id="queue-summary-heading"><span id="pending-count">0</span> pending</h2>
+            <p>Oldest submissions appear first.</p>
+          </div>
+          <div class="trust-note"><strong>Atomic decisions</strong><span>Status changes and audit records commit
+              together or roll back together.</span></div>
         </section>
 
         <p id="admin-status" class="state-message" role="status" aria-live="polite" hidden></p>
 
         <div class="moderation-layout">
           <section class="queue-panel" aria-labelledby="pending-heading">
-            <div class="panel-heading"><div><p class="eyebrow">Review queue</p><h2 id="pending-heading">Pending submissions</h2></div><button id="refresh-queue" class="button button-secondary button-small" type="button">Refresh</button></div>
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Review queue</p>
+                <h2 id="pending-heading">Pending submissions</h2>
+              </div><button id="refresh-queue" class="button button-secondary button-small"
+                type="button">Refresh</button>
+            </div>
             <div id="pending-list" class="pending-list" aria-live="polite" aria-busy="true"></div>
           </section>
 
           <section id="review-panel" class="review-panel card" aria-labelledby="review-title">
-            <div id="review-placeholder" class="review-placeholder"><p class="eyebrow">Submission detail</p><h2>Choose a submission to review</h2><p>The complete salary context and moderation history will appear here.</p></div>
+            <div id="review-placeholder" class="review-placeholder">
+              <p class="eyebrow">Submission detail</p>
+              <h2>Choose a submission to review</h2>
+              <p>The complete salary context and moderation history will appear here.</p>
+            </div>
             <div id="review-content" hidden>
-              <div class="panel-heading"><div><p class="eyebrow">Submission detail</p><h2 id="review-title" tabindex="-1">Review submission</h2></div><span id="review-status-badge" class="badge"></span></div>
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Submission detail</p>
+                  <h2 id="review-title" tabindex="-1">Review submission</h2>
+                </div><span id="review-status-badge" class="badge"></span>
+              </div>
               <div id="submission-detail"></div>
               <section class="decision-section" aria-labelledby="decision-heading">
                 <h3 id="decision-heading">Record a decision</h3>
-                <div class="form-group"><label for="moderation-note">Moderation note</label><textarea id="moderation-note" maxlength="1000" placeholder="Optional for approval; required for rejection or flagging."></textarea><p id="moderation-note-error" class="field-error" role="alert"></p></div>
-                <div class="decision-actions"><button class="button button-primary" type="button" data-decision="APPROVED">Approve</button><button class="button button-danger" type="button" data-decision="REJECTED">Reject</button><button class="button button-warning" type="button" data-decision="FLAGGED">Flag</button></div>
+                <div class="form-group"><label for="moderation-note">Moderation note</label><textarea
+                    id="moderation-note" maxlength="1000"
+                    placeholder="Optional for approval; required for rejection or flagging."></textarea>
+                  <p id="moderation-note-error" class="field-error" role="alert"></p>
+                </div>
+                <div class="decision-actions"><button class="button button-primary" type="button"
+                    data-decision="APPROVED">Approve</button><button class="button button-danger" type="button"
+                    data-decision="REJECTED">Reject</button><button class="button button-warning" type="button"
+                    data-decision="FLAGGED">Flag</button></div>
               </section>
-              <section class="history-section" aria-labelledby="history-heading"><h3 id="history-heading">Moderation history</h3><div id="moderation-history"></div></section>
+              <section class="history-section" aria-labelledby="history-heading">
+                <h3 id="history-heading">Moderation history</h3>
+                <div id="moderation-history"></div>
+              </section>
             </div>
+          </section>
+        </div>
+        <div class="admin-workflow-grid">
+          <section class="workflow-panel card" aria-labelledby="verification-queue-heading">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Employee trust</p>
+                <h2 id="verification-queue-heading">Verification requests <span id="verification-count"
+                    class="badge">0</span></h2>
+              </div><button id="refresh-verifications" class="button button-secondary button-small"
+                type="button">Refresh</button>
+            </div>
+            <div id="verification-list" class="admin-item-list" aria-live="polite"></div>
+          </section>
+          <section class="workflow-panel card" aria-labelledby="report-queue-heading">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Community safety</p>
+                <h2 id="report-queue-heading">Reports <span id="report-count" class="badge">0</span></h2>
+              </div><button id="refresh-reports" class="button button-secondary button-small"
+                type="button">Refresh</button>
+            </div>
+            <p class="field-help">Use the existing submission review panel to flag or reject reported content before
+              resolving the report.</p>
+            <div id="report-list" class="admin-item-list" aria-live="polite"></div>
           </section>
         </div>
       </div>
     </section>
   </main>
 
-  <dialog id="decision-dialog" class="decision-dialog" aria-labelledby="decision-dialog-title" aria-describedby="decision-dialog-message">
-    <form method="dialog"><h2 id="decision-dialog-title">Confirm moderation decision</h2><p id="decision-dialog-message"></p><div class="dialog-actions"><button class="button button-secondary" value="cancel">Cancel</button><button id="confirm-decision" class="button button-primary" type="button">Confirm</button></div></form>
+  <dialog id="decision-dialog" class="decision-dialog" aria-labelledby="decision-dialog-title"
+    aria-describedby="decision-dialog-message">
+    <form method="dialog">
+      <h2 id="decision-dialog-title">Confirm moderation decision</h2>
+      <p id="decision-dialog-message"></p>
+      <div class="dialog-actions"><button class="button button-secondary" value="cancel">Cancel</button><button
+          id="confirm-decision" class="button button-primary" type="button">Confirm</button></div>
+    </form>
   </dialog>
 
   <footer class="site-footer">
     <div class="footer-main container">
-      <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html" aria-label="Saple home"><span class="footer-logo-mark" aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a><p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.</p><div class="project-tags" aria-label="Project technologies"><span>Oracle 19c</span><span>Express</span><span>Vanilla JS</span></div></section>
-      <nav class="footer-column" aria-labelledby="footer-explore-heading"><h2 id="footer-explore-heading">Explore</h2><ul><li><a href="companies.html">Companies</a></li><li><a href="index.html#salary-insights">Salary methodology</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul></nav>
-      <nav class="footer-column" aria-labelledby="footer-account-heading"><h2 id="footer-account-heading">Account</h2><ul><li><a href="admin.html">Admin moderation</a></li><li><a href="submit-salary.html">Submit salary</a></li><li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li></ul></nav>
+      <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html"
+          aria-label="Saple home"><span class="footer-logo-mark" aria-hidden="true">S</span><span
+            id="footer-brand-heading">Saple</span></a>
+        <p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.
+        </p>
+        <div class="project-tags" aria-label="Project technologies"><span>Oracle
+            19c</span><span>Express</span><span>Vanilla JS</span></div>
+      </section>
+      <nav class="footer-column" aria-labelledby="footer-explore-heading">
+        <h2 id="footer-explore-heading">Explore</h2>
+        <ul>
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="index.html#salary-insights">Salary methodology</a></li>
+          <li><a href="submit-review.html">Reviews</a></li>
+          <li><a href="interview-experience.html">Interviews</a></li>
+        </ul>
+      </nav>
+      <nav class="footer-column" aria-labelledby="footer-account-heading">
+        <h2 id="footer-account-heading">Account</h2>
+        <ul>
+          <li><a href="admin.html">Admin moderation</a></li>
+          <li><a href="submit-salary.html">Submit salary</a></li>
+          <li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li>
+        </ul>
+      </nav>
     </div>
-    <div class="footer-bottom"><div class="footer-bottom-content container"><p>&copy; 2026 Saple. BUET CSE Database Project.</p><p>Built for informed career decisions.</p></div></div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+        <p>Built for informed career decisions.</p>
+      </div>
+    </div>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/admin.js"></script>
 </body>
+
 </html>

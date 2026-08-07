@@ -94,6 +94,19 @@ async function updateAuthenticationNavigation() {
       window.location.assign('index.html');
     });
 
+    if (currentUser?.userType === 'EMPLOYEE' && !document.querySelector('[data-verification-link]')) {
+      const options = document.querySelector('.contribute-options');
+      if (options) {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = 'employee-verification.html';
+        link.textContent = 'Request employee verification';
+        link.dataset.verificationLink = '';
+        item.append(link);
+        options.append(item);
+      }
+    }
+
     signInLink.replaceWith(accountName);
     registerLink.replaceWith(signOutButton);
   };

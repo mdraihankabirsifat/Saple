@@ -1,17 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Saple employee review workflow status."><title>Employee reviews | Saple</title>
-  <link rel="stylesheet" href="css/common.css"><link rel="stylesheet" href="css/forms.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Submit a moderated employee review to Saple.">
+    <title>Submit a review | Saple</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/salary-form.css">
 </head>
+
 <body>
-  <header class="site-header"><nav class="navbar container" aria-label="Main navigation">
-    <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
-    <div id="main-menu" class="nav-menu" data-nav-menu><ul class="nav-links"><li><a href="companies.html">Companies</a></li><li><a href="index.html#salary-insights">Salaries</a></li><li><a class="active" href="submit-review.html" aria-current="page">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul><div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a class="button button-secondary button-small" href="register.html">Create account</a><details class="contribute-menu"><summary class="button button-primary button-small">+ Contribute</summary><ul class="contribute-options"><li><a href="submit-salary.html">Submit salary</a></li><li><a href="submit-review.html" aria-current="page">Write a review</a></li><li><a href="interview-experience.html">Share interview experience</a></li></ul></details></div></div>
-  </nav></header>
-  <main class="page-main"><div class="container"><div class="page-header"><p class="eyebrow">Employee reviews</p><h1>Review contributions are coming next.</h1><p>Saple's review interface will be connected when the review submission and moderation workflow is available.</p></div><section class="placeholder-panel" aria-labelledby="review-status-heading"><h2 id="review-status-heading">No review form is active yet</h2><p>We are not collecting or storing review content from this page. Employee reviews will appear on company profiles once the backend workflow is enabled.</p><div class="form-actions"><a class="button button-primary" href="companies.html">Explore companies</a><a class="button button-secondary" href="submit-salary.html">Submit salary details</a></div></section></div></main>
-  <footer class="site-footer"><div class="footer-main container"><section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html"><span class="footer-logo-mark" aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a><p>Company insights and moderated community contributions for better career decisions.</p><div class="project-tags"><span>Oracle 19c</span><span>Vanilla JS</span></div></section><nav class="footer-column" aria-labelledby="footer-explore-heading"><h2 id="footer-explore-heading">Explore</h2><ul><li><a href="companies.html">Companies</a></li><li><a href="index.html#salary-insights">Salary methodology</a></li><li><a href="submit-review.html">Reviews</a></li></ul></nav><nav class="footer-column" aria-labelledby="footer-account-heading"><h2 id="footer-account-heading">Account &amp; contribute</h2><ul><li><a href="login.html">Sign in</a></li><li><a href="register.html">Create account</a></li><li><a href="submit-salary.html">Submit salary</a></li></ul></nav></div><div class="footer-bottom"><div class="footer-bottom-content container"><p>&copy; 2026 Saple. BUET CSE Database Project.</p><p>Built for informed career decisions.</p></div></div></footer>
-  <script src="js/nav.js" defer></script>
-</body></html>
+    <header class="site-header">
+        <nav class="navbar container" aria-label="Main navigation"><a class="brand" href="index.html"><span
+                    class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a><button class="nav-toggle"
+                type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation"
+                data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+            <div id="main-menu" class="nav-menu" data-nav-menu>
+                <ul class="nav-links">
+                    <li><a href="companies.html">Companies</a></li>
+                    <li><a href="index.html#salary-insights">Salaries</a></li>
+                    <li><a class="active" href="submit-review.html">Reviews</a></li>
+                    <li><a href="interview-experience.html">Interviews</a></li>
+                </ul>
+                <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+                        class="button button-secondary button-small" href="register.html">Create account</a>
+                    <details class="contribute-menu">
+                        <summary class="button button-primary button-small">+ Contribute</summary>
+                        <ul class="contribute-options">
+                            <li><a href="submit-salary.html">Submit salary</a></li>
+                            <li><a href="submit-review.html">Write a review</a></li>
+                            <li><a href="interview-experience.html">Share interview experience</a></li>
+                        </ul>
+                    </details>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="page-main">
+        <div class="container">
+            <div class="page-header">
+                <p class="eyebrow">Employee contribution</p>
+                <h1>Share a workplace review.</h1>
+                <p>Reviews are saved as pending and become public only after moderation.</p>
+            </div>
+            <div class="form-layout">
+                <form id="review-form" class="structured-form card" novalidate>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>1</span>
+                            <div>
+                                <h2>Company and role</h2>
+                                <p>Employee accounts only.</p>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group"><label for="review-company">Company <span
+                                        class="required-mark">*</span></label><select id="review-company" required
+                                    disabled>
+                                    <option value="">Loading companies…</option>
+                                </select></div>
+                            <div class="form-group"><label for="review-role">Job role</label><select id="review-role"
+                                    disabled>
+                                    <option value="">Loading roles…</option>
+                                </select></div>
+                            <div class="form-group"><label for="review-employment-status">Employment status <span
+                                        class="required-mark">*</span></label><select id="review-employment-status"
+                                    required>
+                                    <option value="">Select status</option>
+                                    <option value="CURRENT">Current employee</option>
+                                    <option value="FORMER">Former employee</option>
+                                </select></div>
+                            <div class="form-group"><label for="review-date">Review date <span
+                                        class="required-mark">*</span></label><input id="review-date" type="date"
+                                    required></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>2</span>
+                            <div>
+                                <h2>Ratings</h2>
+                                <p>Use a 1–5 scale.</p>
+                            </div>
+                        </div>
+                        <div class="form-grid rating-grid">
+                            <div class="form-group"><label for="overall-rating">Overall</label><input
+                                    id="overall-rating" type="number" min="1" max="5" step="0.5" required></div>
+                            <div class="form-group"><label for="work-life-rating">Work-life balance</label><input
+                                    id="work-life-rating" type="number" min="1" max="5" step="0.5" required></div>
+                            <div class="form-group"><label for="growth-rating">Career growth</label><input
+                                    id="growth-rating" type="number" min="1" max="5" step="0.5" required></div>
+                            <div class="form-group"><label for="management-rating">Management</label><input
+                                    id="management-rating" type="number" min="1" max="5" step="0.5" required></div>
+                            <div class="form-group"><label for="culture-rating">Culture</label><input
+                                    id="culture-rating" type="number" min="1" max="5" step="0.5" required></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>3</span>
+                            <div>
+                                <h2>Your review</h2>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group form-group-full"><label for="review-title">Title <span
+                                        class="required-mark">*</span></label><input id="review-title" maxlength="200"
+                                    required></div>
+                            <div class="form-group form-group-full"><label for="review-pros">Pros <span
+                                        class="required-mark">*</span></label><textarea id="review-pros"
+                                    maxlength="5000" required></textarea></div>
+                            <div class="form-group form-group-full"><label for="review-cons">Cons <span
+                                        class="required-mark">*</span></label><textarea id="review-cons"
+                                    maxlength="5000" required></textarea></div>
+                            <div class="form-group form-group-full"><label for="review-advice">Advice to
+                                    management</label><textarea id="review-advice" maxlength="5000"></textarea></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>4</span>
+                            <div>
+                                <h2>Privacy</h2>
+                            </div>
+                        </div><label class="checkbox-row"><input id="review-anonymous" type="checkbox"
+                                checked><span><strong>Display anonymously</strong><small>Your identity stays hidden
+                                    publicly but remains associated internally for moderation.</small></span></label>
+                    </section>
+                    <p id="review-status" class="state-message form-status" role="status" aria-live="polite" hidden></p>
+                    <div class="form-actions"><button class="button button-primary" type="submit">Submit review for
+                            moderation</button></div>
+                </form>
+                <aside class="form-sidebar">
+                    <div class="trust-card card">
+                        <p class="eyebrow">Before submitting</p>
+                        <h2>Employee verification is company-specific.</h2>
+                        <p>A verified request affects future contributions only. <a
+                                href="employee-verification.html">Request verification</a>.</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+    <footer class="site-footer">
+        <div class="footer-bottom">
+            <div class="footer-bottom-content container">
+                <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+                <p>Moderated community insights.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="js/nav.js" defer></script>
+    <script type="module" src="js/review.js"></script>
+</body>
+
+</html>

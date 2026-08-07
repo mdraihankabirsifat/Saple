@@ -20,6 +20,10 @@ const decisionDialog = document.querySelector('#decision-dialog');
 const decisionDialogMessage = document.querySelector('#decision-dialog-message');
 const confirmDecisionButton = document.querySelector('#confirm-decision');
 const decisionButtons = [...document.querySelectorAll('[data-decision]')];
+const verificationList = document.querySelector('#verification-list');
+const verificationCount = document.querySelector('#verification-count');
+const reportList = document.querySelector('#report-list');
+const reportCount = document.querySelector('#report-count');
 
 let selectedSubmissionId = null;
 let pendingDecision = null;
@@ -115,6 +119,69 @@ async function loadQueue() {
   }
 }
 
+async function decideVerification(verificationId, status, input) {
+  const reason = input.value.trim();
+  if (status === 'REJECTED' && !reason) { input.setCustomValidity('A rejection reason is required.'); input.reportValidity(); return; }
+  input.setCustomValidity('');
+  try {
+    await apiRequest(`/api/admin/verifications/${verificationId}/status`, { method: 'PATCH', auth: true, body: { status, rejectionReason: reason } });
+    showStatus(`Verification #${verificationId} is now ${status}.`, 'success'); await loadVerifications();
+  } catch (error) { showStatus(error.message, 'error'); }
+}
+
+async function loadVerifications() {
+  try {
+    const items = await apiRequest('/api/admin/verifications/pending', { auth: true });
+    verificationList.replaceChildren(); verificationCount.textContent = String(items.length);
+    if (!items.length) { const empty = document.createElement('p'); empty.className = 'empty-state'; empty.textContent = 'No pending verification requests.'; verificationList.append(empty); return; }
+    items.forEach((item) => {
+      const card = document.createElement('article'); card.className = 'admin-item';
+      const title = document.createElement('h3'); title.textContent = `#${item.verificationId} · ${item.employeeName}`;
+      const context = document.createElement('p'); context.textContent = `${item.companyName} · ${item.employmentStatus} · ${item.verificationMethod}`;
+      const evidence = document.createElement('p'); evidence.textContent = item.verificationMethod === 'COMPANY_EMAIL_OTP' ? `Company email: ${item.companyEmail}` : `${item.proofType}: ${item.proofReference}`;
+      const reason = document.createElement('input'); reason.className = 'input'; reason.maxLength = 500; reason.placeholder = 'Rejection reason (required only to reject)'; reason.setAttribute('aria-label', `Rejection reason for verification ${item.verificationId}`);
+      const actions = document.createElement('div'); actions.className = 'admin-item-actions';
+      const verify = document.createElement('button'); verify.className = 'button button-primary button-small'; verify.type = 'button'; verify.textContent = 'Verify'; verify.addEventListener('click', () => decideVerification(item.verificationId, 'VERIFIED', reason));
+      const reject = document.createElement('button'); reject.className = 'button button-danger button-small'; reject.type = 'button'; reject.textContent = 'Reject'; reject.addEventListener('click', () => decideVerification(item.verificationId, 'REJECTED', reason));
+      actions.append(verify, reject); card.append(title, context, evidence, reason, actions); verificationList.append(card);
+    });
+  } catch (error) { showStatus(error.message, 'error'); }
+}
+
+async function updateReport(reportId, status, note) {
+  try {
+    await apiRequest(`/api/admin/reports/${reportId}/status`, { method: 'PATCH', auth: true, body: { status, resolutionNote: note.value } });
+    showStatus(`Report #${reportId} is now ${status}.`, 'success'); await loadReports();
+  } catch (error) { showStatus(error.message, 'error'); }
+}
+
+async function loadReports() {
+  try {
+    const items = await apiRequest('/api/admin/reports', { auth: true });
+    reportList.replaceChildren(); const active = items.filter((item) => ['OPEN', 'REVIEWING'].includes(item.reportStatus)); reportCount.textContent = String(active.length);
+    if (!items.length) { const empty = document.createElement('p'); empty.className = 'empty-state'; empty.textContent = 'No reports have been submitted.'; reportList.append(empty); return; }
+    items.forEach((item) => {
+      const card = document.createElement('article'); card.className = 'admin-item';
+      const title = document.createElement('h3'); title.textContent = `#${item.reportId} · ${item.reasonCategory} · ${item.reportStatus}`;
+      const context = document.createElement('p'); context.textContent = `${item.companyName} · ${item.submissionType} #${item.submissionId}`;
+      const reporter = document.createElement('p'); reporter.textContent = `Reporter: ${item.reporterName} (${item.reporterEmail})`;
+      const description = document.createElement('p'); description.textContent = item.description || 'No description supplied.';
+      card.append(title, context, reporter, description);
+      if (['OPEN', 'REVIEWING'].includes(item.reportStatus)) {
+        const note = document.createElement('textarea'); note.maxLength = 1000; note.placeholder = 'Resolution note (required to resolve or dismiss)'; note.setAttribute('aria-label', `Resolution note for report ${item.reportId}`);
+        const actions = document.createElement('div'); actions.className = 'admin-item-actions';
+        const review = document.createElement('button'); review.className = 'button button-secondary button-small'; review.type = 'button'; review.textContent = 'Inspect submission'; review.addEventListener('click', async () => { await loadSubmission(item.submissionId); document.querySelector('#review-panel').scrollIntoView({ behavior: 'smooth' }); });
+        actions.append(review);
+        if (item.reportStatus === 'OPEN') { const reviewing = document.createElement('button'); reviewing.className = 'button button-secondary button-small'; reviewing.type = 'button'; reviewing.textContent = 'Mark reviewing'; reviewing.addEventListener('click', () => updateReport(item.reportId, 'REVIEWING', note)); actions.append(reviewing); }
+        const resolve = document.createElement('button'); resolve.className = 'button button-primary button-small'; resolve.type = 'button'; resolve.textContent = 'Resolve'; resolve.addEventListener('click', () => updateReport(item.reportId, 'RESOLVED', note));
+        const dismiss = document.createElement('button'); dismiss.className = 'button button-warning button-small'; dismiss.type = 'button'; dismiss.textContent = 'Dismiss'; dismiss.addEventListener('click', () => updateReport(item.reportId, 'DISMISSED', note));
+        actions.append(resolve, dismiss); card.append(note, actions);
+      }
+      reportList.append(card);
+    });
+  } catch (error) { showStatus(error.message, 'error'); }
+}
+
 function renderHistory(history) {
   historyContainer.replaceChildren();
 
@@ -206,11 +273,19 @@ function renderSubmission(submission, history) {
   submissionDetail.replaceChildren(createDefinitionList(commonEntries));
   renderHistory(history);
 
-  const canModerate = submission.submissionStatus === 'PENDING';
-  decisionButtons.forEach((button) => { button.disabled = !canModerate; });
-  noteInput.disabled = !canModerate;
-  if (!canModerate) noteInput.value = '';
-  noteError.textContent = canModerate ? '' : 'This submission has already received a final moderation decision.';
+  const allowedDecisions = {
+    PENDING: ['APPROVED', 'REJECTED', 'FLAGGED'],
+    APPROVED: ['REJECTED', 'FLAGGED'],
+    FLAGGED: ['REJECTED']
+  }[submission.submissionStatus] || [];
+  decisionButtons.forEach((button) => {
+    button.disabled = !allowedDecisions.includes(button.dataset.decision);
+  });
+  noteInput.disabled = allowedDecisions.length === 0;
+  if (allowedDecisions.length === 0) noteInput.value = '';
+  noteError.textContent = allowedDecisions.length === 0
+    ? 'No further moderation transition is available for this submission.'
+    : '';
   reviewTitle.focus();
 }
 
@@ -275,6 +350,8 @@ decisionButtons.forEach((button) => {
   button.addEventListener('click', () => requestDecision(button.dataset.decision));
 });
 refreshButton.addEventListener('click', loadQueue);
+document.querySelector('#refresh-verifications').addEventListener('click', loadVerifications);
+document.querySelector('#refresh-reports').addEventListener('click', loadReports);
 confirmDecisionButton.addEventListener('click', confirmDecision);
 decisionDialog.addEventListener('close', () => {
   if (decisionDialog.returnValue === 'cancel') pendingDecision = null;
@@ -296,7 +373,7 @@ async function initializeAdmin() {
 
     loadingMessage.hidden = true;
     dashboard.hidden = false;
-    await loadQueue();
+    await Promise.all([loadQueue(), loadVerifications(), loadReports()]);
   } catch (error) {
     if (error.status === 401) {
       window.location.replace('login.html?returnTo=admin.html');

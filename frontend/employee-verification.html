@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee verification | Saple</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/salary-form.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="navbar container" aria-label="Main navigation"><a class="brand" href="index.html"><span
+                    class="brand-mark">S</span><span>Saple</span></a>
+            <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+                    class="button button-secondary button-small" href="register.html">Create account</a></div>
+        </nav>
+    </header>
+    <main class="page-main">
+        <div class="container">
+            <div class="page-header">
+                <p class="eyebrow">Company-specific trust</p>
+                <h1>Request employee verification.</h1>
+                <p>Verification for one company never verifies contributions for another company.</p>
+            </div>
+            <div class="form-layout">
+                <form id="verification-form" class="structured-form card" novalidate>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>1</span>
+                            <div>
+                                <h2>Employment context</h2>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group"><label for="verification-company">Company</label><select
+                                    id="verification-company" required disabled>
+                                    <option value="">Loading companies…</option>
+                                </select></div>
+                            <div class="form-group"><label for="verification-employment-status">Employment
+                                    status</label><select id="verification-employment-status" required>
+                                    <option value="">Select</option>
+                                    <option value="CURRENT">Current employee</option>
+                                    <option value="FORMER">Former employee</option>
+                                </select></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>2</span>
+                            <div>
+                                <h2>Safe evidence reference</h2>
+                            </div>
+                        </div>
+                        <div id="current-evidence" class="form-group" hidden><label
+                                for="verification-company-email">Company email</label><input
+                                id="verification-company-email" type="email" maxlength="254">
+                            <p class="field-help">No raw OTP is stored or sent in this milestone.</p>
+                        </div>
+                        <div id="former-evidence" class="form-grid" hidden>
+                            <div class="form-group"><label for="verification-proof-type">Proof type</label><input
+                                    id="verification-proof-type" maxlength="30" placeholder="RELEASE_LETTER"></div>
+                            <div class="form-group"><label for="verification-proof-reference">Safe proof
+                                    reference</label><input id="verification-proof-reference" maxlength="255"
+                                    placeholder="Local reference or token only"></div>
+                        </div>
+                    </section>
+                    <p id="verification-status" class="state-message form-status" role="status" aria-live="polite"
+                        hidden></p>
+                    <div class="form-actions"><button class="button button-primary" type="submit">Submit verification
+                            request</button></div>
+                </form>
+                <aside class="form-sidebar">
+                    <div class="trust-card card">
+                        <h2>Private by design</h2>
+                        <p>Never enter raw document contents, national identifiers, passwords, or OTP values. Evidence
+                            fields are visible only to administrators.</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+    <script src="js/nav.js" defer></script>
+    <script type="module" src="js/verification.js"></script>
+</body>
+
+</html>

@@ -1,4 +1,5 @@
-import { fetchApi } from './api.js';
+import { apiRequest, fetchApi } from './api.js';
+import { getToken } from './auth.js';
 
 const statusMessage = document.querySelector('#details-status');
 const companyContent = document.querySelector('#company-content');
@@ -6,6 +7,14 @@ const companyProfile = document.querySelector('#overview');
 const benefitsList = document.querySelector('#benefits-list');
 const verifiedSalaryList = document.querySelector('#verified-salary-list');
 const communitySalaryList = document.querySelector('#community-salary-list');
+const reviewSummary = document.querySelector('#review-summary');
+const reviewsList = document.querySelector('#reviews-list');
+const interviewsList = document.querySelector('#interviews-list');
+const reportDialog = document.querySelector('#report-dialog');
+const reportReason = document.querySelector('#report-reason');
+const reportDescription = document.querySelector('#report-description');
+const reportStatus = document.querySelector('#report-status');
+let reportSubmissionId = null;
 
 function appendTextElement(parent, tagName, text, className) {
   const element = document.createElement(tagName);
@@ -130,6 +139,52 @@ function renderSalarySummary(container, summaries, emptyMessage) {
   });
 }
 
+function reportButton(submissionId) {
+  const button = document.createElement('button');
+  button.className = 'button button-secondary button-small report-action';
+  button.type = 'button'; button.textContent = 'Report';
+  button.addEventListener('click', () => {
+    if (!getToken()) { window.location.assign(`login.html?returnTo=${encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search)}`); return; }
+    reportSubmissionId = submissionId; reportReason.value = ''; reportDescription.value = ''; reportStatus.hidden = true; reportDialog.showModal();
+  });
+  return button;
+}
+
+function renderReviews(data) {
+  reviewsList.replaceChildren(); reviewSummary.replaceChildren();
+  const reviews = data?.reviews || []; const summary = data?.summary;
+  if (summary?.reviewCount > 0) {
+    reviewSummary.className = 'review-summary card';
+    [['Approved reviews', summary.reviewCount], ['Overall average', summary.overallAverage], ['Work-life', summary.workLifeBalanceAverage], ['Growth', summary.careerGrowthAverage], ['Management', summary.managementAverage], ['Culture', summary.cultureAverage]].forEach(([label, value]) => appendTextElement(reviewSummary, 'span', `${label}: ${value}`));
+  }
+  if (!reviews.length) { appendTextElement(reviewsList, 'p', 'No approved reviews are available for this company.', 'empty-state'); return; }
+  reviews.forEach((review) => {
+    const card = document.createElement('article'); card.className = 'experience-card card';
+    const header = document.createElement('div'); header.className = 'experience-card-header';
+    const copy = document.createElement('div'); appendTextElement(copy, 'h3', review.reviewTitle);
+    appendTextElement(copy, 'p', `${review.roleName || 'Role not specified'} · ${review.employmentStatus} · ${review.verificationStatus}`, 'experience-meta');
+    appendTextElement(header, 'span', `${review.overallRating}/5`, 'badge'); header.prepend(copy); card.append(header);
+    const body = document.createElement('div'); body.className = 'experience-body';
+    appendTextElement(body, 'p', `Pros: ${review.pros}`); appendTextElement(body, 'p', `Cons: ${review.cons}`);
+    if (review.adviceToManagement) appendTextElement(body, 'p', `Advice: ${review.adviceToManagement}`);
+    appendTextElement(body, 'p', `${review.authorName || 'Anonymous contributor'} · ${new Date(review.reviewDate).toLocaleDateString()}`, 'experience-meta');
+    card.append(body, reportButton(review.submissionId)); reviewsList.append(card);
+  });
+}
+
+function renderInterviews(interviews) {
+  interviewsList.replaceChildren();
+  if (!interviews.length) { appendTextElement(interviewsList, 'p', 'No approved interview experiences are available for this company.', 'empty-state'); return; }
+  interviews.forEach((item) => {
+    const card = document.createElement('article'); card.className = 'experience-card card';
+    appendTextElement(card, 'h3', item.roleName); appendTextElement(card, 'p', `${item.difficultyLevel} · ${item.roundsCount} rounds · ${item.interviewMode} · ${item.resultStatus}`, 'experience-meta');
+    const body = document.createElement('div'); body.className = 'experience-body';
+    appendTextElement(body, 'p', item.processDescription); if (item.questionsSummary) appendTextElement(body, 'p', `Topics: ${item.questionsSummary}`);
+    appendTextElement(body, 'p', `${item.durationDays} days · ${item.verificationStatus} · ${item.authorName || 'Anonymous contributor'}`, 'experience-meta');
+    card.append(body, reportButton(item.submissionId)); interviewsList.append(card);
+  });
+}
+
 function showError(message) {
   statusMessage.textContent = message;
   statusMessage.classList.add('error');
@@ -148,16 +203,20 @@ async function loadCompanyDetails() {
   }
 
   try {
-    const [company, benefits, salarySummary] = await Promise.all([
+    const [company, benefits, salarySummary, reviews, interviews] = await Promise.all([
       fetchApi(`/api/companies/${companyId}`),
       fetchApi(`/api/companies/${companyId}/benefits`),
-      fetchApi(`/api/companies/${companyId}/salary-summary`)
+      fetchApi(`/api/companies/${companyId}/salary-summary`),
+      fetchApi(`/api/companies/${companyId}/reviews`),
+      fetchApi(`/api/companies/${companyId}/interviews`)
     ]);
 
     renderCompany(company);
     renderBenefits(benefits);
     renderSalarySummary(verifiedSalaryList, salarySummary.verified, 'No verified salary information is available for this company.');
     renderSalarySummary(communitySalaryList, salarySummary.community, 'No community salary information is available for this company.');
+    renderReviews(reviews);
+    renderInterviews(interviews);
 
     statusMessage.hidden = true;
     companyContent.hidden = false;
@@ -166,5 +225,13 @@ async function loadCompanyDetails() {
     showError(error.message);
   }
 }
+
+document.querySelector('#submit-report').addEventListener('click', async () => {
+  if (!reportReason.value || !reportSubmissionId) { reportStatus.textContent = 'Select a report reason.'; reportStatus.className = 'state-message error'; reportStatus.hidden = false; return; }
+  try {
+    await apiRequest(`/api/submissions/${reportSubmissionId}/reports`, { method: 'POST', auth: true, body: { reasonCategory: reportReason.value, description: reportDescription.value } });
+    reportStatus.textContent = 'Report submitted for review.'; reportStatus.className = 'state-message success'; reportStatus.hidden = false;
+  } catch (error) { reportStatus.textContent = error.message; reportStatus.className = 'state-message error'; reportStatus.hidden = false; }
+});
 
 loadCompanyDetails();
