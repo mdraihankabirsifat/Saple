@@ -1,4 +1,9 @@
-require('dotenv').config({ quiet: true });
+const path = require('path');
+
+require('dotenv').config({
+  path: path.join(__dirname, '.env'),
+  quiet: true
+});
 
 const app = require('./app');
 const database = require('./config/database');
