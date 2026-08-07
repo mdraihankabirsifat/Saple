@@ -1,57 +1,48 @@
 # Saple
 
-Saple is a verified company review, salary insight, benefit, and interview-experience platform developed as a BUET database course project. It helps fresh graduates and job seekers make informed career decisions using moderated community contributions and company-specific employee verification.
+Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform developed as a BUET CSE database project. It helps graduates and job seekers research workplaces while supporting moderated community contributions and privacy-aware anonymous sharing.
 
-## Project Overview
+The repository currently contains a complete Oracle data model, a read-only Express API for public company data, and a responsive Vanilla JavaScript frontend. Authentication and contribution forms have been prepared in the UI but are intentionally not connected to write endpoints yet.
 
-Information about salaries, workplace culture, benefits, and interview processes is often scattered or difficult to verify. Saple provides a structured platform where users can explore companies and contribute experiences while protecting contributor privacy.
+## Current Implementation
 
-The database distinguishes verified salary information from broader community data and keeps moderation history for accountability. Only approved submissions are included in public results.
+| Layer | Status | What is available |
+| --- | --- | --- |
+| Database | Implemented | Oracle tables, constraints, indexes, sample data, public views, and analytical salary views |
+| Backend | Read-only milestone | Health checks, company directory/search, company profiles, benefits, and salary summaries |
+| Frontend | Implemented | Responsive application shell, homepage, live company pages, salary methodology, and accessible state handling |
+| Authentication UI | Prepared | Login and registration validation without fake requests, tokens, or credential storage |
+| Contribution UI | Prepared | Salary form with live company choices and local validation; review/interview placeholders |
+| Write workflows | Not implemented | Authentication, employee verification, salary/review/interview submission, reporting, and moderation endpoints |
 
-## Main Features
+## Available Features
 
-- User account and employee profile management
-- Company, job-role, and benefit information
-- Company-specific current and former employee verification
-- Salary, company-review, and interview-experience submissions
-- Anonymous public contributions with internal ownership retained
-- Verified and community salary summaries
-- Submission reporting and administrative moderation
-- Immutable moderation audit history during normal application use
-- Privacy-safe public and analytical database views
+- Searchable public company directory backed by Oracle through Express
+- Company profiles with industry, location, size, description, and safe website links
+- Company benefits loaded from the API
+- Verified and Community Salary Range summaries
+- Contribution counts to help readers interpret salary confidence
+- Loading, empty, invalid-ID, API-error, and backend-offline states
+- Shared responsive navigation, contribution menu, footer, cards, buttons, forms, and design tokens
+- Mobile navigation and layouts tested at 1440px, 1024px, 768px, and 430px
+- Accessible labels, semantic headings, visible keyboard focus, live status messages, and reduced-motion support
+- UI-only login, registration, and salary contribution workflows with client-side validation
+- Honest placeholders for review and interview workflows that do not invent data or backend behavior
 
-## Account Model
+## Trust and Privacy Model
 
-Common account information is stored in `users`. Accounts have a `user_type` of `NORMAL` or `EMPLOYEE`.
+Anonymous submissions retain an internal association with the submitter for ownership and moderation, while privacy-safe public views do not expose that identity.
 
-Employee-specific information is stored separately in `employees`, with a one-to-one relationship to `users`. Administrative authorization is independent of user type and is represented by `account_role`, which can be `USER` or `ADMIN`.
-
-Passwords are stored only as hashes. Plain passwords must never be stored in the database.
-
-## Employee Verification
-
-An employee verification belongs to one employee and one company. Being verified for one company does not verify that employee for another company.
-
-Supported methods are:
+Employment verification is company-specific. Verification for one company does not verify an employee for another company. The database supports:
 
 - `COMPANY_EMAIL_OTP` for current employees
 - `DOCUMENT` for former employees
 
-The database never stores raw OTP values, uploaded document contents, national identifiers, or other raw confidential data. Document verification stores only a safe proof reference or token. Verification history is retained, while a function-based unique index prevents multiple pending requests for the same employee and company.
-
-## Submission Model
-
-Shared submission information is stored in the `submissions` supertype. Each submission belongs to one user and one company and has exactly one intended subtype:
-
-- `salary_submissions`
-- `company_reviews`
-- `interview_experiences`
-
-Each subtype uses `submission_id` as both its primary key and foreign key. Anonymous submissions still retain their contributor's `user_id` internally, but public views do not expose it.
+The schema never stores raw OTP values, uploaded document contents, national identifiers, or other raw confidential evidence. Passwords are designed to be stored only as hashes once authentication is implemented.
 
 ## Salary Range Concepts
 
-Salary ranges are derived through SQL and are not stored as redundant company attributes.
+Salary ranges are derived from Oracle views rather than stored as redundant company attributes.
 
 ### Verified Salary Range
 
@@ -62,15 +53,134 @@ Uses salary submissions where:
 
 ### Community Salary Range
 
-Uses every approved salary submission, including verified and unverified contributions:
+Uses every approved salary submission, including verified and unverified approved contributions:
 
 - `submission_status = 'APPROVED'`
 
-The term **Community Range** is used because the result can contain both verified and unverified approved data.
+The product deliberately uses **Community Salary Range**, not “Unverified Salary Range.”
 
-## Database Objects
+## Technology Stack
 
-The Oracle schema contains these tables in creation order:
+- Oracle Database 19c
+- SQL and PL/SQL-compatible setup scripts
+- Node.js and Express 5
+- node-oracledb in Thin mode
+- HTML5, CSS, and Vanilla JavaScript ES modules
+
+No frontend framework, CSS framework, TypeScript, or build step is required.
+
+## Quick Start
+
+### 1. Prepare Oracle
+
+Connect to the intended Oracle schema using SQL*Plus, SQLcl, Navicat, or another compatible client, then run:
+
+```sql
+@database/01_create_user.sql
+@database/02_create_tables.sql
+@database/03_insert_sample_data.sql
+@database/04_test_queries.sql
+```
+
+`database/01_create_user.sql` is currently empty, so an existing Oracle user with permission to create tables, views, and indexes is required. The cleanup section in `02_create_tables.sql` can drop and rebuild existing Saple objects; review it before running against data you need to keep.
+
+### 2. Configure and start the backend
+
+From `backend/`:
+
+```bash
+npm install
+```
+
+Copy `.env.example` to `.env` and configure the local Oracle connection:
+
+```env
+PORT=3000
+DB_USER=SAPLE
+DB_PASSWORD=your_local_password
+DB_CONNECT_STRING=localhost:1521/ORCLPDB1
+DB_POOL_MIN=1
+DB_POOL_MAX=5
+DB_POOL_INCREMENT=1
+```
+
+Then start the API:
+
+```bash
+npm run dev
+```
+
+The default API address is `http://localhost:3000`.
+
+### 3. Serve the frontend
+
+From the repository root, use any static HTTP server. For example:
+
+```bash
+python -m http.server 5500 --directory frontend
+```
+
+Open `http://localhost:5500/index.html`.
+
+Using a static server is recommended because the company pages use JavaScript modules. Keep the backend running on port `3000` for live company data.
+
+## Current API
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/` | API welcome response |
+| GET | `/api/health` | Express process health |
+| GET | `/api/health/database` | Oracle connection health |
+| GET | `/api/companies` | List public companies |
+| GET | `/api/companies?search=term` | Backend-powered company search |
+| GET | `/api/companies/:companyId` | Get one public company profile |
+| GET | `/api/companies/:companyId/benefits` | Get company benefits |
+| GET | `/api/companies/:companyId/salary-summary` | Get verified and community salary summaries |
+
+All current endpoints are read-only. See [`backend/README.md`](backend/README.md) for setup, response examples, and Oracle troubleshooting.
+
+## Frontend Pages
+
+| Page | Purpose |
+| --- | --- |
+| `frontend/index.html` | Homepage, company-search entry, trust model, and salary methodology |
+| `frontend/companies.html` | Live company directory and backend-powered search |
+| `frontend/company-details.html?id=<id>` | Live company profile, benefits, salaries, and future-workflow placeholders |
+| `frontend/login.html` | UI-only login with local validation |
+| `frontend/register.html` | UI-only job-seeker/employee registration with local validation |
+| `frontend/submit-salary.html` | Salary contribution form with live company options and local validation |
+| `frontend/submit-review.html` | Review workflow status placeholder |
+| `frontend/interview-experience.html` | Interview workflow status placeholder |
+
+See [`frontend/README.md`](frontend/README.md) for frontend architecture, validation behavior, and manual testing guidance.
+
+## Future Backend Contracts
+
+The prepared UI will need compatible endpoints before its forms can submit data:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- A job-role lookup endpoint, such as `GET /api/job-roles`
+- `POST /api/companies/:companyId/salaries`
+
+Review, interview, verification, reporting, and moderation APIs remain later milestones. The frontend does not assume these routes already exist.
+
+## Project Structure
+
+```text
+Saple/
+|-- backend/                 # Read-only Express and Oracle API
+|-- database/                # Oracle schema, sample data, and test queries
+|-- docs/                    # Requirements, relational schema, and project notes
+|-- frontend/                # Responsive HTML, CSS, and Vanilla JavaScript UI
+|-- ERD.pdf                  # Entity-relationship diagram
+`-- README.md                # Project overview and setup
+```
+
+## Database Model
+
+The Oracle schema contains:
 
 1. `users`
 2. `employees`
@@ -86,70 +196,21 @@ The Oracle schema contains these tables in creation order:
 12. `reports`
 13. `moderation_actions`
 
-It also provides four safe public and analytical views:
+Privacy-safe and analytical views include:
 
 - `vw_public_companies`
 - `vw_public_approved_reviews`
 - `vw_verified_salary_summary`
 - `vw_community_salary_summary`
 
-These views exclude passwords, contributor identity, private company email, proof references, rejection reasons, reporter identity, and internal moderation notes.
+## Security Notes
 
-## Integrity and Security
-
-The schema uses Oracle-compatible primary keys, foreign keys, unique constraints, named check constraints, and useful indexes. Controlled values protect account, verification, submission, report, and moderation statuses. Numeric checks protect ratings, salaries, experience, interview rounds, and durations.
-
-Rules that require information from multiple tables remain application responsibilities, including:
-
-- Ensuring an employee profile belongs to an `EMPLOYEE` user
-- Ensuring reviewers and moderators are active administrators
-- Matching verification method to current or former employment
-- Matching a subtype row to its parent `submission_type`
-- Confirming submission verification applies to the same company
-- Enforcing valid workflow transitions and append-only moderation behavior
-
-## Technology Stack
-
-- Oracle Database 19c
-- SQL and PL/SQL cleanup blocks
-- Navicat Premium or SQL*Plus for database access
-- Node.js and Express.js backend, planned
-- HTML, CSS, and JavaScript frontend, planned
-
-The current implementation covers the database layer. Backend and frontend integration has not started.
-
-## Running the Database Scripts
-
-Connect to the intended Oracle schema using SQL*Plus, SQLcl, or Navicat, then execute the scripts in order:
-
-```sql
-@database/01_create_user.sql
-@database/02_create_tables.sql
-@database/03_insert_sample_data.sql
-@database/04_test_queries.sql
-```
-
-`01_create_user.sql` is currently empty, so an existing Oracle user with permission to create tables, views, and indexes is required. `02_create_tables.sql` contains an optional cleanup section and can rebuild the Saple objects. Run it carefully because existing Saple tables and their data are dropped before recreation.
-
-## Project Structure
-
-```text
-Saple/
-├── backend/                         # Planned backend implementation
-├── database/
-│   ├── 01_create_user.sql           # Optional Oracle user setup
-│   ├── 02_create_tables.sql         # Tables, constraints, indexes, and views
-│   ├── 03_insert_sample_data.sql    # Fictional demonstration data
-│   └── 04_test_queries.sql          # Demonstration and analytical queries
-├── docs/
-│   ├── requirement_analysis.md
-│   ├── relational_schema.md
-│   └── project_notes.md
-├── frontend/                        # Planned frontend implementation
-├── ERD.pdf                          # Final entity-relationship diagram
-└── README.md
-```
+- Never commit `backend/.env` or real credentials.
+- The frontend does not store passwords, fake JWTs, or contribution data in localStorage.
+- Raw Oracle errors are logged by the backend and are not exposed to API clients.
+- Public views omit passwords, contributor identity, private company email, proof references, rejection reasons, reporter identity, and internal moderation notes.
+- Administrative privileges are not exposed as a public registration option.
 
 ## Sample Data Notice
 
-All supplied sample names, companies, email addresses, proof references, and review content are fictional. Demonstration password hashes are intentionally unusable in production.
+All sample names, companies, email addresses, proof references, review text, and test credentials are fictional. Demonstration password hashes are intentionally unusable in production.
