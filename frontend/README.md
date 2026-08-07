@@ -1,138 +1,120 @@
 # Saple Frontend
 
-The Saple frontend is a responsive, framework-free application built with HTML, CSS, and Vanilla JavaScript ES modules. It presents live company data, supports real registration and login, and sends authenticated salary contributions to the Express API while preserving the existing visual design.
+Saple's frontend is a responsive, framework-free application built with HTML, CSS, and Vanilla JavaScript ES modules. The current UI preserves the established visual system while connecting account, contribution, public-display, reporting, and ADMIN workflows to the Express API.
 
-## Connected Features
+## Running Locally
 
-- Company directory and backend search through `GET /api/companies`
-- Company profiles, benefits, and salary summaries through the existing GET endpoints
-- Registration through `POST /api/auth/register`
-- Login through `POST /api/auth/login`
-- Current-user recovery through `GET /api/auth/me`
-- Company and job-role choices through `GET /api/companies` and `GET /api/job-roles`
-- Authenticated salary contribution through `POST /api/companies/:companyId/salaries`
-- ADMIN-only moderation queue, detail, decisions, and history through `/api/admin/submissions/*`
-- Shared signed-in navigation and sign-out behavior
-
-Review and interview forms remain honest placeholders. Forgot-password, employee-verification, reporting, ML, and deployment are not implemented.
-
-## Running the Frontend
-
-Start the backend at `http://localhost:3000`, then run this from the repository root:
+Start the backend at `http://localhost:3000`, then run from the repository root:
 
 ```bash
 python -m http.server 5500 --directory frontend
 ```
 
-Open `http://localhost:5500/index.html`. A static server is required for reliable ES-module loading.
+Open `http://localhost:5500/index.html`. A static server is required for reliable ES-module loading. `js/api.js` contains the default API base URL.
 
-The API base URL is defined in `js/api.js`:
-
-```js
-const API_BASE_URL = 'http://localhost:3000';
-```
-
-## Pages
+## Connected Pages
 
 | File | Behavior |
 | --- | --- |
-| `index.html` | Homepage with search handoff, trust explanation, salary methodology, and contribution CTA |
-| `companies.html` | Live company grid, backend search, and loading/empty/error states |
-| `company-details.html` | Live profile, salary panels, benefits, and review/interview placeholders |
-| `login.html` | Validates credentials, creates a session, and supports a safe local `returnTo` redirect |
-| `register.html` | Creates job-seeker or employee accounts; employee status is conditionally required |
-| `submit-salary.html` | Loads controlled company/role choices and submits salary data for review |
-| `admin.html` | Guards ADMIN access and provides the functional moderation dashboard |
-| `submit-review.html` | Placeholder until review submission is implemented |
-| `interview-experience.html` | Placeholder until interview submission is implemented |
+| `index.html` | Homepage, search handoff, trust explanation, and contribution links |
+| `companies.html` | Live company grid with backend search and error/empty states |
+| `company-details.html` | Live profile, benefits, salary ranges, approved reviews/interviews, and report dialog |
+| `login.html` | JWT session creation and safe local `returnTo` redirects |
+| `register.html` | Job-seeker or current/former-employee registration |
+| `submit-salary.html` | Authenticated pending salary contribution |
+| `submit-review.html` | Employee-only pending company review |
+| `interview-experience.html` | Authenticated pending interview experience |
+| `employee-verification.html` | Current/former employee verification request |
+| `admin.html` | Submission moderation, verification review, and report management |
 
-## Authentication and Session Behavior
+## Authentication and Navigation
 
-`js/auth.js` stores the JWT and safe user object in `sessionStorage`. It never stores a password. `js/api.js` adds `Authorization: Bearer <token>` only when an authenticated request is requested and clears stale session state after an authenticated `401` response.
+`js/auth.js` stores only the JWT and safe user object in `sessionStorage`; passwords are never stored. `js/api.js` attaches `Authorization: Bearer <token>` only to requests marked authenticated and clears stale state after authenticated `401` responses.
 
-On page load, `js/nav.js` uses the stored session and refreshes it through `/api/auth/me`. Signed-in users see their first name and a Sign out action; signed-out users see Sign in and Create account. Login supports the salary page's local `returnTo` link without allowing an external redirect.
+`js/nav.js` refreshes the current user through `/api/auth/me`, renders the signed-in identity and sign-out action, and exposes the verification link only to employee accounts. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
 
-Registration exposes only Job seeker (`NORMAL`) and Employee (`EMPLOYEE`) account types. Employee registration additionally sends `CURRENT` or `FORMER`; it does not claim that employment is verified.
+## Contribution Forms
 
-## Salary Submission
+Salary, review, and interview pages load companies and/or job roles from the API, perform native plus JavaScript validation, and submit structured JSON. A successful write confirms that the contribution was submitted for moderation; it does not imply public approval.
 
-The salary form loads both companies and job roles from the API. A submission requires a current token and sends:
+Review submission requires an employee profile and includes five ratings, employment status, review date, pros/cons, optional advice, optional role, and anonymity. Interview submission includes role, date, difficulty, rounds, mode, result, duration, process, optional questions, and anonymity.
 
-| Field | Contract |
-| --- | --- |
-| `roleId` | Positive job-role ID selected from the API |
-| `baseSalary` | Positive amount with at most two decimal places |
-| `additionalCompensation` | Optional non-negative amount |
-| `currency` | Three-letter uppercase code; `BDT` by default |
-| `payPeriod` | `MONTHLY` or `YEARLY` |
-| `yearsOfExperience` | `0` to `60`, at most one decimal place |
-| `employmentType` | `FULL_TIME`, `PART_TIME`, `CONTRACT`, or `INTERN` |
-| `workMode` | `ONSITE`, `HYBRID`, or `REMOTE` |
-| `salaryYear` | Integer from `2000` through `2100` |
-| `isAnonymous` | Boolean checkbox value |
+The employee-verification page checks the signed-in user and profile status. Current employees provide company-email metadata; former employees provide a proof type and safe reference. Its privacy notice makes clear that no document file or OTP is uploaded through this milestone.
 
-A successful request displays exactly `Salary submitted for review.` An unauthenticated or expired session displays a link to sign in and return to the salary form. New submissions are pending and do not immediately change public salary summaries.
+## Company Detail and Public Safety
+
+The company detail page loads company, benefit, salary, review, and interview data in parallel. Reviews show rating aggregates and approved cards; interviews show approved process cards. Pending, rejected, and flagged rows never appear.
+
+The UI displays `Anonymous` whenever the API withholds `authorName`. It never tries to infer identity from session data or other fields. Content is rendered with DOM text nodes rather than untrusted HTML.
+
+Signed-in users can report a displayed review or interview using a reason category and description. Signed-out users are redirected to login and returned locally. The exact success message is `Report submitted for review.`
+
+## ADMIN Dashboard
+
+`admin.html` verifies `/api/auth/me` before loading protected data. Signed-out users go to login; authenticated non-ADMIN users see access denied. Backend middleware remains the security boundary.
+
+The dashboard contains:
+
+- the pending contribution queue with salary/review/interview subtype detail;
+- accessible approve/reject/flag confirmation and immutable history;
+- pending employee-verification cards with private evidence metadata and verify/reject controls;
+- reports with reporter/target context, reviewing/resolved/dismissed controls, and a link into the existing submission moderation panel.
+
+Pending submissions allow all three decisions. Approved reported submissions allow flag/reject, and flagged submissions allow reject. Invalid transitions are also rejected by the backend.
 
 ## JavaScript Responsibilities
 
 | Script | Responsibility |
 | --- | --- |
-| `js/api.js` | API base URL, token-aware requests, JSON parsing, and safe error normalization |
-| `js/auth.js` | Session token/user storage and current-user lookup |
-| `js/nav.js` | Mobile navigation, contribution menu, signed-in identity, and sign-out |
-| `js/companies.js` | Backend-powered directory loading/search and card rendering |
-| `js/company-details.js` | Company ID validation and profile/benefit/salary rendering |
-| `js/login.js` | Login validation, API request, session creation, and redirect |
-| `js/register.js` | Registration validation and API request |
-| `js/submit-salary.js` | Company/role loading, validation, authentication, and salary POST |
-| `js/admin.js` | ADMIN guard, pending queue, detail/history rendering, confirmation, and PATCH decisions |
-
-## Admin Moderation Dashboard
-
-`admin.html` calls `/api/auth/me` before loading moderation data. Signed-out users return to login with a local `returnTo`; authenticated non-admin users see an access-denied state. Backend authorization remains the security boundary.
-
-The queue is oldest first and displays real pending submissions. Review shows common context and salary, review, or interview subtype fields already present in Oracle. Approve, Reject, and Flag use an accessible confirmation dialog; Reject and Flag require a note. After a decision, the queue and chronological moderation history refresh without inventing counts or content.
+| `js/api.js` | API base URL, token-aware JSON requests, safe errors |
+| `js/auth.js` | Session storage and current-user lookup |
+| `js/nav.js` | Responsive navigation, identity, sign-out, employee link |
+| `js/companies.js` | Directory loading and search |
+| `js/company-details.js` | Public company content and reporting |
+| `js/login.js`, `js/register.js` | Account flows |
+| `js/submit-salary.js` | Salary form options, validation, and POST |
+| `js/review.js` | Review options, validation, and POST |
+| `js/interview.js` | Interview options, validation, and POST |
+| `js/verification.js` | Employee guard, conditional evidence, and POST |
+| `js/admin.js` | ADMIN guard and all dashboard workflows |
 
 ## Design and Accessibility
 
-The existing design system remains in `css/common.css` plus page-specific styles. `css/admin.css` composes those established tokens and components for the moderation layout without redesigning the application.
-
-The UI retains semantic landmarks, labels, keyboard focus, live validation/status messages, ARIA navigation state, safe external links, reduced-motion handling, and responsive single-column layouts. Browser testing covered the full registration-login-salary flow and a 430px viewport without horizontal overflow or runtime JavaScript errors.
-
-## Error and Empty States
-
-Connected pages handle loading, empty results, API failure, invalid IDs, missing records, absent salary data, form validation, duplicate registration, invalid login, expired sessions, access denial, conflicting moderation decisions, and failed write requests. Raw database errors are never intentionally displayed.
+The established styles remain in `css/common.css` and page-specific files. New controls reuse existing colors, spacing, typography, buttons, cards, status messages, and responsive behavior. Forms keep explicit labels, keyboard focus, live status/error regions, native constraints, and narrow-screen layouts. Confirmation/report interactions use native dialogs.
 
 ## Manual Test Checklist
 
 With Oracle and the backend running:
 
-1. Register a Job seeker and confirm the login-page success message.
-2. Register an Employee and verify that Current/Former status is required.
-3. Sign in and confirm the navigation shows the user's first name.
-4. Refresh a page and confirm `/api/auth/me` preserves the session.
-5. Open the salary form and confirm company and job-role choices load.
-6. Submit valid salary data and confirm `Salary submitted for review.` appears.
-7. Sign out and confirm salary submission requests sign-in instead.
-8. Recheck company directory, search, profile, benefits, and both salary summaries.
-9. Stop the backend and confirm errors remain user-friendly.
-10. Check keyboard controls and narrow-screen layouts.
-11. Sign in with a locally prepared ADMIN account and review the pending queue.
-12. Approve, reject, and flag test submissions; confirm the selected item leaves the queue and its audit history appears.
+1. Register a job seeker and an employee; confirm Current/Former is required only for the employee.
+2. Sign in, refresh, and confirm `/api/auth/me` restores the session and navigation.
+3. Submit a salary and confirm it remains absent from public aggregates until ADMIN approval.
+4. As the employee, request verification and confirm duplicate active requests are rejected.
+5. As ADMIN, inspect private evidence and verify or reject the request.
+6. Submit a review and interview; confirm both remain absent from company detail until approved.
+7. Approve them and confirm anonymous cards show no contributor identity.
+8. Report an approved card; confirm duplicate reporting is rejected.
+9. As ADMIN, mark the report reviewing, inspect the target, flag/reject when appropriate, then resolve the report.
+10. Confirm flagged/rejected content disappears from company detail and review aggregates.
+11. Recheck health, directory/search, company detail, benefits, and salary GET behavior.
+12. Check keyboard use and a narrow viewport for overflow and readable dialog/form layouts.
 
 ## Frontend Structure
 
 ```text
 frontend/
-|-- css/                    # Shared and page-specific styles
-|-- js/                     # API, auth, navigation, and page modules
-|-- companies.html          # Live company directory
-|-- company-details.html    # Live company profile
-|-- index.html              # Homepage
-|-- login.html              # Connected sign in
-|-- register.html           # Connected registration
-|-- submit-salary.html      # Connected salary contribution
-|-- admin.html              # ADMIN moderation dashboard
-|-- submit-review.html      # Review placeholder
-`-- interview-experience.html
+|-- css/                         # Shared and page-specific styles
+|-- js/                          # API, auth, page, and workflow modules
+|-- index.html
+|-- companies.html
+|-- company-details.html
+|-- login.html
+|-- register.html
+|-- submit-salary.html
+|-- submit-review.html
+|-- interview-experience.html
+|-- employee-verification.html
+`-- admin.html
 ```
+
+ML and deployment are intentionally outside the current milestone.
