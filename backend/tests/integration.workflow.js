@@ -47,6 +47,41 @@ function salaryPayload(overrides = {}) {
   };
 }
 
+function reviewPayload(overrides = {}) {
+  return {
+    roleId: 1,
+    reviewTitle: 'Workflow review',
+    overallRating: 4.5,
+    workLifeBalanceRating: 4,
+    careerGrowthRating: 4.5,
+    managementRating: 4,
+    cultureRating: 5,
+    pros: 'Supportive teammates and clear technical ownership.',
+    cons: 'Procurement can take longer than expected.',
+    adviceToManagement: 'Keep investing in mentorship.',
+    employmentStatus: 'CURRENT',
+    reviewDate: '2026-01-15',
+    isAnonymous: true,
+    ...overrides
+  };
+}
+
+function interviewPayload(overrides = {}) {
+  return {
+    roleId: 1,
+    interviewDate: '2026-01-12',
+    difficultyLevel: 'MEDIUM',
+    roundsCount: 3,
+    interviewMode: 'ONLINE',
+    resultStatus: 'OFFERED',
+    durationDays: 8,
+    processDescription: 'Screening, technical exercise, and a final behavioral discussion.',
+    questionsSummary: 'Data structures, SQL joins, and API design tradeoffs.',
+    isAnonymous: true,
+    ...overrides
+  };
+}
+
 async function main() {
   await database.initializePool();
   await workflowTestRepository.synchronizeRequiredIdentityGenerators();
@@ -116,6 +151,12 @@ async function main() {
     assert.ok(employeeDatabaseUser.employeeId > 4);
     assert.equal(employeeDatabaseUser.employmentStatus, 'CURRENT');
 
+    const employeeLogin = await request(baseUrl, '/api/auth/login', {
+      method: 'POST', body: { email: employeeEmail, password }
+    });
+    assert.equal(employeeLogin.status, 200);
+    const employeeToken = employeeLogin.body.data.token;
+
     const duplicate = await request(baseUrl, '/api/auth/register', {
       method: 'POST',
       body: { fullName: 'Duplicate', email: normalEmail, password, userType: 'NORMAL' }
@@ -143,6 +184,25 @@ async function main() {
     assert.equal(me.status, 200);
     assert.equal(me.body.data.user.email, normalEmail);
     assert.equal('passwordHash' in me.body.data.user, false);
+
+    const normalVerification = await request(baseUrl, '/api/companies/1/verifications', {
+      method: 'POST', token,
+      body: {
+        employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP',
+        companyEmail: `normal.${uniqueSuffix}@company.test`
+      }
+    });
+    assert.equal(normalVerification.status, 403);
+    const verificationRequest = await request(baseUrl, '/api/companies/1/verifications', {
+      method: 'POST', token: employeeToken,
+      body: {
+        employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP',
+        companyEmail: `employee.${uniqueSuffix}@company.test`
+      }
+    });
+    assert.equal(verificationRequest.status, 201);
+    assert.ok(verificationRequest.body.data.verificationId > 4);
+    assert.equal(verificationRequest.body.data.verificationStatus, 'PENDING');
 
     const adminQueueWithoutToken = await request(baseUrl, '/api/admin/submissions/pending');
     assert.equal(adminQueueWithoutToken.status, 401);
@@ -199,6 +259,194 @@ async function main() {
     assert.equal(adminLogin.body.data.user.accountRole, 'ADMIN');
     const adminToken = adminLogin.body.data.token;
 
+    const verificationQueue = await request(baseUrl, '/api/admin/verifications/pending', { token: adminToken });
+    assert.equal(verificationQueue.status, 200);
+    assert.ok(verificationQueue.body.data.some(
+      (item) => item.verificationId === verificationRequest.body.data.verificationId
+    ));
+    const verificationDecision = await request(
+      baseUrl,
+      `/api/admin/verifications/${verificationRequest.body.data.verificationId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'VERIFIED' } }
+    );
+    assert.equal(verificationDecision.status, 200);
+    const verifiedRequest = await workflowTestRepository.findVerification(verificationRequest.body.data.verificationId);
+    assert.equal(verifiedRequest.verificationStatus, 'VERIFIED');
+    assert.equal(verifiedRequest.reviewedBy, userId);
+    assert.ok(verifiedRequest.reviewedAt);
+    assert.ok(verifiedRequest.expiresAt);
+
+    const verificationQueueAsUser = await request(baseUrl, '/api/admin/verifications/pending', { token });
+    assert.equal(verificationQueueAsUser.status, 403);
+    const rejectedVerificationRequest = await request(baseUrl, '/api/companies/2/verifications', {
+      method: 'POST', token: employeeToken,
+      body: {
+        employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP',
+        companyEmail: `employee.${uniqueSuffix}@second-company.test`
+      }
+    });
+    assert.equal(rejectedVerificationRequest.status, 201);
+    const rejectedVerificationDecision = await request(
+      baseUrl,
+      `/api/admin/verifications/${rejectedVerificationRequest.body.data.verificationId}/status`,
+      {
+        method: 'PATCH', token: adminToken,
+        body: { status: 'REJECTED', rejectionReason: 'Company relationship could not be confirmed.' }
+      }
+    );
+    assert.equal(rejectedVerificationDecision.status, 200);
+    const rejectedVerification = await workflowTestRepository.findVerification(
+      rejectedVerificationRequest.body.data.verificationId
+    );
+    assert.equal(rejectedVerification.verificationStatus, 'REJECTED');
+
+    const verifiedSalary = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: employeeToken, body: salaryPayload({ baseSalary: 65500 })
+    });
+    assert.equal(verifiedSalary.status, 201);
+    assert.equal(verifiedSalary.body.data.verificationStatus, 'VERIFIED');
+    const verifiedSalaryRejection = await request(
+      baseUrl,
+      `/api/admin/submissions/${verifiedSalary.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'REJECTED', note: 'Keep aggregate baseline stable' } }
+    );
+    assert.equal(verifiedSalaryRejection.status, 200);
+
+    const reviewsBefore = await request(baseUrl, '/api/companies/1/reviews');
+    assert.equal(reviewsBefore.status, 200);
+    const reviewWithoutToken = await request(baseUrl, '/api/companies/1/reviews', {
+      method: 'POST', body: reviewPayload()
+    });
+    assert.equal(reviewWithoutToken.status, 401);
+    const invalidReview = await request(baseUrl, '/api/companies/1/reviews', {
+      method: 'POST', token: employeeToken, body: reviewPayload({ overallRating: 6 })
+    });
+    assert.equal(invalidReview.status, 400);
+    const reviewSubmission = await request(baseUrl, '/api/companies/1/reviews', {
+      method: 'POST', token: employeeToken, body: reviewPayload()
+    });
+    assert.equal(reviewSubmission.status, 201);
+    assert.equal(reviewSubmission.body.data.submissionStatus, 'PENDING');
+    assert.equal(reviewSubmission.body.data.verificationStatus, 'VERIFIED');
+    const reviewPair = await workflowTestRepository.findReviewPair(reviewSubmission.body.data.submissionId);
+    assert.equal(reviewPair.parentSubmissionId, reviewPair.childSubmissionId);
+    assert.equal(reviewPair.isAnonymous, 1);
+    const reviewsPending = await request(baseUrl, '/api/companies/1/reviews');
+    assert.equal(reviewsPending.body.data.reviews.some(
+      (item) => item.submissionId === reviewSubmission.body.data.submissionId
+    ), false);
+
+    const interviewWithoutToken = await request(baseUrl, '/api/companies/1/interviews', {
+      method: 'POST', body: interviewPayload()
+    });
+    assert.equal(interviewWithoutToken.status, 401);
+    const invalidInterview = await request(baseUrl, '/api/companies/1/interviews', {
+      method: 'POST', token: adminToken, body: interviewPayload({ roundsCount: 21 })
+    });
+    assert.equal(invalidInterview.status, 400);
+    const interviewSubmission = await request(baseUrl, '/api/companies/1/interviews', {
+      method: 'POST', token: adminToken, body: interviewPayload()
+    });
+    assert.equal(interviewSubmission.status, 201);
+    assert.equal(interviewSubmission.body.data.submissionStatus, 'PENDING');
+    const interviewPair = await workflowTestRepository.findInterviewPair(interviewSubmission.body.data.submissionId);
+    assert.equal(interviewPair.parentSubmissionId, interviewPair.childSubmissionId);
+    assert.equal(interviewPair.isAnonymous, 1);
+
+    for (const submissionId of [reviewSubmission.body.data.submissionId, interviewSubmission.body.data.submissionId]) {
+      const approvalResult = await request(baseUrl, `/api/admin/submissions/${submissionId}/status`, {
+        method: 'PATCH', token: adminToken, body: { status: 'APPROVED' }
+      });
+      assert.equal(approvalResult.status, 200);
+    }
+
+    const publicReviews = await request(baseUrl, '/api/companies/1/reviews');
+    const publicReview = publicReviews.body.data.reviews.find(
+      (item) => item.submissionId === reviewSubmission.body.data.submissionId
+    );
+    assert.ok(publicReview);
+    assert.equal(publicReview.authorName, null);
+    assert.equal('userId' in publicReview, false);
+    assert.equal('email' in publicReview, false);
+    assert.equal(publicReviews.body.data.summary.reviewCount, reviewsBefore.body.data.summary.reviewCount + 1);
+    const publicInterviews = await request(baseUrl, '/api/companies/1/interviews');
+    const publicInterview = publicInterviews.body.data.find(
+      (item) => item.submissionId === interviewSubmission.body.data.submissionId
+    );
+    assert.ok(publicInterview);
+    assert.equal(publicInterview.authorName, null);
+    assert.equal('userId' in publicInterview, false);
+    assert.equal('email' in publicInterview, false);
+
+    const reportWithoutToken = await request(
+      baseUrl,
+      `/api/submissions/${reviewSubmission.body.data.submissionId}/reports`,
+      { method: 'POST', body: { reasonCategory: 'PRIVACY', description: 'No token' } }
+    );
+    assert.equal(reportWithoutToken.status, 401);
+    const report = await request(
+      baseUrl,
+      `/api/submissions/${reviewSubmission.body.data.submissionId}/reports`,
+      { method: 'POST', token: adminToken, body: { reasonCategory: 'PRIVACY', description: 'Integration report' } }
+    );
+    assert.equal(report.status, 201);
+    assert.ok(report.body.data.reportId > 2);
+    const duplicateReport = await request(
+      baseUrl,
+      `/api/submissions/${reviewSubmission.body.data.submissionId}/reports`,
+      { method: 'POST', token: adminToken, body: { reasonCategory: 'PRIVACY', description: 'Duplicate' } }
+    );
+    assert.equal(duplicateReport.status, 409);
+    const reportsAsUser = await request(baseUrl, '/api/admin/reports', { token });
+    assert.equal(reportsAsUser.status, 403);
+    const reports = await request(baseUrl, '/api/admin/reports', { token: adminToken });
+    assert.ok(reports.body.data.some((item) => item.reportId === report.body.data.reportId));
+    const reviewing = await request(baseUrl, `/api/admin/reports/${report.body.data.reportId}/status`, {
+      method: 'PATCH', token: adminToken, body: { status: 'REVIEWING' }
+    });
+    assert.equal(reviewing.status, 200);
+    const flaggedReportedReview = await request(
+      baseUrl,
+      `/api/admin/submissions/${reviewSubmission.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'FLAGGED', note: 'Privacy report confirmed' } }
+    );
+    assert.equal(flaggedReportedReview.status, 200);
+    assert.equal(flaggedReportedReview.body.data.previousStatus, 'APPROVED');
+    const reviewsAfterFlag = await request(baseUrl, '/api/companies/1/reviews');
+    assert.equal(reviewsAfterFlag.body.data.reviews.some(
+      (item) => item.submissionId === reviewSubmission.body.data.submissionId
+    ), false);
+    assert.equal(reviewsAfterFlag.body.data.summary.reviewCount, reviewsBefore.body.data.summary.reviewCount);
+    const resolution = await request(baseUrl, `/api/admin/reports/${report.body.data.reportId}/status`, {
+      method: 'PATCH', token: adminToken,
+      body: { status: 'RESOLVED', resolutionNote: 'Flagged through audited submission moderation.' }
+    });
+    assert.equal(resolution.status, 200);
+    const resolvedReport = await workflowTestRepository.findReport(report.body.data.reportId);
+    assert.equal(resolvedReport.reportStatus, 'RESOLVED');
+    assert.equal(resolvedReport.resolvedBy, userId);
+    assert.ok(resolvedReport.resolvedAt);
+
+    const dismissedReportRequest = await request(
+      baseUrl,
+      `/api/submissions/${interviewSubmission.body.data.submissionId}/reports`,
+      { method: 'POST', token: employeeToken, body: { reasonCategory: 'OTHER', description: 'Dismissal workflow' } }
+    );
+    assert.equal(dismissedReportRequest.status, 201);
+    const dismissal = await request(
+      baseUrl,
+      `/api/admin/reports/${dismissedReportRequest.body.data.reportId}/status`,
+      {
+        method: 'PATCH', token: adminToken,
+        body: { status: 'DISMISSED', resolutionNote: 'No policy issue found.' }
+      }
+    );
+    assert.equal(dismissal.status, 200);
+    const dismissedReport = await workflowTestRepository.findReport(dismissedReportRequest.body.data.reportId);
+    assert.equal(dismissedReport.reportStatus, 'DISMISSED');
+    assert.equal(dismissedReport.resolvedBy, userId);
+    assert.ok(dismissedReport.resolvedAt);
+
     const pendingQueue = await request(baseUrl, '/api/admin/submissions/pending', { token: adminToken });
     assert.equal(pendingQueue.status, 200);
     assert.ok(pendingQueue.body.data.some(
@@ -254,7 +502,7 @@ async function main() {
     const repeatedDecision = await request(
       baseUrl,
       `/api/admin/submissions/${validSalary.body.data.submissionId}/status`,
-      { method: 'PATCH', token: adminToken, body: { status: 'REJECTED', note: 'Repeat attempt' } }
+      { method: 'PATCH', token: adminToken, body: { status: 'APPROVED', note: 'Repeat attempt' } }
     );
     assert.equal(repeatedDecision.status, 409);
 
@@ -331,7 +579,7 @@ async function main() {
     const submissionCountAfterFailure = await workflowTestRepository.countSubmissionsForUser(userId);
     assert.equal(submissionCountAfterFailure, submissionCountBeforeFailure);
 
-    console.log('Integration workflow passed: auth, salary, ADMIN moderation, audit rollback, public aggregates, and GET regressions.');
+    console.log('Integration workflow passed: auth, verification, review/interview publication, reporting, moderation rollback, anonymous display, salary aggregates, and GET regressions.');
   } finally {
     await workflowTestRepository.cleanupWorkflowUsers(normalEmail, employeeEmail);
   }

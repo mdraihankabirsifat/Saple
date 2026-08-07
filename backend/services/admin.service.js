@@ -3,8 +3,8 @@ const createHttpError = require('../utils/httpError');
 
 const DECISIONS = {
   APPROVED: { actionType: 'APPROVE', noteRequired: false, allowedPreviousStatuses: ['PENDING'] },
-  REJECTED: { actionType: 'REJECT', noteRequired: true, allowedPreviousStatuses: ['PENDING'] },
-  FLAGGED: { actionType: 'FLAG', noteRequired: true, allowedPreviousStatuses: ['PENDING'] }
+  REJECTED: { actionType: 'REJECT', noteRequired: true, allowedPreviousStatuses: ['PENDING', 'APPROVED', 'FLAGGED'] },
+  FLAGGED: { actionType: 'FLAG', noteRequired: true, allowedPreviousStatuses: ['PENDING', 'APPROVED'] }
 };
 
 function validateSubmissionId(value) {

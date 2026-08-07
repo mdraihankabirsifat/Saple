@@ -1,25 +1,20 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Oracle 19c. It provides public company data, authentication, transactional salary submission, and an ADMIN-only moderation workflow with immutable audit history.
+The Saple backend connects Express 5 to Oracle 19c. It provides public company information, JWT authentication, transactional community contributions, company-specific employee verification, reporting, and ADMIN workflows with immutable submission-moderation history.
 
-## Prerequisites
+## Prerequisites and Setup
 
-- Node.js 18 or newer
-- npm
-- Oracle Database 19c with the Saple schema and sample-data identity synchronization applied
-- Network access from Node.js to the Oracle listener
+- Node.js 18 or newer and npm
+- Oracle Database 19c with the Saple scripts applied
+- Network access to the Oracle listener
 
-node-oracledb uses Thin mode, so Oracle Instant Client is not required.
-
-## Install and Configure
-
-From `backend/`:
+node-oracledb runs in Thin mode; Oracle Instant Client is not required.
 
 ```bash
 npm install
 ```
 
-Copy `.env.example` to `.env` and provide local values:
+Copy `.env.example` to `.env` and configure:
 
 ```env
 PORT=3000
@@ -33,225 +28,169 @@ JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 ```
 
-`JWT_SECRET` is required for login and protected routes. Use a long, unpredictable value and never commit it. `JWT_EXPIRES_IN` accepts a jsonwebtoken duration such as `1d`.
-
-## Start the API
-
 ```bash
 npm run dev
-# or
-npm start
+# or: npm start
 ```
 
-The Oracle pool initializes before the HTTP server. The default address is `http://localhost:3000`.
+The Oracle pool initializes before HTTP listening. The default address is `http://localhost:3000`.
 
-## Available Endpoints
+## Endpoint Reference
+
+Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors expose a safe application message, not raw Oracle details.
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/` | Public | API welcome response |
-| GET | `/api/health` | Public | Express process health |
-| GET | `/api/health/database` | Public | Oracle connection health |
+| GET | `/` | Public | API welcome |
+| GET | `/api/health` | Public | Express health |
+| GET | `/api/health/database` | Public | Oracle health |
 | GET | `/api/companies` | Public | List/search companies (`?search=term`) |
-| GET | `/api/companies/:companyId` | Public | Get one company |
-| GET | `/api/companies/:companyId/benefits` | Public | Get company benefits |
-| GET | `/api/companies/:companyId/salary-summary` | Public | Get verified and community summaries |
+| GET | `/api/companies/:companyId` | Public | Company detail |
+| GET | `/api/companies/:companyId/benefits` | Public | Company benefits |
+| GET | `/api/companies/:companyId/salary-summary` | Public | Verified/community salary summaries |
+| GET | `/api/companies/:companyId/reviews` | Public | Approved reviews and rating aggregates |
+| POST | `/api/companies/:companyId/reviews` | Employee token | Create a pending review |
+| GET | `/api/companies/:companyId/interviews` | Public | Approved interview experiences |
+| POST | `/api/companies/:companyId/interviews` | Bearer token | Create a pending interview experience |
+| POST | `/api/companies/:companyId/verifications` | Employee token | Request company-specific verification |
+| GET | `/api/job-roles` | Public | Controlled job-role values |
 | POST | `/api/auth/register` | Public | Create a `NORMAL` or `EMPLOYEE` account |
-| POST | `/api/auth/login` | Public | Return a signed JWT and safe user object |
-| GET | `/api/auth/me` | Bearer token | Return the active current user |
-| GET | `/api/job-roles` | Public | List controlled job-role values |
+| POST | `/api/auth/login` | Public | Return JWT and safe user object |
+| GET | `/api/auth/me` | Bearer token | Current safe user profile |
 | POST | `/api/companies/:companyId/salaries` | Bearer token | Create a pending salary contribution |
-| GET | `/api/admin/submissions/pending` | ADMIN token | List pending submissions oldest first |
-| GET | `/api/admin/submissions/:submissionId` | ADMIN token | Inspect common and subtype-specific details |
-| PATCH | `/api/admin/submissions/:submissionId/status` | ADMIN token | Approve, reject, or flag a pending submission |
-| GET | `/api/admin/submissions/:submissionId/moderation-history` | ADMIN token | Read chronological moderation actions |
+| POST | `/api/submissions/:submissionId/reports` | Bearer token | Create one report per user/submission |
+| GET | `/api/admin/submissions/pending` | ADMIN token | Pending queue, oldest first |
+| GET | `/api/admin/submissions/:submissionId` | ADMIN token | Parent and subtype detail |
+| PATCH | `/api/admin/submissions/:submissionId/status` | ADMIN token | Audited approve/reject/flag transition |
+| GET | `/api/admin/submissions/:submissionId/moderation-history` | ADMIN token | Chronological immutable actions |
+| GET | `/api/admin/verifications/pending` | ADMIN token | Pending verification queue |
+| GET | `/api/admin/verifications/:verificationId` | ADMIN token | Verification detail including evidence metadata |
+| PATCH | `/api/admin/verifications/:verificationId/status` | ADMIN token | Verify or reject request |
+| GET | `/api/admin/reports` | ADMIN token | Report queue and resolved history |
+| GET | `/api/admin/reports/:reportId` | ADMIN token | Report detail |
+| PATCH | `/api/admin/reports/:reportId/status` | ADMIN token | Review, resolve, or dismiss report |
 
-Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors use a safe public message without raw Oracle details.
+## Authentication
 
-## Authentication Contracts
+Registration lowercases email, rejects duplicates with `409`, hashes passwords with BCrypt (12 rounds), and atomically creates an `EMPLOYEES` child for employee accounts. Employee registration requires `employmentStatus` of `CURRENT` or `FORMER`. Public input never accepts `account_role`.
 
-Register a job seeker:
-
-```json
-{
-  "fullName": "Sample User",
-  "email": "sample@example.com",
-  "password": "example123",
-  "userType": "NORMAL"
-}
-```
-
-For `userType: "EMPLOYEE"`, also send `employmentStatus: "CURRENT"` or `"FORMER"`. Registration lowercases and trims email, rejects duplicate email with `409`, hashes the password with BCrypt (12 rounds), creates employee metadata in the same transaction when required, and never accepts a public administrator role.
-
-Login accepts `email` and `password`. Invalid credentials and unavailable accounts return the same `401` message. A successful response includes a minimal HS256 JWT containing `userId` and `role`, plus a safe user object without `password_hash`. The token is restricted by issuer, audience, algorithm, and expiry.
-
-Use the token on protected routes:
+Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, algorithm, and expiration are verified. Invalid credentials and unavailable accounts share the same `401` response. Use protected endpoints with:
 
 ```text
 Authorization: Bearer <token>
 ```
 
-## Salary Submission Contract
+## Transactional Contributions
 
-`POST /api/companies/:companyId/salaries` accepts:
-
-```json
-{
-  "roleId": 1,
-  "baseSalary": 85000,
-  "additionalCompensation": 5000,
-  "currency": "BDT",
-  "payPeriod": "MONTHLY",
-  "yearsOfExperience": 2.5,
-  "employmentType": "FULL_TIME",
-  "workMode": "HYBRID",
-  "salaryYear": 2026,
-  "isAnonymous": true
-}
-```
-
-The service validates database-compatible IDs, numeric ranges/precision, uppercase currency, enumerated values, salary year, and the boolean anonymous flag. Missing companies or roles return `404`; invalid input returns `400`; a missing/invalid token returns `401`.
-
-### Transaction boundary
-
-The repository acquires one Oracle connection and performs this atomic unit:
+Salary, review, and interview repositories each use one Oracle connection:
 
 ```text
-validate active user/company/role
-              |
-              v
-insert SUBMISSIONS parent (type SALARY, status PENDING)
-              |
-              v
-insert SALARY_SUBMISSIONS child with the returned submission_id
-              |
-              v
-            COMMIT
+validate active actor + referenced company/role
+                    |
+                    v
+insert SUBMISSIONS parent as PENDING
+                    |
+                    v
+insert subtype child with returned submission_id
+                    |
+                    v
+                  COMMIT
 ```
 
-Any failure rolls back the complete unit, so an orphan parent cannot remain. The same connection is always closed in `finally`, and SQL uses bind variables. Verification is `VERIFIED` only when an active, non-expired, company-specific verified-employment record exists; otherwise it is `UNVERIFIED`. The endpoint never self-approves a submission.
+Any error rolls back the whole unit, preventing orphan parents. All values are validated in services and bound in repository SQL.
 
-## ADMIN Moderation
+### Salary input
 
-ADMIN access uses the signed JWT `role` claim, which originates from `USERS.ACCOUNT_ROLE`; `USER_TYPE` never grants administrative access. Authentication and authorization remain separate middleware. Missing or invalid tokens return `401`, while a valid non-ADMIN token returns `403`.
+The salary body contains `roleId`, positive `baseSalary`, optional nonnegative `additionalCompensation`, three-letter uppercase `currency`, `MONTHLY|YEARLY` pay period, experience from `0` to `60`, controlled employment/work-mode values, salary year `2000`–`2100`, and boolean `isAnonymous`.
 
-Allowed transitions in this milestone are deliberately final:
+### Review input
 
-- `PENDING -> APPROVED`
-- `PENDING -> REJECTED`
-- `PENDING -> FLAGGED`
+Reviews require an active employee account whose profile status matches the supplied `CURRENT|FORMER` value. They include an optional role, title, five ratings from `1` to `5` with at most one decimal, pros, cons, optional advice, a nonfuture review date, and boolean anonymity.
 
-Approval notes are optional. Rejection and flagging notes are required. Reprocessing an approved, rejected, or flagged submission returns `409`.
+### Interview input
 
-The moderation repository uses one connection and transaction:
+Interview experiences accept active authenticated accounts. They require a role, nonfuture date, difficulty, `1`–`20` rounds, mode, result, duration `0`–`365` days, process description, optional question summary, and boolean anonymity.
 
-```text
-SELECT current status FOR UPDATE
-              |
-              v
-validate the transition while the row is locked
-              |
-              v
-UPDATE SUBMISSIONS + INSERT MODERATION_ACTIONS
-              |
-              v
-            COMMIT
-```
+All contribution types inherit `VERIFIED` only from a matching, active, non-expired company verification; otherwise they are `UNVERIFIED`. They never self-approve.
 
-Any failure rolls back both operations. `approved_at` is assigned `SYSTIMESTAMP` only for approval and remains `NULL` for rejection or flagging. No endpoint updates or deletes prior `MODERATION_ACTIONS` rows.
+## Employee Verification
+
+Only active `EMPLOYEE` accounts may request verification. Current employees use `COMPANY_EMAIL_OTP` with a company-email address; former employees use `DOCUMENT` with a short proof type and safe external/reference identifier. A pending or active company verification blocks duplicates.
+
+ADMIN users can inspect the private evidence metadata and move a `PENDING` request to `VERIFIED` or `REJECTED`. Rejection requires a reason. Verification and rejection are written in one locked transaction; verified requests expire after 12 months. Public endpoints never return the evidence fields.
+
+## Submission Moderation
+
+ADMIN authority comes only from the signed `USERS.ACCOUNT_ROLE` claim. Missing/invalid authentication returns `401`; a valid non-ADMIN token returns `403`.
+
+Allowed transitions are:
+
+- `PENDING -> APPROVED|REJECTED|FLAGGED`
+- `APPROVED -> REJECTED|FLAGGED` for reported public content
+- `FLAGGED -> REJECTED`
+
+Approval notes are optional; rejection and flagging notes are required. Other transitions return `409`.
+
+The repository locks the submission with `SELECT ... FOR UPDATE`, validates the current state, updates `SUBMISSIONS`, inserts one `MODERATION_ACTIONS` row, and commits. A failure in either write rolls back both. `approved_at` is set only for approval and cleared when approved content is later rejected or flagged. Prior audit rows are never updated or deleted.
+
+## Reports
+
+Authenticated active accounts can report a submission once using `FAKE_DATA`, `DEFAMATION`, `SPAM`, `PRIVACY`, or `OTHER` plus an optional description. The database uniqueness constraint maps duplicates to `409`.
+
+ADMIN report transitions are `OPEN -> REVIEWING|RESOLVED|DISMISSED` and `REVIEWING -> RESOLVED|DISMISSED`. Terminal decisions require a resolution note and record resolver/time atomically. When the report requires a content action, the ADMIN uses the existing submission endpoint so the target status change is locked and audited; report resolution is then recorded separately.
+
+## Public Data and Anonymity
+
+Public review/interview repositories explicitly select only approved fields. `authorName` is populated only for nonanonymous rows. User IDs, email addresses, evidence, reporter identity, and moderation data are absent from public responses. Flagging or rejecting approved content immediately excludes it and its review aggregate contribution.
 
 ## Identity Synchronization
 
-The sample script inserts explicit identity values. After its sample-data `COMMIT`, it runs Oracle `START WITH LIMIT VALUE` for:
+After sample inserts and `COMMIT`, `database/03_insert_sample_data.sql` runs `START WITH LIMIT VALUE` for:
 
 - `USERS.USER_ID`
 - `EMPLOYEES.EMPLOYEE_ID`
+- `EMPLOYMENT_VERIFICATIONS.VERIFICATION_ID`
 - `SUBMISSIONS.SUBMISSION_ID`
+- `REPORTS.REPORT_ID`
 - `MODERATION_ACTIONS.ACTION_ID`
 
-These identity synchronizations advance each generator beyond its existing maximum, preventing generated-ID collisions without changing table definitions or constraints. The only database-script change in the moderation milestone is the `MODERATION_ACTIONS.ACTION_ID` synchronization.
+This advances each identity beyond explicit sample IDs without changing constraints. Live rollback probes confirmed a generated `VERIFICATION_ID` greater than `4` and `REPORT_ID` greater than `2`.
 
 ## Architecture
 
-Application flow is `routes -> controllers -> services -> repositories`. Controllers translate HTTP input/output, services own validation and application rules, and repositories contain all Oracle SQL and transaction/connection handling.
+Application flow is `routes -> controllers -> services -> repositories`. Services own validation and application rules. All Oracle SQL and transaction boundaries stay in repositories.
 
 ```text
 backend/
 |-- config/          # Oracle pool and JWT settings
-|-- controllers/     # HTTP request/response handling
-|-- middleware/      # Authentication, 404, and centralized errors
-|-- repositories/    # All Oracle SQL and transaction handling
+|-- controllers/     # HTTP translation
+|-- middleware/      # Authentication, ADMIN guard, and errors
+|-- repositories/    # SQL and transaction handling
 |-- routes/          # Express endpoints
-|-- services/        # Validation and application rules
-|-- tests/           # Unit and opt-in live Oracle integration tests
-|-- utils/           # Response and HTTP-error helpers
-|-- app.js           # Express configuration and mounted routes
-`-- server.js        # Pool initialization and process lifecycle
+|-- services/        # Validation and workflow rules
+|-- tests/           # Unit and live workflow tests
+|-- utils/           # Responses and HTTP errors
+|-- app.js           # Express composition
+`-- server.js        # Pool/server lifecycle
 ```
 
 ## Tests
 
-Run unit tests:
-
 ```bash
 npm test
-```
-
-Run the real HTTP + Oracle workflow test with a configured `.env`:
-
-```bash
 npm run test:integration
 ```
 
-The integration test creates uniquely named test accounts, cleans them afterward, and verifies:
+The 31-test unit suite covers authentication, middleware, input validation, transition rules, private/public mapping, and forced rollback of salary, review, interview, verification, report, and moderation writes.
 
-- generated user, employee, and submission IDs exceed sample-data maximums;
-- password hashes are not plaintext;
-- normal/employee registration, duplicate and validation errors, login, and `/me`;
-- job-role lookup and authenticated salary submission;
-- matching parent/child submission IDs and exact `PENDING`/verification state;
-- a forced child insert failure rolls back its parent;
-- pending submissions do not change public salary aggregates;
-- ADMIN-only queue/detail/history access and approve/reject/flag transitions;
-- a forced moderation-action failure rolls back the submission status update;
-- approval adds an unverified salary to the community aggregate without changing the verified aggregate;
-- all pre-existing health, company, search, detail, benefit, and summary GETs still work.
+The live test requires Oracle and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, registration/login, verification request and approval, salary/review/interview parent-child writes, approved-only public display, anonymous-field omission, report duplication and resolution, approved-content flagging, moderation history, salary aggregates, authorization, GET regressions, and rollback under forced constraint/write failures.
 
-### Local administrator account
+Public registration always creates `account_role = 'USER'`. The fictional sample ADMIN hash is intentionally not a usable password. For manual local ADMIN testing, generate and apply a local BCrypt hash without committing it; the integration test instead promotes and deletes a temporary user.
 
-Public registration always creates `account_role = 'USER'`. The sample `admin@example.test` row is an active ADMIN, but its demonstration hash is intentionally not login-compatible. For local manual testing, generate a BCrypt hash locally and update only that sample row through your SQL client; do not commit the password, generated hash, or local `.env`. The integration test instead promotes its temporary registered user through the test repository and deletes it afterward.
+## Security and Deferred Scope
 
-## curl Examples
-
-```bash
-curl http://localhost:3000/api/companies
-curl http://localhost:3000/api/job-roles
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"sample@example.com","password":"example123"}'
-curl http://localhost:3000/api/auth/me \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-## Common Oracle Connection Problems
-
-- `ORA-01017`: Check `DB_USER` and `DB_PASSWORD`.
-- `ORA-12154`: Check the connect-string format and service name.
-- `ORA-12514`: Confirm the requested service is registered with the listener.
-- `ORA-12541`: Confirm Oracle and its listener are running.
-- Table or view not found: Connect as the schema owner or grant the required access.
-
-## Security Notes
-
-- Keep `.env`, database credentials, and the JWT secret local and untracked.
-- Password hashes are never selected for public responses.
-- Generic login errors reduce account-enumeration leakage.
-- Protected routes verify the Bearer token before controller execution.
-- SQL uses bind parameters; raw Oracle errors are not returned to clients.
-- Public registration cannot create an administrator.
-- ADMIN routes require both JWT authentication and the `ADMIN` role claim.
-- Moderation history has read and insert paths only; status and audit writes are atomic.
-
-## Deferred Scope
-
-Review submission, interview submission, employee-verification workflows, reporting, ML, and deployment are intentionally outside this milestone.
+- Keep `.env`, credentials, JWT secrets, and real verification evidence untracked.
+- SQL uses bind variables; raw Oracle errors are not returned.
+- Password hashes are never present in API responses.
+- ADMIN endpoints require authentication and role authorization.
+- ML and deployment are intentionally outside this milestone.

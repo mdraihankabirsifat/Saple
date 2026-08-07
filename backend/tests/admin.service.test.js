@@ -57,6 +57,20 @@ test('repository transition conflicts become HTTP 409', async () => {
   );
 });
 
+test('reported approved content may be flagged or rejected through audited moderation', async () => {
+  const calls = [];
+  adminRepository.updateSubmissionStatusWithAudit = async (input) => {
+    calls.push(input);
+    return { submissionId: input.submissionId, submissionStatus: input.newStatus };
+  };
+
+  await adminService.moderateSubmission(6, 4, { status: 'FLAGGED', note: 'Privacy report confirmed' });
+  await adminService.moderateSubmission(6, 4, { status: 'REJECTED', note: 'Remove reported content' });
+
+  assert.deepEqual(calls[0].allowedPreviousStatuses, ['PENDING', 'APPROVED']);
+  assert.deepEqual(calls[1].allowedPreviousStatuses, ['PENDING', 'APPROVED', 'FLAGGED']);
+});
+
 test('admin detail maps salary fields and numeric anonymity safely', async () => {
   adminRepository.findSubmissionById = async () => ({
     submissionId: 4,
