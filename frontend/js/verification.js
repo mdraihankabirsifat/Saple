@@ -10,6 +10,7 @@ const companyEmail = document.querySelector('#verification-company-email');
 const proofType = document.querySelector('#verification-proof-type');
 const proofReference = document.querySelector('#verification-proof-reference');
 const status = document.querySelector('#verification-status');
+const submitButton = form.querySelector('[type="submit"]');
 
 function show(message, type = '') { status.textContent = message; status.className = 'state-message form-status'; if (type) status.classList.add(type); status.hidden = false; }
 function updateEvidence() {
@@ -27,10 +28,12 @@ form.addEventListener('submit', async (event) => {
     verificationMethod: current ? 'COMPANY_EMAIL_OTP' : 'DOCUMENT',
     ...(current ? { companyEmail: companyEmail.value } : { proofType: proofType.value, proofReference: proofReference.value })
   };
+  submitButton.disabled = true;
   try {
     await apiRequest(`/api/companies/${company.value}/verifications`, { method: 'POST', auth: true, body });
     show('Verification request submitted for admin review.', 'success');
   } catch (error) { show(error.message, 'error'); }
+  finally { submitButton.disabled = false; }
 });
 
 (async () => {

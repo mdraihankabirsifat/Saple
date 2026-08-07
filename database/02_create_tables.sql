@@ -507,7 +507,7 @@ GROUP BY s.company_id, c.company_name, ss.role_id, jr.role_name,
 -- ================================================================
 -- 10. Important business rules
 -- ================================================================
--- The application (or a small future trigger) must enforce these cross-table rules:
+-- The application enforces these cross-table rules:
 -- * employees.user_id belongs to a users row whose user_type is EMPLOYEE.
 -- * reviewed_by, resolved_by, and moderator_user_id identify ACTIVE ADMIN users.
 -- * current employees use COMPANY_EMAIL_OTP and former employees use DOCUMENT.

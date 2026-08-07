@@ -286,3 +286,36 @@ WHERE
     industry = 'Software'
 ORDER BY
     company_name;
+
+-- 18. Terminal report resolution history (admin query)
+SELECT
+    r.report_id,
+    r.submission_id,
+    r.reason_category,
+    r.report_status,
+    r.resolved_at,
+    r.resolution_note,
+    u.full_name AS resolved_by_name
+FROM
+    reports r
+    JOIN users u ON u.user_id = r.resolved_by
+WHERE
+    r.report_status IN ('RESOLVED', 'DISMISSED')
+ORDER BY
+    r.resolved_at DESC;
+
+-- 19. Identity-column inventory for rebuild verification
+SELECT
+    table_name,
+    column_name,
+    generation_type,
+    identity_options
+FROM
+    user_tab_identity_cols
+WHERE
+    table_name IN (
+        'USERS', 'EMPLOYEES', 'COMPANIES', 'JOB_ROLES', 'BENEFITS',
+        'EMPLOYMENT_VERIFICATIONS', 'SUBMISSIONS', 'REPORTS', 'MODERATION_ACTIONS'
+    )
+ORDER BY
+    table_name;

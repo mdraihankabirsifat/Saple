@@ -74,7 +74,7 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 
 Registration lowercases email, rejects duplicates with `409`, hashes passwords with BCrypt (12 rounds), and atomically creates an `EMPLOYEES` child for employee accounts. Employee registration requires `employmentStatus` of `CURRENT` or `FORMER`. Public input never accepts `account_role`.
 
-Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, algorithm, and expiration are verified. Invalid credentials and unavailable accounts share the same `401` response. Use protected endpoints with:
+Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, algorithm, and expiration are verified. Every protected request also reloads the current `account_status` and `account_role`, so suspension, deactivation, or role changes take effect immediately. Invalid credentials and unavailable accounts use safe `401` responses. Use protected endpoints with:
 
 ```text
 Authorization: Bearer <token>
@@ -121,7 +121,7 @@ ADMIN users can inspect the private evidence metadata and move a `PENDING` reque
 
 ## Submission Moderation
 
-ADMIN authority comes only from the signed `USERS.ACCOUNT_ROLE` claim. Missing/invalid authentication returns `401`; a valid non-ADMIN token returns `403`.
+ADMIN authority comes from the current Oracle `USERS.ACCOUNT_ROLE`, reached only after JWT verification. Missing/invalid authentication or an unavailable account returns `401`; an active non-ADMIN account returns `403`.
 
 Allowed transitions are:
 
@@ -149,6 +149,9 @@ After sample inserts and `COMMIT`, `database/03_insert_sample_data.sql` runs `ST
 
 - `USERS.USER_ID`
 - `EMPLOYEES.EMPLOYEE_ID`
+- `COMPANIES.COMPANY_ID`
+- `JOB_ROLES.ROLE_ID`
+- `BENEFITS.BENEFIT_ID`
 - `EMPLOYMENT_VERIFICATIONS.VERIFICATION_ID`
 - `SUBMISSIONS.SUBMISSION_ID`
 - `REPORTS.REPORT_ID`
@@ -181,7 +184,7 @@ npm test
 npm run test:integration
 ```
 
-The 31-test unit suite covers authentication, middleware, input validation, transition rules, private/public mapping, and forced rollback of salary, review, interview, verification, report, and moderation writes.
+The unit suite covers authentication, current-account middleware checks, input validation, transition rules, private/public mapping, exact calendar dates, and forced rollback of salary, review, interview, verification, report, and moderation writes.
 
 The live test requires Oracle and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, registration/login, verification request and approval, salary/review/interview parent-child writes, approved-only public display, anonymous-field omission, report duplication and resolution, approved-content flagging, moderation history, salary aggregates, authorization, GET regressions, and rollback under forced constraint/write failures.
 
@@ -193,4 +196,4 @@ Public registration always creates `account_role = 'USER'`. The fictional sample
 - SQL uses bind variables; raw Oracle errors are not returned.
 - Password hashes are never present in API responses.
 - ADMIN endpoints require authentication and role authorization.
-- ML and deployment are intentionally outside this milestone.
+- Real OTP/document transport, ML, advanced recommendations, and deployment are intentionally outside core completion.

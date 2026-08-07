@@ -53,6 +53,18 @@ async function findSafeUserById(userId) {
   return executeSingleRow(sql, { userId });
 }
 
+async function findAuthorizationById(userId) {
+  const sql = `
+    SELECT
+      account_role AS "accountRole",
+      account_status AS "accountStatus"
+    FROM users
+    WHERE user_id = :userId
+  `;
+
+  return executeSingleRow(sql, { userId });
+}
+
 async function createUserWithOptionalEmployee({
   fullName,
   email,
@@ -140,5 +152,6 @@ async function createUserWithOptionalEmployee({
 module.exports = {
   findUserByEmail,
   findSafeUserById,
+  findAuthorizationById,
   createUserWithOptionalEmployee
 };

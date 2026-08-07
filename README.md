@@ -59,7 +59,7 @@ Run these files as the intended schema owner:
 @database/04_test_queries.sql
 ```
 
-`03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to `USERS.USER_ID`, `EMPLOYEES.EMPLOYEE_ID`, `EMPLOYMENT_VERIFICATIONS.VERIFICATION_ID`, `SUBMISSIONS.SUBMISSION_ID`, `REPORTS.REPORT_ID`, and `MODERATION_ACTIONS.ACTION_ID`. The verified live generators produced a verification ID greater than `4` and a report ID greater than `2`.
+`03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to every identity populated with explicit sample IDs: `USERS`, `EMPLOYEES`, `COMPANIES`, `JOB_ROLES`, `BENEFITS`, `EMPLOYMENT_VERIFICATIONS`, `SUBMISSIONS`, `REPORTS`, and `MODERATION_ACTIONS`.
 
 `01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
 
@@ -149,7 +149,7 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 31 passing tests. The live Oracle workflow covers authentication, all three contribution types, identity generation, verification, ADMIN authorization, report handling, anonymous display, public publication rules, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
+The unit suite currently contains 34 passing tests. The live Oracle workflow covers authentication, all three contribution types, all identity generators, verification, ADMIN authorization, report handling, anonymous display, public publication rules, missing-resource contracts, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
 
 ## Security Notes
 
@@ -157,9 +157,13 @@ The unit suite currently contains 31 passing tests. The live Oracle workflow cov
 - Public registration cannot create an administrator.
 - Password hashes and raw Oracle errors are never returned to clients.
 - SQL is contained in repositories and uses bind variables.
-- ADMIN routes require both authenticated JWT middleware and the `ADMIN` role claim.
+- Protected requests recheck the current account status and role in Oracle; ADMIN routes do not rely on frontend hiding or a stale token role.
 - Sample identities, companies, content, evidence references, and credentials are fictional.
 
 ## Deferred Scope
 
-ML and deployment are intentionally outside this milestone. Forgot-password automation is also not part of the current application workflow.
+Real OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, deployment, and production-grade session/password-recovery improvements are intentionally outside core completion.
+
+## Presentation Demo
+
+Use the end-to-end sequence in [docs/project_notes.md](docs/project_notes.md): browse a company, register/login, submit and moderate salary data, demonstrate company-specific verification, publish anonymous review/interview contributions, and resolve a report through audited target moderation. The same document lists recommended report screenshots.

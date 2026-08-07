@@ -32,3 +32,39 @@ Public responses must not expose user IDs, email addresses, verification evidenc
 ## Current Scope Boundary
 
 Authentication, salary contributions, moderation, employee verification, reviews, interviews, reporting, public display, ADMIN dashboard integration, rollback tests, and documentation are implemented. ML and deployment remain deferred.
+
+## Presentation-Day Demo Sequence
+
+Before presenting, register a dedicated local demo account through the UI, promote only that row with your Oracle client, then sign out and sign back in so the dashboard reflects the current role:
+
+```sql
+UPDATE users
+SET account_role = 'ADMIN', updated_at = SYSTIMESTAMP
+WHERE email = 'your-registered-demo-email@example.test';
+COMMIT;
+```
+
+Do not commit the demo password, its generated hash, or local credentials.
+
+1. Open the homepage and search for a company.
+2. Show its details, benefits, and Verified/Community salary ranges.
+3. Register and log in with a temporary contributor account.
+4. Submit a salary and show that it starts `PENDING` and does not change public aggregates.
+5. Use the ADMIN dashboard to inspect and approve it; show the new `MODERATION_ACTIONS` row and updated Community range.
+6. Explain that only an active company-specific verification also changes the Verified range.
+7. With an employee account, request verification and demonstrate an ADMIN verify/reject decision.
+8. Submit and approve an anonymous review, then show its public card and rating aggregate without contributor identity.
+9. Submit and approve an anonymous interview experience, then show its public card.
+10. Report one public card, mark the report reviewing, inspect and flag/reject the target through submission moderation, then resolve the report.
+
+## Recommended Report Screenshots
+
+- Homepage and company search
+- Company profile with benefits and both salary ranges
+- Registration/login and one contribution form
+- Pending submission queue and subtype detail
+- Moderation confirmation plus immutable history
+- Employee verification request and ADMIN verification card
+- Approved anonymous review and interview cards
+- Report dialog and ADMIN report-resolution controls
+- Oracle schema/ERD and representative `04_test_queries.sql` results

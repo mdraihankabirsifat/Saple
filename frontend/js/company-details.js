@@ -14,6 +14,7 @@ const reportDialog = document.querySelector('#report-dialog');
 const reportReason = document.querySelector('#report-reason');
 const reportDescription = document.querySelector('#report-description');
 const reportStatus = document.querySelector('#report-status');
+const submitReportButton = document.querySelector('#submit-report');
 let reportSubmissionId = null;
 
 function appendTextElement(parent, tagName, text, className) {
@@ -25,15 +26,17 @@ function appendTextElement(parent, tagName, text, className) {
 }
 
 function renderCompany(company) {
+  const heading = document.querySelector('#company-name');
   companyProfile.replaceChildren();
 
   const titleRow = document.createElement('div');
   const monogram = appendTextElement(titleRow, 'span', company.companyName?.trim().charAt(0).toUpperCase() || 'S', 'company-profile-mark');
   const titleCopy = document.createElement('div');
-  const heading = appendTextElement(titleCopy, 'h1', company.companyName || 'Company');
   titleRow.className = 'company-title-row';
   monogram.setAttribute('aria-hidden', 'true');
-  heading.id = 'company-name';
+  heading.textContent = company.companyName || 'Company';
+  heading.classList.remove('sr-only');
+  titleCopy.append(heading);
 
   if (company.industry) appendTextElement(titleCopy, 'p', company.industry, 'industry');
   titleRow.append(titleCopy);
@@ -228,10 +231,12 @@ async function loadCompanyDetails() {
 
 document.querySelector('#submit-report').addEventListener('click', async () => {
   if (!reportReason.value || !reportSubmissionId) { reportStatus.textContent = 'Select a report reason.'; reportStatus.className = 'state-message error'; reportStatus.hidden = false; return; }
+  submitReportButton.disabled = true;
   try {
     await apiRequest(`/api/submissions/${reportSubmissionId}/reports`, { method: 'POST', auth: true, body: { reasonCategory: reportReason.value, description: reportDescription.value } });
     reportStatus.textContent = 'Report submitted for review.'; reportStatus.className = 'state-message success'; reportStatus.hidden = false;
   } catch (error) { reportStatus.textContent = error.message; reportStatus.className = 'state-message error'; reportStatus.hidden = false; }
+  finally { submitReportButton.disabled = false; }
 });
 
 loadCompanyDetails();

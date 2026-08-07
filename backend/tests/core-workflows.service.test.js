@@ -4,6 +4,7 @@ const verificationRepository = require('../repositories/verification.repository'
 const reviewRepository = require('../repositories/review.repository');
 const interviewRepository = require('../repositories/interview.repository');
 const reportRepository = require('../repositories/report.repository');
+const companyRepository = require('../repositories/company.repository');
 const verificationService = require('../services/verification.service');
 const reviewService = require('../services/review.service');
 const interviewService = require('../services/interview.service');
@@ -15,7 +16,8 @@ const originals = {
   createReview: reviewRepository.createReview,
   createInterview: interviewRepository.createInterview,
   createReport: reportRepository.createReport,
-  updateReportStatus: reportRepository.updateReportStatus
+  updateReportStatus: reportRepository.updateReportStatus,
+  findCompanyById: companyRepository.findCompanyById
 };
 
 test.afterEach(() => {
@@ -25,6 +27,7 @@ test.afterEach(() => {
   interviewRepository.createInterview = originals.createInterview;
   reportRepository.createReport = originals.createReport;
   reportRepository.updateReportStatus = originals.updateReportStatus;
+  companyRepository.findCompanyById = originals.findCompanyById;
 });
 
 test('verification request normalizes private evidence and maps authorization errors', async () => {
@@ -72,6 +75,10 @@ test('review validation rejects unsafe fields and passes normalized valid data',
     reviewService.submitReview(8, 1, { ...payload, overallRating: 5.55 }),
     (error) => error.statusCode === 400
   );
+  await assert.rejects(
+    reviewService.submitReview(8, 1, { ...payload, reviewDate: '2026-02-31' }),
+    (error) => error.statusCode === 400
+  );
   let received;
   reviewRepository.createReview = async (input) => { received = input; return { submissionId: 12 }; };
   await reviewService.submitReview(8, '1', payload);
@@ -88,6 +95,10 @@ test('interview validation enforces ranges and normalizes enums', async () => {
   };
   await assert.rejects(
     interviewService.submitInterview(8, 1, { ...payload, roundsCount: 21 }),
+    (error) => error.statusCode === 400
+  );
+  await assert.rejects(
+    interviewService.submitInterview(8, 1, { ...payload, interviewDate: '2026-02-31' }),
     (error) => error.statusCode === 400
   );
   let received;
@@ -115,4 +126,10 @@ test('reports prevent duplicate submissions and enforce terminal resolution note
   await reportService.updateStatus(6, 3, { status: 'dismissed', resolutionNote: ' Not a violation ' });
   assert.deepEqual(received.allowedPreviousStatuses, ['OPEN', 'REVIEWING']);
   assert.equal(received.resolutionNote, 'Not a violation');
+});
+
+test('public review and interview endpoints return 404 for a missing company', async () => {
+  companyRepository.findCompanyById = async () => null;
+  await assert.rejects(reviewService.getApprovedReviews(999), (error) => error.statusCode === 404);
+  await assert.rejects(interviewService.getApprovedInterviews(999), (error) => error.statusCode === 404);
 });

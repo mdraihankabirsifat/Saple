@@ -31,7 +31,7 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 
 `js/auth.js` stores only the JWT and safe user object in `sessionStorage`; passwords are never stored. `js/api.js` attaches `Authorization: Bearer <token>` only to requests marked authenticated and clears stale state after authenticated `401` responses.
 
-`js/nav.js` refreshes the current user through `/api/auth/me`, renders the signed-in identity and sign-out action, and exposes the verification link only to employee accounts. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
+`js/nav.js` refreshes the current user through `/api/auth/me`, replaces stale stored role/profile display, renders the signed-in identity and sign-out action, and exposes the verification link only to employee accounts. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
 
 ## Contribution Forms
 

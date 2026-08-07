@@ -1,4 +1,5 @@
 const interviewRepository = require('../repositories/interview.repository');
+const companyRepository = require('../repositories/company.repository');
 const createHttpError = require('../utils/httpError');
 
 function positiveInteger(value, label, min = 1, max = Number.MAX_SAFE_INTEGER) {
@@ -20,7 +21,12 @@ function text(value, label, maximum, required = true) {
 function dateValue(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw createHttpError(400, 'Interview date must use YYYY-MM-DD');
   const date = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime()) || date > new Date()) throw createHttpError(400, 'Interview date must be a valid non-future date');
+  if (
+    value.startsWith('0000')
+    || Number.isNaN(date.getTime())
+    || date.toISOString().slice(0, 10) !== value
+    || date > new Date()
+  ) throw createHttpError(400, 'Interview date must be a valid non-future date');
   return date;
 }
 
@@ -48,6 +54,8 @@ async function submitInterview(userId, companyIdValue, input = {}) {
   }
 }
 async function getApprovedInterviews(companyIdValue) {
-  return interviewRepository.findApprovedInterviews(positiveInteger(companyIdValue, 'Company ID'));
+  const companyId = positiveInteger(companyIdValue, 'Company ID');
+  if (!await companyRepository.findCompanyById(companyId)) throw createHttpError(404, 'Company not found');
+  return interviewRepository.findApprovedInterviews(companyId);
 }
 module.exports = { submitInterview, getApprovedInterviews };

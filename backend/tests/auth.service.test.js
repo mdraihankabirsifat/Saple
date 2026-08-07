@@ -7,6 +7,7 @@ const authService = require('../services/auth.service');
 const originalMethods = {
   findUserByEmail: userRepository.findUserByEmail,
   findSafeUserById: userRepository.findSafeUserById,
+  findAuthorizationById: userRepository.findAuthorizationById,
   createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee
 };
 
@@ -103,4 +104,23 @@ test('unknown users and wrong passwords share the same generic login error', asy
     authService.login({ email: 'missing@example.com', password: 'wrong' }),
     (error) => error.statusCode === 401 && error.message === 'Invalid email or password.'
   );
+});
+
+test('auth/me rejects suspended accounts and never returns a password hash', async () => {
+  userRepository.findSafeUserById = async () => ({
+    userId: 8,
+    accountStatus: 'SUSPENDED',
+    passwordHash: 'must-not-leak'
+  });
+  await assert.rejects(
+    authService.getCurrentUser(8),
+    (error) => error.statusCode === 401
+  );
+
+  userRepository.findSafeUserById = async () => ({
+    userId: 8, fullName: 'Safe User', email: 'safe@example.test', userType: 'NORMAL',
+    accountRole: 'USER', accountStatus: 'ACTIVE', employmentStatus: null
+  });
+  const user = await authService.getCurrentUser(8);
+  assert.equal('passwordHash' in user, false);
 });

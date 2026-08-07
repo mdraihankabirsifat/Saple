@@ -1,99 +1,67 @@
-# Saple: Verified Company Review and Salary Insight Platform
+# Saple Requirement Analysis
 
-## 1. Project Overview
+## Project Purpose
 
-Saple is a database project inspired by Glassdoor. It is designed to help fresh graduates and job seekers get reliable information about companies, salary ranges, benefits, workplace culture, and interview experiences.
+Saple is a BUET CSE database project for trustworthy company research. It helps graduates and job seekers compare company profiles, benefits, salary ranges, moderated workplace reviews, and interview experiences.
 
-The platform allows current and former employees to submit company reviews, salary ranges, benefits information, and interview experiences. To reduce fake or defamatory submissions, Saple includes a verification and moderation system.
+## Users and Authorization
 
-## 2. Problem Statement
+- Public visitors browse approved information without an account.
+- `NORMAL` users can contribute salaries and interview experiences and report visible content.
+- `EMPLOYEE` users can additionally request company-specific verification and submit workplace reviews.
+- `ADMIN` is an independent `account_role`; public registration can never grant it.
+- Suspended or deactivated accounts cannot authenticate or continue using an existing token.
 
-Fresh graduates often lack reliable information about companies before applying or joining. Information about salary, work environment, benefits, and interview process is usually scattered, informal, or biased.
+## Implemented Functional Requirements
 
-A major problem in public review platforms is fake submissions. Someone may submit a false low salary or negative review to defame a company. Saple solves this problem by separating verified data from community data and by using admin moderation before publishing submissions.
+1. Register normal or current/former employee accounts and store only BCrypt password hashes.
+2. Log in with normalized email and receive an expiring, issuer/audience-bound JWT.
+3. Search and browse companies, details, benefits, and job roles.
+4. Display Verified and Community salary ranges calculated from approved database rows.
+5. Submit salary, review, and interview contributions as atomic parent/subtype transactions.
+6. Keep every new contribution `PENDING` until ADMIN moderation.
+7. Approve, reject, or flag through an atomic status-update plus immutable audit action.
+8. Request company-specific employment verification and let ADMIN verify or reject it.
+9. Publish only approved reviews/interviews and enforce anonymous public display.
+10. Let authenticated users report concrete public review/interview submissions once.
+11. Let ADMIN inspect, review, resolve, or dismiss reports and moderate the target through the audited submission workflow.
 
-## 3. Target Users
+Benefits are maintained as reference/sample data in the current project; there is no public benefit-submission workflow.
 
-1. Fresh graduates
-2. Job seekers
-3. Current employees
-4. Former employees
-5. Admin/moderator
+## Verification Requirements
 
-## 4. Main Features
+- Verification for one company never implies verification for another.
+- Current employees use the `COMPANY_EMAIL_OTP` concept and store only company-email metadata; actual OTP delivery and values are not implemented or stored.
+- Former employees use the `DOCUMENT` concept and store only a short proof type plus safe external/reference token; raw files and national identifiers are not stored.
+- Pending requests have no reviewer or review timestamp.
+- ADMIN decisions record reviewer and timestamp; rejection requires a reason, and verified requests expire after 12 months.
+- Only future contributions inherit the active company-specific verification status.
 
-1. Users can register and log in.
-2. Users can search companies.
-3. Users can view company profiles.
-4. Users can submit company reviews.
-5. Users can submit salary ranges.
-6. Users can submit interview experiences.
-7. Users can submit benefits information.
-8. Users can request company verification.
-9. Admin can approve or reject verification requests.
-10. Admin can approve, reject, or flag submissions.
-11. Public users can view only approved submissions.
-12. Public users can view Verified Salary Range.
-13. Public users can view Community Salary Range.
-14. The system shows the number of submissions beside each salary range.
+## Publication and Salary Rules
 
-## 5. Verification System
+Only `APPROVED` submissions are public. Anonymous rows retain their internal `user_id` for accountability but expose no public identity.
 
-Saple supports verification to reduce fake submissions.
+The Verified Salary Range requires both:
 
-Current employees may verify themselves using company email OTP verification.
+- `submission_status = 'APPROVED'`
+- `verification_status = 'VERIFIED'`
 
-Former employees may verify themselves using documents such as:
+The Community Salary Range includes every approved salary, verified or unverified. Ranges and review averages are calculated by queries/views rather than stored redundantly.
 
-- Offer letter
-- Payslip
-- Experience certificate
-- Resignation or release letter
-- Employee ID
+## Reporting and Moderation Rules
 
-Optional reference-based verification may also be supported, where a previously verified employee can help verify another user.
+- A reporter may create at most one report per submission.
+- Reports move from `OPEN` to `REVIEWING`, `RESOLVED`, or `DISMISSED`; terminal states record resolver, time, and note.
+- Submission transitions use the moderation service exclusively, with `SELECT ... FOR UPDATE`, a status update, and a `MODERATION_ACTIONS` insert in one transaction.
+- Public approved content may be flagged/rejected after a report, which removes it from public results while retaining its audit history.
 
-## 6. Salary Range Types
+## Nonfunctional Requirements
 
-Saple shows two types of salary ranges.
+- Oracle SQL is isolated in repositories and uses bind variables and explicit projections.
+- Multi-step writes commit only after every step succeeds and roll back on failure.
+- Public APIs omit passwords, private evidence, reporter identity, internal notes, and raw Oracle errors.
+- The responsive Vanilla JavaScript frontend supports keyboard focus, semantic labels, live status messages, and reduced motion.
 
-### Verified Salary Range
+## Deferred Post-Core Scope
 
-This range uses only salary submissions where:
-
-- verification_status = VERIFIED
-- submission_status = APPROVED
-
-### Community Salary Range
-
-This range uses all approved salary submissions, including both verified and unverified users.
-
-Condition:
-
-- submission_status = APPROVED
-
-The term "Community Range" is used instead of "Unverified Range" because this range includes both verified and unverified approved submissions.
-
-## 7. Main Entities
-
-1. USERS 
-2. COMPANIES
-3. JOB_ROLES
-4. BENEFITS
-5. USER_COMPANY_VERIFICATIONS
-6. SALARY_SUBMISSIONS
-7. COMPANY_REVIEWS
-8. INTERVIEW_EXPERIENCES
-9. COMPANY_BENEFITS
-10. SUBMISSION_REPORTS
-11. ADMIN_ACTIONS
-
-## 8. Assumptions
-
-1. A user may submit salary information for a company.
-2. A user may be verified for one company but not for another company.
-3. Verification is company-specific.
-4. Public users cannot see the real identity of reviewers.
-5. Admin approval is required before publishing sensitive submissions.
-6. Only approved submissions are visible publicly.
-7. Suspicious submissions are flagged or rejected.
+Real OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, cloud deployment, and production session enhancements are outside core completion.

@@ -1,4 +1,5 @@
 const reviewRepository = require('../repositories/review.repository');
+const companyRepository = require('../repositories/company.repository');
 const createHttpError = require('../utils/httpError');
 
 function positiveId(value, label, optional = false) {
@@ -22,7 +23,12 @@ function text(value, label, maximum, required = true) {
 function dateValue(value, label) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) throw createHttpError(400, `${label} must use YYYY-MM-DD`);
   const date = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime()) || date > new Date()) throw createHttpError(400, `${label} must be a valid non-future date`);
+  if (
+    value.startsWith('0000')
+    || Number.isNaN(date.getTime())
+    || date.toISOString().slice(0, 10) !== value
+    || date > new Date()
+  ) throw createHttpError(400, `${label} must be a valid non-future date`);
   return date;
 }
 
@@ -56,6 +62,8 @@ async function submitReview(userId, companyIdValue, input = {}) {
 }
 
 async function getApprovedReviews(companyIdValue) {
-  return reviewRepository.findApprovedReviews(positiveId(companyIdValue, 'company ID'));
+  const companyId = positiveId(companyIdValue, 'company ID');
+  if (!await companyRepository.findCompanyById(companyId)) throw createHttpError(404, 'Company not found');
+  return reviewRepository.findApprovedReviews(companyId);
 }
 module.exports = { submitReview, getApprovedReviews };

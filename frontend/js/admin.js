@@ -170,7 +170,7 @@ async function loadReports() {
       if (['OPEN', 'REVIEWING'].includes(item.reportStatus)) {
         const note = document.createElement('textarea'); note.maxLength = 1000; note.placeholder = 'Resolution note (required to resolve or dismiss)'; note.setAttribute('aria-label', `Resolution note for report ${item.reportId}`);
         const actions = document.createElement('div'); actions.className = 'admin-item-actions';
-        const review = document.createElement('button'); review.className = 'button button-secondary button-small'; review.type = 'button'; review.textContent = 'Inspect submission'; review.addEventListener('click', async () => { await loadSubmission(item.submissionId); document.querySelector('#review-panel').scrollIntoView({ behavior: 'smooth' }); });
+        const review = document.createElement('button'); review.className = 'button button-secondary button-small'; review.type = 'button'; review.textContent = 'Inspect submission'; review.addEventListener('click', async () => { await loadSubmission(item.submissionId); const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; document.querySelector('#review-panel').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' }); });
         actions.append(review);
         if (item.reportStatus === 'OPEN') { const reviewing = document.createElement('button'); reviewing.className = 'button button-secondary button-small'; reviewing.type = 'button'; reviewing.textContent = 'Mark reviewing'; reviewing.addEventListener('click', () => updateReport(item.reportId, 'REVIEWING', note)); actions.append(reviewing); }
         const resolve = document.createElement('button'); resolve.className = 'button button-primary button-small'; resolve.type = 'button'; resolve.textContent = 'Resolve'; resolve.addEventListener('click', () => updateReport(item.reportId, 'RESOLVED', note));
@@ -338,8 +338,8 @@ async function confirmDecision() {
     await Promise.all([loadQueue(), loadSubmission(submissionId)]);
     showStatus(`Submission #${submissionId} is now ${decision.status}.`, 'success');
   } catch (error) {
+    await loadSubmission(submissionId);
     showStatus(error.message, 'error');
-    decisionButtons.forEach((button) => { button.disabled = false; });
   } finally {
     pendingDecision = null;
     confirmDecisionButton.disabled = false;

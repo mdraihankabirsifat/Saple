@@ -12,10 +12,33 @@
 
 <body>
     <header class="site-header">
-        <nav class="navbar container" aria-label="Main navigation"><a class="brand" href="index.html"><span
-                    class="brand-mark">S</span><span>Saple</span></a>
-            <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
-                    class="button button-secondary button-small" href="register.html">Create account</a></div>
+        <nav class="navbar container" aria-label="Main navigation">
+            <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark"
+                    aria-hidden="true">S</span><span>Saple</span></a>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+                aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines"
+                    aria-hidden="true"></span></button>
+            <div id="main-menu" class="nav-menu" data-nav-menu>
+                <ul class="nav-links">
+                    <li><a href="companies.html">Companies</a></li>
+                    <li><a href="index.html#salary-insights">Salaries</a></li>
+                    <li><a href="submit-review.html">Reviews</a></li>
+                    <li><a href="interview-experience.html">Interviews</a></li>
+                </ul>
+                <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+                        class="button button-secondary button-small" href="register.html">Create account</a>
+                    <details class="contribute-menu">
+                        <summary class="button button-primary button-small">+ Contribute</summary>
+                        <ul class="contribute-options">
+                            <li><a href="submit-salary.html">Submit salary</a></li>
+                            <li><a href="submit-review.html">Write a review</a></li>
+                            <li><a href="interview-experience.html">Share interview experience</a></li>
+                            <li><a href="employee-verification.html" aria-current="page"
+                                    data-verification-link>Request verification</a></li>
+                        </ul>
+                    </details>
+                </div>
+            </div>
         </nav>
     </header>
     <main class="page-main">
@@ -34,12 +57,14 @@
                             </div>
                         </div>
                         <div class="form-grid">
-                            <div class="form-group"><label for="verification-company">Company</label><select
+                            <div class="form-group"><label for="verification-company">Company <span
+                                        class="required-mark" aria-hidden="true">*</span></label><select
                                     id="verification-company" required disabled>
                                     <option value="">Loading companies…</option>
                                 </select></div>
                             <div class="form-group"><label for="verification-employment-status">Employment
-                                    status</label><select id="verification-employment-status" required>
+                                    status <span class="required-mark" aria-hidden="true">*</span></label><select
+                                    id="verification-employment-status" required disabled>
                                     <option value="">Select</option>
                                     <option value="CURRENT">Current employee</option>
                                     <option value="FORMER">Former employee</option>
@@ -53,15 +78,18 @@
                             </div>
                         </div>
                         <div id="current-evidence" class="form-group" hidden><label
-                                for="verification-company-email">Company email</label><input
+                                for="verification-company-email">Company email <span class="required-mark"
+                                    aria-hidden="true">*</span></label><input
                                 id="verification-company-email" type="email" maxlength="254">
                             <p class="field-help">No raw OTP is stored or sent in this milestone.</p>
                         </div>
                         <div id="former-evidence" class="form-grid" hidden>
-                            <div class="form-group"><label for="verification-proof-type">Proof type</label><input
+                            <div class="form-group"><label for="verification-proof-type">Proof type <span
+                                        class="required-mark" aria-hidden="true">*</span></label><input
                                     id="verification-proof-type" maxlength="30" placeholder="RELEASE_LETTER"></div>
                             <div class="form-group"><label for="verification-proof-reference">Safe proof
-                                    reference</label><input id="verification-proof-reference" maxlength="255"
+                                    reference <span class="required-mark" aria-hidden="true">*</span></label><input
+                                    id="verification-proof-reference" maxlength="255"
                                     placeholder="Local reference or token only"></div>
                         </div>
                     </section>
@@ -80,6 +108,25 @@
             </div>
         </div>
     </main>
+    <footer class="site-footer">
+        <div class="footer-main container">
+            <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo"
+                    href="index.html" aria-label="Saple home"><span class="footer-logo-mark"
+                        aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a>
+                <p>Company insights and moderated community contributions for better career decisions.</p>
+                <div class="project-tags"><span>Oracle 19c</span><span>Express</span><span>Vanilla JS</span></div>
+            </section>
+            <nav class="footer-column" aria-labelledby="footer-explore-heading">
+                <h2 id="footer-explore-heading">Explore</h2>
+                <ul><li><a href="companies.html">Companies</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul>
+            </nav>
+            <nav class="footer-column" aria-labelledby="footer-account-heading">
+                <h2 id="footer-account-heading">Account &amp; contribute</h2>
+                <ul><li><a href="submit-salary.html">Submit salary</a></li><li><a href="employee-verification.html">Request verification</a></li></ul>
+            </nav>
+        </div>
+        <div class="footer-bottom"><div class="footer-bottom-content container"><p>&copy; 2026 Saple. BUET CSE Database Project.</p><p>Private evidence, accountable moderation.</p></div></div>
+    </footer>
     <script src="js/nav.js" defer></script>
     <script type="module" src="js/verification.js"></script>
 </body>

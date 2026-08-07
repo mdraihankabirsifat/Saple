@@ -58,13 +58,6 @@ async function updateAuthenticationNavigation() {
     return;
   }
 
-  const signInLink = navigationActions.querySelector('a[href="login.html"]');
-  const registerLink = navigationActions.querySelector('a[href="register.html"]');
-
-  if (!signInLink || !registerLink) {
-    return;
-  }
-
   const auth = await import(authModuleUrl.href);
 
   if (!auth.isAuthenticated()) {
@@ -74,6 +67,7 @@ async function updateAuthenticationNavigation() {
   let user = auth.getStoredUser();
 
   const renderAuthenticatedState = (currentUser) => {
+    const contribution = navigationActions.querySelector('.contribute-menu');
     const accountName = document.createElement(currentUser?.accountRole === 'ADMIN' ? 'a' : 'span');
     const signOutButton = document.createElement('button');
     const firstName = currentUser?.fullName?.trim().split(/\s+/)[0] || 'Account';
@@ -107,8 +101,15 @@ async function updateAuthenticationNavigation() {
       }
     }
 
-    signInLink.replaceWith(accountName);
-    registerLink.replaceWith(signOutButton);
+    navigationActions.querySelector('a[href="login.html"]')?.remove();
+    navigationActions.querySelector('a[href="register.html"]')?.remove();
+    navigationActions.querySelector('.nav-account-name')?.remove();
+    navigationActions.querySelector('.nav-sign-out')?.remove();
+    navigationActions.insertBefore(accountName, contribution || null);
+    navigationActions.insertBefore(signOutButton, contribution || null);
+
+    const verificationLink = document.querySelector('[data-verification-link]');
+    if (currentUser?.userType !== 'EMPLOYEE') verificationLink?.closest('li')?.remove();
   };
 
   if (user) {
@@ -118,13 +119,7 @@ async function updateAuthenticationNavigation() {
   try {
     user = await auth.getCurrentUser();
 
-    if (!document.querySelector('.nav-account-name')) {
-      renderAuthenticatedState(user);
-    } else {
-      const accountName = document.querySelector('.nav-account-name');
-      accountName.textContent = user.fullName?.trim().split(/\s+/)[0] || 'Account';
-      accountName.title = user.email;
-    }
+    renderAuthenticatedState(user);
   } catch (error) {
     if (error.status === 401) {
       window.location.reload();

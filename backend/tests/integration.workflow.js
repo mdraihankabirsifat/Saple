@@ -85,6 +85,10 @@ function interviewPayload(overrides = {}) {
 async function main() {
   await database.initializePool();
   await workflowTestRepository.synchronizeRequiredIdentityGenerators();
+  const referenceIdentityProbe = await workflowTestRepository.probeReferenceIdentityGenerators(uniqueSuffix);
+  assert.ok(referenceIdentityProbe.companyId > 4);
+  assert.ok(referenceIdentityProbe.roleId > 5);
+  assert.ok(referenceIdentityProbe.benefitId > 6);
 
   server = await new Promise((resolve) => {
     const runningServer = app.listen(0, '127.0.0.1', () => resolve(runningServer));
@@ -109,6 +113,10 @@ async function main() {
     assert.equal(benefits.status, 200);
     const salarySummary = await request(baseUrl, '/api/companies/1/salary-summary');
     assert.equal(salarySummary.status, 200);
+    const missingReviews = await request(baseUrl, '/api/companies/999999999/reviews');
+    assert.equal(missingReviews.status, 404);
+    const missingInterviews = await request(baseUrl, '/api/companies/999999999/interviews');
+    assert.equal(missingInterviews.status, 404);
 
     const invalidEmail = await request(baseUrl, '/api/auth/register', {
       method: 'POST',
@@ -185,6 +193,11 @@ async function main() {
     assert.equal(me.body.data.user.email, normalEmail);
     assert.equal('passwordHash' in me.body.data.user, false);
 
+    await workflowTestRepository.setWorkflowUserAccountStatus(userId, 'SUSPENDED');
+    const meWhileSuspended = await request(baseUrl, '/api/auth/me', { token });
+    assert.equal(meWhileSuspended.status, 401);
+    await workflowTestRepository.setWorkflowUserAccountStatus(userId, 'ACTIVE');
+
     const normalVerification = await request(baseUrl, '/api/companies/1/verifications', {
       method: 'POST', token,
       body: {
@@ -208,6 +221,10 @@ async function main() {
     assert.equal(adminQueueWithoutToken.status, 401);
     const adminQueueAsUser = await request(baseUrl, '/api/admin/submissions/pending', { token });
     assert.equal(adminQueueAsUser.status, 403);
+    const verificationQueueAsUser = await request(baseUrl, '/api/admin/verifications/pending', { token });
+    assert.equal(verificationQueueAsUser.status, 403);
+    const reportsAsUser = await request(baseUrl, '/api/admin/reports', { token });
+    assert.equal(reportsAsUser.status, 403);
 
     const roles = await request(baseUrl, '/api/job-roles');
     assert.equal(roles.status, 200);
@@ -251,6 +268,8 @@ async function main() {
 
     const verifiedCountBeforeApproval = await workflowTestRepository.countVerifiedContributions(1);
     await workflowTestRepository.promoteUserToAdmin(userId);
+    const adminQueueWithPrePromotionToken = await request(baseUrl, '/api/admin/submissions/pending', { token });
+    assert.equal(adminQueueWithPrePromotionToken.status, 200);
     const adminLogin = await request(baseUrl, '/api/auth/login', {
       method: 'POST',
       body: { email: normalEmail, password }
@@ -276,8 +295,6 @@ async function main() {
     assert.ok(verifiedRequest.reviewedAt);
     assert.ok(verifiedRequest.expiresAt);
 
-    const verificationQueueAsUser = await request(baseUrl, '/api/admin/verifications/pending', { token });
-    assert.equal(verificationQueueAsUser.status, 403);
     const rejectedVerificationRequest = await request(baseUrl, '/api/companies/2/verifications', {
       method: 'POST', token: employeeToken,
       body: {
@@ -397,8 +414,6 @@ async function main() {
       { method: 'POST', token: adminToken, body: { reasonCategory: 'PRIVACY', description: 'Duplicate' } }
     );
     assert.equal(duplicateReport.status, 409);
-    const reportsAsUser = await request(baseUrl, '/api/admin/reports', { token });
-    assert.equal(reportsAsUser.status, 403);
     const reports = await request(baseUrl, '/api/admin/reports', { token: adminToken });
     assert.ok(reports.body.data.some((item) => item.reportId === report.body.data.reportId));
     const reviewing = await request(baseUrl, `/api/admin/reports/${report.body.data.reportId}/status`, {
