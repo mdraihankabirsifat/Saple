@@ -1,4 +1,4 @@
-# Saple
+# 🌱 Saple
 
 Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current milestone connects the Oracle model to an Express API and the existing responsive Vanilla JavaScript interface, with authenticated contributions and administrator review workflows.
 
