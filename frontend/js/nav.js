@@ -90,7 +90,7 @@ async function updateAuthenticationNavigation() {
 
   let user = auth.getStoredUser();
 
-  const renderAuthenticatedState = (currentUser) => {
+  const renderAuthenticatedState = (currentUser, verificationRefreshed = false) => {
     const contribution = navigationActions.querySelector('.contribute-menu');
     const accountName = document.createElement('a');
     const signOutButton = document.createElement('button');
@@ -133,7 +133,7 @@ async function updateAuthenticationNavigation() {
     navigationActions.insertBefore(signOutButton, contribution || null);
 
     if (currentUser?.userType !== 'EMPLOYEE') verificationLink?.remove();
-    updateContributionVisibility(currentUser);
+    updateContributionVisibility(verificationRefreshed ? currentUser : null);
   };
 
   if (user) {
@@ -143,7 +143,7 @@ async function updateAuthenticationNavigation() {
   try {
     user = await auth.getCurrentUser();
 
-    renderAuthenticatedState(user);
+    renderAuthenticatedState(user, true);
   } catch (error) {
     if (error.status === 401) {
       window.location.reload();

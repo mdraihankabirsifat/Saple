@@ -107,6 +107,17 @@ async function main() {
     assert.ok(companies.body.data.length > 0);
     const search = await request(baseUrl, '/api/companies?search=software');
     assert.equal(search.status, 200);
+    const filterOptions = await request(baseUrl, '/api/companies/filter-options');
+    assert.equal(filterOptions.status, 200);
+    assert.ok(filterOptions.body.data.industries.length > 0);
+    const locationFilter = await request(
+      baseUrl,
+      '/api/companies?location=Dhaka%2C%20Bangladesh'
+    );
+    assert.equal(locationFilter.status, 200);
+    assert.ok(locationFilter.body.data.some((item) => item.companyId === 1));
+    const invalidRoleFilter = await request(baseUrl, '/api/companies?roleId=1%20OR%201%3D1');
+    assert.equal(invalidRoleFilter.status, 400);
     const company = await request(baseUrl, '/api/companies/1');
     assert.equal(company.status, 200);
     const benefits = await request(baseUrl, '/api/companies/1/benefits');

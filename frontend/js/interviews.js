@@ -40,7 +40,8 @@ function interviewCard(item) {
 }
 
 async function load() {
-  results.replaceChildren(); status.hidden = false; status.textContent = 'Loading approved interview experiences…';
+  results.replaceChildren(); status.hidden = false; status.classList.remove('error');
+  status.textContent = 'Loading approved interview experiences…';
   const query = buildQuery([
     ['companyId', company.value], ['roleId', role.value], ['location', location.value],
     ['difficultyLevel', difficulty.value], ['interviewMode', mode.value]

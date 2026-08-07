@@ -63,6 +63,7 @@ function salaryCard(item) {
 async function load() {
   results.replaceChildren();
   status.hidden = false;
+  status.classList.remove('error');
   status.textContent = 'Loading approved salary insights…';
   const query = buildQuery([
     ['companyId', company.value], ['roleId', role.value], ['location', location.value],

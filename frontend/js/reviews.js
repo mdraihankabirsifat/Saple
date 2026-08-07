@@ -46,7 +46,8 @@ function reviewCard(item) {
 }
 
 async function load() {
-  results.replaceChildren(); status.hidden = false; status.textContent = 'Loading approved reviews…';
+  results.replaceChildren(); status.hidden = false; status.classList.remove('error');
+  status.textContent = 'Loading approved reviews…';
   const query = buildQuery([
     ['companyId', company.value], ['roleId', role.value], ['location', location.value], ['minRating', rating.value]
   ]);
