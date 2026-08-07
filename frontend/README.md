@@ -1,6 +1,6 @@
 # Saple Frontend
 
-Saple's frontend is a responsive, framework-free application built with HTML, CSS, and Vanilla JavaScript ES modules. The current UI preserves the established visual system while connecting account, contribution, public-display, reporting, and ADMIN workflows to the Express API.
+Saple's frontend is a responsive, framework-free application built with HTML, CSS, and Vanilla JavaScript ES modules. The current UI preserves the established visual system while separating public Browse pages from verified-employee Contribute actions and connecting profile, reporting, and ADMIN workflows to the Express API.
 
 ## Running Locally
 
@@ -16,14 +16,18 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 
 | File | Behavior |
 | --- | --- |
-| `index.html` | Homepage, search handoff, trust explanation, and contribution links |
-| `companies.html` | Live company grid with backend search and error/empty states |
+| `index.html` | Homepage, search handoff, and trust explanation |
+| `companies.html` | Live company grid with database-backed advanced filters and aggregate summaries |
+| `salaries.html` | Public approved salary ranges with company, role, location, range, and source filters |
+| `reviews.html` | Public approved reviews with company, role, location, and rating filters |
+| `interviews.html` | Public approved interviews with company, role, location, difficulty, and mode filters |
 | `company-details.html` | Live profile, benefits, salary ranges, approved reviews/interviews, and report dialog |
 | `login.html` | JWT session creation and safe local `returnTo` redirects |
 | `register.html` | Job-seeker or current/former-employee registration |
-| `submit-salary.html` | Authenticated pending salary contribution |
-| `submit-review.html` | Employee-only pending company review |
-| `interview-experience.html` | Authenticated pending interview experience |
+| `profile.html` | Safe account view, name editing, password change, and verified-company list |
+| `submit-salary.html` | Company-verified employee pending salary contribution |
+| `submit-review.html` | Company-verified employee pending company review |
+| `interview-experience.html` | Company-verified employee pending interview experience |
 | `employee-verification.html` | Current/former employee verification request |
 | `admin.html` | Submission moderation, verification review, and report management |
 
@@ -31,15 +35,23 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 
 `js/auth.js` stores only the JWT and safe user object in `sessionStorage`; passwords are never stored. `js/api.js` attaches `Authorization: Bearer <token>` only to requests marked authenticated and clears stale state after authenticated `401` responses.
 
-`js/nav.js` refreshes the current user through `/api/auth/me`, replaces stale stored role/profile display, renders the signed-in identity and sign-out action, and exposes the verification link only to employee accounts. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
+`js/nav.js` keeps Companies, Salaries, Reviews, and Interviews as public Browse links for every visitor. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `+ Contribute` plus page CTAs only when `verifiedCompanies` contains an active company verification. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
 
 ## Contribution Forms
 
-Salary, review, and interview pages load companies and/or job roles from the API, perform native plus JavaScript validation, and submit structured JSON. A successful write confirms that the contribution was submitted for moderation; it does not imply public approval.
+`js/contribution-access.js` hides each contribution form until `/api/auth/me` confirms at least one active company-specific verification. Signed-out and unverified users receive an employee-verification-required state with the appropriate sign-in or verification action. The company selector contains only companies the current user is verified for. Backend middleware and repository checks remain the security boundary.
+
+Salary, review, and interview pages load verified companies and job roles from the API, perform native plus JavaScript validation, and submit structured JSON. A successful write confirms that the contribution was submitted for moderation; it does not imply public approval.
 
 Review submission requires an employee profile and includes five ratings, employment status, review date, pros/cons, optional advice, optional role, and anonymity. Interview submission includes role, date, difficulty, rounds, mode, result, duration, process, optional questions, and anonymity.
 
 The employee-verification page checks the signed-in user and profile status. Current employees provide company-email metadata; former employees provide a proof type and safe reference. Its privacy notice makes clear that no document file or OTP is uploaded through this milestone.
+
+The review and interview forms share integrated numbered section headers, consistent cards, padding, field grids, status placement, and narrow-screen rules. Submit Salary retains its established fieldset layout while using the same guarded contribution behavior.
+
+## Profile and Security
+
+`profile.html` displays only the safe `/api/auth/me` object and active verified companies. Users can normalize/change their full name and change their password by supplying the current password. Email is read-only because this milestone does not implement email-change verification. System roles, account/employment states, and verification values are display-only.
 
 ## Company Detail and Public Safety
 
@@ -70,8 +82,12 @@ Pending submissions allow all three decisions. Approved reported submissions all
 | `js/auth.js` | Session storage and current-user lookup |
 | `js/nav.js` | Responsive navigation, identity, sign-out, employee link |
 | `js/companies.js` | Directory loading and search |
+| `js/browse-shared.js` | Shared public browse options, queries, metadata, and links |
+| `js/salaries.js`, `js/reviews.js`, `js/interviews.js` | Approved-data browse filters and safe card rendering |
 | `js/company-details.js` | Public company content and reporting |
 | `js/login.js`, `js/register.js` | Account flows |
+| `js/profile.js` | Safe profile and password changes |
+| `js/contribution-access.js` | Verified-company form guard and allowed-company list |
 | `js/submit-salary.js` | Salary form options, validation, and POST |
 | `js/review.js` | Review options, validation, and POST |
 | `js/interview.js` | Interview options, validation, and POST |
@@ -88,16 +104,18 @@ With Oracle and the backend running:
 
 1. Register a job seeker and an employee; confirm Current/Former is required only for the employee.
 2. Sign in, refresh, and confirm `/api/auth/me` restores the session and navigation.
-3. Submit a salary and confirm it remains absent from public aggregates until ADMIN approval.
-4. As the employee, request verification and confirm duplicate active requests are rejected.
-5. As ADMIN, inspect private evidence and verify or reject the request.
-6. Submit a review and interview; confirm both remain absent from company detail until approved.
-7. Approve them and confirm anonymous cards show no contributor identity.
-8. Report an approved card; confirm duplicate reporting is rejected.
-9. As ADMIN, mark the report reviewing, inspect the target, flag/reject when appropriate, then resolve the report.
-10. Confirm flagged/rejected content disappears from company detail and review aggregates.
-11. Recheck health, directory/search, company detail, benefits, and salary GET behavior.
-12. Check keyboard use and a narrow viewport for overflow and readable dialog/form layouts.
+3. As a public visitor, browse and filter Companies, Salaries, Reviews, and Interviews without signing in.
+4. As a normal account, confirm all three contribution pages show the verification-required state and direct POSTs return `403`.
+5. As the employee, request verification and confirm duplicate active requests are rejected.
+6. As ADMIN, inspect private evidence and verify or reject the request.
+7. Refresh the employee session; confirm `+ Contribute` appears and each form lists only verified companies.
+8. Submit salary, review, and interview records; confirm all remain absent from public pages until approved.
+9. Approve them and confirm anonymous cards show no contributor identity.
+10. Open Profile, change the name, confirm email/system fields are read-only, and test current-password validation.
+11. Report an approved card; confirm duplicate reporting is rejected.
+12. As ADMIN, mark the report reviewing, inspect the target, flag/reject when appropriate, then resolve the report.
+13. Confirm flagged/rejected content disappears from public pages and review aggregates.
+14. Check keyboard use and desktop, tablet, and mobile widths for navigation/form/filter overflow.
 
 ## Frontend Structure
 
@@ -107,9 +125,13 @@ frontend/
 |-- js/                          # API, auth, page, and workflow modules
 |-- index.html
 |-- companies.html
+|-- salaries.html
+|-- reviews.html
+|-- interviews.html
 |-- company-details.html
 |-- login.html
 |-- register.html
+|-- profile.html
 |-- submit-salary.html
 |-- submit-review.html
 |-- interview-experience.html

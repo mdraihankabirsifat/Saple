@@ -8,7 +8,10 @@ const originalMethods = {
   findUserByEmail: userRepository.findUserByEmail,
   findSafeUserById: userRepository.findSafeUserById,
   findAuthorizationById: userRepository.findAuthorizationById,
-  createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee
+  createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee,
+  updateFullName: userRepository.updateFullName,
+  findPasswordHashById: userRepository.findPasswordHashById,
+  updatePasswordHash: userRepository.updatePasswordHash
 };
 
 test.afterEach(() => {
@@ -123,4 +126,51 @@ test('auth/me rejects suspended accounts and never returns a password hash', asy
   });
   const user = await authService.getCurrentUser(8);
   assert.equal('passwordHash' in user, false);
+});
+
+test('profile update permits only a normalized full name', async () => {
+  let updatedName;
+  userRepository.updateFullName = async (userId, fullName) => {
+    assert.equal(userId, 8);
+    updatedName = fullName;
+    return true;
+  };
+  userRepository.findSafeUserById = async () => ({
+    userId: 8, fullName: updatedName, email: 'safe@example.test', userType: 'NORMAL',
+    accountRole: 'USER', accountStatus: 'ACTIVE', employmentStatus: null
+  });
+
+  const user = await authService.updateProfile(8, { fullName: '  Safe   Name  ' });
+  assert.equal(updatedName, 'Safe Name');
+  assert.equal(user.fullName, 'Safe Name');
+  await assert.rejects(
+    authService.updateProfile(8, { fullName: 'Safe Name', accountRole: 'ADMIN' }),
+    (error) => error.statusCode === 400 && /cannot be changed/.test(error.message)
+  );
+});
+
+test('password change requires the current password and stores only a new hash', async () => {
+  const currentHash = await bcrypt.hash('current1', 4);
+  let storedHash;
+  userRepository.findPasswordHashById = async () => ({
+    passwordHash: currentHash,
+    accountStatus: 'ACTIVE'
+  });
+  userRepository.updatePasswordHash = async (userId, passwordHash) => {
+    assert.equal(userId, 8);
+    storedHash = passwordHash;
+    return true;
+  };
+
+  await assert.rejects(
+    authService.changePassword(8, { currentPassword: 'wrong1', newPassword: 'changed1' }),
+    (error) => error.statusCode === 400 && /incorrect/.test(error.message)
+  );
+  const result = await authService.changePassword(8, {
+    currentPassword: 'current1',
+    newPassword: 'changed1'
+  });
+  assert.equal(result.passwordChanged, true);
+  assert.notEqual(storedHash, 'changed1');
+  assert.equal(await bcrypt.compare('changed1', storedHash), true);
 });

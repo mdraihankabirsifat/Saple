@@ -1,6 +1,6 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Oracle 19c. It provides public company information, JWT authentication, transactional community contributions, company-specific employee verification, reporting, and ADMIN workflows with immutable submission-moderation history.
+The Saple backend connects Express 5 to Oracle 19c. It provides public approved company/salary/review/interview browsing, JWT authentication and safe profile changes, company-specific verified-employee contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
 
 ## Prerequisites and Setup
 
@@ -44,20 +44,26 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/` | Public | API welcome |
 | GET | `/api/health` | Public | Express health |
 | GET | `/api/health/database` | Public | Oracle health |
-| GET | `/api/companies` | Public | List/search companies (`?search=term`) |
+| GET | `/api/companies` | Public | Filter companies and approved-data aggregates |
+| GET | `/api/companies/filter-options` | Public | Distinct industry, location, and size choices |
 | GET | `/api/companies/:companyId` | Public | Company detail |
 | GET | `/api/companies/:companyId/benefits` | Public | Company benefits |
 | GET | `/api/companies/:companyId/salary-summary` | Public | Verified/community salary summaries |
 | GET | `/api/companies/:companyId/reviews` | Public | Approved reviews and rating aggregates |
-| POST | `/api/companies/:companyId/reviews` | Employee token | Create a pending review |
 | GET | `/api/companies/:companyId/interviews` | Public | Approved interview experiences |
-| POST | `/api/companies/:companyId/interviews` | Bearer token | Create a pending interview experience |
+| GET | `/api/salaries` | Public | Approved salary aggregates across companies |
+| GET | `/api/reviews` | Public | Approved reviews across companies |
+| GET | `/api/interviews` | Public | Approved interview experiences across companies |
+| POST | `/api/companies/:companyId/interviews` | Verified employee for company | Create a pending interview experience |
 | POST | `/api/companies/:companyId/verifications` | Employee token | Request company-specific verification |
 | GET | `/api/job-roles` | Public | Controlled job-role values |
 | POST | `/api/auth/register` | Public | Create a `NORMAL` or `EMPLOYEE` account |
 | POST | `/api/auth/login` | Public | Return JWT and safe user object |
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
-| POST | `/api/companies/:companyId/salaries` | Bearer token | Create a pending salary contribution |
+| PATCH | `/api/auth/me` | Bearer token | Change full name only |
+| PATCH | `/api/auth/me/password` | Bearer token | Change password with current password |
+| POST | `/api/companies/:companyId/salaries` | Verified employee for company | Create a pending salary contribution |
+| POST | `/api/companies/:companyId/reviews` | Verified employee for company | Create a pending review |
 | POST | `/api/submissions/:submissionId/reports` | Bearer token | Create one report per user/submission |
 | GET | `/api/admin/submissions/pending` | ADMIN token | Pending queue, oldest first |
 | GET | `/api/admin/submissions/:submissionId` | ADMIN token | Parent and subtype detail |
@@ -80,12 +86,18 @@ Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, al
 Authorization: Bearer <token>
 ```
 
+`GET /api/auth/me` also returns active, non-expired company verifications as a safe `verifiedCompanies` list. Profile updates accept only `fullName`; email, account type, role, account status, employment status, and verification state cannot be changed there. Password changes require the current password, enforce the existing policy, and store a new BCrypt hash. Email remains read-only until a verified email-change workflow exists.
+
+## Public Browse Queries
+
+The top-level `GET /api/salaries`, `/api/reviews`, and `/api/interviews` endpoints require no token and select approved rows only. They support bound company/role/location filters; salaries add range and `COMMUNITY|VERIFIED` source filters, reviews add minimum rating, and interviews add difficulty/mode. Public company filtering uses Oracle CTEs, `LEFT JOIN`, `EXISTS`, `GROUP BY`, aggregates, and bound predicates for name, industry, role, location, salary source/range, size, rating, and available-data flags.
+
 ## Transactional Contributions
 
 Salary, review, and interview repositories each use one Oracle connection:
 
 ```text
-validate active actor + referenced company/role
+validate active company-specific employment verification + references
                     |
                     v
 insert SUBMISSIONS parent as PENDING
@@ -109,9 +121,9 @@ Reviews require an active employee account whose profile status matches the supp
 
 ### Interview input
 
-Interview experiences accept active authenticated accounts. They require a role, nonfuture date, difficulty, `1`–`20` rounds, mode, result, duration `0`–`365` days, process description, optional question summary, and boolean anonymity.
+Interview experiences require a company-verified employee. They include a role, nonfuture date, difficulty, `1`–`20` rounds, mode, result, duration `0`–`365` days, process description, optional question summary, and boolean anonymity.
 
-All contribution types inherit `VERIFIED` only from a matching, active, non-expired company verification; otherwise they are `UNVERIFIED`. They never self-approve.
+All three contribution routes and repositories require a matching active, non-expired company verification. Missing verification returns `403`; accepted contributions are marked `VERIFIED` and remain `PENDING` until moderation. A frontend flag is never an authorization source.
 
 ## Employee Verification
 
@@ -159,6 +171,10 @@ After sample inserts and `COMMIT`, `database/03_insert_sample_data.sql` runs `ST
 
 This advances each identity beyond explicit sample IDs without changing constraints. Live rollback probes confirmed a generated `VERIFICATION_ID` greater than `4` and `REPORT_ID` greater than `2`.
 
+## Expanded Reference Data
+
+Run `database/05_expand_reference_data.sql` after the base sample script. Its case-insensitive `MERGE` statements add 50 company references (35 Bangladesh-focused and 15 international) plus 55 cross-industry job roles without modifying the schema or deleting existing data. Company sources are recorded in `database/company_seed_sources.md`. These are employer-directory records only; Saple never imports third-party salary, review, or interview claims as submissions.
+
 ## Architecture
 
 Application flow is `routes -> controllers -> services -> repositories`. Services own validation and application rules. All Oracle SQL and transaction boundaries stay in repositories.
@@ -184,7 +200,7 @@ npm test
 npm run test:integration
 ```
 
-The unit suite covers authentication, current-account middleware checks, input validation, transition rules, private/public mapping, exact calendar dates, and forced rollback of salary, review, interview, verification, report, and moderation writes.
+The 47-test unit suite covers authentication and safe profile changes, public browse access, all three verified-employee gates, approved-only/bound public SQL, input validation, transition rules, private/public mapping, exact calendar dates, and forced rollback of salary, review, interview, verification, report, and moderation writes.
 
 The live test requires Oracle and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, registration/login, verification request and approval, salary/review/interview parent-child writes, approved-only public display, anonymous-field omission, report duplication and resolution, approved-content flagging, moderation history, salary aggregates, authorization, GET regressions, and rollback under forced constraint/write failures.
 

@@ -61,5 +61,10 @@ form.addEventListener('submit', async (event) => {
 });
 (async () => {
   const access = await requireContributionAccess('submit-review.html');
-  if (access) await loadOptions(access.verifiedCompanies);
+  if (access) {
+    const employmentStatus = document.querySelector('#review-employment-status');
+    employmentStatus.value = access.user.employmentStatus || '';
+    employmentStatus.disabled = true;
+    await loadOptions(access.verifiedCompanies);
+  }
 })();

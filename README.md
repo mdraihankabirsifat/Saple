@@ -1,21 +1,24 @@
 # 🌱 Saple
 
-Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current milestone connects the Oracle model to an Express API and the existing responsive Vanilla JavaScript interface, with authenticated contributions and administrator review workflows.
+Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current milestone provides public approved-data browsing, company-specific verified-employee contributions, account/profile management, and administrator review workflows through Oracle, Express, and the existing responsive Vanilla JavaScript interface.
 
 ## Current Implementation
 
 | Layer | Available now |
 | --- | --- |
-| Oracle database | Tables, constraints, indexes, fictional sample data, privacy-safe public views, salary analytical views, and synchronized identity generators |
-| Express backend | Public company data, account authentication, salary/review/interview writes, employee verification, reporting, ADMIN authorization, and transactional moderation |
-| Frontend | Existing responsive design with live public data, account flows, contribution forms, verification requests, reporting, and an expanded ADMIN dashboard |
+| Oracle database | Tables, constraints, indexes, fictional workflow samples, 50 sourced employer references, 55 additional job roles, analytical queries, and synchronized identity generators |
+| Express backend | Public company/salary/review/interview queries, advanced bound filters, account/profile APIs, verified-employee contribution policy, reporting, and transactional ADMIN workflows |
+| Frontend | Public Browse pages, guarded Contribute forms, profile/security controls, verification requests, reporting, and the existing responsive ADMIN dashboard |
 | Deferred | ML features and deployment automation |
 
 ## Core Features
 
-- Searchable company directory, company profiles, benefits, and verified/community salary summaries
+- Public company, salary, review, and interview directories with approved-only Oracle queries
+- Company filtering by name, industry, approved-data job role, salary range/source, location, size, rating, and data availability
+- 50 real employer references (35 Bangladesh-focused and 15 international) with documented official sources, plus 55 additional cross-industry roles
 - Job-seeker and current/former-employee registration with BCrypt password hashing and signed JWT sessions
-- Transactional salary, company-review, and interview-experience submissions
+- Company-specific verified-employee-only salary, review, and interview submissions, enforced by middleware and repositories
+- Safe profile name editing, read-only email, and current-password-protected password changes
 - Company-specific employee verification requests using company email metadata or a safe document reference
 - ADMIN review of pending verification requests
 - Approved-only public reviews and interview experiences with server-enforced anonymous display
@@ -28,7 +31,7 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 
 Every contribution retains its owner internally for authorization and moderation. Public review and interview responses expose an author name only when `is_anonymous = 0`; they never expose user IDs, email addresses, verification evidence, or moderation internals. Only `APPROVED` submissions are public.
 
-Employee verification is company-specific. A later contribution is marked `VERIFIED` only when its employee has an active, non-expired `VERIFIED` request for that company. Evidence metadata is available only to ADMIN endpoints. The application does not store raw OTP values, uploaded document contents, national identifiers, or raw confidential files.
+Employee verification is company-specific. Salary, review, and interview POST requests require an active, non-expired `VERIFIED` record for the target company; otherwise the API returns `403`. Accepted contributions are stored as `VERIFIED`. Evidence metadata is available only to ADMIN endpoints. The application does not store raw OTP values, uploaded document contents, national identifiers, or raw confidential files.
 
 Reported approved content can be flagged or rejected using the same locked, audited moderation transaction. This immediately removes it from approved-only public reads. Report resolution remains a separate recorded ADMIN action.
 
@@ -56,10 +59,13 @@ Run these files as the intended schema owner:
 @database/01_create_user.sql
 @database/02_create_tables.sql
 @database/03_insert_sample_data.sql
+@database/05_expand_reference_data.sql
 @database/04_test_queries.sql
 ```
 
 `03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to every identity populated with explicit sample IDs: `USERS`, `EMPLOYEES`, `COMPANIES`, `JOB_ROLES`, `BENEFITS`, `EMPLOYMENT_VERIFICATIONS`, `SUBMISSIONS`, `REPORTS`, and `MODERATION_ACTIONS`.
+
+`05_expand_reference_data.sql` is additive and repeatable. It uses case-insensitive `MERGE` operations to add 50 real employer reference rows and 55 roles without deleting developer data or duplicating names. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview data is seeded.
 
 `01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
 
@@ -104,18 +110,24 @@ Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
 | GET | `/api/health`, `/api/health/database` | Public | Process and Oracle health |
-| GET | `/api/companies` | Public | List/search companies with `?search=` |
+| GET | `/api/companies` | Public | Advanced company search and aggregate filters |
+| GET | `/api/companies/filter-options` | Public | Distinct industry/location/size options |
 | GET | `/api/companies/:companyId` | Public | Company profile |
 | GET | `/api/companies/:companyId/benefits` | Public | Company benefits |
 | GET | `/api/companies/:companyId/salary-summary` | Public | Verified/community salary summaries |
 | GET | `/api/companies/:companyId/reviews` | Public | Approved reviews and rating summary |
 | GET | `/api/companies/:companyId/interviews` | Public | Approved interview experiences |
+| GET | `/api/salaries` | Public | Approved verified/community salary aggregates |
+| GET | `/api/reviews` | Public | Approved reviews across companies |
+| GET | `/api/interviews` | Public | Approved interviews across companies |
 | POST | `/api/auth/register`, `/api/auth/login` | Public | Create/authenticate an account |
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
+| PATCH | `/api/auth/me` | Bearer token | Change full name only |
+| PATCH | `/api/auth/me/password` | Bearer token | Change password after current-password check |
 | GET | `/api/job-roles` | Public | Controlled job-role choices |
-| POST | `/api/companies/:companyId/salaries` | Bearer token | Pending salary contribution |
-| POST | `/api/companies/:companyId/reviews` | Employee token | Pending company review |
-| POST | `/api/companies/:companyId/interviews` | Bearer token | Pending interview experience |
+| POST | `/api/companies/:companyId/salaries` | Verified employee for company | Pending salary contribution |
+| POST | `/api/companies/:companyId/reviews` | Verified employee for company | Pending company review |
+| POST | `/api/companies/:companyId/interviews` | Verified employee for company | Pending interview experience |
 | POST | `/api/companies/:companyId/verifications` | Employee token | Pending verification request |
 | POST | `/api/submissions/:submissionId/reports` | Bearer token | Report a submission |
 | GET/PATCH | `/api/admin/submissions/*` | ADMIN token | Queue, detail, decisions, and history |
@@ -130,11 +142,13 @@ See [backend/README.md](backend/README.md) for contracts and transaction rules.
 | --- | --- |
 | `index.html` | Homepage, search handoff, and trust model |
 | `companies.html` | Live company directory and search |
+| `salaries.html` | Public approved salary aggregates and filters |
+| `reviews.html` | Public approved workplace reviews and filters |
+| `interviews.html` | Public approved interview experiences and filters |
 | `company-details.html?id=<id>` | Profile, benefits, salary data, approved reviews/interviews, and reporting |
 | `login.html`, `register.html` | Authentication and account creation |
-| `submit-salary.html` | Authenticated salary contribution |
-| `submit-review.html` | Employee company-review contribution |
-| `interview-experience.html` | Authenticated interview contribution |
+| `profile.html` | Safe profile view, name edit, verified companies, and password change |
+| `submit-salary.html`, `submit-review.html`, `interview-experience.html` | Verified-employee-only contribution forms |
 | `employee-verification.html` | Employee verification request |
 | `admin.html` | Submission moderation, verification review, and report management |
 
@@ -149,7 +163,7 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 34 passing tests. The live Oracle workflow covers authentication, all three contribution types, all identity generators, verification, ADMIN authorization, report handling, anonymous display, public publication rules, missing-resource contracts, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
+The unit suite currently contains 47 tests covering authentication/profile behavior, public browse routes, all three verified contribution gates, input validation, SQL filter binding, ADMIN rules, privacy, and transaction rollbacks. The live Oracle workflow covers authentication, all three contribution types, identity generators, verification, ADMIN authorization, reports, anonymous display, public publication, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
 
 ## Security Notes
 

@@ -6,7 +6,7 @@
 
 MERGE INTO companies target
 USING (
-    SELECT 'Grameenphone' company_name, 'Telecommunications' industry, 'Dhaka' headquarters_city, 'Bangladesh' country, 'https://www.grameenphone.com' website, '5001-10000' company_size, 'A Bangladesh telecommunications and digital services provider.' description FROM dual
+    SELECT 'Grameenphone' company_name, 'Telecommunications' industry, 'Dhaka' headquarters_city, 'Bangladesh' country, 'https://www.grameenphone.com' website, CAST(NULL AS VARCHAR2(30)) company_size, 'A Bangladesh telecommunications and digital services provider.' description FROM dual
     UNION ALL SELECT 'Robi Axiata', 'Telecommunications', 'Dhaka', 'Bangladesh', 'https://www.robi.com.bd', NULL, 'A mobile network and digital services provider in Bangladesh.' FROM dual
     UNION ALL SELECT 'Banglalink', 'Telecommunications', 'Dhaka', 'Bangladesh', 'https://www.banglalink.net', NULL, 'A digital communications service provider in Bangladesh.' FROM dual
     UNION ALL SELECT 'BRAC Bank', 'Banking', 'Dhaka', 'Bangladesh', 'https://www.bracbank.com', NULL, 'A private commercial bank with a focus that includes small and medium enterprises.' FROM dual
@@ -20,14 +20,14 @@ USING (
     UNION ALL SELECT 'Renata', 'Pharmaceuticals', 'Dhaka', 'Bangladesh', 'https://www.renata-limited.com', NULL, 'A pharmaceutical and animal-health products manufacturer.' FROM dual
     UNION ALL SELECT 'Incepta Pharmaceuticals', 'Pharmaceuticals', 'Dhaka', 'Bangladesh', 'https://www.inceptapharma.com', NULL, 'A Bangladesh manufacturer of pharmaceutical products.' FROM dual
     UNION ALL SELECT 'Beximco Pharmaceuticals', 'Pharmaceuticals', 'Dhaka', 'Bangladesh', 'https://www.beximcopharma.com', NULL, 'A pharmaceutical manufacturer serving domestic and international markets.' FROM dual
-    UNION ALL SELECT 'ACI', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.aci-bd.com', '10000+', 'A Bangladesh group active in pharmaceuticals, consumer brands, agribusiness, and retail.' FROM dual
-    UNION ALL SELECT 'PRAN-RFL Group', 'Consumer Goods', 'Dhaka', 'Bangladesh', 'https://www.pranrflgroup.com', '10000+', 'A Bangladesh group producing food, beverages, plastics, and household products.' FROM dual
+    UNION ALL SELECT 'ACI', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.aci-bd.com', NULL, 'A Bangladesh group active in pharmaceuticals, consumer brands, agribusiness, and retail.' FROM dual
+    UNION ALL SELECT 'PRAN-RFL Group', 'Consumer Goods', 'Dhaka', 'Bangladesh', 'https://www.pranrflgroup.com', NULL, 'A Bangladesh group producing food, beverages, plastics, and household products.' FROM dual
     UNION ALL SELECT 'Walton Hi-Tech Industries', 'Electronics Manufacturing', 'Gazipur', 'Bangladesh', 'https://waltonbd.com', '10000+', 'A Bangladesh manufacturer of electronics, electrical appliances, and technology products.' FROM dual
-    UNION ALL SELECT 'Bashundhara Group', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.bashundharagroup.com', '10000+', 'A Bangladesh group with businesses spanning manufacturing, property, media, and services.' FROM dual
-    UNION ALL SELECT 'Akij Group', 'Diversified', 'Dhaka', 'Bangladesh', 'https://akij.net', '10000+', 'A Bangladesh industrial group with operations across consumer and manufacturing sectors.' FROM dual
+    UNION ALL SELECT 'Bashundhara Group', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.bashundharagroup.com', NULL, 'A Bangladesh group with businesses spanning manufacturing, property, media, and services.' FROM dual
+    UNION ALL SELECT 'Akij Group', 'Diversified', 'Dhaka', 'Bangladesh', 'https://akij.net', NULL, 'A Bangladesh industrial group with operations across consumer and manufacturing sectors.' FROM dual
     UNION ALL SELECT 'Meghna Group of Industries', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.mgi.org', '10000+', 'A Bangladesh conglomerate active in consumer goods, materials, logistics, and industrial manufacturing.' FROM dual
-    UNION ALL SELECT 'Beximco Group', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.beximco.com', '10000+', 'A Bangladesh business group with operations in manufacturing and services.' FROM dual
-    UNION ALL SELECT 'DBL Group', 'Apparel and Textiles', 'Dhaka', 'Bangladesh', 'https://dbl-group.com', '10000+', 'A diversified Bangladesh group with a foundation in apparel and textiles.' FROM dual
+    UNION ALL SELECT 'Beximco Group', 'Diversified', 'Dhaka', 'Bangladesh', 'https://www.beximco.com', NULL, 'A Bangladesh business group with operations in manufacturing and services.' FROM dual
+    UNION ALL SELECT 'DBL Group', 'Apparel and Textiles', 'Dhaka', 'Bangladesh', 'https://dbl-group.com', NULL, 'A diversified Bangladesh group with a foundation in apparel and textiles.' FROM dual
     UNION ALL SELECT 'Viyellatex Group', 'Apparel and Textiles', 'Dhaka', 'Bangladesh', 'https://www.viyellatexgroup.com', '10000+', 'An integrated apparel and textile group based in Bangladesh.' FROM dual
     UNION ALL SELECT 'Brain Station 23', 'Software and IT Services', 'Dhaka', 'Bangladesh', 'https://brainstation-23.com', NULL, 'A Bangladesh software development and digital transformation company.' FROM dual
     UNION ALL SELECT 'BJIT', 'Software and IT Services', 'Dhaka', 'Bangladesh', 'https://bjitgroup.com', '501-1000', 'A software development and IT services company with Bangladesh operations.' FROM dual
@@ -39,23 +39,23 @@ USING (
     UNION ALL SELECT 'ShopUp', 'E-commerce', 'Dhaka', 'Bangladesh', 'https://shopup.org', NULL, 'A Bangladesh B2B commerce platform connecting manufacturers and neighborhood retailers.' FROM dual
     UNION ALL SELECT 'Daraz Bangladesh', 'E-commerce', 'Dhaka', 'Bangladesh', 'https://www.daraz.com.bd', NULL, 'The Bangladesh operation of a South Asian online marketplace.' FROM dual
     UNION ALL SELECT 'foodpanda Bangladesh', 'Consumer Technology', 'Dhaka', 'Bangladesh', 'https://www.foodpanda.com.bd', NULL, 'The Bangladesh operation of an online food and commerce delivery platform.' FROM dual
-    UNION ALL SELECT 'BRAC', 'Nonprofit and Development', 'Dhaka', 'Bangladesh', 'https://www.brac.net', '10000+', 'A Bangladesh-founded international development organization.' FROM dual
+    UNION ALL SELECT 'BRAC', 'Nonprofit and Development', 'Dhaka', 'Bangladesh', 'https://www.brac.net', NULL, 'A Bangladesh-founded international development organization.' FROM dual
     UNION ALL SELECT 'Summit Group', 'Power and Infrastructure', 'Dhaka', 'Bangladesh', 'https://summitpowerinternational.com', NULL, 'A Bangladesh-origin infrastructure group focused on power generation and related services.' FROM dual
-    UNION ALL SELECT 'Google', 'Technology', 'Mountain View', 'United States', 'https://about.google', '10000+', 'A global technology company building internet, cloud, advertising, and computing products.' FROM dual
-    UNION ALL SELECT 'Microsoft', 'Technology', 'Redmond', 'United States', 'https://www.microsoft.com', '10000+', 'A global software, cloud, productivity, and computing company.' FROM dual
-    UNION ALL SELECT 'Amazon', 'Technology and Retail', 'Seattle', 'United States', 'https://www.aboutamazon.com', '10000+', 'A global company operating e-commerce, cloud computing, logistics, and digital services.' FROM dual
-    UNION ALL SELECT 'IBM', 'Technology and Consulting', 'Armonk', 'United States', 'https://www.ibm.com', '10000+', 'A global technology and consulting company.' FROM dual
-    UNION ALL SELECT 'Oracle', 'Technology', 'Austin', 'United States', 'https://www.oracle.com', '10000+', 'A global database, enterprise software, and cloud technology company.' FROM dual
-    UNION ALL SELECT 'Samsung Electronics', 'Electronics Manufacturing', 'Suwon', 'South Korea', 'https://www.samsung.com', '10000+', 'A global electronics and technology manufacturer.' FROM dual
-    UNION ALL SELECT 'Unilever', 'Consumer Goods', 'London', 'United Kingdom', 'https://www.unilever.com', '10000+', 'A global consumer goods company.' FROM dual
-    UNION ALL SELECT 'Nestle', 'Food and Beverage', 'Vevey', 'Switzerland', 'https://www.nestle.com', '10000+', 'A global food and beverage company.' FROM dual
-    UNION ALL SELECT 'Siemens', 'Industrial Technology', 'Munich', 'Germany', 'https://www.siemens.com', '10000+', 'A global industrial technology and infrastructure company.' FROM dual
-    UNION ALL SELECT 'Deloitte', 'Professional Services', 'London', 'United Kingdom', 'https://www.deloitte.com', '10000+', 'A global professional services organization.' FROM dual
-    UNION ALL SELECT 'PwC', 'Professional Services', 'London', 'United Kingdom', 'https://www.pwc.com', '10000+', 'A global assurance, tax, and consulting network.' FROM dual
-    UNION ALL SELECT 'Maersk', 'Logistics and Shipping', 'Copenhagen', 'Denmark', 'https://www.maersk.com', '10000+', 'A global logistics and shipping company.' FROM dual
-    UNION ALL SELECT 'Toyota', 'Automotive Manufacturing', 'Toyota City', 'Japan', 'https://global.toyota', '10000+', 'A global automotive and mobility manufacturer.' FROM dual
-    UNION ALL SELECT 'Pfizer', 'Pharmaceuticals', 'New York', 'United States', 'https://www.pfizer.com', '10000+', 'A global biopharmaceutical company.' FROM dual
-    UNION ALL SELECT 'HSBC', 'Banking', 'London', 'United Kingdom', 'https://www.hsbc.com', '10000+', 'A global banking and financial services organization.' FROM dual
+    UNION ALL SELECT 'Google', 'Technology', 'Mountain View', 'United States', 'https://about.google', NULL, 'A global technology company building internet, cloud, advertising, and computing products.' FROM dual
+    UNION ALL SELECT 'Microsoft', 'Technology', 'Redmond', 'United States', 'https://www.microsoft.com', NULL, 'A global software, cloud, productivity, and computing company.' FROM dual
+    UNION ALL SELECT 'Amazon', 'Technology and Retail', 'Seattle', 'United States', 'https://www.aboutamazon.com', NULL, 'A global company operating e-commerce, cloud computing, logistics, and digital services.' FROM dual
+    UNION ALL SELECT 'IBM', 'Technology and Consulting', 'Armonk', 'United States', 'https://www.ibm.com', NULL, 'A global technology and consulting company.' FROM dual
+    UNION ALL SELECT 'Oracle', 'Technology', 'Austin', 'United States', 'https://www.oracle.com', NULL, 'A global database, enterprise software, and cloud technology company.' FROM dual
+    UNION ALL SELECT 'Samsung Electronics', 'Electronics Manufacturing', 'Suwon', 'South Korea', 'https://www.samsung.com', NULL, 'A global electronics and technology manufacturer.' FROM dual
+    UNION ALL SELECT 'Unilever', 'Consumer Goods', 'London', 'United Kingdom', 'https://www.unilever.com', NULL, 'A global consumer goods company.' FROM dual
+    UNION ALL SELECT 'Nestle', 'Food and Beverage', 'Vevey', 'Switzerland', 'https://www.nestle.com', NULL, 'A global food and beverage company.' FROM dual
+    UNION ALL SELECT 'Siemens', 'Industrial Technology', 'Munich', 'Germany', 'https://www.siemens.com', NULL, 'A global industrial technology and infrastructure company.' FROM dual
+    UNION ALL SELECT 'Deloitte', 'Professional Services', 'London', 'United Kingdom', 'https://www.deloitte.com', NULL, 'A global professional services organization.' FROM dual
+    UNION ALL SELECT 'PwC', 'Professional Services', 'London', 'United Kingdom', 'https://www.pwc.com', NULL, 'A global assurance, tax, and consulting network.' FROM dual
+    UNION ALL SELECT 'Maersk', 'Logistics and Shipping', 'Copenhagen', 'Denmark', 'https://www.maersk.com', NULL, 'A global logistics and shipping company.' FROM dual
+    UNION ALL SELECT 'Toyota', 'Automotive Manufacturing', 'Toyota City', 'Japan', 'https://global.toyota', NULL, 'A global automotive and mobility manufacturer.' FROM dual
+    UNION ALL SELECT 'Pfizer', 'Pharmaceuticals', 'New York', 'United States', 'https://www.pfizer.com', NULL, 'A global biopharmaceutical company.' FROM dual
+    UNION ALL SELECT 'HSBC', 'Banking', 'London', 'United Kingdom', 'https://www.hsbc.com', NULL, 'A global banking and financial services organization.' FROM dual
 ) source
 ON (UPPER(target.company_name) = UPPER(source.company_name))
 WHEN NOT MATCHED THEN

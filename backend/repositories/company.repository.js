@@ -35,6 +35,7 @@ async function findAllCompanies(filters) {
     conditions.push(`(
       UPPER(c.headquarters_city) LIKE :locationPattern
       OR UPPER(c.country) LIKE :locationPattern
+      OR UPPER(c.headquarters_city || ', ' || c.country) LIKE :locationPattern
     )`);
     binds.locationPattern = `%${filters.location.toUpperCase()}%`;
   }

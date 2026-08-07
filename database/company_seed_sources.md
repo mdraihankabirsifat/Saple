@@ -20,18 +20,18 @@ The additive seed in `05_expand_reference_data.sql` contains public employer ref
 | Beximco Pharmaceuticals | https://www.beximcopharma.com/about-us | identity, pharmaceuticals, location |
 | ACI | https://www.aci-bd.com/about-us/company-profile.html | identity, business areas, location |
 | PRAN-RFL Group | https://www.pranrflgroup.com/about-us | identity, business areas, location |
-| Walton Hi-Tech Industries | https://waltonbd.com/about | identity, manufacturing focus, headquarters |
+| Walton Hi-Tech Industries | https://waltonbd.com/about | identity, manufacturing focus, headquarters, workforce size bucket |
 | Bashundhara Group | https://www.bashundharagroup.com/page/corporate-profile | identity, business areas, corporate office |
 | Akij Group | https://akij.net/companyprofile/ | identity, business areas, corporate office |
-| Meghna Group of Industries | https://www.mgi.org/about | identity, business areas, corporate office |
+| Meghna Group of Industries | https://www.mgi.org/about | identity, business areas, corporate office, workforce size bucket |
 | Beximco Group | https://www.beximco.com/about | identity, business areas, location |
 | DBL Group | https://dbl-group.com/about/about/ | identity, business areas, corporate office |
-| Viyellatex Group | https://www.viyellatexgroup.com/about/ | identity, apparel focus, Bangladesh presence |
+| Viyellatex Group | https://www.viyellatexgroup.com/about/ | identity, apparel focus, Bangladesh presence, workforce size bucket |
 | Brain Station 23 | https://brainstation-23.com/about | identity, software focus, Dhaka office |
-| BJIT | https://bjitgroup.com/about-us | identity, software focus, Bangladesh operation |
+| BJIT | https://bjitgroup.com/about-us | identity, software focus, Bangladesh operation, workforce size bucket |
 | Enosis Solutions | https://www.enosisbd.com/about-us | identity, software focus, Bangladesh operation |
 | Therap (Bangladesh) | https://therapbd.com/about-us | identity, software focus, Bangladesh operation |
-| SSL Wireless | https://sslwireless.com/about-us | identity, technology focus, Bangladesh presence |
+| SSL Wireless | https://sslwireless.com/about-us | identity, technology focus, Bangladesh presence, workforce size bucket |
 | Pathao | https://pathao.com/about-us/ | identity, services, Bangladesh presence |
 | Chaldal | https://chaldal.com | identity, online grocery services, Bangladesh presence |
 | ShopUp | https://shopup.org/about | identity, B2B commerce focus, Dhaka office |

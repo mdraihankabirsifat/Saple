@@ -113,6 +113,12 @@ async function main() {
     assert.equal(benefits.status, 200);
     const salarySummary = await request(baseUrl, '/api/companies/1/salary-summary');
     assert.equal(salarySummary.status, 200);
+    const publicSalaries = await request(baseUrl, '/api/salaries');
+    assert.equal(publicSalaries.status, 200);
+    const allPublicReviews = await request(baseUrl, '/api/reviews');
+    assert.equal(allPublicReviews.status, 200);
+    const allPublicInterviews = await request(baseUrl, '/api/interviews');
+    assert.equal(allPublicInterviews.status, 200);
     const missingReviews = await request(baseUrl, '/api/companies/999999999/reviews');
     assert.equal(missingReviews.status, 404);
     const missingInterviews = await request(baseUrl, '/api/companies/999999999/interviews');
@@ -151,6 +157,7 @@ async function main() {
     });
     assert.equal(employeeRegistration.status, 201);
     assert.ok(employeeRegistration.body.data.user.userId > 7);
+    const employeeUserId = employeeRegistration.body.data.user.userId;
 
     const normalDatabaseUser = await workflowTestRepository.findInternalUserByEmail(normalEmail);
     assert.notEqual(normalDatabaseUser.passwordHash, password);
@@ -235,38 +242,10 @@ async function main() {
       body: salaryPayload()
     });
     assert.equal(salaryWithoutToken.status, 401);
-    const invalidCompany = await request(baseUrl, '/api/companies/999999999/salaries', {
+    const salaryAsNormalUser = await request(baseUrl, '/api/companies/1/salaries', {
       method: 'POST', token, body: salaryPayload()
     });
-    assert.equal(invalidCompany.status, 404);
-    const invalidRole = await request(baseUrl, '/api/companies/1/salaries', {
-      method: 'POST', token, body: salaryPayload({ roleId: 999999999 })
-    });
-    assert.equal(invalidRole.status, 404);
-    const invalidSalary = await request(baseUrl, '/api/companies/1/salaries', {
-      method: 'POST', token, body: salaryPayload({ baseSalary: 0 })
-    });
-    assert.equal(invalidSalary.status, 400);
-
-    const publicCountBefore = await workflowTestRepository.countCommunityContributions(1);
-    const validSalary = await request(baseUrl, '/api/companies/1/salaries', {
-      method: 'POST', token, body: salaryPayload()
-    });
-    assert.equal(validSalary.status, 201);
-    assert.equal(validSalary.body.message, 'Salary submitted for review');
-    assert.equal(validSalary.body.data.submissionStatus, 'PENDING');
-    assert.equal(validSalary.body.data.verificationStatus, 'UNVERIFIED');
-    assert.ok(validSalary.body.data.submissionId > 11);
-
-    const pair = await workflowTestRepository.findSalaryPair(validSalary.body.data.submissionId);
-    assert.equal(pair.parentSubmissionId, pair.childSubmissionId);
-    assert.equal(pair.submissionStatus, 'PENDING');
-    assert.equal(pair.verificationStatus, 'UNVERIFIED');
-    assert.equal(pair.approvedAt, null);
-    const publicCountAfter = await workflowTestRepository.countCommunityContributions(1);
-    assert.equal(publicCountAfter, publicCountBefore);
-
-    const verifiedCountBeforeApproval = await workflowTestRepository.countVerifiedContributions(1);
+    assert.equal(salaryAsNormalUser.status, 403);
     await workflowTestRepository.promoteUserToAdmin(userId);
     const adminQueueWithPrePromotionToken = await request(baseUrl, '/api/admin/submissions/pending', { token });
     assert.equal(adminQueueWithPrePromotionToken.status, 200);
@@ -294,6 +273,43 @@ async function main() {
     assert.equal(verifiedRequest.reviewedBy, userId);
     assert.ok(verifiedRequest.reviewedAt);
     assert.ok(verifiedRequest.expiresAt);
+    const verifiedEmployeeProfile = await request(baseUrl, '/api/auth/me', { token: employeeToken });
+    assert.equal(verifiedEmployeeProfile.status, 200);
+    assert.ok(verifiedEmployeeProfile.body.data.user.verifiedCompanies.some(
+      (item) => item.companyId === 1
+    ));
+
+    const invalidCompany = await request(baseUrl, '/api/companies/999999999/salaries', {
+      method: 'POST', token: employeeToken, body: salaryPayload()
+    });
+    assert.equal(invalidCompany.status, 403);
+    const invalidRole = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: employeeToken, body: salaryPayload({ roleId: 999999999 })
+    });
+    assert.equal(invalidRole.status, 404);
+    const invalidSalary = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: employeeToken, body: salaryPayload({ baseSalary: 0 })
+    });
+    assert.equal(invalidSalary.status, 400);
+
+    const publicCountBefore = await workflowTestRepository.countCommunityContributions(1);
+    const verifiedCountBeforeApproval = await workflowTestRepository.countVerifiedContributions(1);
+    const validSalary = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: employeeToken, body: salaryPayload()
+    });
+    assert.equal(validSalary.status, 201);
+    assert.equal(validSalary.body.message, 'Salary submitted for review');
+    assert.equal(validSalary.body.data.submissionStatus, 'PENDING');
+    assert.equal(validSalary.body.data.verificationStatus, 'VERIFIED');
+    assert.ok(validSalary.body.data.submissionId > 11);
+
+    const pair = await workflowTestRepository.findSalaryPair(validSalary.body.data.submissionId);
+    assert.equal(pair.parentSubmissionId, pair.childSubmissionId);
+    assert.equal(pair.submissionStatus, 'PENDING');
+    assert.equal(pair.verificationStatus, 'VERIFIED');
+    assert.equal(pair.approvedAt, null);
+    const publicCountAfter = await workflowTestRepository.countCommunityContributions(1);
+    assert.equal(publicCountAfter, publicCountBefore);
 
     const rejectedVerificationRequest = await request(baseUrl, '/api/companies/2/verifications', {
       method: 'POST', token: employeeToken,
@@ -358,11 +374,11 @@ async function main() {
     });
     assert.equal(interviewWithoutToken.status, 401);
     const invalidInterview = await request(baseUrl, '/api/companies/1/interviews', {
-      method: 'POST', token: adminToken, body: interviewPayload({ roundsCount: 21 })
+      method: 'POST', token: employeeToken, body: interviewPayload({ roundsCount: 21 })
     });
     assert.equal(invalidInterview.status, 400);
     const interviewSubmission = await request(baseUrl, '/api/companies/1/interviews', {
-      method: 'POST', token: adminToken, body: interviewPayload()
+      method: 'POST', token: employeeToken, body: interviewPayload()
     });
     assert.equal(interviewSubmission.status, 201);
     assert.equal(interviewSubmission.body.data.submissionStatus, 'PENDING');
@@ -394,6 +410,14 @@ async function main() {
     assert.equal(publicInterview.authorName, null);
     assert.equal('userId' in publicInterview, false);
     assert.equal('email' in publicInterview, false);
+    const browsedReview = await request(baseUrl, '/api/reviews?companyId=1&roleId=1');
+    assert.ok(browsedReview.body.data.some(
+      (item) => item.submissionId === reviewSubmission.body.data.submissionId
+    ));
+    const browsedInterview = await request(baseUrl, '/api/interviews?companyId=1&roleId=1');
+    assert.ok(browsedInterview.body.data.some(
+      (item) => item.submissionId === interviewSubmission.body.data.submissionId
+    ));
 
     const reportWithoutToken = await request(
       baseUrl,
@@ -512,7 +536,13 @@ async function main() {
     const communityCountAfterApproval = await workflowTestRepository.countCommunityContributions(1);
     const verifiedCountAfterApproval = await workflowTestRepository.countVerifiedContributions(1);
     assert.equal(communityCountAfterApproval, publicCountBefore + 1);
-    assert.equal(verifiedCountAfterApproval, verifiedCountBeforeApproval);
+    assert.equal(verifiedCountAfterApproval, verifiedCountBeforeApproval + 1);
+    const browsedSalary = await request(
+      baseUrl,
+      '/api/salaries?companyId=1&roleId=1&salarySource=VERIFIED'
+    );
+    assert.equal(browsedSalary.status, 200);
+    assert.ok(browsedSalary.body.data.some((item) => item.verifiedContributionCount > 0));
 
     const repeatedDecision = await request(
       baseUrl,
@@ -522,7 +552,7 @@ async function main() {
     assert.equal(repeatedDecision.status, 409);
 
     const rejectionSalary = await request(baseUrl, '/api/companies/1/salaries', {
-      method: 'POST', token: adminToken, body: salaryPayload({ baseSalary: 62500 })
+      method: 'POST', token: employeeToken, body: salaryPayload({ baseSalary: 62500 })
     });
     assert.equal(rejectionSalary.status, 201);
     const rejectionWithoutNote = await request(
@@ -543,7 +573,7 @@ async function main() {
     assert.equal(rejectedState.actions[0].actionType, 'REJECT');
 
     const flaggedSalary = await request(baseUrl, '/api/companies/1/salaries', {
-      method: 'POST', token: adminToken, body: salaryPayload({ baseSalary: 63500 })
+      method: 'POST', token: employeeToken, body: salaryPayload({ baseSalary: 63500 })
     });
     assert.equal(flaggedSalary.status, 201);
     const flagging = await request(
@@ -558,7 +588,7 @@ async function main() {
     assert.equal(flaggedState.actions[0].actionType, 'FLAG');
 
     const rollbackSalary = await request(baseUrl, '/api/companies/1/salaries', {
-      method: 'POST', token: adminToken, body: salaryPayload({ baseSalary: 64500 })
+      method: 'POST', token: employeeToken, body: salaryPayload({ baseSalary: 64500 })
     });
     assert.equal(rollbackSalary.status, 201);
     await assert.rejects(adminRepository.updateSubmissionStatusWithAudit({
@@ -574,10 +604,10 @@ async function main() {
     assert.equal(rolledBackState.submission.approvedAt, null);
     assert.equal(rolledBackState.actions.length, 0);
 
-    const submissionCountBeforeFailure = await workflowTestRepository.countSubmissionsForUser(userId);
+    const submissionCountBeforeFailure = await workflowTestRepository.countSubmissionsForUser(employeeUserId);
     await assert.rejects(
       salaryRepository.createSalarySubmission({
-        userId,
+        userId: employeeUserId,
         companyId: 1,
         roleId: 1,
         baseSalary: -1,
@@ -591,7 +621,7 @@ async function main() {
         isAnonymous: true
       })
     );
-    const submissionCountAfterFailure = await workflowTestRepository.countSubmissionsForUser(userId);
+    const submissionCountAfterFailure = await workflowTestRepository.countSubmissionsForUser(employeeUserId);
     assert.equal(submissionCountAfterFailure, submissionCountBeforeFailure);
 
     console.log('Integration workflow passed: auth, verification, review/interview publication, reporting, moderation rollback, anonymous display, salary aggregates, and GET regressions.');
