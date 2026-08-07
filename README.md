@@ -7,9 +7,9 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 | Layer | Status | What is available |
 | --- | --- | --- |
 | Database | Implemented | Oracle tables, constraints, indexes, sample data, public views, and analytical salary views |
-| Backend | Authenticated write milestone | Existing public company GET endpoints, registration, login, current-user lookup, job-role lookup, and transactional salary submission |
-| Frontend | Connected | Responsive public pages, live company data, account flows, shared session state, and the salary form |
-| Later milestones | Not implemented | Review/interview submissions, employee-verification workflows, reporting, administration, moderation, ML, and deployment |
+| Backend | Moderated write milestone | Public GETs, authentication, transactional salary submission, ADMIN authorization, and atomic moderation decisions |
+| Frontend | Connected | Responsive public pages, account flows, salary contribution, and an ADMIN-only moderation dashboard |
+| Later milestones | Not implemented | Review/interview submissions, employee-verification workflows, reporting, ML, and deployment |
 
 ## Available Features
 
@@ -19,7 +19,9 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - Shared frontend session state with signed-in navigation and sign-out
 - API-backed company and job-role choices on the salary form
 - Authenticated salary submissions written atomically to `SUBMISSIONS` and `SALARY_SUBMISSIONS`
-- New salary submissions start as `PENDING`; unverified users do not affect public salary aggregates
+- ADMIN-only pending queue, submission inspection, approve/reject/flag decisions, and moderation history
+- Atomic `SUBMISSIONS` status changes plus immutable `MODERATION_ACTIONS` audit rows
+- New salary submissions start as `PENDING`; only approved submissions enter public salary aggregates
 - Loading, empty, invalid-ID, API-error, and backend-offline states
 - Responsive layouts and accessible forms without a frontend build step
 
@@ -38,7 +40,7 @@ Salary ranges come from Oracle views rather than redundant company attributes:
 - **Verified Salary Range:** approved submissions with `verification_status = 'VERIFIED'`.
 - **Community Salary Range:** every approved salary submission, verified or unverified.
 
-New submissions use `submission_status = 'PENDING'`, so they do not enter either public range before a future moderation workflow approves them.
+New submissions use `submission_status = 'PENDING'`, so they do not enter either public range before an administrator approves them.
 
 ## Technology Stack
 
@@ -63,7 +65,7 @@ Connect to the intended Oracle schema using SQL*Plus, SQLcl, Navicat, or another
 @database/04_test_queries.sql
 ```
 
-The final three statements in `03_insert_sample_data.sql` synchronize the `USERS.USER_ID`, `EMPLOYEES.EMPLOYEE_ID`, and `SUBMISSIONS.SUBMISSION_ID` identity generators after the explicit sample IDs are committed. This ensures later generated IDs are above the corresponding sample-data maximums.
+The final statements in `03_insert_sample_data.sql` synchronize the `USERS.USER_ID`, `EMPLOYEES.EMPLOYEE_ID`, `SUBMISSIONS.SUBMISSION_ID`, and `MODERATION_ACTIONS.ACTION_ID` identity generators after explicit sample IDs are committed. This ensures generated IDs are above their sample-data maximums.
 
 `database/01_create_user.sql` is currently empty, so an existing Oracle user with permission to create tables, views, and indexes is required. The cleanup section in `02_create_tables.sql` can drop and rebuild existing Saple objects; review it before running against data you need to keep.
 
@@ -123,6 +125,10 @@ Open `http://localhost:5500/index.html`. Keep the backend running on port `3000`
 | GET | `/api/auth/me` | Bearer token | Return the current safe user profile |
 | GET | `/api/job-roles` | Public | List job roles for controlled salary input |
 | POST | `/api/companies/:companyId/salaries` | Bearer token | Create one pending salary contribution transaction |
+| GET | `/api/admin/submissions/pending` | ADMIN token | List pending submissions oldest first |
+| GET | `/api/admin/submissions/:submissionId` | ADMIN token | Inspect one submission and its subtype data |
+| PATCH | `/api/admin/submissions/:submissionId/status` | ADMIN token | Approve, reject, or flag a pending submission atomically |
+| GET | `/api/admin/submissions/:submissionId/moderation-history` | ADMIN token | Read immutable moderation history |
 
 See [`backend/README.md`](backend/README.md) for request bodies, transaction behavior, tests, and Oracle troubleshooting.
 
@@ -136,6 +142,7 @@ See [`backend/README.md`](backend/README.md) for request bodies, transaction beh
 | `frontend/login.html` | Real login with JWT session creation |
 | `frontend/register.html` | Real job-seeker/employee registration |
 | `frontend/submit-salary.html` | Authenticated salary contribution with live company and job-role choices |
+| `frontend/admin.html` | ADMIN-only pending queue, submission review, decisions, and audit history |
 | `frontend/submit-review.html` | Review workflow status placeholder |
 | `frontend/interview-experience.html` | Interview workflow status placeholder |
 
@@ -183,11 +190,11 @@ npm test
 npm run test:integration
 ```
 
-Unit tests use repository mocks. Integration tests require the configured Oracle database and `JWT_SECRET`; they create and clean up their own test rows while checking authentication, ID generation, transaction rollback, salary status, and existing GET regressions.
+Unit tests use repository mocks. Integration tests require Oracle and `JWT_SECRET`; they create and clean up their own rows while checking authentication, identity generation, salary and moderation rollback, authorization, status transitions, public aggregates, and existing GET regressions.
 
 ## Deferred Scope
 
-Admin moderation, review submission, interview submission, employee-verification flows, reporting, ML, and deployment remain later milestones.
+Review submission, interview submission, employee-verification flows, reporting, ML, and deployment remain later milestones.
 
 ## Sample Data Notice
 
