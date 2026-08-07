@@ -1,62 +1,56 @@
 # Saple
 
-Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform developed as a BUET CSE database project. This milestone connects the Oracle data model to an Express API and a responsive Vanilla JavaScript frontend, including real account authentication and authenticated salary contributions.
+Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current milestone connects the Oracle model to an Express API and the existing responsive Vanilla JavaScript interface, with authenticated contributions and administrator review workflows.
 
 ## Current Implementation
 
-| Layer | Status | What is available |
-| --- | --- | --- |
-| Database | Implemented | Oracle tables, constraints, indexes, sample data, public views, and analytical salary views |
-| Backend | Moderated write milestone | Public GETs, authentication, transactional salary submission, ADMIN authorization, and atomic moderation decisions |
-| Frontend | Connected | Responsive public pages, account flows, salary contribution, and an ADMIN-only moderation dashboard |
-| Later milestones | Not implemented | Review/interview submissions, employee-verification workflows, reporting, ML, and deployment |
+| Layer | Available now |
+| --- | --- |
+| Oracle database | Tables, constraints, indexes, fictional sample data, privacy-safe public views, salary analytical views, and synchronized identity generators |
+| Express backend | Public company data, account authentication, salary/review/interview writes, employee verification, reporting, ADMIN authorization, and transactional moderation |
+| Frontend | Existing responsive design with live public data, account flows, contribution forms, verification requests, reporting, and an expanded ADMIN dashboard |
+| Deferred | ML features and deployment automation |
 
-## Available Features
+## Core Features
 
-- Searchable company directory, company profiles, benefits, and salary summaries backed by Oracle
-- Registration for job seekers and current/former employees
-- BCrypt password hashing and signed JWT authentication
-- Shared frontend session state with signed-in navigation and sign-out
-- API-backed company and job-role choices on the salary form
-- Authenticated salary submissions written atomically to `SUBMISSIONS` and `SALARY_SUBMISSIONS`
-- ADMIN-only pending queue, submission inspection, approve/reject/flag decisions, and moderation history
-- Atomic `SUBMISSIONS` status changes plus immutable `MODERATION_ACTIONS` audit rows
-- New salary submissions start as `PENDING`; only approved submissions enter public salary aggregates
-- Loading, empty, invalid-ID, API-error, and backend-offline states
-- Responsive layouts and accessible forms without a frontend build step
+- Searchable company directory, company profiles, benefits, and verified/community salary summaries
+- Job-seeker and current/former-employee registration with BCrypt password hashing and signed JWT sessions
+- Transactional salary, company-review, and interview-experience submissions
+- Company-specific employee verification requests using company email metadata or a safe document reference
+- ADMIN review of pending verification requests
+- Approved-only public reviews and interview experiences with server-enforced anonymous display
+- Authenticated reports with duplicate prevention, ADMIN triage, resolution, and dismissal
+- ADMIN submission queue, subtype detail, approve/reject/flag controls, and immutable moderation history
+- Atomic parent/child contribution inserts and atomic `SUBMISSIONS` plus `MODERATION_ACTIONS` writes
+- Existing responsive design, accessible forms, and no frontend build step
 
-## Trust and Privacy Model
+## Trust, Privacy, and Publication
 
-Anonymous submissions retain an internal association with the submitter for ownership and moderation, while privacy-safe public views omit that identity. Registration never exposes the `ADMIN` account role.
+Every contribution retains its owner internally for authorization and moderation. Public review and interview responses expose an author name only when `is_anonymous = 0`; they never expose user IDs, email addresses, verification evidence, or moderation internals. Only `APPROVED` submissions are public.
 
-Employment verification is company-specific. A salary submission is marked `VERIFIED` only when the submitting user has a matching, active, non-expired `VERIFIED` employment-verification row for that company; otherwise it is `UNVERIFIED`. This milestone does not add a verification workflow.
+Employee verification is company-specific. A later contribution is marked `VERIFIED` only when its employee has an active, non-expired `VERIFIED` request for that company. Evidence metadata is available only to ADMIN endpoints. The application does not store raw OTP values, uploaded document contents, national identifiers, or raw confidential files.
 
-The schema never stores raw OTP values, uploaded document contents, national identifiers, or other raw confidential evidence. Passwords are stored only as BCrypt hashes.
+Reported approved content can be flagged or rejected using the same locked, audited moderation transaction. This immediately removes it from approved-only public reads. Report resolution remains a separate recorded ADMIN action.
 
 ## Salary Range Concepts
 
-Salary ranges come from Oracle views rather than redundant company attributes:
+- **Verified Salary Range:** approved salary submissions whose verification status is `VERIFIED`.
+- **Community Salary Range:** all approved salary submissions, verified or unverified.
 
-- **Verified Salary Range:** approved submissions with `verification_status = 'VERIFIED'`.
-- **Community Salary Range:** every approved salary submission, verified or unverified.
-
-New submissions use `submission_status = 'PENDING'`, so they do not enter either public range before an administrator approves them.
+Pending, rejected, and flagged salaries do not affect either public range.
 
 ## Technology Stack
 
 - Oracle Database 19c
-- Node.js and Express 5
-- node-oracledb in Thin mode
+- Node.js, Express 5, and node-oracledb Thin mode
 - BCrypt and JSON Web Tokens
 - HTML5, CSS, and Vanilla JavaScript ES modules
-
-No frontend framework, CSS framework, TypeScript, or build step is required.
 
 ## Quick Start
 
 ### 1. Prepare Oracle
 
-Connect to the intended Oracle schema using SQL*Plus, SQLcl, Navicat, or another compatible client, then run:
+Run these files as the intended schema owner:
 
 ```sql
 @database/01_create_user.sql
@@ -65,11 +59,11 @@ Connect to the intended Oracle schema using SQL*Plus, SQLcl, Navicat, or another
 @database/04_test_queries.sql
 ```
 
-The final statements in `03_insert_sample_data.sql` synchronize the `USERS.USER_ID`, `EMPLOYEES.EMPLOYEE_ID`, `SUBMISSIONS.SUBMISSION_ID`, and `MODERATION_ACTIONS.ACTION_ID` identity generators after explicit sample IDs are committed. This ensures generated IDs are above their sample-data maximums.
+`03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to `USERS.USER_ID`, `EMPLOYEES.EMPLOYEE_ID`, `EMPLOYMENT_VERIFICATIONS.VERIFICATION_ID`, `SUBMISSIONS.SUBMISSION_ID`, `REPORTS.REPORT_ID`, and `MODERATION_ACTIONS.ACTION_ID`. The verified live generators produced a verification ID greater than `4` and a report ID greater than `2`.
 
-`database/01_create_user.sql` is currently empty, so an existing Oracle user with permission to create tables, views, and indexes is required. The cleanup section in `02_create_tables.sql` can drop and rebuild existing Saple objects; review it before running against data you need to keep.
+`01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
 
-### 2. Configure and start the backend
+### 2. Start the backend
 
 From `backend/`:
 
@@ -77,7 +71,7 @@ From `backend/`:
 npm install
 ```
 
-Copy `backend/.env.example` to `backend/.env` and provide local values:
+Copy `.env.example` to `.env`, then set the Oracle connection and a long random `JWT_SECRET`:
 
 ```env
 PORT=3000
@@ -91,13 +85,9 @@ JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 ```
 
-Then start the API:
-
 ```bash
 npm run dev
 ```
-
-The default API address is `http://localhost:3000`.
 
 ### 3. Serve the frontend
 
@@ -107,79 +97,48 @@ From the repository root:
 python -m http.server 5500 --directory frontend
 ```
 
-Open `http://localhost:5500/index.html`. Keep the backend running on port `3000`.
+Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3000`.
 
-## Current API
+## API Overview
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/` | Public | API welcome response |
-| GET | `/api/health` | Public | Express process health |
-| GET | `/api/health/database` | Public | Oracle connection health |
-| GET | `/api/companies` | Public | List or search public companies with `?search=term` |
-| GET | `/api/companies/:companyId` | Public | Get one public company profile |
-| GET | `/api/companies/:companyId/benefits` | Public | Get company benefits |
-| GET | `/api/companies/:companyId/salary-summary` | Public | Get verified and community salary summaries |
-| POST | `/api/auth/register` | Public | Create a normal or employee account |
-| POST | `/api/auth/login` | Public | Authenticate and return a signed JWT plus safe user data |
-| GET | `/api/auth/me` | Bearer token | Return the current safe user profile |
-| GET | `/api/job-roles` | Public | List job roles for controlled salary input |
-| POST | `/api/companies/:companyId/salaries` | Bearer token | Create one pending salary contribution transaction |
-| GET | `/api/admin/submissions/pending` | ADMIN token | List pending submissions oldest first |
-| GET | `/api/admin/submissions/:submissionId` | ADMIN token | Inspect one submission and its subtype data |
-| PATCH | `/api/admin/submissions/:submissionId/status` | ADMIN token | Approve, reject, or flag a pending submission atomically |
-| GET | `/api/admin/submissions/:submissionId/moderation-history` | ADMIN token | Read immutable moderation history |
+| GET | `/api/health`, `/api/health/database` | Public | Process and Oracle health |
+| GET | `/api/companies` | Public | List/search companies with `?search=` |
+| GET | `/api/companies/:companyId` | Public | Company profile |
+| GET | `/api/companies/:companyId/benefits` | Public | Company benefits |
+| GET | `/api/companies/:companyId/salary-summary` | Public | Verified/community salary summaries |
+| GET | `/api/companies/:companyId/reviews` | Public | Approved reviews and rating summary |
+| GET | `/api/companies/:companyId/interviews` | Public | Approved interview experiences |
+| POST | `/api/auth/register`, `/api/auth/login` | Public | Create/authenticate an account |
+| GET | `/api/auth/me` | Bearer token | Current safe user profile |
+| GET | `/api/job-roles` | Public | Controlled job-role choices |
+| POST | `/api/companies/:companyId/salaries` | Bearer token | Pending salary contribution |
+| POST | `/api/companies/:companyId/reviews` | Employee token | Pending company review |
+| POST | `/api/companies/:companyId/interviews` | Bearer token | Pending interview experience |
+| POST | `/api/companies/:companyId/verifications` | Employee token | Pending verification request |
+| POST | `/api/submissions/:submissionId/reports` | Bearer token | Report a submission |
+| GET/PATCH | `/api/admin/submissions/*` | ADMIN token | Queue, detail, decisions, and history |
+| GET/PATCH | `/api/admin/verifications/*` | ADMIN token | Pending queue, detail, and decision |
+| GET/PATCH | `/api/admin/reports/*` | ADMIN token | Report queue, detail, and status |
 
-See [`backend/README.md`](backend/README.md) for request bodies, transaction behavior, tests, and Oracle troubleshooting.
+See [backend/README.md](backend/README.md) for contracts and transaction rules.
 
 ## Frontend Pages
 
 | Page | Purpose |
 | --- | --- |
-| `frontend/index.html` | Homepage, search entry, trust model, and salary methodology |
-| `frontend/companies.html` | Live company directory and backend-powered search |
-| `frontend/company-details.html?id=<id>` | Live profile, benefits, salary summaries, and later-workflow placeholders |
-| `frontend/login.html` | Real login with JWT session creation |
-| `frontend/register.html` | Real job-seeker/employee registration |
-| `frontend/submit-salary.html` | Authenticated salary contribution with live company and job-role choices |
-| `frontend/admin.html` | ADMIN-only pending queue, submission review, decisions, and audit history |
-| `frontend/submit-review.html` | Review workflow status placeholder |
-| `frontend/interview-experience.html` | Interview workflow status placeholder |
+| `index.html` | Homepage, search handoff, and trust model |
+| `companies.html` | Live company directory and search |
+| `company-details.html?id=<id>` | Profile, benefits, salary data, approved reviews/interviews, and reporting |
+| `login.html`, `register.html` | Authentication and account creation |
+| `submit-salary.html` | Authenticated salary contribution |
+| `submit-review.html` | Employee company-review contribution |
+| `interview-experience.html` | Authenticated interview contribution |
+| `employee-verification.html` | Employee verification request |
+| `admin.html` | Submission moderation, verification review, and report management |
 
-See [`frontend/README.md`](frontend/README.md) for frontend behavior and manual testing guidance.
-
-## Project Structure
-
-```text
-Saple/
-|-- backend/                 # Express, authentication, and Oracle API
-|-- database/                # Oracle schema, sample data, and test queries
-|-- docs/                    # Requirements, relational schema, and project notes
-|-- frontend/                # Responsive HTML, CSS, and Vanilla JavaScript UI
-|-- ERD.pdf                  # Entity-relationship diagram
-`-- README.md                # Project overview and setup
-```
-
-## Database Model
-
-The Oracle schema contains `users`, `employees`, `companies`, `job_roles`, `benefits`, `company_benefits`, `employment_verifications`, `submissions`, `salary_submissions`, `company_reviews`, `interview_experiences`, `reports`, and `moderation_actions`.
-
-Privacy-safe and analytical views include:
-
-- `vw_public_companies`
-- `vw_public_approved_reviews`
-- `vw_verified_salary_summary`
-- `vw_community_salary_summary`
-
-## Security Notes
-
-- Never commit `backend/.env`, database credentials, or the JWT secret.
-- Passwords are BCrypt-hashed with 12 salt rounds and are never returned by the API.
-- JWTs are signed with HS256 and verified for algorithm, issuer, audience, and expiration.
-- The browser stores only the token and safe user object in `sessionStorage`; sessions end when that browser session is closed or the user signs out.
-- Raw Oracle errors are logged by the backend and are not exposed to API clients.
-- Public views omit contributor identity and other private moderation/verification fields.
-- Administrative privileges are not exposed through public registration.
+See [frontend/README.md](frontend/README.md) for UI behavior and manual checks.
 
 ## Tests
 
@@ -190,12 +149,17 @@ npm test
 npm run test:integration
 ```
 
-Unit tests use repository mocks. Integration tests require Oracle and `JWT_SECRET`; they create and clean up their own rows while checking authentication, identity generation, salary and moderation rollback, authorization, status transitions, public aggregates, and existing GET regressions.
+The unit suite currently contains 31 passing tests. The live Oracle workflow covers authentication, all three contribution types, identity generation, verification, ADMIN authorization, report handling, anonymous display, public publication rules, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
+
+## Security Notes
+
+- Never commit `.env`, Oracle credentials, JWT secrets, real proof material, or test passwords.
+- Public registration cannot create an administrator.
+- Password hashes and raw Oracle errors are never returned to clients.
+- SQL is contained in repositories and uses bind variables.
+- ADMIN routes require both authenticated JWT middleware and the `ADMIN` role claim.
+- Sample identities, companies, content, evidence references, and credentials are fictional.
 
 ## Deferred Scope
 
-Review submission, interview submission, employee-verification flows, reporting, ML, and deployment remain later milestones.
-
-## Sample Data Notice
-
-All sample names, companies, email addresses, proof references, review text, and test credentials are fictional. Demonstration password hashes are intentionally unusable in production.
+ML and deployment are intentionally outside this milestone. Forgot-password automation is also not part of the current application workflow.

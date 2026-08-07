@@ -1,48 +1,34 @@
 # Saple Project Notes
 
-## Project Name
+## Project Idea
 
-Saple
+Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform for graduates and job seekers. The name reflects starting small like a sapling and growing into a reliable career-guidance resource.
 
-## Meaning
+## Implemented Trust Model
 
-Saple represents the idea of starting small like a sapling and growing into a trusted career guidance platform.
+- Public salary data is separated into a Verified Salary Range and a Community Salary Range.
+- The Verified range uses approved, company-verified salary contributions only.
+- The Community range uses all approved salaries, verified or unverified.
+- Reviews and interviews are public only after ADMIN approval.
+- Anonymous contributions retain internal ownership but expose no public contributor identity.
+- Company-specific employee verification is reviewed by an ADMIN and expires after 12 months.
+- Users can report submissions once; ADMIN users triage and resolve reports.
+- Content actions reuse the locked, immutable-audit submission moderation workflow.
 
-## Core Idea
+## Status Rules
 
-A verified company review and salary insight platform for fresh graduates and job seekers.
+`SUBMISSIONS.SUBMISSION_STATUS` uses `PENDING`, `APPROVED`, `REJECTED`, and `FLAGGED`. New contributions start `PENDING`. Public reads return only `APPROVED`; flagging/rejecting approved reported content removes it immediately.
 
-## Main Trust Mechanism
+`SUBMISSIONS.VERIFICATION_STATUS` uses `VERIFIED`, `UNVERIFIED`, `PENDING`, and `REJECTED`. New contributions are normally `VERIFIED` or `UNVERIFIED`, based on an active non-expired company verification.
 
-Saple separates salary information into two ranges:
+`EMPLOYMENT_VERIFICATIONS.VERIFICATION_STATUS` uses `PENDING`, `VERIFIED`, `REJECTED`, and `EXPIRED`.
 
-1. Verified Salary Range
-2. Community Salary Range
+`REPORTS.REPORT_STATUS` uses `OPEN`, `REVIEWING`, `RESOLVED`, and `DISMISSED`.
 
-Verified Range uses only verified and approved salary data.
+## Privacy Boundary
 
-Community Range uses all approved salary data.
+Public responses must not expose user IDs, email addresses, verification evidence, reporter identity, or moderation internals. Company-email metadata and proof references are available only inside ADMIN verification endpoints. The project does not store raw OTPs, document uploads, national IDs, or production credentials.
 
-## Important Status Fields
+## Current Scope Boundary
 
-### verification_status
-
-Possible values:
-
-- VERIFIED
-- UNVERIFIED
-- PENDING
-- REJECTED
-
-### submission_status
-
-Possible values:
-
-- APPROVED
-- FLAGGED
-- PENDING
-- REJECTED
-
-## Important Rule
-
-Public pages should show only APPROVED submissions.
+Authentication, salary contributions, moderation, employee verification, reviews, interviews, reporting, public display, ADMIN dashboard integration, rollback tests, and documentation are implemented. ML and deployment remain deferred.
