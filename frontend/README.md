@@ -11,9 +11,10 @@ The Saple frontend is a responsive, framework-free application built with HTML, 
 - Current-user recovery through `GET /api/auth/me`
 - Company and job-role choices through `GET /api/companies` and `GET /api/job-roles`
 - Authenticated salary contribution through `POST /api/companies/:companyId/salaries`
+- ADMIN-only moderation queue, detail, decisions, and history through `/api/admin/submissions/*`
 - Shared signed-in navigation and sign-out behavior
 
-Review and interview forms remain honest placeholders. Forgot-password, employee-verification, reporting, administration, moderation, ML, and deployment are not implemented.
+Review and interview forms remain honest placeholders. Forgot-password, employee-verification, reporting, ML, and deployment are not implemented.
 
 ## Running the Frontend
 
@@ -41,6 +42,7 @@ const API_BASE_URL = 'http://localhost:3000';
 | `login.html` | Validates credentials, creates a session, and supports a safe local `returnTo` redirect |
 | `register.html` | Creates job-seeker or employee accounts; employee status is conditionally required |
 | `submit-salary.html` | Loads controlled company/role choices and submits salary data for review |
+| `admin.html` | Guards ADMIN access and provides the functional moderation dashboard |
 | `submit-review.html` | Placeholder until review submission is implemented |
 | `interview-experience.html` | Placeholder until interview submission is implemented |
 
@@ -83,16 +85,23 @@ A successful request displays exactly `Salary submitted for review.` An unauthen
 | `js/login.js` | Login validation, API request, session creation, and redirect |
 | `js/register.js` | Registration validation and API request |
 | `js/submit-salary.js` | Company/role loading, validation, authentication, and salary POST |
+| `js/admin.js` | ADMIN guard, pending queue, detail/history rendering, confirmation, and PATCH decisions |
+
+## Admin Moderation Dashboard
+
+`admin.html` calls `/api/auth/me` before loading moderation data. Signed-out users return to login with a local `returnTo`; authenticated non-admin users see an access-denied state. Backend authorization remains the security boundary.
+
+The queue is oldest first and displays real pending submissions. Review shows common context and salary, review, or interview subtype fields already present in Oracle. Approve, Reject, and Flag use an accessible confirmation dialog; Reject and Flag require a note. After a decision, the queue and chronological moderation history refresh without inventing counts or content.
 
 ## Design and Accessibility
 
-The existing design system remains in `css/common.css` plus page-specific styles. The milestone adds only the signed-in navigation state and form-state link styling; it does not redesign the application.
+The existing design system remains in `css/common.css` plus page-specific styles. `css/admin.css` composes those established tokens and components for the moderation layout without redesigning the application.
 
 The UI retains semantic landmarks, labels, keyboard focus, live validation/status messages, ARIA navigation state, safe external links, reduced-motion handling, and responsive single-column layouts. Browser testing covered the full registration-login-salary flow and a 430px viewport without horizontal overflow or runtime JavaScript errors.
 
 ## Error and Empty States
 
-Connected pages handle loading, empty results, API failure, invalid company IDs, missing records, absent salary data, form validation, duplicate registration, invalid login, expired sessions, and failed salary requests. Raw database errors are never intentionally displayed.
+Connected pages handle loading, empty results, API failure, invalid IDs, missing records, absent salary data, form validation, duplicate registration, invalid login, expired sessions, access denial, conflicting moderation decisions, and failed write requests. Raw database errors are never intentionally displayed.
 
 ## Manual Test Checklist
 
@@ -108,6 +117,8 @@ With Oracle and the backend running:
 8. Recheck company directory, search, profile, benefits, and both salary summaries.
 9. Stop the backend and confirm errors remain user-friendly.
 10. Check keyboard controls and narrow-screen layouts.
+11. Sign in with a locally prepared ADMIN account and review the pending queue.
+12. Approve, reject, and flag test submissions; confirm the selected item leaves the queue and its audit history appears.
 
 ## Frontend Structure
 
@@ -121,6 +132,7 @@ frontend/
 |-- login.html              # Connected sign in
 |-- register.html           # Connected registration
 |-- submit-salary.html      # Connected salary contribution
+|-- admin.html              # ADMIN moderation dashboard
 |-- submit-review.html      # Review placeholder
 `-- interview-experience.html
 ```

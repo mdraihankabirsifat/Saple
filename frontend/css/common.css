@@ -234,6 +234,7 @@ h3 {
   color: var(--saple-green-900);
   font-size: 0.92rem;
   font-weight: 780;
+  text-decoration: none;
 }
 
 .nav-sign-out {
@@ -275,6 +276,13 @@ h3 {
 
 .button:hover {
   transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .button-primary {

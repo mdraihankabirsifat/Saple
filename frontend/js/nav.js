@@ -74,13 +74,17 @@ async function updateAuthenticationNavigation() {
   let user = auth.getStoredUser();
 
   const renderAuthenticatedState = (currentUser) => {
-    const accountName = document.createElement('span');
+    const accountName = document.createElement(currentUser?.accountRole === 'ADMIN' ? 'a' : 'span');
     const signOutButton = document.createElement('button');
     const firstName = currentUser?.fullName?.trim().split(/\s+/)[0] || 'Account';
 
     accountName.className = 'nav-account-name';
     accountName.textContent = firstName;
     accountName.title = currentUser?.email || 'Signed-in account';
+    if (currentUser?.accountRole === 'ADMIN') {
+      accountName.href = 'admin.html';
+      accountName.setAttribute('aria-label', `${firstName} administrator dashboard`);
+    }
 
     signOutButton.className = 'nav-text-link nav-sign-out';
     signOutButton.type = 'button';
