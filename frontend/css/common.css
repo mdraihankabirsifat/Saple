@@ -313,8 +313,13 @@ h3 {
 }
 
 .contribute-menu {
+  display: none;
   position: relative;
 }
+
+.contribute-menu.is-available { display: block; }
+
+[data-verified-contributor][hidden] { display: none !important; }
 
 .contribute-menu summary {
   list-style: none;

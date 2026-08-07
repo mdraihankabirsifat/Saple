@@ -22,9 +22,9 @@
       <div id="main-menu" class="nav-menu" data-nav-menu>
         <ul class="nav-links">
           <li><a href="companies.html">Companies</a></li>
-          <li><a class="active" href="index.html#salary-insights">Salaries</a></li>
-          <li><a href="submit-review.html">Reviews</a></li>
-          <li><a href="interview-experience.html">Interviews</a></li>
+          <li><a class="active" href="salaries.html">Salaries</a></li>
+          <li><a href="reviews.html">Reviews</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
         </ul>
         <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
             class="button button-secondary button-small" href="register.html">Create account</a>
@@ -49,10 +49,11 @@
         <p>Provide structured information for a moderated salary contribution. New submissions remain pending until
           reviewed.</p>
       </div>
-      <div class="contribution-layout">
+      <section id="contribution-access" class="access-state card" role="status" hidden></section>
+      <div class="contribution-layout" data-contribution-layout hidden>
         <form id="salary-form" class="form-card card" novalidate>
           <fieldset class="form-section">
-            <legend><span class="form-step-label" aria-hidden="true">1</span>Company &amp; role</legend>
+            <legend><span class="form-step-label" aria-hidden="true">01</span>Company &amp; role</legend>
             <p class="form-section-intro">Choose a company and standardized job role from the live Saple API.</p>
             <div class="form-grid">
               <div class="form-group"><label for="salary-company">Company <span class="required-mark"
@@ -75,7 +76,7 @@
           </fieldset>
 
           <fieldset class="form-section">
-            <legend><span class="form-step-label" aria-hidden="true">2</span>Compensation</legend>
+            <legend><span class="form-step-label" aria-hidden="true">02</span>Compensation</legend>
             <p class="form-section-intro">Enter the amount for the selected pay period. Use numbers without commas.</p>
             <div class="form-grid">
               <div class="form-group"><label for="base-salary">Base salary <span class="required-mark"
@@ -111,7 +112,7 @@
           </fieldset>
 
           <fieldset class="form-section">
-            <legend><span class="form-step-label" aria-hidden="true">3</span>Employment context</legend>
+            <legend><span class="form-step-label" aria-hidden="true">03</span>Employment context</legend>
             <p class="form-section-intro">Add enough context for readers to interpret the salary responsibly.</p>
             <div class="form-grid">
               <div class="form-group"><label for="years-experience">Years of experience <span class="required-mark"
@@ -150,7 +151,7 @@
           </fieldset>
 
           <fieldset class="form-section">
-            <legend><span class="form-step-label" aria-hidden="true">4</span>Privacy &amp; submission</legend>
+            <legend><span class="form-step-label" aria-hidden="true">04</span>Privacy &amp; submission</legend>
             <p class="form-section-intro">Choose how your identity should be treated in the eventual public view.</p>
             <div class="checkbox-row"><input id="anonymous-display" name="isAnonymous" type="checkbox" checked><label
                 for="anonymous-display"><strong>Display anonymously</strong><br><span class="field-help">Choosing
@@ -194,7 +195,7 @@
         <ul>
           <li><a href="companies.html">Companies</a></li>
           <li><a href="index.html#salary-insights">Salary methodology</a></li>
-          <li><a href="submit-review.html">Reviews</a></li>
+          <li><a href="reviews.html">Reviews</a></li>
         </ul>
       </nav>
       <nav class="footer-column" aria-labelledby="footer-account-heading">

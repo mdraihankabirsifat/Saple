@@ -35,7 +35,7 @@ test('review child-insert failure rolls back the parent submission', async () =>
     execution += 1;
     if (execution === 1) return { rows: [{ employeeId: 5, employmentStatus: 'CURRENT' }] };
     if (execution === 2) return { rows: [{ companyId: 1 }] };
-    if (execution === 3) return { rows: [] };
+    if (execution === 3) return { rows: [{ verificationId: 9 }] };
     if (execution === 4) return { outBinds: { submissionId: [12] } };
     throw new Error('child insert failed');
   });
@@ -48,10 +48,11 @@ test('interview child-insert failure rolls back the parent submission', async ()
   let execution = 0;
   const connection = mockConnection(async () => {
     execution += 1;
-    if (execution === 1) return { rows: [{ accountStatus: 'ACTIVE', employeeId: null }] };
+    if (execution === 1) return { rows: [{ accountStatus: 'ACTIVE', employeeId: 5 }] };
     if (execution === 2) return { rows: [{ companyId: 1 }] };
     if (execution === 3) return { rows: [{ roleId: 1 }] };
-    if (execution === 4) return { outBinds: { submissionId: [13] } };
+    if (execution === 4) return { rows: [{ verificationId: 9 }] };
+    if (execution === 5) return { outBinds: { submissionId: [13] } };
     throw new Error('child insert failed');
   });
   database.getConnection = async () => connection;

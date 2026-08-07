@@ -1,0 +1,96 @@
+.browse-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.browse-header .page-header { margin-bottom: 0; }
+
+.filter-panel {
+  margin-bottom: 2rem;
+  padding: clamp(1.15rem, 3vw, 1.6rem);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.filter-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.browse-results { display: grid; gap: 1rem; }
+
+.insight-card,
+.content-card {
+  min-width: 0;
+  padding: clamp(1.15rem, 3vw, 1.6rem);
+}
+
+.card-heading-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-heading-row h2 { margin-bottom: 0.25rem; font-size: 1.25rem; }
+.card-heading-row p { margin: 0; color: var(--text-secondary); }
+
+.salary-ranges {
+  margin-top: 1.1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.salary-range {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.salary-range h3 { margin-bottom: 0.4rem; font-size: 0.9rem; }
+.salary-range strong { color: var(--saple-green-900); font-size: 1.05rem; }
+.salary-range p { margin: 0.35rem 0 0; color: var(--text-secondary); font-size: 0.84rem; }
+
+.content-meta {
+  margin: 0.8rem 0 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.content-meta span {
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  color: var(--saple-green-900);
+  background: var(--saple-green-50);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.content-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.content-block { min-width: 0; }
+.content-block h3 { margin-bottom: 0.35rem; font-size: 0.92rem; }
+.content-block p { margin: 0; overflow-wrap: anywhere; color: var(--text-secondary); white-space: pre-wrap; }
+.content-card .card-link { display: inline-block; margin-top: 1rem; }
+
+@media (max-width: 900px) {
+  .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .browse-header { align-items: start; flex-direction: column; }
+}
+
+@media (max-width: 600px) {
+  .filter-grid, .salary-ranges, .content-grid { grid-template-columns: 1fr; }
+  .filter-actions .button, .browse-header .button { width: 100%; }
+  .card-heading-row { flex-direction: column; }
+}

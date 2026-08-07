@@ -55,7 +55,7 @@ async function submitReview(userId, companyIdValue, input = {}) {
   };
   try { return await reviewRepository.createReview(data); }
   catch (error) {
-    const map = { EMPLOYEE_REQUIRED: 403, EMPLOYMENT_STATUS_MISMATCH: 400, COMPANY_NOT_FOUND: 404, ROLE_NOT_FOUND: 404 };
+    const map = { EMPLOYEE_REQUIRED: 403, VERIFICATION_REQUIRED: 403, EMPLOYMENT_STATUS_MISMATCH: 400, COMPANY_NOT_FOUND: 404, ROLE_NOT_FOUND: 404 };
     if (map[error.sapleCode]) throw createHttpError(map[error.sapleCode], error.message);
     throw error;
   }

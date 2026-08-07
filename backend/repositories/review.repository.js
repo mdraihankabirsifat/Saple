@@ -40,7 +40,10 @@ async function createReview({
        FETCH FIRST 1 ROW ONLY`,
       { employeeId: employee.employeeId, companyId }
     );
-    const verificationStatus = verificationResult.rows[0] ? 'VERIFIED' : 'UNVERIFIED';
+    if (!verificationResult.rows[0]) {
+      throw repositoryError('VERIFICATION_REQUIRED', 'Employee verification is required for this company');
+    }
+    const verificationStatus = 'VERIFIED';
     const parent = await connection.execute(
       `INSERT INTO submissions (
          user_id, company_id, submission_type, is_anonymous, submission_status, verification_status

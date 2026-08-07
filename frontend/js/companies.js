@@ -1,8 +1,20 @@
 import { fetchApi } from './api.js';
 
-const searchForm = document.querySelector('#company-search-form');
-const searchInput = document.querySelector('#company-search');
-const clearButton = document.querySelector('#clear-search');
+const form = document.querySelector('#company-search-form');
+const fields = {
+  search: document.querySelector('#company-search'),
+  industry: document.querySelector('#company-industry'),
+  roleId: document.querySelector('#company-role'),
+  location: document.querySelector('#company-location'),
+  minSalary: document.querySelector('#company-min-salary'),
+  maxSalary: document.querySelector('#company-max-salary'),
+  salarySource: document.querySelector('#company-salary-source'),
+  companySize: document.querySelector('#company-size'),
+  minRating: document.querySelector('#company-rating'),
+  hasSalaryData: document.querySelector('#company-has-salary'),
+  hasReviews: document.querySelector('#company-has-reviews'),
+  hasInterviews: document.querySelector('#company-has-interviews')
+};
 const companyList = document.querySelector('#company-list');
 const statusMessage = document.querySelector('#company-status');
 
@@ -10,10 +22,16 @@ function createMetaItem(label, value) {
   const wrapper = document.createElement('div');
   const term = document.createElement('dt');
   const description = document.createElement('dd');
-  term.textContent = label;
-  description.textContent = value;
-  wrapper.append(term, description);
+  term.textContent = label; description.textContent = value; wrapper.append(term, description);
   return wrapper;
+}
+
+function salaryText(company) {
+  const verified = fields.salarySource.value === 'VERIFIED';
+  const count = verified ? company.verifiedSalaryCount : company.communitySalaryCount;
+  const minimum = verified ? company.verifiedMinimumSalary : company.communityMinimumSalary;
+  const maximum = verified ? company.verifiedMaximumSalary : company.communityMaximumSalary;
+  return count ? `${Number(minimum).toLocaleString()} – ${Number(maximum).toLocaleString()} (${count})` : 'No salary data';
 }
 
 function createCompanyCard(company) {
@@ -23,88 +41,70 @@ function createCompanyCard(company) {
   const industry = document.createElement('p');
   const metadata = document.createElement('dl');
   const detailsLink = document.createElement('a');
-
-  article.className = 'company-card';
-  monogram.className = 'company-monogram';
+  article.className = 'company-card'; monogram.className = 'company-monogram';
   monogram.setAttribute('aria-hidden', 'true');
   monogram.textContent = company.companyName?.trim().charAt(0).toUpperCase() || 'S';
-  heading.textContent = company.companyName || 'Unnamed company';
-  metadata.className = 'company-meta';
-
-  if (company.industry) {
-    industry.className = 'industry';
-    industry.textContent = company.industry;
-  }
-
+  heading.textContent = company.companyName || 'Unnamed company'; metadata.className = 'company-meta';
+  if (company.industry) { industry.className = 'industry'; industry.textContent = company.industry; }
   const location = [company.headquartersCity, company.country].filter(Boolean).join(', ');
-
   if (location) metadata.append(createMetaItem('Location', location));
   if (company.companySize) metadata.append(createMetaItem('Size', company.companySize));
-
-  detailsLink.className = 'card-link';
-  detailsLink.href = `company-details.html?id=${encodeURIComponent(company.companyId)}`;
-  detailsLink.textContent = 'View company details \u2192';
+  metadata.append(createMetaItem(fields.salarySource.value === 'VERIFIED' ? 'Verified pay' : 'Community pay', salaryText(company)));
+  metadata.append(createMetaItem('Reviews', company.reviewCount ? `${company.averageRating}/5 (${company.reviewCount})` : 'No reviews yet'));
+  metadata.append(createMetaItem('Interviews', company.interviewCount ? String(company.interviewCount) : 'None yet'));
+  detailsLink.className = 'card-link'; detailsLink.href = `company-details.html?id=${encodeURIComponent(company.companyId)}`;
+  detailsLink.textContent = 'View company details →';
   detailsLink.setAttribute('aria-label', `View details for ${company.companyName || 'this company'}`);
-
-  article.append(monogram, heading);
-  if (company.industry) article.append(industry);
-  if (metadata.childElementCount > 0) article.append(metadata);
-  article.append(detailsLink);
-  return article;
+  article.append(monogram, heading); if (company.industry) article.append(industry);
+  article.append(metadata, detailsLink); return article;
 }
 
-function showStatus(message, isError = false) {
-  statusMessage.textContent = message;
-  statusMessage.hidden = false;
-  statusMessage.classList.toggle('error', isError);
+function queryFromForm() {
+  const query = new URLSearchParams();
+  Object.entries(fields).forEach(([name, input]) => {
+    const value = input.type === 'checkbox' ? (input.checked ? 'true' : '') : input.value.trim();
+    if (value && !(name === 'salarySource' && value === 'COMMUNITY')) query.set(name, value);
+  });
+  return query;
 }
 
-async function loadCompanies(search = '') {
-  companyList.replaceChildren();
-  companyList.setAttribute('aria-busy', 'true');
-  showStatus(search ? `Searching for "${search}"...` : 'Loading companies...');
-  const query = search ? `?search=${encodeURIComponent(search)}` : '';
-
+async function loadCompanies() {
+  companyList.replaceChildren(); companyList.setAttribute('aria-busy', 'true');
+  statusMessage.hidden = false; statusMessage.textContent = 'Loading companies…';
+  statusMessage.classList.remove('error');
+  const query = queryFromForm();
+  window.history.replaceState({}, '', `${window.location.pathname}${query.size ? `?${query}` : ''}`);
   try {
-    const companies = await fetchApi(`/api/companies${query}`);
-
-    if (!Array.isArray(companies) || companies.length === 0) {
-      showStatus(search ? 'No companies matched your search.' : 'No companies are available yet.');
-      return;
-    }
-
-    statusMessage.hidden = true;
-    companies.forEach((company) => companyList.append(createCompanyCard(company)));
-  } catch (error) {
-    showStatus(error.message, true);
-  } finally {
-    companyList.setAttribute('aria-busy', 'false');
-  }
+    const companies = await fetchApi(`/api/companies${query.size ? `?${query}` : ''}`);
+    if (!companies.length) { statusMessage.textContent = 'No companies matched these database filters.'; return; }
+    statusMessage.hidden = true; companies.forEach((item) => companyList.append(createCompanyCard(item)));
+  } catch (error) { statusMessage.textContent = error.message; statusMessage.classList.add('error'); }
+  finally { companyList.setAttribute('aria-busy', 'false'); }
 }
 
-function updateSearchUrl(search) {
-  const url = new URL(window.location.href);
-  search ? url.searchParams.set('search', search) : url.searchParams.delete('search');
-  window.history.replaceState({}, '', url);
+async function loadOptions() {
+  const [options, roles] = await Promise.all([
+    fetchApi('/api/companies/filter-options'), fetchApi('/api/job-roles')
+  ]);
+  options.industries.forEach((value) => fields.industry.append(new Option(value, value)));
+  options.locations.forEach((value) => fields.location.append(new Option(value, value)));
+  options.companySizes.forEach((value) => fields.companySize.append(new Option(value, value)));
+  roles.forEach((role) => fields.roleId.append(new Option(role.roleName, role.roleId)));
 }
 
-searchForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const search = searchInput.value.trim();
-  clearButton.hidden = search.length === 0;
-  updateSearchUrl(search);
-  loadCompanies(search);
-});
+function restoreQuery() {
+  const query = new URLSearchParams(window.location.search);
+  Object.entries(fields).forEach(([name, input]) => {
+    const value = query.get(name);
+    if (value === null) return;
+    if (input.type === 'checkbox') input.checked = value === 'true';
+    else input.value = value;
+  });
+}
 
-clearButton.addEventListener('click', () => {
-  searchInput.value = '';
-  clearButton.hidden = true;
-  searchInput.focus();
-  updateSearchUrl('');
-  loadCompanies();
-});
-
-const initialSearch = new URLSearchParams(window.location.search).get('search')?.trim() || '';
-searchInput.value = initialSearch;
-clearButton.hidden = initialSearch.length === 0;
-loadCompanies(initialSearch);
+form.addEventListener('submit', (event) => { event.preventDefault(); loadCompanies(); });
+form.addEventListener('reset', () => setTimeout(loadCompanies));
+(async () => {
+  try { await loadOptions(); restoreQuery(); await loadCompanies(); }
+  catch (error) { statusMessage.textContent = error.message; statusMessage.classList.add('error'); }
+})();

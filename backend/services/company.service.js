@@ -20,26 +20,87 @@ function validateCompanyId(companyId) {
   return parsedId;
 }
 
-function validateSearch(search) {
-  if (search === undefined) {
+function validateText(value, label, maximum = 100) {
+  if (value === undefined || value === '') {
     return '';
   }
 
-  if (typeof search !== 'string') {
-    throw createHttpError(400, 'Search must be a string');
+  if (typeof value !== 'string') {
+    throw createHttpError(400, `${label} must be a string`);
   }
 
-  const trimmedSearch = search.trim();
+  const normalized = value.trim();
 
-  if (trimmedSearch.length > 100) {
-    throw createHttpError(400, 'Search must not exceed 100 characters');
+  if (normalized.length > maximum) {
+    throw createHttpError(400, `${label} must not exceed ${maximum} characters`);
   }
 
-  return trimmedSearch;
+  return normalized;
 }
 
-async function getCompanies(search) {
-  return companyRepository.findAllCompanies(validateSearch(search));
+function optionalPositiveInteger(value, label) {
+  if (value === undefined || value === '') return null;
+  if (!/^\d+$/.test(String(value))) {
+    throw createHttpError(400, `${label} must be a positive integer`);
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw createHttpError(400, `${label} must be a positive integer`);
+  }
+  return parsed;
+}
+
+function optionalNumber(value, label, minimum = 0, maximum = 9999999999.99) {
+  if (value === undefined || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < minimum || parsed > maximum) {
+    throw createHttpError(400, `${label} must be between ${minimum} and ${maximum}`);
+  }
+  return parsed;
+}
+
+function optionalBoolean(value, label) {
+  if (value === undefined || value === '') return false;
+  if (value !== 'true' && value !== true) {
+    throw createHttpError(400, `${label} must be true when provided`);
+  }
+  return true;
+}
+
+function validateCompanyFilters(query = {}) {
+  const salarySource = validateText(query.salarySource, 'Salary source', 20).toUpperCase() || 'COMMUNITY';
+  if (!['COMMUNITY', 'VERIFIED'].includes(salarySource)) {
+    throw createHttpError(400, 'Salary source must be COMMUNITY or VERIFIED');
+  }
+
+  const filters = {
+    search: validateText(query.search, 'Search'),
+    industry: validateText(query.industry, 'Industry'),
+    roleId: optionalPositiveInteger(query.roleId, 'Role ID'),
+    minSalary: optionalNumber(query.minSalary, 'Minimum salary'),
+    maxSalary: optionalNumber(query.maxSalary, 'Maximum salary'),
+    location: validateText(query.location, 'Location'),
+    companySize: validateText(query.companySize, 'Company size', 30),
+    minRating: optionalNumber(query.minRating, 'Minimum rating', 1, 5),
+    salarySource,
+    hasSalaryData: optionalBoolean(query.hasSalaryData, 'Has salary data'),
+    hasReviews: optionalBoolean(query.hasReviews, 'Has reviews'),
+    hasInterviews: optionalBoolean(query.hasInterviews, 'Has interviews')
+  };
+
+  if (filters.minSalary !== null && filters.maxSalary !== null && filters.minSalary > filters.maxSalary) {
+    throw createHttpError(400, 'Minimum salary cannot exceed maximum salary');
+  }
+
+  return filters;
+}
+
+async function getCompanies(query) {
+  return companyRepository.findAllCompanies(validateCompanyFilters(query));
+}
+
+async function getCompanyFilterOptions() {
+  return companyRepository.findCompanyFilterOptions();
 }
 
 async function getCompany(companyId) {
@@ -86,7 +147,9 @@ async function getCompanySalarySummary(companyId) {
 
 module.exports = {
   getCompanies,
+  getCompanyFilterOptions,
   getCompany,
   getCompanyBenefits,
-  getCompanySalarySummary
+  getCompanySalarySummary,
+  validateCompanyFilters
 };

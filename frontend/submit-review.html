@@ -20,9 +20,9 @@
             <div id="main-menu" class="nav-menu" data-nav-menu>
                 <ul class="nav-links">
                     <li><a href="companies.html">Companies</a></li>
-                    <li><a href="index.html#salary-insights">Salaries</a></li>
-                    <li><a class="active" href="submit-review.html">Reviews</a></li>
-                    <li><a href="interview-experience.html">Interviews</a></li>
+                    <li><a href="salaries.html">Salaries</a></li>
+                    <li><a class="active" href="reviews.html">Reviews</a></li>
+                    <li><a href="interviews.html">Interviews</a></li>
                 </ul>
                 <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
                         class="button button-secondary button-small" href="register.html">Create account</a>
@@ -45,10 +45,11 @@
                 <h1>Share a workplace review.</h1>
                 <p>Reviews are saved as pending and become public only after moderation.</p>
             </div>
-            <div class="form-layout">
+            <section id="contribution-access" class="access-state card" role="status" hidden></section>
+            <div class="form-layout" data-contribution-layout hidden>
                 <form id="review-form" class="structured-form card" novalidate>
                     <section class="form-section">
-                        <div class="form-section-heading"><span>1</span>
+                        <div class="form-section-heading"><span>01</span>
                             <div>
                                 <h2>Company and role</h2>
                                 <p>Employee accounts only.</p>
@@ -77,7 +78,7 @@
                         </div>
                     </section>
                     <section class="form-section">
-                        <div class="form-section-heading"><span>2</span>
+                        <div class="form-section-heading"><span>02</span>
                             <div>
                                 <h2>Ratings</h2>
                                 <p>Use a 1–5 scale.</p>
@@ -97,9 +98,9 @@
                         </div>
                     </section>
                     <section class="form-section">
-                        <div class="form-section-heading"><span>3</span>
+                        <div class="form-section-heading"><span>03</span>
                             <div>
-                                <h2>Your review</h2>
+                                <h2>Review details</h2>
                             </div>
                         </div>
                         <div class="form-grid">
@@ -117,7 +118,7 @@
                         </div>
                     </section>
                     <section class="form-section">
-                        <div class="form-section-heading"><span>4</span>
+                        <div class="form-section-heading"><span>04</span>
                             <div>
                                 <h2>Privacy</h2>
                             </div>
@@ -125,9 +126,14 @@
                                 checked><span><strong>Display anonymously</strong><small>Your identity stays hidden
                                     publicly but remains associated internally for moderation.</small></span></label>
                     </section>
-                    <p id="review-status" class="state-message form-status" role="status" aria-live="polite" hidden></p>
-                    <div class="form-actions"><button class="button button-primary" type="submit">Submit review for
-                            moderation</button></div>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>05</span>
+                            <div><h2>Submit</h2><p>Confirm the details above before sending them to moderation.</p></div>
+                        </div>
+                        <p id="review-status" class="state-message form-status" role="status" aria-live="polite" hidden></p>
+                        <div class="form-actions"><button class="button button-primary" type="submit">Submit review for
+                                moderation</button></div>
+                    </section>
                 </form>
                 <aside class="form-sidebar">
                     <div class="trust-card card">

@@ -2,6 +2,30 @@ const navigationToggle = document.querySelector('[data-nav-toggle]');
 const navigationMenu = document.querySelector('[data-nav-menu]');
 const contributionMenu = document.querySelector('.contribute-menu');
 const authModuleUrl = new URL('./auth.js', document.currentScript.src);
+const browseDestinations = {
+  Companies: 'companies.html',
+  Salaries: 'salaries.html',
+  Reviews: 'reviews.html',
+  Interviews: 'interviews.html'
+};
+
+document.querySelectorAll('.nav-links a').forEach((link) => {
+  const destination = browseDestinations[link.textContent.trim()];
+  if (destination) link.href = destination;
+});
+
+function updateContributionVisibility(user) {
+  const verified = Array.isArray(user?.verifiedCompanies) && user.verifiedCompanies.length > 0;
+  contributionMenu?.classList.toggle('is-available', verified);
+  document.querySelectorAll('[data-verified-contributor]').forEach((element) => {
+    element.hidden = !verified;
+  });
+  document.querySelectorAll(
+    '.site-footer a[href="submit-salary.html"], .site-footer a[href="submit-review.html"], .site-footer a[href="interview-experience.html"]'
+  ).forEach((link) => { link.hidden = !verified; });
+}
+
+updateContributionVisibility(null);
 
 function closeNavigation() {
   if (!navigationToggle || !navigationMenu) {
@@ -68,17 +92,20 @@ async function updateAuthenticationNavigation() {
 
   const renderAuthenticatedState = (currentUser) => {
     const contribution = navigationActions.querySelector('.contribute-menu');
-    const accountName = document.createElement(currentUser?.accountRole === 'ADMIN' ? 'a' : 'span');
+    const accountName = document.createElement('a');
     const signOutButton = document.createElement('button');
     const firstName = currentUser?.fullName?.trim().split(/\s+/)[0] || 'Account';
 
     accountName.className = 'nav-account-name';
     accountName.textContent = firstName;
     accountName.title = currentUser?.email || 'Signed-in account';
-    if (currentUser?.accountRole === 'ADMIN') {
-      accountName.href = 'admin.html';
-      accountName.setAttribute('aria-label', `${firstName} administrator dashboard`);
-    }
+    accountName.href = currentUser?.accountRole === 'ADMIN' ? 'admin.html' : 'profile.html';
+    accountName.setAttribute(
+      'aria-label',
+      currentUser?.accountRole === 'ADMIN'
+        ? `${firstName} administrator dashboard`
+        : `${firstName} profile`
+    );
 
     signOutButton.className = 'nav-text-link nav-sign-out';
     signOutButton.type = 'button';
@@ -88,17 +115,14 @@ async function updateAuthenticationNavigation() {
       window.location.assign('index.html');
     });
 
-    if (currentUser?.userType === 'EMPLOYEE' && !document.querySelector('[data-verification-link]')) {
-      const options = document.querySelector('.contribute-options');
-      if (options) {
-        const item = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = 'employee-verification.html';
-        link.textContent = 'Request employee verification';
-        link.dataset.verificationLink = '';
-        item.append(link);
-        options.append(item);
-      }
+    let verificationLink = navigationActions.querySelector('[data-verification-link]');
+    if (currentUser?.userType === 'EMPLOYEE' && !verificationLink) {
+      verificationLink = document.createElement('a');
+      verificationLink.href = 'employee-verification.html';
+      verificationLink.textContent = 'Verification';
+      verificationLink.className = 'nav-text-link';
+      verificationLink.dataset.verificationLink = '';
+      navigationActions.insertBefore(verificationLink, contribution || null);
     }
 
     navigationActions.querySelector('a[href="login.html"]')?.remove();
@@ -108,8 +132,8 @@ async function updateAuthenticationNavigation() {
     navigationActions.insertBefore(accountName, contribution || null);
     navigationActions.insertBefore(signOutButton, contribution || null);
 
-    const verificationLink = document.querySelector('[data-verification-link]');
-    if (currentUser?.userType !== 'EMPLOYEE') verificationLink?.closest('li')?.remove();
+    if (currentUser?.userType !== 'EMPLOYEE') verificationLink?.remove();
+    updateContributionVisibility(currentUser);
   };
 
   if (user) {

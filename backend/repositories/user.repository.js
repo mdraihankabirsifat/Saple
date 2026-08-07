@@ -65,6 +65,69 @@ async function findAuthorizationById(userId) {
   return executeSingleRow(sql, { userId });
 }
 
+async function findActiveVerifiedCompaniesByUserId(userId) {
+  let connection;
+  try {
+    connection = await database.getConnection();
+    const result = await connection.execute(
+      `SELECT DISTINCT c.company_id AS "companyId", c.company_name AS "companyName",
+         e.employment_status AS "employmentStatus", ev.expires_at AS "expiresAt"
+       FROM employees e
+       JOIN employment_verifications ev ON ev.employee_id = e.employee_id
+       JOIN companies c ON c.company_id = ev.company_id
+       WHERE e.user_id = :userId
+         AND ev.verification_status = 'VERIFIED'
+         AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
+       ORDER BY c.company_name`,
+      { userId }
+    );
+    return result.rows;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+async function updateFullName(userId, fullName) {
+  let connection;
+  try {
+    connection = await database.getConnection();
+    const result = await connection.execute(
+      `UPDATE users SET full_name = :fullName, updated_at = SYSTIMESTAMP
+       WHERE user_id = :userId AND account_status = 'ACTIVE'`,
+      { userId, fullName },
+      { autoCommit: true }
+    );
+    return result.rowsAffected === 1;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
+async function findPasswordHashById(userId) {
+  const result = await executeSingleRow(
+    `SELECT password_hash AS "passwordHash", account_status AS "accountStatus"
+     FROM users WHERE user_id = :userId`,
+    { userId }
+  );
+  return result;
+}
+
+async function updatePasswordHash(userId, passwordHash) {
+  let connection;
+  try {
+    connection = await database.getConnection();
+    const result = await connection.execute(
+      `UPDATE users SET password_hash = :passwordHash, updated_at = SYSTIMESTAMP
+       WHERE user_id = :userId AND account_status = 'ACTIVE'`,
+      { userId, passwordHash },
+      { autoCommit: true }
+    );
+    return result.rowsAffected === 1;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 async function createUserWithOptionalEmployee({
   fullName,
   email,
@@ -153,5 +216,9 @@ module.exports = {
   findUserByEmail,
   findSafeUserById,
   findAuthorizationById,
+  findActiveVerifiedCompaniesByUserId,
+  updateFullName,
+  findPasswordHashById,
+  updatePasswordHash,
   createUserWithOptionalEmployee
 };

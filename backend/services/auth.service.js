@@ -28,7 +28,7 @@ function validatePassword(password) {
   );
 }
 
-function toSafeUser(user) {
+function toSafeUser(user, verifiedCompanies = []) {
   return {
     userId: user.userId,
     fullName: user.fullName,
@@ -37,6 +37,7 @@ function toSafeUser(user) {
     accountRole: user.accountRole,
     accountStatus: user.accountStatus,
     employmentStatus: user.employmentStatus || null,
+    verifiedCompanies,
     ...(user.createdAt ? { createdAt: user.createdAt } : {})
   };
 }
@@ -126,9 +127,13 @@ async function login(input = {}) {
     }
   );
 
+  const verifiedCompanies = user.userType === 'EMPLOYEE'
+    ? await userRepository.findActiveVerifiedCompaniesByUserId(user.userId)
+    : [];
+
   return {
     token,
-    user: toSafeUser(user)
+    user: toSafeUser(user, verifiedCompanies)
   };
 }
 
@@ -139,11 +144,60 @@ async function getCurrentUser(userId) {
     throw createHttpError(401, 'Authenticated account is unavailable');
   }
 
-  return toSafeUser(user);
+  const verifiedCompanies = user.userType === 'EMPLOYEE'
+    ? await userRepository.findActiveVerifiedCompaniesByUserId(userId)
+    : [];
+  return toSafeUser(user, verifiedCompanies);
+}
+
+async function updateProfile(userId, input = {}) {
+  const allowedFields = new Set(['fullName']);
+  const unexpected = Object.keys(input).filter((key) => !allowedFields.has(key));
+  if (unexpected.length > 0) {
+    throw createHttpError(400, `Profile field cannot be changed: ${unexpected[0]}`);
+  }
+  const fullName = typeof input.fullName === 'string'
+    ? input.fullName.trim().replace(/\s+/g, ' ')
+    : '';
+  if (fullName.length < 2 || fullName.length > 120) {
+    throw createHttpError(400, 'Full name must be between 2 and 120 characters');
+  }
+  if (!await userRepository.updateFullName(userId, fullName)) {
+    throw createHttpError(401, 'Authenticated account is unavailable');
+  }
+  return getCurrentUser(userId);
+}
+
+async function changePassword(userId, input = {}) {
+  const currentPassword = input.currentPassword;
+  const newPassword = input.newPassword;
+  if (typeof currentPassword !== 'string' || currentPassword.length === 0) {
+    throw createHttpError(400, 'Current password is required');
+  }
+  if (!validatePassword(newPassword)) {
+    throw createHttpError(400, 'New password must contain 8 to 72 bytes, including a letter and a number');
+  }
+  const credentials = await userRepository.findPasswordHashById(userId);
+  if (!credentials || credentials.accountStatus !== 'ACTIVE') {
+    throw createHttpError(401, 'Authenticated account is unavailable');
+  }
+  if (!await bcrypt.compare(currentPassword, credentials.passwordHash)) {
+    throw createHttpError(400, 'Current password is incorrect');
+  }
+  if (await bcrypt.compare(newPassword, credentials.passwordHash)) {
+    throw createHttpError(400, 'New password must be different from the current password');
+  }
+  const passwordHash = await bcrypt.hash(newPassword, PASSWORD_SALT_ROUNDS);
+  if (!await userRepository.updatePasswordHash(userId, passwordHash)) {
+    throw createHttpError(401, 'Authenticated account is unavailable');
+  }
+  return { passwordChanged: true };
 }
 
 module.exports = {
   register,
   login,
-  getCurrentUser
+  getCurrentUser,
+  updateProfile,
+  changePassword
 };

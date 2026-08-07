@@ -7,6 +7,33 @@ function repositoryError(code, message) {
   return error;
 }
 
+async function findActiveVerifiedEmployment(userId, companyId) {
+  let connection;
+  try {
+    connection = await database.getConnection();
+    const result = await connection.execute(
+      `SELECT e.employee_id AS "employeeId", e.employment_status AS "employmentStatus",
+         ev.verification_id AS "verificationId", ev.company_id AS "companyId",
+         ev.expires_at AS "expiresAt"
+       FROM users u
+       JOIN employees e ON e.user_id = u.user_id
+       JOIN employment_verifications ev ON ev.employee_id = e.employee_id
+       WHERE u.user_id = :userId
+         AND u.user_type = 'EMPLOYEE'
+         AND u.account_status = 'ACTIVE'
+         AND ev.company_id = :companyId
+         AND ev.verification_status = 'VERIFIED'
+         AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
+       ORDER BY ev.reviewed_at DESC
+       FETCH FIRST 1 ROW ONLY`,
+      { userId, companyId }
+    );
+    return result.rows[0] || null;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 async function createVerificationRequest({
   userId,
   companyId,
@@ -163,6 +190,7 @@ async function decideVerification({ verificationId, reviewerUserId, status, reje
 }
 
 module.exports = {
+  findActiveVerifiedEmployment,
   createVerificationRequest,
   findPendingVerifications,
   findVerificationById,

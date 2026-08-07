@@ -1,0 +1,30 @@
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.profile-card { min-width: 0; padding: clamp(1.3rem, 4vw, 2rem); }
+.profile-card h2 { margin-bottom: 0.5rem; }
+.profile-card > p { color: var(--text-secondary); }
+.profile-card-full { grid-column: 1 / -1; }
+
+.account-facts {
+  margin: 1rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.account-facts div { padding: 0.85rem; border-radius: var(--radius-sm); background: var(--surface-muted); }
+.account-facts dt { color: var(--text-secondary); font-size: 0.78rem; font-weight: 750; }
+.account-facts dd { margin: 0.2rem 0 0; overflow-wrap: anywhere; font-weight: 700; }
+
+.verified-company-list { margin: 1rem 0 0; padding-left: 1.2rem; }
+.verified-company-list li + li { margin-top: 0.55rem; }
+
+@media (max-width: 720px) {
+  .profile-grid, .account-facts { grid-template-columns: 1fr; }
+  .profile-card-full { grid-column: auto; }
+}

@@ -28,8 +28,28 @@ async function getCurrentUser(request, response, next) {
   }
 }
 
+async function updateProfile(request, response, next) {
+  try {
+    const user = await authService.updateProfile(request.user.userId, request.body);
+    return sendSuccess(response, 200, 'Profile updated successfully', { user });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function changePassword(request, response, next) {
+  try {
+    const result = await authService.changePassword(request.user.userId, request.body);
+    return sendSuccess(response, 200, 'Password changed successfully', result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   register,
   login,
-  getCurrentUser
+  getCurrentUser,
+  updateProfile,
+  changePassword
 };

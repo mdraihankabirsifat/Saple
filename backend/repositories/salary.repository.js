@@ -26,18 +26,29 @@ async function createSalarySubmission({
   try {
     connection = await database.getConnection();
 
-    const userResult = await connection.execute(
+    const verificationResult = await connection.execute(
       `
         SELECT
-          account_status AS "accountStatus"
-        FROM users
-        WHERE user_id = :userId
+          ev.verification_id AS "verificationId"
+        FROM users u
+        JOIN employees e ON e.user_id = u.user_id
+        JOIN employment_verifications ev ON ev.employee_id = e.employee_id
+        WHERE u.user_id = :userId
+          AND u.user_type = 'EMPLOYEE'
+          AND u.account_status = 'ACTIVE'
+          AND ev.company_id = :companyId
+          AND ev.verification_status = 'VERIFIED'
+          AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
+        FETCH FIRST 1 ROW ONLY
       `,
-      { userId }
+      { userId, companyId }
     );
 
-    if (!userResult.rows[0] || userResult.rows[0].accountStatus !== 'ACTIVE') {
-      throw createRepositoryError('ACCOUNT_UNAVAILABLE', 'Authenticated account is unavailable');
+    if (!verificationResult.rows[0]) {
+      throw createRepositoryError(
+        'VERIFICATION_REQUIRED',
+        'Employee verification is required for this company'
+      );
     }
 
     const companyResult = await connection.execute(
@@ -68,22 +79,7 @@ async function createSalarySubmission({
       throw createRepositoryError('ROLE_NOT_FOUND', 'Job role not found');
     }
 
-    const verificationResult = await connection.execute(
-      `
-        SELECT
-          ev.verification_id AS "verificationId"
-        FROM employees e
-        JOIN employment_verifications ev ON ev.employee_id = e.employee_id
-        WHERE e.user_id = :userId
-          AND ev.company_id = :companyId
-          AND ev.verification_status = 'VERIFIED'
-          AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
-        FETCH FIRST 1 ROW ONLY
-      `,
-      { userId, companyId }
-    );
-
-    const verificationStatus = verificationResult.rows.length > 0 ? 'VERIFIED' : 'UNVERIFIED';
+    const verificationStatus = 'VERIFIED';
 
     const parentResult = await connection.execute(
       `

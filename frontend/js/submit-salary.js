@@ -1,5 +1,5 @@
 import { apiRequest, fetchApi } from './api.js';
-import { getToken } from './auth.js';
+import { requireContributionAccess } from './contribution-access.js';
 
 const salaryForm = document.querySelector('#salary-form');
 const companySelect = document.querySelector('#salary-company');
@@ -43,13 +43,12 @@ function showSignInRequired(message = 'Please sign in before submitting salary i
   formStatus.append(document.createElement('br'), signInLink);
 }
 
-async function loadCompanies() {
+async function loadCompanies(companies) {
   companySelect.disabled = true;
   companyLoadStatus.textContent = 'Loading from the Saple API...';
   companyLoadStatus.classList.remove('error');
 
   try {
-    const companies = await fetchApi('/api/companies');
     const placeholder = new Option('Select a company', '');
     companySelect.replaceChildren(placeholder);
 
@@ -191,11 +190,6 @@ salaryForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   formStatus.hidden = true;
 
-  if (!getToken()) {
-    showSignInRequired();
-    return;
-  }
-
   if (!validateForm()) {
     salaryForm.querySelector('[aria-invalid="true"]:not(:disabled)')?.focus();
     return;
@@ -228,6 +222,8 @@ salaryForm.addEventListener('submit', async (event) => {
   } catch (error) {
     if (error.status === 401) {
       showSignInRequired('Your session is missing or expired. Please sign in again.');
+    } else if (error.status === 403) {
+      showFormStatus('Employee verification is required for the selected company.', 'error');
     } else {
       showFormStatus(error.message, 'error');
     }
@@ -237,4 +233,8 @@ salaryForm.addEventListener('submit', async (event) => {
   }
 });
 
-Promise.all([loadCompanies(), loadJobRoles()]);
+(async () => {
+  const access = await requireContributionAccess('submit-salary.html');
+  if (!access) return;
+  await Promise.all([loadCompanies(access.verifiedCompanies), loadJobRoles()]);
+})();

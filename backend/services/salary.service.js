@@ -118,8 +118,8 @@ async function submitSalary(userId, companyIdValue, input) {
       ...validated
     });
   } catch (error) {
-    if (error.sapleCode === 'ACCOUNT_UNAVAILABLE') {
-      throw createHttpError(403, 'This account cannot submit salary information');
+    if (['ACCOUNT_UNAVAILABLE', 'VERIFICATION_REQUIRED'].includes(error.sapleCode)) {
+      throw createHttpError(403, error.message);
     }
 
     if (error.sapleCode === 'COMPANY_NOT_FOUND') {

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View and update your Saple account.">
+  <title>Profile | Saple</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation"><a class="brand" href="index.html"><span
+          class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a><button class="nav-toggle" type="button"
+        aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation" data-nav-toggle><span
+          class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links">
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="salaries.html">Salaries</a></li>
+          <li><a href="reviews.html">Reviews</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+            class="button button-secondary button-small" href="register.html">Create account</a>
+          <details class="contribute-menu">
+            <summary class="button button-primary button-small">+ Contribute</summary>
+            <ul class="contribute-options">
+              <li><a href="submit-salary.html">Submit salary</a></li>
+              <li><a href="submit-review.html">Write a review</a></li>
+              <li><a href="interview-experience.html">Share interview experience</a></li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main class="page-main">
+    <div class="container">
+      <div class="page-header">
+        <p class="eyebrow">Your account</p>
+        <h1>Profile and security.</h1>
+        <p>Update personal information while system roles and verification remain protected.</p>
+      </div>
+      <p id="profile-load-status" class="state-message" role="status">Loading profile&hellip;</p>
+      <div id="profile-content" class="profile-grid" hidden>
+        <section class="profile-card card">
+          <h2>Personal details</h2>
+          <p>Email changes require a future verification flow, so email remains read-only.</p>
+          <form id="profile-form">
+            <div class="form-group"><label for="profile-name">Full name</label><input id="profile-name" maxlength="120"
+                required></div>
+            <div class="form-group"><label for="profile-email">Email</label><input id="profile-email" type="email"
+                readonly aria-readonly="true"></div>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save name</button></div>
+          </form>
+          <p id="profile-status" class="state-message form-status" role="status" hidden></p>
+        </section>
+        <section class="profile-card card">
+          <h2>Account status</h2>
+          <p>These values are controlled by Saple and cannot be edited here.</p>
+          <dl class="account-facts">
+            <div>
+              <dt>Account type</dt>
+              <dd id="profile-user-type"></dd>
+            </div>
+            <div>
+              <dt>Employment status</dt>
+              <dd id="profile-employment-status"></dd>
+            </div>
+            <div>
+              <dt>Account role</dt>
+              <dd id="profile-account-role"></dd>
+            </div>
+            <div>
+              <dt>Account state</dt>
+              <dd id="profile-account-status"></dd>
+            </div>
+          </dl>
+        </section>
+        <section class="profile-card card">
+          <h2>Change password</h2>
+          <p>Your current password is required. The new password uses the existing BCrypt policy.</p>
+          <form id="password-form">
+            <div class="form-group"><label for="current-password">Current password</label><input id="current-password"
+                type="password" autocomplete="current-password" required></div>
+            <div class="form-group"><label for="new-password">New password</label><input id="new-password"
+                type="password" autocomplete="new-password" minlength="8" maxlength="72" required></div>
+            <div class="form-actions"><button class="button button-primary" type="submit">Change password</button></div>
+          </form>
+          <p id="password-status" class="state-message form-status" role="status" hidden></p>
+        </section>
+        <section class="profile-card card">
+          <h2>Verified companies</h2>
+          <p>Contribution access is derived from active, company-specific verification records.</p>
+          <ul id="verified-company-list" class="verified-company-list"></ul>
+          <p id="no-verified-companies" class="empty-state" hidden>No active verified companies. <a
+              href="employee-verification.html">Request verification</a>.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple.</p>
+        <p>Private account information.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/nav.js" defer></script>
+  <script type="module" src="js/profile.js"></script>
+</body>
+
+</html>

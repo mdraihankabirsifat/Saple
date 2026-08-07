@@ -1,5 +1,5 @@
 import { apiRequest, fetchApi } from './api.js';
-import { getToken } from './auth.js';
+import { requireContributionAccess } from './contribution-access.js';
 
 const form = document.querySelector('#interview-form');
 const company = document.querySelector('#interview-company');
@@ -16,9 +16,9 @@ function signIn() {
   link.className = 'state-action-link'; link.textContent = 'Sign in to continue';
   status.append(document.createElement('br'), link);
 }
-async function loadOptions() {
+async function loadOptions(companies) {
   try {
-    const [companies, roles] = await Promise.all([fetchApi('/api/companies'), fetchApi('/api/job-roles')]);
+    const roles = await fetchApi('/api/job-roles');
     company.replaceChildren(new Option('Select a company', ''));
     companies.forEach((item) => company.append(new Option(item.companyName, item.companyId)));
     role.replaceChildren(new Option('Select a job role', ''));
@@ -29,7 +29,6 @@ async function loadOptions() {
 document.querySelector('#interview-date').max = new Date().toISOString().slice(0, 10);
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); status.hidden = true;
-  if (!getToken()) return signIn();
   if (!form.checkValidity()) { form.reportValidity(); return; }
   const body = {
     roleId: Number(role.value), interviewDate: document.querySelector('#interview-date').value,
@@ -46,7 +45,14 @@ form.addEventListener('submit', async (event) => {
   try {
     await apiRequest(`/api/companies/${company.value}/interviews`, { method: 'POST', auth: true, body });
     show('Interview experience submitted for moderation.', 'success');
-  } catch (error) { error.status === 401 ? signIn() : show(error.message, 'error'); }
+  } catch (error) {
+    if (error.status === 401) signIn();
+    else if (error.status === 403) show('Employee verification is required for the selected company.', 'error');
+    else show(error.message, 'error');
+  }
   finally { submit.disabled = false; }
 });
-loadOptions();
+(async () => {
+  const access = await requireContributionAccess('interview-experience.html');
+  if (access) await loadOptions(access.verifiedCompanies);
+})();

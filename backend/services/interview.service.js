@@ -48,7 +48,7 @@ async function submitInterview(userId, companyIdValue, input = {}) {
   };
   try { return await interviewRepository.createInterview(data); }
   catch (error) {
-    const map = { ACCOUNT_UNAVAILABLE: 403, COMPANY_NOT_FOUND: 404, ROLE_NOT_FOUND: 404 };
+    const map = { ACCOUNT_UNAVAILABLE: 403, VERIFICATION_REQUIRED: 403, COMPANY_NOT_FOUND: 404, ROLE_NOT_FOUND: 404 };
     if (map[error.sapleCode]) throw createHttpError(map[error.sapleCode], error.message);
     throw error;
   }

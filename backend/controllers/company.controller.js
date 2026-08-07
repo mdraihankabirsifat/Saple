@@ -3,8 +3,17 @@ const { sendSuccess } = require('../utils/apiResponse');
 
 async function getCompanies(request, response, next) {
   try {
-    const companies = await companyService.getCompanies(request.query.search);
+    const companies = await companyService.getCompanies(request.query);
     return sendSuccess(response, 200, 'Companies retrieved successfully', companies);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getCompanyFilterOptions(request, response, next) {
+  try {
+    const options = await companyService.getCompanyFilterOptions();
+    return sendSuccess(response, 200, 'Company filter options retrieved successfully', options);
   } catch (error) {
     return next(error);
   }
@@ -39,6 +48,7 @@ async function getCompanySalarySummary(request, response, next) {
 
 module.exports = {
   getCompanies,
+  getCompanyFilterOptions,
   getCompany,
   getCompanyBenefits,
   getCompanySalarySummary

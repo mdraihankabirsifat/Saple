@@ -1,5 +1,5 @@
 import { apiRequest, fetchApi } from './api.js';
-import { getToken } from './auth.js';
+import { requireContributionAccess } from './contribution-access.js';
 
 const form = document.querySelector('#review-form');
 const company = document.querySelector('#review-company');
@@ -28,9 +28,9 @@ function signIn() {
   link.textContent = 'Sign in to continue';
   status.append(document.createElement('br'), link);
 }
-async function loadOptions() {
+async function loadOptions(companies) {
   try {
-    const [companies, roles] = await Promise.all([fetchApi('/api/companies'), fetchApi('/api/job-roles')]);
+    const roles = await fetchApi('/api/job-roles');
     company.replaceChildren(new Option('Select a company', ''));
     companies.forEach((item) => company.append(new Option(item.companyName, item.companyId)));
     role.replaceChildren(new Option('No role specified', ''));
@@ -42,7 +42,6 @@ document.querySelector('#review-date').max = new Date().toISOString().slice(0, 1
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   status.hidden = true;
-  if (!getToken()) return signIn();
   if (!form.checkValidity()) { form.reportValidity(); return; }
   const body = {};
   Object.entries(ids).forEach(([key, selector]) => { body[key] = document.querySelector(selector).value; });
@@ -53,7 +52,14 @@ form.addEventListener('submit', async (event) => {
   try {
     await apiRequest(`/api/companies/${company.value}/reviews`, { method: 'POST', auth: true, body });
     show('Review submitted for moderation.', 'success');
-  } catch (error) { error.status === 401 ? signIn() : show(error.message, 'error'); }
+  } catch (error) {
+    if (error.status === 401) signIn();
+    else if (error.status === 403) show('Employee verification is required for the selected company.', 'error');
+    else show(error.message, 'error');
+  }
   finally { submit.disabled = false; }
 });
-loadOptions();
+(async () => {
+  const access = await requireContributionAccess('submit-review.html');
+  if (access) await loadOptions(access.verifiedCompanies);
+})();

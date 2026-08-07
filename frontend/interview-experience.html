@@ -20,9 +20,9 @@
             <div id="main-menu" class="nav-menu" data-nav-menu>
                 <ul class="nav-links">
                     <li><a href="companies.html">Companies</a></li>
-                    <li><a href="index.html#salary-insights">Salaries</a></li>
-                    <li><a href="submit-review.html">Reviews</a></li>
-                    <li><a class="active" href="interview-experience.html">Interviews</a></li>
+                    <li><a href="salaries.html">Salaries</a></li>
+                    <li><a href="reviews.html">Reviews</a></li>
+                    <li><a class="active" href="interviews.html">Interviews</a></li>
                 </ul>
                 <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
                         class="button button-secondary button-small" href="register.html">Create account</a>
@@ -45,10 +45,11 @@
                 <h1>Share an interview experience.</h1>
                 <p>Your experience stays pending until an administrator reviews it.</p>
             </div>
-            <div class="form-layout">
+            <section id="contribution-access" class="access-state card" role="status" hidden></section>
+            <div class="form-layout" data-contribution-layout hidden>
                 <form id="interview-form" class="structured-form card" novalidate>
                     <section class="form-section">
-                        <div class="form-section-heading"><span>1</span>
+                        <div class="form-section-heading"><span>01</span>
                             <div>
                                 <h2>Company and role</h2>
                             </div>
@@ -62,6 +63,15 @@
                                     id="interview-role" required disabled>
                                     <option value="">Loading roles…</option>
                                 </select></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>02</span>
+                            <div>
+                                <h2>Process details</h2>
+                            </div>
+                        </div>
+                        <div class="form-grid">
                             <div class="form-group"><label for="interview-date">Interview date</label><input
                                     id="interview-date" type="date" required></div>
                             <div class="form-group"><label for="interview-difficulty">Difficulty</label><select
@@ -71,15 +81,6 @@
                                     <option value="MEDIUM">Medium</option>
                                     <option value="HARD">Hard</option>
                                 </select></div>
-                        </div>
-                    </section>
-                    <section class="form-section">
-                        <div class="form-section-heading"><span>2</span>
-                            <div>
-                                <h2>Process details</h2>
-                            </div>
-                        </div>
-                        <div class="form-grid">
                             <div class="form-group"><label for="interview-rounds">Rounds</label><input
                                     id="interview-rounds" type="number" min="1" max="20" required></div>
                             <div class="form-group"><label for="interview-mode">Mode</label><select id="interview-mode"
@@ -89,6 +90,13 @@
                                     <option value="ONSITE">Onsite</option>
                                     <option value="HYBRID">Hybrid</option>
                                 </select></div>
+                            <div class="form-group"><label for="interview-duration">Duration in days</label><input
+                                    id="interview-duration" type="number" min="0" max="365" required></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>03</span><div><h2>Interview outcome</h2></div></div>
+                        <div class="form-grid">
                             <div class="form-group"><label for="interview-result">Outcome</label><select
                                     id="interview-result" required>
                                     <option value="">Select</option>
@@ -97,8 +105,11 @@
                                     <option value="PENDING">Pending</option>
                                     <option value="WITHDREW">Withdrew</option>
                                 </select></div>
-                            <div class="form-group"><label for="interview-duration">Duration in days</label><input
-                                    id="interview-duration" type="number" min="0" max="365" required></div>
+                        </div>
+                    </section>
+                    <section class="form-section">
+                        <div class="form-section-heading"><span>04</span><div><h2>Experience and questions</h2></div></div>
+                        <div class="form-grid">
                             <div class="form-group form-group-full"><label for="interview-process">Process
                                     description</label><textarea id="interview-process" maxlength="8000"
                                     required></textarea></div>
@@ -107,9 +118,9 @@
                         </div>
                     </section>
                     <section class="form-section">
-                        <div class="form-section-heading"><span>3</span>
+                        <div class="form-section-heading"><span>05</span>
                             <div>
-                                <h2>Privacy</h2>
+                                <h2>Privacy and submit</h2>
                             </div>
                         </div><label class="checkbox-row"><input id="interview-anonymous" type="checkbox"
                                 checked><span><strong>Display anonymously</strong><small>Saple retains the internal user

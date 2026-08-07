@@ -12,8 +12,10 @@ async function createInterview({
   try {
     connection = await database.getConnection();
     const userResult = await connection.execute(
-      `SELECT u.account_status AS "accountStatus", e.employee_id AS "employeeId"
-       FROM users u LEFT JOIN employees e ON e.user_id = u.user_id WHERE u.user_id = :userId`,
+      `SELECT u.account_status AS "accountStatus", e.employee_id AS "employeeId",
+         e.employment_status AS "employmentStatus"
+       FROM users u JOIN employees e ON e.user_id = u.user_id
+       WHERE u.user_id = :userId AND u.user_type = 'EMPLOYEE'`,
       { userId }
     );
     const user = userResult.rows[0];
@@ -23,18 +25,18 @@ async function createInterview({
     const roleResult = await connection.execute(`SELECT role_id AS "roleId" FROM job_roles WHERE role_id = :roleId`, { roleId });
     if (!roleResult.rows[0]) throw repositoryError('ROLE_NOT_FOUND', 'Job role not found');
 
-    let verificationStatus = 'UNVERIFIED';
-    if (user.employeeId) {
-      const verification = await connection.execute(
-        `SELECT verification_id AS "verificationId" FROM employment_verifications
-         WHERE employee_id = :employeeId AND company_id = :companyId
-           AND verification_status = 'VERIFIED'
-           AND (expires_at IS NULL OR expires_at > SYSTIMESTAMP)
-         FETCH FIRST 1 ROW ONLY`,
-        { employeeId: user.employeeId, companyId }
-      );
-      if (verification.rows[0]) verificationStatus = 'VERIFIED';
+    const verification = await connection.execute(
+      `SELECT verification_id AS "verificationId" FROM employment_verifications
+       WHERE employee_id = :employeeId AND company_id = :companyId
+         AND verification_status = 'VERIFIED'
+         AND (expires_at IS NULL OR expires_at > SYSTIMESTAMP)
+       FETCH FIRST 1 ROW ONLY`,
+      { employeeId: user.employeeId, companyId }
+    );
+    if (!verification.rows[0]) {
+      throw repositoryError('VERIFICATION_REQUIRED', 'Employee verification is required for this company');
     }
+    const verificationStatus = 'VERIFIED';
 
     const parent = await connection.execute(
       `INSERT INTO submissions (

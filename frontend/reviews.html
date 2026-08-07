@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse approved workplace reviews on Saple.">
+  <title>Reviews | Saple</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/browse.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation"><a class="brand" href="index.html"><span
+          class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a><button class="nav-toggle" type="button"
+        aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation" data-nav-toggle><span
+          class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links">
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="salaries.html">Salaries</a></li>
+          <li><a class="active" href="reviews.html" aria-current="page">Reviews</a></li>
+          <li><a href="interviews.html">Interviews</a></li>
+        </ul>
+        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
+            class="button button-secondary button-small" href="register.html">Create account</a>
+          <details class="contribute-menu">
+            <summary class="button button-primary button-small">+ Contribute</summary>
+            <ul class="contribute-options">
+              <li><a href="submit-salary.html">Submit salary</a></li>
+              <li><a href="submit-review.html">Write a review</a></li>
+              <li><a href="interview-experience.html">Share interview experience</a></li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main class="page-main">
+    <div class="container">
+      <div class="browse-header">
+        <div class="page-header">
+          <p class="eyebrow">Approved workplace reviews</p>
+          <h1>Employee perspectives.</h1>
+          <p>Only administrator-approved reviews are shown, with anonymous ownership enforced by the API.</p>
+        </div><a class="button button-primary" href="submit-review.html" data-verified-contributor hidden>+ Write a
+          review</a>
+      </div>
+      <form id="review-filters" class="filter-panel card">
+        <div class="filter-grid">
+          <div class="form-group"><label for="review-company-filter">Company</label><select id="review-company-filter">
+              <option value="">All companies</option>
+            </select></div>
+          <div class="form-group"><label for="review-role-filter">Job role</label><select id="review-role-filter">
+              <option value="">All roles</option>
+            </select></div>
+          <div class="form-group"><label for="review-location-filter">Location</label><input id="review-location-filter"
+              maxlength="100" placeholder="City or country"></div>
+          <div class="form-group"><label for="review-rating-filter">Minimum rating</label><select
+              id="review-rating-filter">
+              <option value="">Any rating</option>
+              <option value="3">3+</option>
+              <option value="4">4+</option>
+              <option value="4.5">4.5+</option>
+            </select></div>
+        </div>
+        <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button
+            class="button button-secondary" type="reset">Clear</button></div>
+      </form>
+      <p id="review-browse-status" class="state-message" role="status" aria-live="polite">Loading approved
+        reviews&hellip;</p>
+      <div id="review-results" class="browse-results" aria-live="polite"></div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple.</p>
+        <p>Anonymous display, accountable moderation.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/nav.js" defer></script>
+  <script type="module" src="js/reviews.js"></script>
+</body>
+
+</html>

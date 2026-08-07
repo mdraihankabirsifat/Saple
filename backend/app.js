@@ -10,6 +10,7 @@ const reviewRoutes = require('./routes/review.routes');
 const interviewRoutes = require('./routes/interview.routes');
 const reportRoutes = require('./routes/report.routes');
 const adminRoutes = require('./routes/admin.routes');
+const browseRoutes = require('./routes/browse.routes');
 const authenticate = require('./middleware/authenticate');
 const requireAdmin = require('./middleware/requireAdmin');
 const notFound = require('./middleware/notFound');
@@ -29,6 +30,7 @@ app.get('/', (request, response) => {
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/job-roles', jobRoleRoutes);
+app.use('/api', browseRoutes);
 app.use('/api/admin', authenticate, requireAdmin, adminRoutes);
 app.use('/api/companies', verificationRoutes);
 app.use('/api/companies', reviewRoutes);
