@@ -1,12 +1,23 @@
+import { apiRequest } from './api.js';
+import { setSession } from './auth.js';
+
 const loginForm = document.querySelector('#login-form');
 const emailInput = document.querySelector('#login-email');
 const passwordInput = document.querySelector('#login-password');
 const statusMessage = document.querySelector('#login-status');
+const submitButton = loginForm.querySelector('[type="submit"]');
 
 function setFieldError(input, message) {
   const errorElement = document.querySelector(`#${input.getAttribute('aria-describedby')}`);
   input.setAttribute('aria-invalid', message ? 'true' : 'false');
   if (errorElement) errorElement.textContent = message;
+}
+
+function showStatus(message, isError = false) {
+  statusMessage.textContent = message;
+  statusMessage.className = 'state-message form-status';
+  statusMessage.classList.toggle('error', isError);
+  statusMessage.hidden = false;
 }
 
 function validateLogin() {
@@ -33,6 +44,13 @@ function validateLogin() {
   return valid;
 }
 
+function getReturnPath() {
+  const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+  return returnTo && /^[a-z0-9-]+\.html(?:\?[^#]*)?(?:#.*)?$/i.test(returnTo)
+    ? returnTo
+    : 'index.html';
+}
+
 document.querySelectorAll('.password-toggle').forEach((button) => {
   button.addEventListener('click', () => {
     const input = document.querySelector(`#${button.getAttribute('aria-controls')}`);
@@ -50,7 +68,7 @@ document.querySelectorAll('.password-toggle').forEach((button) => {
   });
 });
 
-loginForm.addEventListener('submit', (event) => {
+loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   statusMessage.hidden = true;
 
@@ -59,7 +77,28 @@ loginForm.addEventListener('submit', (event) => {
     return;
   }
 
-  statusMessage.textContent = 'Authentication backend is not connected yet.';
-  statusMessage.className = 'state-message form-status';
-  statusMessage.hidden = false;
+  submitButton.disabled = true;
+  submitButton.textContent = 'Signing in...';
+
+  try {
+    const result = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: {
+        email: emailInput.value.trim(),
+        password: passwordInput.value
+      }
+    });
+
+    setSession(result.token, result.user);
+    window.location.assign(getReturnPath());
+  } catch (error) {
+    showStatus(error.message, true);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Sign in';
+  }
 });
+
+if (new URLSearchParams(window.location.search).get('registered') === '1') {
+  showStatus('Account created successfully. Sign in to continue.');
+}

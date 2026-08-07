@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Prepare a salary contribution for Saple."><title>Submit salary | Saple</title>
+  <meta name="description" content="Submit salary information to Saple for moderation."><title>Submit salary | Saple</title>
   <link rel="stylesheet" href="css/common.css"><link rel="stylesheet" href="css/forms.css"><link rel="stylesheet" href="css/salary-form.css">
 </head>
 <body>
@@ -13,12 +13,12 @@
   </nav></header>
 
   <main class="page-main"><div class="container">
-    <div class="page-header"><p class="eyebrow">Contribute salary context</p><h1>Share your compensation details.</h1><p>Provide structured information to help Saple prepare a useful, moderated salary contribution. Nothing will be submitted until the backend workflow is connected.</p></div>
+    <div class="page-header"><p class="eyebrow">Contribute salary context</p><h1>Share your compensation details.</h1><p>Provide structured information for a moderated salary contribution. New submissions remain pending until reviewed.</p></div>
     <div class="contribution-layout">
       <form id="salary-form" class="form-card card" novalidate>
-        <fieldset class="form-section"><legend><span class="form-step-label" aria-hidden="true">1</span>Company &amp; role</legend><p class="form-section-intro">Choose a company from the live Saple directory and describe your role.</p><div class="form-grid">
+        <fieldset class="form-section"><legend><span class="form-step-label" aria-hidden="true">1</span>Company &amp; role</legend><p class="form-section-intro">Choose a company and standardized job role from the live Saple API.</p><div class="form-grid">
           <div class="form-group"><label for="salary-company">Company <span class="required-mark" aria-hidden="true">*</span></label><select id="salary-company" name="companyId" required aria-describedby="company-load-status salary-company-error"><option value="">Loading companies&hellip;</option></select><p id="company-load-status" class="company-load-status" role="status" aria-live="polite"></p><p id="salary-company-error" class="field-error" aria-live="polite"></p></div>
-          <div class="form-group"><label for="salary-role">Job role <span class="required-mark" aria-hidden="true">*</span></label><input id="salary-role" name="roleName" type="text" minlength="2" maxlength="100" placeholder="e.g. Software Engineer" autocomplete="organization-title" required aria-describedby="salary-role-help salary-role-error"><p id="salary-role-help" class="field-help">A job-role lookup endpoint is required before final API integration.</p><p id="salary-role-error" class="field-error" aria-live="polite"></p></div>
+          <div class="form-group"><label for="salary-role">Job role <span class="required-mark" aria-hidden="true">*</span></label><select id="salary-role" name="roleId" required disabled aria-describedby="role-load-status salary-role-error"><option value="">Loading job roles&hellip;</option></select><p id="role-load-status" class="company-load-status" role="status" aria-live="polite"></p><p id="salary-role-error" class="field-error" aria-live="polite"></p></div>
         </div></fieldset>
 
         <fieldset class="form-section"><legend><span class="form-step-label" aria-hidden="true">2</span>Compensation</legend><p class="form-section-intro">Enter the amount for the selected pay period. Use numbers without commas.</p><div class="form-grid">
@@ -37,11 +37,11 @@
 
         <fieldset class="form-section"><legend><span class="form-step-label" aria-hidden="true">4</span>Privacy &amp; submission</legend><p class="form-section-intro">Choose how your identity should be treated in the eventual public view.</p><div class="checkbox-row"><input id="anonymous-display" name="isAnonymous" type="checkbox" checked><label for="anonymous-display"><strong>Display anonymously</strong><br><span class="field-help">Choosing anonymous hides your public identity, but Saple retains the submission internally for moderation.</span></label></div><div class="trust-notice"><strong>Review before publication</strong><p>Your submission will be reviewed before becoming publicly visible.</p></div></fieldset>
 
-        <div class="form-actions"><button class="button button-primary" type="submit">Validate salary submission</button><a class="button button-secondary" href="companies.html">Cancel</a></div>
+        <div class="form-actions"><button class="button button-primary" type="submit">Submit salary for review</button><a class="button button-secondary" href="companies.html">Cancel</a></div>
         <p id="salary-form-status" class="state-message form-status" role="status" aria-live="polite" hidden></p>
       </form>
 
-      <aside class="contribution-sidebar" aria-label="Salary contribution guidance"><section class="sidebar-card card"><h2>Private by design</h2><p>Anonymous display hides your identity from public views, not from internal moderation records.</p></section><section class="sidebar-card card"><h2>Backend status</h2><p>Company choices use the live API. Job-role lookup and salary submission endpoints are not available yet.</p></section></aside>
+      <aside class="contribution-sidebar" aria-label="Salary contribution guidance"><section class="sidebar-card card"><h2>Private by design</h2><p>Anonymous display hides your identity from public views, not from internal moderation records.</p></section><section class="sidebar-card card"><h2>Review workflow</h2><p>You must sign in to submit. Salary information is stored as pending and does not enter public ranges before approval.</p></section></aside>
     </div>
   </div></main>
 

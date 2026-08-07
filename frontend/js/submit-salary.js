@@ -1,9 +1,11 @@
-import { fetchApi } from './api.js';
+import { apiRequest, fetchApi } from './api.js';
+import { getToken } from './auth.js';
 
 const salaryForm = document.querySelector('#salary-form');
 const companySelect = document.querySelector('#salary-company');
 const companyLoadStatus = document.querySelector('#company-load-status');
-const roleInput = document.querySelector('#salary-role');
+const roleSelect = document.querySelector('#salary-role');
+const roleLoadStatus = document.querySelector('#role-load-status');
 const baseSalaryInput = document.querySelector('#base-salary');
 const additionalCompensationInput = document.querySelector('#additional-compensation');
 const currencyInput = document.querySelector('#salary-currency');
@@ -12,7 +14,9 @@ const experienceInput = document.querySelector('#years-experience');
 const salaryYearInput = document.querySelector('#salary-year');
 const employmentTypeSelect = document.querySelector('#employment-type');
 const workModeSelect = document.querySelector('#work-mode');
+const anonymousInput = document.querySelector('#anonymous-display');
 const formStatus = document.querySelector('#salary-form-status');
+const submitButton = salaryForm.querySelector('[type="submit"]');
 
 const currentYear = new Date().getFullYear();
 salaryYearInput.value = String(Math.min(Math.max(currentYear, 2000), 2100));
@@ -22,6 +26,23 @@ function setFieldError(input, errorId, message) {
   document.querySelector(`#${errorId}`).textContent = message;
 }
 
+function showFormStatus(message, type = '') {
+  formStatus.replaceChildren();
+  formStatus.className = 'state-message form-status';
+  if (type) formStatus.classList.add(type);
+  formStatus.append(document.createTextNode(message));
+  formStatus.hidden = false;
+}
+
+function showSignInRequired(message = 'Please sign in before submitting salary information.') {
+  showFormStatus(message, 'error');
+  const signInLink = document.createElement('a');
+  signInLink.href = 'login.html?returnTo=submit-salary.html';
+  signInLink.textContent = 'Sign in to continue';
+  signInLink.className = 'state-action-link';
+  formStatus.append(document.createElement('br'), signInLink);
+}
+
 async function loadCompanies() {
   companySelect.disabled = true;
   companyLoadStatus.textContent = 'Loading from the Saple API...';
@@ -29,35 +50,55 @@ async function loadCompanies() {
 
   try {
     const companies = await fetchApi('/api/companies');
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = 'Select a company';
+    const placeholder = new Option('Select a company', '');
     companySelect.replaceChildren(placeholder);
 
     if (!Array.isArray(companies) || companies.length === 0) {
       companyLoadStatus.textContent = 'No companies are available yet.';
-      companySelect.disabled = true;
       return;
     }
 
     companies.forEach((company) => {
-      if (company.companyId === null || company.companyId === undefined || !company.companyName) return;
-      const option = document.createElement('option');
-      option.value = String(company.companyId);
-      option.textContent = company.companyName;
-      companySelect.append(option);
+      if (company.companyId !== null && company.companyId !== undefined && company.companyName) {
+        companySelect.append(new Option(company.companyName, String(company.companyId)));
+      }
     });
 
     companySelect.disabled = false;
     companyLoadStatus.textContent = 'Companies loaded from the live directory.';
   } catch (error) {
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = 'Company list unavailable';
-    companySelect.replaceChildren(placeholder);
-    companySelect.disabled = true;
+    companySelect.replaceChildren(new Option('Company list unavailable', ''));
     companyLoadStatus.textContent = error.message;
     companyLoadStatus.classList.add('error');
+  }
+}
+
+async function loadJobRoles() {
+  roleSelect.disabled = true;
+  roleLoadStatus.textContent = 'Loading job roles...';
+  roleLoadStatus.classList.remove('error');
+
+  try {
+    const roles = await fetchApi('/api/job-roles');
+    roleSelect.replaceChildren(new Option('Select a job role', ''));
+
+    if (!Array.isArray(roles) || roles.length === 0) {
+      roleLoadStatus.textContent = 'No job roles are available yet.';
+      return;
+    }
+
+    roles.forEach((role) => {
+      if (role.roleId !== null && role.roleId !== undefined && role.roleName) {
+        roleSelect.append(new Option(role.roleName, String(role.roleId)));
+      }
+    });
+
+    roleSelect.disabled = false;
+    roleLoadStatus.textContent = 'Job roles loaded from the Saple API.';
+  } catch (error) {
+    roleSelect.replaceChildren(new Option('Job roles unavailable', ''));
+    roleLoadStatus.textContent = error.message;
+    roleLoadStatus.classList.add('error');
   }
 }
 
@@ -71,11 +112,11 @@ function validateForm() {
     setFieldError(companySelect, 'salary-company-error', '');
   }
 
-  if (roleInput.value.trim().length < 2) {
-    setFieldError(roleInput, 'salary-role-error', 'Enter a job role using at least 2 characters.');
+  if (!roleSelect.value) {
+    setFieldError(roleSelect, 'salary-role-error', 'Select a job role.');
     valid = false;
   } else {
-    setFieldError(roleInput, 'salary-role-error', '');
+    setFieldError(roleSelect, 'salary-role-error', '');
   }
 
   if (!baseSalaryInput.value || !baseSalaryInput.validity.valid || Number(baseSalaryInput.value) <= 0) {
@@ -146,18 +187,54 @@ salaryForm.querySelectorAll('input, select').forEach((field) => {
   field.addEventListener('change', () => { formStatus.hidden = true; });
 });
 
-salaryForm.addEventListener('submit', (event) => {
+salaryForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   formStatus.hidden = true;
 
-  if (!validateForm()) {
-    salaryForm.querySelector('[aria-invalid="true"]')?.focus();
+  if (!getToken()) {
+    showSignInRequired();
     return;
   }
 
-  formStatus.textContent = 'Salary submission backend will be connected in the next implementation step.';
-  formStatus.className = 'state-message form-status';
-  formStatus.hidden = false;
+  if (!validateForm()) {
+    salaryForm.querySelector('[aria-invalid="true"]:not(:disabled)')?.focus();
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = 'Submitting...';
+
+  try {
+    await apiRequest(`/api/companies/${encodeURIComponent(companySelect.value)}/salaries`, {
+      method: 'POST',
+      auth: true,
+      body: {
+        roleId: Number(roleSelect.value),
+        baseSalary: Number(baseSalaryInput.value),
+        additionalCompensation: additionalCompensationInput.value === ''
+          ? null
+          : Number(additionalCompensationInput.value),
+        currency: currencyInput.value.trim(),
+        payPeriod: payPeriodSelect.value,
+        yearsOfExperience: Number(experienceInput.value),
+        employmentType: employmentTypeSelect.value,
+        workMode: workModeSelect.value,
+        salaryYear: Number(salaryYearInput.value),
+        isAnonymous: anonymousInput.checked
+      }
+    });
+
+    showFormStatus('Salary submitted for review.', 'success');
+  } catch (error) {
+    if (error.status === 401) {
+      showSignInRequired('Your session is missing or expired. Please sign in again.');
+    } else {
+      showFormStatus(error.message, 'error');
+    }
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Submit salary for review';
+  }
 });
 
-loadCompanies();
+Promise.all([loadCompanies(), loadJobRoles()]);

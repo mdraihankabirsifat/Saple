@@ -1,3 +1,5 @@
+import { apiRequest } from './api.js';
+
 const registerForm = document.querySelector('#register-form');
 const nameInput = document.querySelector('#register-name');
 const emailInput = document.querySelector('#register-email');
@@ -5,6 +7,7 @@ const passwordInput = document.querySelector('#register-password');
 const confirmPasswordInput = document.querySelector('#register-confirm-password');
 const employmentFields = document.querySelector('#employment-fields');
 const statusMessage = document.querySelector('#register-status');
+const submitButton = registerForm.querySelector('[type="submit"]');
 
 function setFieldError(input, errorId, message) {
   input.setAttribute('aria-invalid', message ? 'true' : 'false');
@@ -85,7 +88,7 @@ document.querySelectorAll('.password-toggle').forEach((button) => {
 registerForm.querySelectorAll('[name="accountType"]').forEach((input) => input.addEventListener('change', updateEmploymentFields));
 registerForm.querySelectorAll('input').forEach((input) => input.addEventListener('input', () => { statusMessage.hidden = true; }));
 
-registerForm.addEventListener('submit', (event) => {
+registerForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   statusMessage.hidden = true;
 
@@ -94,9 +97,33 @@ registerForm.addEventListener('submit', (event) => {
     return;
   }
 
-  statusMessage.textContent = 'Registration backend is not connected yet.';
-  statusMessage.className = 'state-message form-status';
-  statusMessage.hidden = false;
+  const userType = registerForm.elements.accountType.value;
+  submitButton.disabled = true;
+  submitButton.textContent = 'Creating account...';
+
+  try {
+    await apiRequest('/api/auth/register', {
+      method: 'POST',
+      body: {
+        fullName: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        password: passwordInput.value,
+        userType,
+        ...(userType === 'EMPLOYEE'
+          ? { employmentStatus: registerForm.elements.employmentStatus.value }
+          : {})
+      }
+    });
+
+    window.location.assign('login.html?registered=1');
+  } catch (error) {
+    statusMessage.textContent = error.message;
+    statusMessage.className = 'state-message form-status error';
+    statusMessage.hidden = false;
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Create account';
+  }
 });
 
 updateEmploymentFields();

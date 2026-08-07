@@ -229,6 +229,20 @@ h3 {
   text-decoration: none;
 }
 
+.nav-account-name {
+  padding: 0.55rem 0.7rem;
+  color: var(--saple-green-900);
+  font-size: 0.92rem;
+  font-weight: 780;
+}
+
+.nav-sign-out {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
 .nav-links a:hover,
 .nav-links a.active,
 .nav-text-link:hover,
@@ -472,6 +486,14 @@ main {
   color: var(--success);
   border-color: #bfddce;
   background: #f4fbf7;
+}
+
+.state-action-link {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: var(--saple-green-700);
+  font-weight: 750;
+  text-underline-offset: 0.2rem;
 }
 
 .state-message:empty,

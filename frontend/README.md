@@ -1,48 +1,31 @@
 # Saple Frontend
 
-The Saple frontend is a responsive, framework-free application built with HTML, CSS, and Vanilla JavaScript. It presents live company information from the Express API and provides the UI foundation for future authentication and contribution workflows.
+The Saple frontend is a responsive, framework-free application built with HTML, CSS, and Vanilla JavaScript ES modules. It presents live company data, supports real registration and login, and sends authenticated salary contributions to the Express API while preserving the existing visual design.
 
-## Current Status
+## Connected Features
 
-### Connected to the backend
+- Company directory and backend search through `GET /api/companies`
+- Company profiles, benefits, and salary summaries through the existing GET endpoints
+- Registration through `POST /api/auth/register`
+- Login through `POST /api/auth/login`
+- Current-user recovery through `GET /api/auth/me`
+- Company and job-role choices through `GET /api/companies` and `GET /api/job-roles`
+- Authenticated salary contribution through `POST /api/companies/:companyId/salaries`
+- Shared signed-in navigation and sign-out behavior
 
-- Company directory through `GET /api/companies`
-- Backend-powered company search through `GET /api/companies?search=term`
-- Company profiles through `GET /api/companies/:companyId`
-- Company benefits through `GET /api/companies/:companyId/benefits`
-- Verified and Community Salary Range summaries through `GET /api/companies/:companyId/salary-summary`
-- Company choices on the salary form through `GET /api/companies`
-
-### UI-only foundations
-
-- Sign-in form
-- Job-seeker and employee registration form
-- Salary contribution form
-- Password visibility controls
-- Client-side validation and accessible error messages
-- Review and interview workflow placeholders
-
-The UI-only forms do not send fake requests, store passwords, create tokens, use localStorage as a substitute backend, or report false success.
+Review and interview forms remain honest placeholders. Forgot-password, employee-verification, reporting, administration, moderation, ML, and deployment are not implemented.
 
 ## Running the Frontend
 
-Start the backend first so live company data is available at `http://localhost:3000`.
-
-From the repository root, serve this directory over HTTP:
+Start the backend at `http://localhost:3000`, then run this from the repository root:
 
 ```bash
 python -m http.server 5500 --directory frontend
 ```
 
-Then open:
+Open `http://localhost:5500/index.html`. A static server is required for reliable ES-module loading.
 
-```text
-http://localhost:5500/index.html
-```
-
-A static server is recommended because `companies.js`, `company-details.js`, and `submit-salary.js` use ES modules. Opening pages directly with a `file://` URL may prevent module loading in some browsers.
-
-The API base URL currently lives in `js/api.js`:
+The API base URL is defined in `js/api.js`:
 
 ```js
 const API_BASE_URL = 'http://localhost:3000';
@@ -52,165 +35,92 @@ const API_BASE_URL = 'http://localhost:3000';
 
 | File | Behavior |
 | --- | --- |
-| `index.html` | Homepage with hero, company-search handoff, trust explanation, salary methodology, and contribution CTA |
-| `companies.html` | Live company grid, backend search, clear action, and loading/empty/error states |
-| `company-details.html` | Live company profile, salary panels, benefits, and review/interview placeholders |
-| `login.html` | Local email/password validation and show/hide password control |
-| `register.html` | Local account validation, job-seeker/employee types, and conditional employment status |
-| `submit-salary.html` | Structured salary form with live company options and backend-compatible controlled values |
-| `submit-review.html` | Honest placeholder until the review workflow is enabled |
-| `interview-experience.html` | Honest placeholder until interview submissions are enabled |
+| `index.html` | Homepage with search handoff, trust explanation, salary methodology, and contribution CTA |
+| `companies.html` | Live company grid, backend search, and loading/empty/error states |
+| `company-details.html` | Live profile, salary panels, benefits, and review/interview placeholders |
+| `login.html` | Validates credentials, creates a session, and supports a safe local `returnTo` redirect |
+| `register.html` | Creates job-seeker or employee accounts; employee status is conditionally required |
+| `submit-salary.html` | Loads controlled company/role choices and submits salary data for review |
+| `submit-review.html` | Placeholder until review submission is implemented |
+| `interview-experience.html` | Placeholder until interview submission is implemented |
 
-## Application Shell
+## Authentication and Session Behavior
 
-Public pages share:
+`js/auth.js` stores the JWT and safe user object in `sessionStorage`. It never stores a password. `js/api.js` adds `Authorization: Bearer <token>` only when an authenticated request is requested and clears stale session state after an authenticated `401` response.
 
-- Saple branding
-- Companies, Salaries, Reviews, and Interviews navigation
-- Sign-in and Create account actions
-- A contribution dropdown for salary, review, and interview workflows
-- A compact mobile menu below 900px
-- A consistent project footer
+On page load, `js/nav.js` uses the stored session and refreshes it through `/api/auth/me`. Signed-in users see their first name and a Sign out action; signed-out users see Sign in and Create account. Login supports the salary page's local `returnTo` link without allowing an external redirect.
 
-`js/nav.js` owns mobile-navigation and contribution-menu behavior. Page-specific scripts do not duplicate it.
+Registration exposes only Job seeker (`NORMAL`) and Employee (`EMPLOYEE`) account types. Employee registration additionally sends `CURRENT` or `FORMER`; it does not claim that employment is verified.
 
-## Design System
+## Salary Submission
 
-`css/common.css` defines the shared tokens and components, including:
+The salary form loads both companies and job roles from the API. A submission requires a current token and sends:
 
-- Saple green palette and semantic color aliases
-- Containers and page/section spacing
-- Buttons, badges, cards, inputs, field groups, and state messages
-- Navigation and footer layouts
-- Focus-visible and reduced-motion behavior
-- Shared responsive breakpoints
-
-Page-specific styles remain separated:
-
-| Stylesheet | Responsibility |
+| Field | Contract |
 | --- | --- |
-| `css/home.css` | Homepage hero, search, trust, salary explanation, and CTA |
-| `css/companies.css` | Directory header, search layout, and company grid/cards |
-| `css/company-details.css` | Company profile, section navigation, benefits, salaries, and placeholders |
-| `css/forms.css` | Shared form grids, sections, choices, errors, actions, and trust notices |
-| `css/auth.css` | Login and registration layouts |
-| `css/salary-form.css` | Salary contribution layout and guidance sidebar |
+| `roleId` | Positive job-role ID selected from the API |
+| `baseSalary` | Positive amount with at most two decimal places |
+| `additionalCompensation` | Optional non-negative amount |
+| `currency` | Three-letter uppercase code; `BDT` by default |
+| `payPeriod` | `MONTHLY` or `YEARLY` |
+| `yearsOfExperience` | `0` to `60`, at most one decimal place |
+| `employmentType` | `FULL_TIME`, `PART_TIME`, `CONTRACT`, or `INTERN` |
+| `workMode` | `ONSITE`, `HYBRID`, or `REMOTE` |
+| `salaryYear` | Integer from `2000` through `2100` |
+| `isAnonymous` | Boolean checkbox value |
+
+A successful request displays exactly `Salary submitted for review.` An unauthenticated or expired session displays a link to sign in and return to the salary form. New submissions are pending and do not immediately change public salary summaries.
 
 ## JavaScript Responsibilities
 
 | Script | Responsibility |
 | --- | --- |
-| `js/api.js` | Shared API base URL, JSON parsing, and safe error normalization |
-| `js/nav.js` | Mobile menu and contribution dropdown |
-| `js/companies.js` | Backend-powered directory loading/search and company-card rendering |
-| `js/company-details.js` | ID validation plus company, benefit, and salary rendering |
-| `js/login.js` | Login validation and password visibility |
-| `js/register.js` | Registration validation, password visibility, and employee fields |
-| `js/submit-salary.js` | Live company loading and salary-form validation |
+| `js/api.js` | API base URL, token-aware requests, JSON parsing, and safe error normalization |
+| `js/auth.js` | Session token/user storage and current-user lookup |
+| `js/nav.js` | Mobile navigation, contribution menu, signed-in identity, and sign-out |
+| `js/companies.js` | Backend-powered directory loading/search and card rendering |
+| `js/company-details.js` | Company ID validation and profile/benefit/salary rendering |
+| `js/login.js` | Login validation, API request, session creation, and redirect |
+| `js/register.js` | Registration validation and API request |
+| `js/submit-salary.js` | Company/role loading, validation, authentication, and salary POST |
 
-## Salary Form Contract Preparation
+## Design and Accessibility
 
-The salary form uses these backend-compatible controlled values:
+The existing design system remains in `css/common.css` plus page-specific styles. The milestone adds only the signed-in navigation state and form-state link styling; it does not redesign the application.
 
-| Field | Values |
-| --- | --- |
-| Currency | Three-letter uppercase code, with `BDT` as the default |
-| Pay period | `MONTHLY`, `YEARLY` |
-| Employment type | `FULL_TIME`, `PART_TIME`, `INTERN`, `CONTRACT` |
-| Work mode | `ONSITE`, `HYBRID`, `REMOTE` |
-| Anonymous display | Boolean checkbox prepared for `isAnonymous` |
-
-The company field uses the live companies endpoint. Job role remains a validated text field because no job-role lookup endpoint currently exists. The form displays this clearly and does not invent a route.
-
-After valid local input, the form displays:
-
-> Salary submission backend will be connected in the next implementation step.
-
-No submission is stored or transmitted.
-
-## Authentication Form Behavior
-
-The login and registration pages perform local validation only. Valid forms display clear backend-status messages:
-
-- `Authentication backend is not connected yet.`
-- `Registration backend is not connected yet.`
-
-Registration exposes only Job seeker and Employee account types. It does not expose administrator registration. Selecting Employee reveals Current employee and Former employee choices, but this does not claim employment verification.
+The UI retains semantic landmarks, labels, keyboard focus, live validation/status messages, ARIA navigation state, safe external links, reduced-motion handling, and responsive single-column layouts. Browser testing covered the full registration-login-salary flow and a 430px viewport without horizontal overflow or runtime JavaScript errors.
 
 ## Error and Empty States
 
-The connected pages handle:
-
-- Initial loading
-- Empty company directory
-- No backend search matches
-- Backend connection failure
-- Invalid API response
-- Invalid company ID
-- Missing company
-- No recorded benefits
-- No verified salary data
-- No community salary data
-
-Raw database errors are never intentionally shown by the frontend.
-
-## Accessibility and Responsiveness
-
-The frontend includes:
-
-- Semantic landmarks and heading hierarchy
-- Explicit form labels and required indicators
-- Accessible status and validation messages
-- Button elements for interactive controls
-- Visible keyboard focus
-- ARIA state on the mobile navigation
-- Safe external company links
-- `prefers-reduced-motion` handling
-- Single-column cards and forms on narrow screens
-
-The layouts were browser-checked at approximately 1440px, 1024px, 768px, and 430px with no horizontal overflow.
+Connected pages handle loading, empty results, API failure, invalid company IDs, missing records, absent salary data, form validation, duplicate registration, invalid login, expired sessions, and failed salary requests. Raw database errors are never intentionally displayed.
 
 ## Manual Test Checklist
 
 With Oracle and the backend running:
 
-1. Open `index.html` and use the company search.
-2. Confirm `companies.html` loads Oracle-backed company records.
-3. Search for a company and clear the search.
-4. Open a company card and confirm its profile loads.
-5. Confirm benefits, verified salaries, and community salaries render.
-6. Open `company-details.html?id=invalid` and confirm the invalid-ID state.
-7. Stop the backend and confirm company API errors remain user-friendly.
-8. Validate the login form and password toggle.
-9. Validate registration, password matching, and Employee field reveal.
-10. Validate every salary form section and confirm no fake submission occurs.
-11. Test navigation and forms using keyboard controls.
-12. Check layouts near 1440px, 1024px, 768px, and 430px.
-
-## Endpoints Needed Next
-
-The next backend milestone should provide compatible contracts for:
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- A job-role lookup endpoint, such as `GET /api/job-roles`
-- `POST /api/companies/:companyId/salaries`
-
-Review and interview APIs are also required before their public contribution workflows can be enabled.
+1. Register a Job seeker and confirm the login-page success message.
+2. Register an Employee and verify that Current/Former status is required.
+3. Sign in and confirm the navigation shows the user's first name.
+4. Refresh a page and confirm `/api/auth/me` preserves the session.
+5. Open the salary form and confirm company and job-role choices load.
+6. Submit valid salary data and confirm `Salary submitted for review.` appears.
+7. Sign out and confirm salary submission requests sign-in instead.
+8. Recheck company directory, search, profile, benefits, and both salary summaries.
+9. Stop the backend and confirm errors remain user-friendly.
+10. Check keyboard controls and narrow-screen layouts.
 
 ## Frontend Structure
 
 ```text
 frontend/
 |-- css/                    # Shared and page-specific styles
-|-- js/                     # Shared API/navigation and page scripts
+|-- js/                     # API, auth, navigation, and page modules
 |-- companies.html          # Live company directory
 |-- company-details.html    # Live company profile
 |-- index.html              # Homepage
-|-- login.html              # UI-only sign in
-|-- register.html           # UI-only registration
-|-- submit-salary.html      # Prepared salary contribution form
-|-- submit-review.html      # Review workflow placeholder
+|-- login.html              # Connected sign in
+|-- register.html           # Connected registration
+|-- submit-salary.html      # Connected salary contribution
+|-- submit-review.html      # Review placeholder
 `-- interview-experience.html
 ```
