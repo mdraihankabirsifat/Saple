@@ -3,6 +3,7 @@ require('dotenv').config({ quiet: true });
 const assert = require('node:assert/strict');
 const app = require('../app');
 const database = require('../config/database');
+const adminRepository = require('../repositories/admin.repository');
 const salaryRepository = require('../repositories/salary.repository');
 const workflowTestRepository = require('../repositories/workflow-test.repository');
 
@@ -93,6 +94,7 @@ async function main() {
     assert.equal(registration.status, 201);
     assert.ok(registration.body.data.user.userId > 7);
     assert.equal(registration.body.data.user.accountRole, 'USER');
+    const userId = registration.body.data.user.userId;
 
     const employeeRegistration = await request(baseUrl, '/api/auth/register', {
       method: 'POST',
@@ -142,6 +144,11 @@ async function main() {
     assert.equal(me.body.data.user.email, normalEmail);
     assert.equal('passwordHash' in me.body.data.user, false);
 
+    const adminQueueWithoutToken = await request(baseUrl, '/api/admin/submissions/pending');
+    assert.equal(adminQueueWithoutToken.status, 401);
+    const adminQueueAsUser = await request(baseUrl, '/api/admin/submissions/pending', { token });
+    assert.equal(adminQueueAsUser.status, 403);
+
     const roles = await request(baseUrl, '/api/job-roles');
     assert.equal(roles.status, 200);
     assert.ok(roles.body.data.some((role) => role.roleId === 1));
@@ -182,7 +189,128 @@ async function main() {
     const publicCountAfter = await workflowTestRepository.countCommunityContributions(1);
     assert.equal(publicCountAfter, publicCountBefore);
 
-    const userId = registration.body.data.user.userId;
+    const verifiedCountBeforeApproval = await workflowTestRepository.countVerifiedContributions(1);
+    await workflowTestRepository.promoteUserToAdmin(userId);
+    const adminLogin = await request(baseUrl, '/api/auth/login', {
+      method: 'POST',
+      body: { email: normalEmail, password }
+    });
+    assert.equal(adminLogin.status, 200);
+    assert.equal(adminLogin.body.data.user.accountRole, 'ADMIN');
+    const adminToken = adminLogin.body.data.token;
+
+    const pendingQueue = await request(baseUrl, '/api/admin/submissions/pending', { token: adminToken });
+    assert.equal(pendingQueue.status, 200);
+    assert.ok(pendingQueue.body.data.some(
+      (submission) => submission.submissionId === validSalary.body.data.submissionId
+    ));
+
+    const pendingDetail = await request(
+      baseUrl,
+      `/api/admin/submissions/${validSalary.body.data.submissionId}`,
+      { token: adminToken }
+    );
+    assert.equal(pendingDetail.status, 200);
+    assert.equal(pendingDetail.body.data.salary.roleId, 1);
+    assert.equal('passwordHash' in pendingDetail.body.data.submitter, false);
+
+    const emptyHistory = await request(
+      baseUrl,
+      `/api/admin/submissions/${validSalary.body.data.submissionId}/moderation-history`,
+      { token: adminToken }
+    );
+    assert.equal(emptyHistory.status, 200);
+    assert.deepEqual(emptyHistory.body.data, []);
+
+    const approval = await request(
+      baseUrl,
+      `/api/admin/submissions/${validSalary.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'APPROVED', note: '' } }
+    );
+    assert.equal(approval.status, 200);
+    assert.equal(approval.body.data.previousStatus, 'PENDING');
+    assert.equal(approval.body.data.submissionStatus, 'APPROVED');
+    assert.ok(approval.body.data.actionId > 3);
+
+    const approvedState = await workflowTestRepository.findModerationState(validSalary.body.data.submissionId);
+    assert.equal(approvedState.submission.submissionStatus, 'APPROVED');
+    assert.ok(approvedState.submission.approvedAt);
+    assert.equal(approvedState.actions.length, 1);
+    assert.equal(approvedState.actions[0].actionType, 'APPROVE');
+    assert.equal(approvedState.actions[0].previousStatus, 'PENDING');
+    assert.equal(approvedState.actions[0].newStatus, 'APPROVED');
+
+    const queueAfterApproval = await request(baseUrl, '/api/admin/submissions/pending', { token: adminToken });
+    assert.equal(queueAfterApproval.status, 200);
+    assert.equal(queueAfterApproval.body.data.some(
+      (submission) => submission.submissionId === validSalary.body.data.submissionId
+    ), false);
+
+    const communityCountAfterApproval = await workflowTestRepository.countCommunityContributions(1);
+    const verifiedCountAfterApproval = await workflowTestRepository.countVerifiedContributions(1);
+    assert.equal(communityCountAfterApproval, publicCountBefore + 1);
+    assert.equal(verifiedCountAfterApproval, verifiedCountBeforeApproval);
+
+    const repeatedDecision = await request(
+      baseUrl,
+      `/api/admin/submissions/${validSalary.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'REJECTED', note: 'Repeat attempt' } }
+    );
+    assert.equal(repeatedDecision.status, 409);
+
+    const rejectionSalary = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: adminToken, body: salaryPayload({ baseSalary: 62500 })
+    });
+    assert.equal(rejectionSalary.status, 201);
+    const rejectionWithoutNote = await request(
+      baseUrl,
+      `/api/admin/submissions/${rejectionSalary.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'REJECTED' } }
+    );
+    assert.equal(rejectionWithoutNote.status, 400);
+    const rejection = await request(
+      baseUrl,
+      `/api/admin/submissions/${rejectionSalary.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'REJECTED', note: 'Integration rejection' } }
+    );
+    assert.equal(rejection.status, 200);
+    const rejectedState = await workflowTestRepository.findModerationState(rejectionSalary.body.data.submissionId);
+    assert.equal(rejectedState.submission.submissionStatus, 'REJECTED');
+    assert.equal(rejectedState.submission.approvedAt, null);
+    assert.equal(rejectedState.actions[0].actionType, 'REJECT');
+
+    const flaggedSalary = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: adminToken, body: salaryPayload({ baseSalary: 63500 })
+    });
+    assert.equal(flaggedSalary.status, 201);
+    const flagging = await request(
+      baseUrl,
+      `/api/admin/submissions/${flaggedSalary.body.data.submissionId}/status`,
+      { method: 'PATCH', token: adminToken, body: { status: 'FLAGGED', note: 'Integration flag' } }
+    );
+    assert.equal(flagging.status, 200);
+    const flaggedState = await workflowTestRepository.findModerationState(flaggedSalary.body.data.submissionId);
+    assert.equal(flaggedState.submission.submissionStatus, 'FLAGGED');
+    assert.equal(flaggedState.submission.approvedAt, null);
+    assert.equal(flaggedState.actions[0].actionType, 'FLAG');
+
+    const rollbackSalary = await request(baseUrl, '/api/companies/1/salaries', {
+      method: 'POST', token: adminToken, body: salaryPayload({ baseSalary: 64500 })
+    });
+    assert.equal(rollbackSalary.status, 201);
+    await assert.rejects(adminRepository.updateSubmissionStatusWithAudit({
+      submissionId: rollbackSalary.body.data.submissionId,
+      moderatorUserId: userId,
+      newStatus: 'APPROVED',
+      actionType: 'INVALID_ACTION',
+      actionNote: 'Force audit constraint failure',
+      allowedPreviousStatuses: ['PENDING']
+    }));
+    const rolledBackState = await workflowTestRepository.findModerationState(rollbackSalary.body.data.submissionId);
+    assert.equal(rolledBackState.submission.submissionStatus, 'PENDING');
+    assert.equal(rolledBackState.submission.approvedAt, null);
+    assert.equal(rolledBackState.actions.length, 0);
+
     const submissionCountBeforeFailure = await workflowTestRepository.countSubmissionsForUser(userId);
     await assert.rejects(
       salaryRepository.createSalarySubmission({
@@ -203,7 +331,7 @@ async function main() {
     const submissionCountAfterFailure = await workflowTestRepository.countSubmissionsForUser(userId);
     assert.equal(submissionCountAfterFailure, submissionCountBeforeFailure);
 
-    console.log('Integration workflow passed: auth, IDs, job roles, salary transaction, rollback, and GET regressions.');
+    console.log('Integration workflow passed: auth, salary, ADMIN moderation, audit rollback, public aggregates, and GET regressions.');
   } finally {
     await workflowTestRepository.cleanupWorkflowUsers(normalEmail, employeeEmail);
   }

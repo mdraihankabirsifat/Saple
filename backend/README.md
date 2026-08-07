@@ -1,6 +1,6 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Oracle 19c. It preserves the existing public company GET API and adds registration, JWT login, current-user lookup, public job-role lookup, and an authenticated transactional salary-submission endpoint.
+The Saple backend connects Express 5 to Oracle 19c. It provides public company data, authentication, transactional salary submission, and an ADMIN-only moderation workflow with immutable audit history.
 
 ## Prerequisites
 
@@ -61,6 +61,10 @@ The Oracle pool initializes before the HTTP server. The default address is `http
 | GET | `/api/auth/me` | Bearer token | Return the active current user |
 | GET | `/api/job-roles` | Public | List controlled job-role values |
 | POST | `/api/companies/:companyId/salaries` | Bearer token | Create a pending salary contribution |
+| GET | `/api/admin/submissions/pending` | ADMIN token | List pending submissions oldest first |
+| GET | `/api/admin/submissions/:submissionId` | ADMIN token | Inspect common and subtype-specific details |
+| PATCH | `/api/admin/submissions/:submissionId/status` | ADMIN token | Approve, reject, or flag a pending submission |
+| GET | `/api/admin/submissions/:submissionId/moderation-history` | ADMIN token | Read chronological moderation actions |
 
 Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors use a safe public message without raw Oracle details.
 
@@ -127,6 +131,35 @@ insert SALARY_SUBMISSIONS child with the returned submission_id
 
 Any failure rolls back the complete unit, so an orphan parent cannot remain. The same connection is always closed in `finally`, and SQL uses bind variables. Verification is `VERIFIED` only when an active, non-expired, company-specific verified-employment record exists; otherwise it is `UNVERIFIED`. The endpoint never self-approves a submission.
 
+## ADMIN Moderation
+
+ADMIN access uses the signed JWT `role` claim, which originates from `USERS.ACCOUNT_ROLE`; `USER_TYPE` never grants administrative access. Authentication and authorization remain separate middleware. Missing or invalid tokens return `401`, while a valid non-ADMIN token returns `403`.
+
+Allowed transitions in this milestone are deliberately final:
+
+- `PENDING -> APPROVED`
+- `PENDING -> REJECTED`
+- `PENDING -> FLAGGED`
+
+Approval notes are optional. Rejection and flagging notes are required. Reprocessing an approved, rejected, or flagged submission returns `409`.
+
+The moderation repository uses one connection and transaction:
+
+```text
+SELECT current status FOR UPDATE
+              |
+              v
+validate the transition while the row is locked
+              |
+              v
+UPDATE SUBMISSIONS + INSERT MODERATION_ACTIONS
+              |
+              v
+            COMMIT
+```
+
+Any failure rolls back both operations. `approved_at` is assigned `SYSTIMESTAMP` only for approval and remains `NULL` for rejection or flagging. No endpoint updates or deletes prior `MODERATION_ACTIONS` rows.
+
 ## Identity Synchronization
 
 The sample script inserts explicit identity values. After its sample-data `COMMIT`, it runs Oracle `START WITH LIMIT VALUE` for:
@@ -134,8 +167,9 @@ The sample script inserts explicit identity values. After its sample-data `COMMI
 - `USERS.USER_ID`
 - `EMPLOYEES.EMPLOYEE_ID`
 - `SUBMISSIONS.SUBMISSION_ID`
+- `MODERATION_ACTIONS.ACTION_ID`
 
-This is the only schema-related correction in this milestone. It advances each generator beyond its existing maximum, preventing generated-ID collisions without changing table definitions.
+These identity synchronizations advance each generator beyond its existing maximum, preventing generated-ID collisions without changing table definitions or constraints. The only database-script change in the moderation milestone is the `MODERATION_ACTIONS.ACTION_ID` synchronization.
 
 ## Architecture
 
@@ -178,7 +212,14 @@ The integration test creates uniquely named test accounts, cleans them afterward
 - matching parent/child submission IDs and exact `PENDING`/verification state;
 - a forced child insert failure rolls back its parent;
 - pending submissions do not change public salary aggregates;
+- ADMIN-only queue/detail/history access and approve/reject/flag transitions;
+- a forced moderation-action failure rolls back the submission status update;
+- approval adds an unverified salary to the community aggregate without changing the verified aggregate;
 - all pre-existing health, company, search, detail, benefit, and summary GETs still work.
+
+### Local administrator account
+
+Public registration always creates `account_role = 'USER'`. The sample `admin@example.test` row is an active ADMIN, but its demonstration hash is intentionally not login-compatible. For local manual testing, generate a BCrypt hash locally and update only that sample row through your SQL client; do not commit the password, generated hash, or local `.env`. The integration test instead promotes its temporary registered user through the test repository and deletes it afterward.
 
 ## curl Examples
 
@@ -208,7 +249,9 @@ curl http://localhost:3000/api/auth/me \
 - Protected routes verify the Bearer token before controller execution.
 - SQL uses bind parameters; raw Oracle errors are not returned to clients.
 - Public registration cannot create an administrator.
+- ADMIN routes require both JWT authentication and the `ADMIN` role claim.
+- Moderation history has read and insert paths only; status and audit writes are atomic.
 
 ## Deferred Scope
 
-Admin moderation, review submission, interview submission, employee-verification workflows, reporting, ML, and deployment are intentionally outside this milestone.
+Review submission, interview submission, employee-verification workflows, reporting, ML, and deployment are intentionally outside this milestone.
