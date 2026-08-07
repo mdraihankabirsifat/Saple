@@ -1,0 +1,101 @@
+.form-card {
+  min-width: 0;
+  padding: clamp(1.35rem, 4vw, 2.25rem);
+}
+
+.form-section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-section + .form-section {
+  margin-top: 2.25rem;
+  padding-top: 2.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.form-section legend {
+  max-width: 100%;
+  margin-bottom: 0.35rem;
+  padding: 0;
+  color: var(--saple-green-900);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.form-section-intro {
+  margin-bottom: 1.35rem;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+.form-grid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.form-grid .full-width { grid-column: 1 / -1; }
+
+.choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.choice-card {
+  min-width: 150px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.choice-card:hover { border-color: #9cc6b2; }
+.choice-card:has(input:checked) { border-color: var(--saple-green-600); background: var(--saple-green-50); }
+.choice-card input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--saple-green-700); }
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.checkbox-row input { width: 1.05rem; height: 1.05rem; margin-top: 0.25rem; flex: 0 0 auto; accent-color: var(--saple-green-700); }
+.checkbox-row label { color: var(--text-primary); font-size: 0.92rem; }
+
+.form-actions {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.trust-notice {
+  padding: 1rem 1.1rem;
+  border: 1px solid #c9e4d6;
+  border-radius: var(--radius-md);
+  color: var(--saple-green-900);
+  background: var(--saple-green-50);
+  font-size: 0.9rem;
+}
+
+.trust-notice strong { display: block; margin-bottom: 0.2rem; }
+.trust-notice p { margin: 0; color: var(--text-secondary); }
+
+.form-status { margin-top: 1.25rem; }
+
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full-width { grid-column: auto; }
+  .form-actions .button { width: 100%; }
+}

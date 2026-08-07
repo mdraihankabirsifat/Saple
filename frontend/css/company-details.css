@@ -1,75 +1,136 @@
 .back-link {
-  display: inline-block;
   margin-bottom: 1.5rem;
-  color: var(--green-700);
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--saple-green-700);
+  font-weight: 750;
   text-decoration: none;
 }
 
-.back-link:hover {
-  text-decoration: underline;
-}
+.back-link:hover { text-decoration: underline; text-underline-offset: 0.2rem; }
 
 .company-profile {
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  border: 1px solid var(--border);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #cfe2d8;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #ffffff 0%, var(--saple-green-50) 100%);
+  box-shadow: var(--shadow-sm);
+}
+
+.company-profile::after {
+  width: 16rem;
+  height: 16rem;
+  position: absolute;
+  right: -7rem;
+  bottom: -10rem;
+  border-radius: 50%;
+  background: var(--saple-green-100);
+  content: "";
+}
+
+.company-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.company-profile-mark {
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
   border-radius: 1rem;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  color: #ffffff;
+  background: var(--saple-green-700);
+  font-size: 1.45rem;
+  font-weight: 850;
+  box-shadow: 0 8px 20px rgba(31, 107, 77, 0.2);
 }
 
 .company-profile h1 {
-  margin-bottom: 0.55rem;
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  margin-bottom: 0.35rem;
+  font-size: clamp(2.1rem, 6vw, 3.7rem);
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
 }
 
 .company-profile .industry {
-  margin-bottom: 1.5rem;
-  color: var(--green-700);
-  font-size: 1.05rem;
+  margin: 0;
+  color: var(--saple-green-700);
   font-weight: 750;
 }
 
 .profile-meta {
-  margin: 0 0 1.7rem;
+  margin: 1.6rem 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .profile-meta span {
   padding: 0.35rem 0.7rem;
+  border: 1px solid #cfe2d8;
   border-radius: 999px;
-  color: var(--green-900);
-  background: var(--green-100);
-  font-size: 0.9rem;
+  color: var(--saple-green-900);
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 0.88rem;
 }
 
 .company-description {
   max-width: 800px;
   margin-bottom: 0;
-  color: var(--muted);
+  position: relative;
+  z-index: 1;
+  color: var(--text-secondary);
   white-space: pre-wrap;
 }
 
 .company-website {
-  display: inline-block;
   margin-top: 1.2rem;
-  color: var(--green-700);
-  font-weight: 700;
+  display: inline-flex;
+  position: relative;
+  z-index: 1;
+  color: var(--saple-green-700);
+  font-weight: 750;
+  text-underline-offset: 0.2rem;
 }
+
+.profile-nav {
+  margin: 1.25rem 0 0;
+  padding: 0.45rem;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.profile-nav a {
+  min-height: 40px;
+  padding: 0.5rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 720;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.profile-nav a:hover { color: var(--saple-green-700); background: var(--saple-green-50); }
 
 .detail-section {
-  padding-top: 3.5rem;
-}
-
-.section-heading {
-  margin-bottom: 1.25rem;
-}
-
-.section-heading h2 {
-  margin-bottom: 0;
-  font-size: 1.75rem;
+  padding-top: clamp(3.5rem, 7vw, 5.5rem);
+  scroll-margin-top: 90px;
 }
 
 .benefit-grid {
@@ -80,83 +141,67 @@
 
 .benefit-card,
 .salary-card {
-  padding: 1.25rem;
   border: 1px solid var(--border);
-  border-radius: 0.8rem;
+  border-radius: var(--radius-md);
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
-.benefit-card h3,
-.salary-card h3 {
-  margin-bottom: 0.45rem;
-  font-size: 1.1rem;
+.benefit-card { padding: 1.35rem; }
+.benefit-card h3 { margin-bottom: 0.45rem; font-size: 1.08rem; }
+.benefit-category { margin-bottom: 0.8rem; color: var(--saple-green-700); font-size: 0.82rem; font-weight: 780; letter-spacing: 0.04em; text-transform: uppercase; }
+.benefit-card p:last-child { margin-bottom: 0; }
+.benefit-detail { color: var(--text-secondary); font-size: 0.91rem; }
+
+.salary-groups { display: grid; gap: 1.25rem; }
+
+.salary-panel {
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--saple-green-50);
 }
 
-.benefit-category {
-  margin-bottom: 0.8rem;
-  color: var(--green-700);
-  font-size: 0.88rem;
-  font-weight: 750;
-}
+.salary-panel.community { background: #fffbf1; }
 
-.benefit-card p:last-child {
-  margin-bottom: 0;
-}
-
-.benefit-detail {
-  color: var(--muted);
-  font-size: 0.93rem;
-}
-
-.salary-list {
-  display: grid;
+.salary-panel-heading {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
   gap: 1rem;
 }
 
+.salary-panel-heading h3 { margin-bottom: 0.3rem; font-size: 1.2rem; }
+.salary-panel-heading p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+
+.salary-list { display: grid; gap: 0.85rem; }
+
 .salary-card {
+  padding: 1.15rem;
   display: grid;
-  grid-template-columns: minmax(170px, 1.2fr) repeat(4, minmax(110px, 0.7fr));
+  grid-template-columns: minmax(170px, 1.2fr) repeat(4, minmax(100px, 0.7fr));
   align-items: center;
   gap: 1rem;
 }
 
-.salary-metric {
-  margin: 0;
+.salary-card-header h4 { margin: 0 0 0.35rem; color: var(--saple-green-900); font-size: 1.05rem; line-height: 1.25; }
+.pay-period { color: var(--text-secondary); font-size: 0.78rem; font-weight: 700; }
+.salary-metric { margin: 0; }
+.salary-metric span { display: block; color: var(--text-secondary); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
+.salary-metric strong { color: var(--saple-green-900); overflow-wrap: anywhere; }
+
+.future-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+
+@media (max-width: 900px) {
+  .benefit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .salary-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .salary-card-header { grid-column: 1 / -1; }
 }
 
-.salary-metric span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.salary-metric strong {
-  color: var(--green-900);
-}
-
-@media (max-width: 850px) {
-  .benefit-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .salary-card {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .salary-card h3 {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 560px) {
-  .benefit-grid,
-  .salary-card {
-    grid-template-columns: 1fr;
-  }
-
-  .salary-card h3 {
-    grid-column: auto;
-  }
+@media (max-width: 600px) {
+  .company-title-row { align-items: flex-start; flex-direction: column; }
+  .benefit-grid, .salary-card, .future-grid { grid-template-columns: 1fr; }
+  .salary-card-header { grid-column: auto; }
+  .salary-panel-heading { flex-direction: column; }
 }

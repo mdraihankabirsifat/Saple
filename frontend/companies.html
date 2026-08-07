@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Browse and search companies available on Saple.">
+  <meta name="description" content="Browse and search real company records available on Saple.">
   <title>Companies | Saple</title>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/companies.css">
@@ -11,100 +11,39 @@
 <body>
   <header class="site-header">
     <nav class="navbar container" aria-label="Main navigation">
-      <a class="brand" href="index.html" aria-label="Saple home">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <span>Saple</span>
-      </a>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a class="active" href="companies.html" aria-current="page">Companies</a></li>
-      </ul>
+      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links"><li><a class="active" href="companies.html" aria-current="page">Companies</a></li><li><a href="index.html#salary-insights">Salaries</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul>
+        <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a class="button button-secondary button-small" href="register.html">Create account</a><details class="contribute-menu"><summary class="button button-primary button-small">+ Contribute</summary><ul class="contribute-options"><li><a href="submit-salary.html">Submit salary</a></li><li><a href="submit-review.html">Write a review</a></li><li><a href="interview-experience.html">Share interview experience</a></li></ul></details></div>
+      </div>
     </nav>
   </header>
 
   <main class="page-main">
     <section class="container" aria-labelledby="companies-heading">
-      <div class="page-heading">
-        <p class="eyebrow">Company directory</p>
-        <h1 id="companies-heading">Find a company</h1>
-        <p>Search by company name, industry, city, or country.</p>
+      <div class="directory-header">
+        <div class="page-header"><p class="eyebrow">Company directory</p><h1 id="companies-heading">Find your next workplace.</h1><p>Search the live Saple directory by company name, industry, city, or country.</p></div>
+        <form id="company-search-form" class="search-form" role="search">
+          <div class="form-group"><label for="company-search">Search companies</label><input class="input" id="company-search" name="search" type="search" maxlength="100" placeholder="Name, industry, or location" autocomplete="off"></div>
+          <button class="button button-primary" type="submit">Search</button><button id="clear-search" class="button button-secondary" type="button" hidden>Clear</button>
+        </form>
       </div>
-
-      <form id="company-search-form" class="search-form" role="search">
-        <label class="sr-only" for="company-search">Search companies</label>
-        <input
-          id="company-search"
-          name="search"
-          type="search"
-          maxlength="100"
-          placeholder="Search companies"
-          autocomplete="off"
-        >
-        <button class="button button-primary" type="submit">Search</button>
-        <button id="clear-search" class="button button-secondary" type="button" hidden>Clear</button>
-      </form>
-
-      <p id="company-status" class="status-message" role="status" aria-live="polite">Loading companies…</p>
-      <div id="company-list" class="company-grid" aria-live="polite"></div>
+      <div class="results-header"><h2 id="company-results-heading">Companies</h2><span class="badge">Live directory</span></div>
+      <p id="company-status" class="state-message" role="status" aria-live="polite">Loading companies&hellip;</p>
+      <div id="company-list" class="company-grid" aria-labelledby="company-results-heading" aria-live="polite" aria-busy="true"></div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="footer-main container">
-      <section class="footer-brand" aria-labelledby="footer-brand-heading">
-        <a class="footer-logo" href="index.html" aria-label="Saple home">
-          <span class="footer-logo-mark" aria-hidden="true">S</span>
-          <span id="footer-brand-heading">Saple</span>
-        </a>
-        <p>
-          Verified company reviews, salary insights, benefits, and interview
-          experiences for better career decisions.
-        </p>
-        <div class="project-tags" aria-label="Project technologies">
-          <span>Oracle 19c</span>
-          <span>Vanilla JS</span>
-        </div>
-      </section>
-
-      <nav class="footer-column" aria-labelledby="footer-links-heading">
-        <h2 id="footer-links-heading">Quick links</h2>
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="companies.html">Companies</a></li>
-          <li><a href="companies.html#company-search">Company search</a></li>
-          <li><a href="index.html#about-saple">About Saple</a></li>
-        </ul>
-      </nav>
-
-      <section class="footer-column" aria-labelledby="footer-resources-heading">
-        <h2 id="footer-resources-heading">Project resources</h2>
-        <ul>
-          <li><a href="../docs/relational_schema.md">Database documentation</a></li>
-          <li><span>GitHub repository — coming later</span></li>
-          <li><span>Issue reporting — coming later</span></li>
-          <li><span>Privacy-first public data</span></li>
-        </ul>
-      </section>
-
-      <section class="footer-column" aria-labelledby="footer-team-heading">
-        <h2 id="footer-team-heading">Project team</h2>
-        <ul>
-          <li><span>Saple Development Team</span></li>
-          <li><span>BUET CSE Database Project</span></li>
-          <li><span>Dhaka, Bangladesh</span></li>
-          <li><span>Contact details will be added later.</span></li>
-        </ul>
-      </section>
+      <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html" aria-label="Saple home"><span class="footer-logo-mark" aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a><p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.</p><div class="project-tags" aria-label="Project technologies"><span>Oracle 19c</span><span>Express</span><span>Vanilla JS</span></div></section>
+      <nav class="footer-column" aria-labelledby="footer-explore-heading"><h2 id="footer-explore-heading">Explore</h2><ul><li><a href="companies.html">Companies</a></li><li><a href="index.html#salary-insights">Salary methodology</a></li><li><a href="submit-review.html">Reviews</a></li><li><a href="interview-experience.html">Interviews</a></li></ul></nav>
+      <nav class="footer-column" aria-labelledby="footer-contribute-heading"><h2 id="footer-contribute-heading">Account &amp; contribute</h2><ul><li><a href="login.html">Sign in</a></li><li><a href="register.html">Create account</a></li><li><a href="submit-salary.html">Submit salary</a></li><li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li></ul></nav>
     </div>
-
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
-        <p>Built to support informed career decisions.</p>
-      </div>
-    </div>
+    <div class="footer-bottom"><div class="footer-bottom-content container"><p>&copy; 2026 Saple. BUET CSE Database Project.</p><p>Built for informed career decisions.</p></div></div>
   </footer>
-
+  <script src="js/nav.js" defer></script>
   <script type="module" src="js/companies.js"></script>
 </body>
 </html>

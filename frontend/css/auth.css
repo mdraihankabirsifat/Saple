@@ -1,0 +1,58 @@
+.auth-main {
+  padding-block: clamp(3rem, 7vw, 6rem);
+  display: grid;
+  align-items: center;
+  background: linear-gradient(180deg, var(--saple-green-50) 0%, var(--background) 58%);
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(360px, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 8vw, 7rem);
+}
+
+.auth-intro h1 {
+  margin-bottom: 0.8rem;
+  font-size: clamp(2.3rem, 6vw, 4rem);
+  letter-spacing: -0.045em;
+}
+
+.auth-intro > p:last-of-type { color: var(--text-secondary); }
+
+.auth-points {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+  list-style: none;
+}
+
+.auth-points li { padding-left: 1.55rem; position: relative; color: var(--text-secondary); }
+.auth-points li::before { position: absolute; left: 0; color: var(--saple-green-600); content: "\2713"; font-weight: 850; }
+
+.auth-card { max-width: 560px; padding: clamp(1.4rem, 5vw, 2.4rem); }
+.auth-card h2 { margin-bottom: 0.4rem; font-size: 1.55rem; }
+.auth-card > p { margin-bottom: 1.5rem; color: var(--text-secondary); }
+.auth-form { display: grid; gap: 1rem; }
+
+.password-control { position: relative; }
+.password-control input { padding-right: 4.8rem; }
+.password-toggle { height: 34px; padding: 0 0.65rem; position: absolute; top: 6px; right: 6px; border: 0; border-radius: 0.4rem; color: var(--saple-green-700); background: var(--saple-green-50); font-size: 0.82rem; font-weight: 750; cursor: pointer; }
+
+.auth-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.link-button { padding: 0; border: 0; color: var(--saple-green-700); background: transparent; font: inherit; font-size: 0.88rem; font-weight: 700; }
+.link-button:disabled { color: var(--text-secondary); cursor: not-allowed; opacity: 0.72; }
+
+.auth-submit { width: 100%; margin-top: 0.25rem; }
+.auth-switch { margin: 1.4rem 0 0; text-align: center; color: var(--text-secondary); font-size: 0.92rem; }
+.auth-switch a { color: var(--saple-green-700); font-weight: 750; }
+
+.conditional-fields { margin-top: 0.3rem; }
+.conditional-fields[hidden] { display: none; }
+
+@media (max-width: 800px) {
+  .auth-layout { grid-template-columns: 1fr; }
+  .auth-intro { max-width: 620px; }
+  .auth-card { max-width: none; }
+}

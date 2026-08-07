@@ -1,0 +1,51 @@
+.contribution-layout {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.32fr);
+  align-items: start;
+  gap: clamp(1.5rem, 5vw, 3.5rem);
+}
+
+.contribution-sidebar {
+  display: grid;
+  position: sticky;
+  top: 96px;
+  gap: 1rem;
+}
+
+.sidebar-card { padding: 1.3rem; }
+.contribution-layout > *,
+.sidebar-card { min-width: 0; }
+.sidebar-card h2 { margin-bottom: 0.6rem; font-size: 1.1rem; }
+.sidebar-card p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+.sidebar-card p + p { margin-top: 0.8rem; }
+
+.form-step-label {
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.6rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 0.55rem;
+  color: var(--saple-green-800);
+  background: var(--saple-green-100);
+  font-size: 0.82rem;
+  vertical-align: middle;
+}
+
+.company-load-status {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.company-load-status.error { color: var(--danger); }
+
+@media (max-width: 900px) {
+  .contribution-layout { grid-template-columns: 1fr; }
+  .contribution-sidebar { position: static; grid-row: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .contribution-sidebar { grid-template-columns: 1fr; }
+}
