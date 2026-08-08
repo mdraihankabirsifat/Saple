@@ -97,7 +97,7 @@ async function findAllCompanies(filters) {
   const sql = `
     WITH review_stats AS (
       SELECT s.company_id, COUNT(*) AS review_count,
-        ROUND(AVG(cr.overall_rating), 2) AS average_rating
+        ROUND(AVG(cr.overall_rating), 1) AS average_rating
       FROM submissions s
       JOIN company_reviews cr ON cr.submission_id = s.submission_id
       WHERE s.submission_status = 'APPROVED'
@@ -170,17 +170,27 @@ async function findCompanyFilterOptions() {
 async function findCompanyById(companyId) {
   const sql = `
     SELECT
-      company_id AS "companyId",
-      company_name AS "companyName",
-      industry AS "industry",
-      headquarters_city AS "headquartersCity",
-      country AS "country",
-      website AS "website",
-      company_size AS "companySize",
-      description AS "description",
-      created_at AS "createdAt"
-    FROM companies
-    WHERE company_id = :companyId
+      c.company_id AS "companyId",
+      c.company_name AS "companyName",
+      c.industry AS "industry",
+      c.headquarters_city AS "headquartersCity",
+      c.country AS "country",
+      c.website AS "website",
+      c.company_size AS "companySize",
+      c.description AS "description",
+      c.created_at AS "createdAt",
+      NVL(review_stats.review_count, 0) AS "reviewCount",
+      review_stats.average_rating AS "averageRating"
+    FROM companies c
+    LEFT JOIN (
+      SELECT s.company_id, COUNT(*) AS review_count,
+        ROUND(AVG(cr.overall_rating), 1) AS average_rating
+      FROM submissions s
+      JOIN company_reviews cr ON cr.submission_id = s.submission_id
+      WHERE s.submission_status = 'APPROVED'
+      GROUP BY s.company_id
+    ) review_stats ON review_stats.company_id = c.company_id
+    WHERE c.company_id = :companyId
   `;
 
   const rows = await executeQuery(sql, { companyId });

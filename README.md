@@ -6,10 +6,10 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 
 | Layer | Available now |
 | --- | --- |
-| Oracle database | Tables, constraints, indexes, fictional workflow samples, 50 sourced employer references, 55 additional job roles, analytical queries, and synchronized identity generators |
-| Express backend | Public company/salary/review/interview queries, advanced bound filters, account/profile APIs, SMTP password recovery, verified-employee contribution policy, reporting, and transactional ADMIN workflows |
-| Frontend | Public Browse pages, email password recovery, guarded Contribute forms, profile/security controls, verification requests, reporting, an animated homepage tree, and the responsive ADMIN dashboard |
-| Deferred | ML features and deployment automation |
+| Oracle database | Tables, constraints, indexes, role-scoped verification, 54 scripted company references, dense guarded synthetic demo content, analytical queries, and synchronized identity generators |
+| Express backend | Public company/salary/review/interview queries, approved-review ratings, account/profile APIs, SMTP password recovery, exact company-role contribution policy, reporting, and transactional ADMIN workflows |
+| Frontend | Responsive sidebar Browse pages, rating headers, email password recovery, verified-scope Contribute forms, profile/security controls, verification requests, reporting, the homepage tree, and ADMIN dashboard |
+| Optional ML | Standalone minimal moderation-risk prototype implemented; runtime/backend/admin integration remains deferred |
 
 ## Core Features
 
@@ -17,10 +17,10 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - Company filtering by name, industry, approved-data job role, salary range/source, location, size, rating, and data availability
 - 50 real employer references (35 Bangladesh-focused and 15 international) with documented official sources, plus 55 additional cross-industry roles
 - Job-seeker and current/former-employee registration with BCrypt password hashing and signed JWT sessions
-- Company-specific verified-employee-only salary, review, and interview submissions, enforced by middleware and repositories
+- Exact company-and-designation verified-employee-only salary, review, and interview submissions, enforced by middleware and the write transaction
 - Safe profile name editing, read-only email, and current-password-protected password changes
 - Temporary single-use email password resets with SHA-256 token storage and BCrypt password replacement
-- Company-specific employee verification requests using company email metadata or a safe document reference
+- Company-and-designation employee verification requests using company email metadata or a safe document reference
 - ADMIN review of pending verification requests
 - Approved-only public reviews and interview experiences with server-enforced anonymous display
 - Authenticated reports with duplicate prevention, ADMIN triage, resolution, and dismissal
@@ -32,7 +32,7 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 
 Every contribution retains its owner internally for authorization and moderation. Public review and interview responses expose an author name only when `is_anonymous = 0`; they never expose user IDs, email addresses, verification evidence, or moderation internals. Only `APPROVED` submissions are public.
 
-Employee verification is company-specific. Salary, review, and interview POST requests require an active, non-expired `VERIFIED` record for the target company; otherwise the API returns `403`. Accepted contributions are stored as `VERIFIED`. Evidence metadata is available only to ADMIN endpoints. The application does not store raw OTP values, uploaded document contents, national identifiers, or raw confidential files.
+Employee verification is scoped to an exact employee, company, and job role. Salary, review, and interview POST requests require an active account and a non-expired `VERIFIED` row matching both submitted IDs; ADMIN status grants no contribution access by itself. The authoritative check and insert use the same Oracle connection and transaction. Legacy verification rows whose role could not be inferred safely remain nullable and cannot authorize new contributions. Evidence metadata is available only to ADMIN endpoints.
 
 Reported approved content can be flagged or rejected using the same locked, audited moderation transaction. This immediately removes it from approved-only public reads. Report resolution remains a separate recorded ADMIN action.
 
@@ -63,6 +63,8 @@ Run these files as the intended schema owner:
 @database/03_insert_sample_data.sql
 @database/05_expand_reference_data.sql
 @database/06_create_password_reset_tokens.sql
+@database/07_add_role_scoped_verification.sql
+@database/08_seed_demo_salary_reviews.sql
 @database/04_test_queries.sql
 ```
 
@@ -70,7 +72,16 @@ Run these files as the intended schema owner:
 
 `05_expand_reference_data.sql` is additive and repeatable. It uses case-insensitive `MERGE` operations to add 50 real employer reference rows and 55 roles without deleting developer data or duplicating names. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview data is seeded.
 
-`06_create_password_reset_tokens.sql` is a one-time additive migration. On an existing Saple schema, run only `06`; do not rerun the destructive cleanup in `02_create_tables.sql`. It stores only unique SHA-256 token hashes and creates the user/state lookup index used by password recovery.
+`06_create_password_reset_tokens.sql` was the one-time additive password-recovery migration. It stores only unique SHA-256 token hashes and creates the user/state lookup index; it is already present in the current populated database.
+
+For the current existing populated database, migration `06` is already completed. Apply only this exact next order:
+
+```sql
+@database/07_add_role_scoped_verification.sql
+@database/08_seed_demo_salary_reviews.sql
+```
+
+Do not rerun `02` or `06`. Migration `07` adds nullable `ROLE_ID`, safely backfills only unambiguous legacy rows, and leaves unresolved rows unauthorized. Seed `08` is rerunnable and adds clearly marked synthetic academic salaries and reviews without deleting or duplicating existing data. Its salary figures are fictional, not official company data, and are not trustworthy ML training data.
 
 `01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
 
@@ -142,10 +153,10 @@ Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
 | PATCH | `/api/auth/me/password` | Bearer token | Change password after current-password check |
 | GET | `/api/job-roles` | Public | Controlled job-role choices |
-| POST | `/api/companies/:companyId/salaries` | Verified employee for company | Pending salary contribution |
-| POST | `/api/companies/:companyId/reviews` | Verified employee for company | Pending company review |
-| POST | `/api/companies/:companyId/interviews` | Verified employee for company | Pending interview experience |
-| POST | `/api/companies/:companyId/verifications` | Employee token | Pending verification request |
+| POST | `/api/companies/:companyId/salaries` | Verified exact company-role scope | Pending salary contribution |
+| POST | `/api/companies/:companyId/reviews` | Verified exact company-role scope | Pending company review |
+| POST | `/api/companies/:companyId/interviews` | Verified exact company-role scope | Pending interview experience |
+| POST | `/api/companies/:companyId/verifications` | Employee token | Pending company-role verification request |
 | POST | `/api/submissions/:submissionId/reports` | Bearer token | Report a submission |
 | GET/PATCH | `/api/admin/submissions/*` | ADMIN token | Queue, detail, decisions, and history |
 | GET/PATCH | `/api/admin/verifications/*` | ADMIN token | Pending queue, detail, and decision |
@@ -166,7 +177,7 @@ See [backend/README.md](backend/README.md) for contracts and transaction rules.
 | `company-details.html?id=<id>` | Profile, benefits, salary data, approved reviews/interviews, and reporting |
 | `login.html`, `register.html` | Authentication and account creation |
 | `forgot-password.html`, `reset-password.html` | Temporary email password-reset request and completion |
-| `profile.html` | Safe profile view, name edit, verified companies, and password change |
+| `profile.html` | Safe profile view, name edit, verified company-role scopes, and password change |
 | `submit-salary.html`, `submit-review.html`, `interview-experience.html` | Verified-employee-only contribution forms |
 | `employee-verification.html` | Employee verification request |
 | `admin.html` | Submission moderation, verification review, and report management |
@@ -182,9 +193,9 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 83 tests covering authentication/profile behavior, detailed login outcomes, password-reset hashing/delivery/transactions/rate limiting, controlled error handling, migration structure, public browse routes, all three verified contribution gates, input validation, SQL filter binding, ADMIN rules, privacy, transaction rollbacks, shared information navigation, responsive safeguards, the tree fallback, and FAQ accessibility behavior. The live Oracle workflow covers the pre-existing core workflows plus the reset-token database lifecycle; real SMTP delivery still requires the environment-level steps below.
+The unit suite currently contains 94 tests, including focused coverage for exact company-role authorization, ADMIN independence, transaction rollback, migration/seed structure, safe verified-scope responses, approved rating queries, and responsive filter layouts, alongside all prior authentication, recovery, moderation, privacy, tree, FAQ, and navigation tests.
 
-To test recovery manually, apply migration `06`, configure SMTP, start both applications, request a link from `forgot-password.html`, and open the received link. Confirm the old password fails, the new password succeeds, and reuse of the same link is rejected. Also test an expired row and an unavailable SMTP server. Never paste a reset link into logs or issue trackers.
+To test recovery locally, do not rerun migration `06`: configure SMTP and `FRONTEND_URL`, restart the backend, call a clearly unknown address and confirm the exact `404` response, then request a link for an active account. Confirm SMTP acceptance, a 64-character database hash, old-password failure, new-password success, one-time use, expiry handling, and rollback on SMTP failure. Never paste a reset link into logs or issue trackers. Detailed unknown-email responses are an academic requirement; production systems normally use a generic response to reduce account enumeration.
 
 ## Security Notes
 
@@ -200,7 +211,7 @@ To test recovery manually, apply migration `06`, configure SMTP, start both appl
 
 ## Deferred Scope
 
-Real employment-verification OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, deployment, production-grade session revocation, shared rate limiting, and email-delivery monitoring are intentionally outside core completion.
+Real employment-verification OTP delivery, uploaded document storage, runtime/backend/admin integration of ML scores, recommendation systems, advanced analytics, deployment, production-grade session revocation, shared rate limiting, and email-delivery monitoring are intentionally outside core completion. The standalone minimal ML prototype is implemented as decision support only. It stays inactive for a role below 50 final moderator-reviewed historical records, excludes synthetic demonstration data as trustworthy evidence, and never replaces the human moderator.
 
 ## Presentation Demo
 

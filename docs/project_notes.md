@@ -11,7 +11,7 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - The Community range uses all approved salaries, verified or unverified.
 - Reviews and interviews are public only after ADMIN approval.
 - Anonymous contributions retain internal ownership but expose no public contributor identity.
-- Company-specific employee verification is reviewed by an ADMIN and expires after 12 months.
+- Exact company-and-designation employee verification is reviewed by an ADMIN and expires after 12 months.
 - Users can report submissions once; ADMIN users triage and resolve reports.
 - Content actions reuse the locked, immutable-audit submission moderation workflow.
 - Password recovery sends a temporary single-use link while Oracle retains only its SHA-256 token hash.
@@ -20,7 +20,7 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 
 `SUBMISSIONS.SUBMISSION_STATUS` uses `PENDING`, `APPROVED`, `REJECTED`, and `FLAGGED`. New contributions start `PENDING`. Public reads return only `APPROVED`; flagging/rejecting approved reported content removes it immediately.
 
-`SUBMISSIONS.VERIFICATION_STATUS` uses `VERIFIED`, `UNVERIFIED`, `PENDING`, and `REJECTED`. New contributions are normally `VERIFIED` or `UNVERIFIED`, based on an active non-expired company verification.
+`SUBMISSIONS.VERIFICATION_STATUS` uses `VERIFIED`, `UNVERIFIED`, `PENDING`, and `REJECTED`. New contributions require an active non-expired employee/company/role verification and are created as `VERIFIED` and `PENDING` moderation rows.
 
 `EMPLOYMENT_VERIFICATIONS.VERIFICATION_STATUS` uses `PENDING`, `VERIFIED`, `REJECTED`, and `EXPIRED`.
 
@@ -32,7 +32,7 @@ Public responses must not expose user IDs, email addresses, verification evidenc
 
 ## Current Scope Boundary
 
-Authentication, SMTP password recovery, salary contributions, moderation, employee verification, reviews, interviews, reporting, public display, ADMIN dashboard integration, rollback tests, and documentation are implemented. Real SMTP and reset-table execution still require local credentials and Oracle. ML and deployment remain deferred.
+Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, reviews, interviews, reporting, rating display, responsive Browse sidebars, ADMIN integration, rollback tests, and documentation are implemented. Migration `06` is already complete; `07` and rerunnable synthetic seed `08` are the next populated-schema order. Real SMTP delivery still requires local provider credentials. The standalone ML prototype is implemented, while runtime integration and deployment remain deferred.
 
 ## Presentation-Day Demo Sequence
 
@@ -53,7 +53,7 @@ Do not commit the demo password, its generated hash, or local credentials.
 4. Submit a salary and show that it starts `PENDING` and does not change public aggregates.
 5. Use the ADMIN dashboard to inspect and approve it; show the new `MODERATION_ACTIONS` row and updated Community range.
 6. Explain that only an active company-specific verification also changes the Verified range.
-7. With an employee account, request verification and demonstrate an ADMIN verify/reject decision.
+7. With an employee account, request a company and designation; demonstrate that ADMIN sees both and that another role is rejected.
 8. Submit and approve an anonymous review, then show its public card and rating aggregate without contributor identity.
 9. Submit and approve an anonymous interview experience, then show its public card.
 10. Report one public card, mark the report reviewing, inspect and flag/reject the target through submission moderation, then resolve the report.
@@ -71,3 +71,9 @@ Do not commit the demo password, its generated hash, or local credentials.
 - Approved anonymous review and interview cards
 - Report dialog and ADMIN report-resolution controls
 - Oracle schema/ERD and representative `04_test_queries.sql` results
+
+## Password-recovery live diagnostic
+
+Start the backend before testing the browser and call `POST /api/auth/forgot-password` directly. An unknown normalized email must return `404`, `success: false`, and `No account was found with that email address.` without a token row. A registered active account is proven only when configured SMTP accepts delivery; then verify a 64-character hash, one-time link use, old/new-password login, and rollback under SMTP failure. Never print environment values or reset URLs. This detailed unknown-email response is an academic requirement; a production system normally uses a generic response to reduce account enumeration.
+
+The synthetic `08` salaries/reviews are classroom presentation content, not official employer data and not trustworthy ML training history. The optional model remains decision-support only, stays inactive below 50 final moderator-reviewed historical records for a role, and never replaces the human moderator.

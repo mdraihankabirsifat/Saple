@@ -37,17 +37,18 @@ async function createSalarySubmission({
           AND u.user_type = 'EMPLOYEE'
           AND u.account_status = 'ACTIVE'
           AND ev.company_id = :companyId
+          AND ev.role_id = :roleId
           AND ev.verification_status = 'VERIFIED'
           AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
         FETCH FIRST 1 ROW ONLY
       `,
-      { userId, companyId }
+      { userId, companyId, roleId }
     );
 
     if (!verificationResult.rows[0]) {
       throw createRepositoryError(
         'VERIFICATION_REQUIRED',
-        'Employee verification is required for this company'
+        'Employee verification is required for this company and designation'
       );
     }
 

@@ -75,7 +75,7 @@ renderPublicNavigation();
 renderFooterInformationLinks();
 
 function updateContributionVisibility(user) {
-  const verified = Array.isArray(user?.verifiedCompanies) && user.verifiedCompanies.length > 0;
+  const verified = Array.isArray(user?.verifiedScopes) && user.verifiedScopes.length > 0;
   contributionMenu?.classList.toggle('is-available', verified);
   document.querySelectorAll('[data-verified-contributor]').forEach((element) => {
     element.hidden = !verified;

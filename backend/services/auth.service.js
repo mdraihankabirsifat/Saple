@@ -32,7 +32,7 @@ function validatePassword(password) {
   );
 }
 
-function toSafeUser(user, verifiedCompanies = []) {
+function toSafeUser(user, verifiedScopes = []) {
   return {
     userId: user.userId,
     fullName: user.fullName,
@@ -41,7 +41,7 @@ function toSafeUser(user, verifiedCompanies = []) {
     accountRole: user.accountRole,
     accountStatus: user.accountStatus,
     employmentStatus: user.employmentStatus || null,
-    verifiedCompanies,
+    verifiedScopes,
     ...(user.createdAt ? { createdAt: user.createdAt } : {})
   };
 }
@@ -141,13 +141,13 @@ async function login(input = {}) {
     }
   );
 
-  const verifiedCompanies = user.userType === 'EMPLOYEE'
-    ? await userRepository.findActiveVerifiedCompaniesByUserId(user.userId)
+  const verifiedScopes = user.userType === 'EMPLOYEE'
+    ? await userRepository.findActiveVerifiedScopesByUserId(user.userId)
     : [];
 
   return {
     token,
-    user: toSafeUser(user, verifiedCompanies)
+    user: toSafeUser(user, verifiedScopes)
   };
 }
 
@@ -255,10 +255,10 @@ async function getCurrentUser(userId) {
     throw createHttpError(401, 'Authenticated account is unavailable');
   }
 
-  const verifiedCompanies = user.userType === 'EMPLOYEE'
-    ? await userRepository.findActiveVerifiedCompaniesByUserId(userId)
+  const verifiedScopes = user.userType === 'EMPLOYEE'
+    ? await userRepository.findActiveVerifiedScopesByUserId(userId)
     : [];
-  return toSafeUser(user, verifiedCompanies);
+  return toSafeUser(user, verifiedScopes);
 }
 
 async function updateProfile(userId, input = {}) {

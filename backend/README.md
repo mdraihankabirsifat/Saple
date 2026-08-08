@@ -1,6 +1,6 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Oracle 19c. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, company-specific verified-employee contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
+The Saple backend connects Express 5 to Oracle 19c. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, exact company-and-designation verified contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
 
 ## Prerequisites and Setup
 
@@ -46,10 +46,12 @@ Apply Oracle scripts in this order for a clean local build:
 @database/03_insert_sample_data.sql
 @database/05_expand_reference_data.sql
 @database/06_create_password_reset_tokens.sql
+@database/07_add_role_scoped_verification.sql
+@database/08_seed_demo_salary_reviews.sql
 @database/04_test_queries.sql
 ```
 
-For an existing populated schema, run only `06_create_password_reset_tokens.sql`. Do not rerun `02_create_tables.sql`, whose documented cleanup rebuilds the schema.
+For the current existing populated schema, `06_create_password_reset_tokens.sql` is already completed. Run `07_add_role_scoped_verification.sql`, then `08_seed_demo_salary_reviews.sql`. Do not rerun `02_create_tables.sql` or `06`. Migration `07` deliberately keeps unresolved legacy roles nullable and unauthorized; seed `08` is rerunnable synthetic academic data and does not delete existing rows.
 
 ```bash
 npm run dev
@@ -77,8 +79,8 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/api/salaries` | Public | Approved salary aggregates across companies |
 | GET | `/api/reviews` | Public | Approved reviews across companies |
 | GET | `/api/interviews` | Public | Approved interview experiences across companies |
-| POST | `/api/companies/:companyId/interviews` | Verified employee for company | Create a pending interview experience |
-| POST | `/api/companies/:companyId/verifications` | Employee token | Request company-specific verification |
+| POST | `/api/companies/:companyId/interviews` | Verified exact company-role scope | Create a pending interview experience |
+| POST | `/api/companies/:companyId/verifications` | Employee token | Request company-role verification |
 | GET | `/api/job-roles` | Public | Controlled job-role values |
 | POST | `/api/auth/register` | Public | Create a `NORMAL` or `EMPLOYEE` account |
 | POST | `/api/auth/login` | Public | Return JWT and safe user object |
@@ -87,8 +89,8 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
 | PATCH | `/api/auth/me/password` | Bearer token | Change password with current password |
-| POST | `/api/companies/:companyId/salaries` | Verified employee for company | Create a pending salary contribution |
-| POST | `/api/companies/:companyId/reviews` | Verified employee for company | Create a pending review |
+| POST | `/api/companies/:companyId/salaries` | Verified exact company-role scope | Create a pending salary contribution |
+| POST | `/api/companies/:companyId/reviews` | Verified exact company-role scope | Create a pending review |
 | POST | `/api/submissions/:submissionId/reports` | Bearer token | Create one report per user/submission |
 | GET | `/api/admin/submissions/pending` | ADMIN token | Pending queue, oldest first |
 | GET | `/api/admin/submissions/:submissionId` | ADMIN token | Parent and subtype detail |
@@ -111,11 +113,13 @@ Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, al
 Authorization: Bearer <token>
 ```
 
-`GET /api/auth/me` also returns active, non-expired company verifications as a safe `verifiedCompanies` list. Profile updates accept only `fullName`; email, account type, role, account status, employment status, and verification state cannot be changed there. Password changes require the current password, enforce the existing policy, and store a new BCrypt hash. Email remains read-only until a verified email-change workflow exists.
+`GET /api/auth/me` returns active, non-expired exact scopes as `verifiedScopes`, containing only `companyId`, `companyName`, `roleId`, `roleName`, and `expiresAt`. It never exposes employee IDs, evidence, reviewer data, or internal references. Profile updates accept only `fullName`; email, account type, role, account status, employment status, and verification state cannot be changed there.
 
 ### Password recovery
 
 `POST /api/auth/forgot-password` normalizes the email, checks account status, generates 32 cryptographically random bytes, stores only their SHA-256 hash, and sends the raw value only inside the temporary email link. Existing active tokens are revoked in the same Oracle transaction. SMTP delivery runs before commit; delivery failure rolls back both the new token and revocation changes and returns a controlled `503`.
+
+Live diagnosis must start the actual backend and call the route directly. An unknown valid email returns `404`, `success: false`, and exactly `No account was found with that email address.` without inserting a token. For a real account, verify provider acceptance, a 64-character stored hash, one-time reset behavior, and rollback under an invalid SMTP configuration. Required local names are `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, and `FRONTEND_URL`; never print their values. The detailed unknown-email response is an academic choice and should normally be generic in production.
 
 `POST /api/auth/reset-password` accepts `token`, `newPassword`, and `confirmPassword`. It enforces the existing 8-to-72-byte letter-and-number policy, locks the matching hash row, rejects expired/used/revoked tokens, updates the BCrypt hash, marks the token used, revokes other tokens, and commits once. The raw token is never returned or logged. The default expiry is 15 minutes.
 
@@ -132,7 +136,7 @@ The top-level `GET /api/salaries`, `/api/reviews`, and `/api/interviews` endpoin
 Salary, review, and interview repositories each use one Oracle connection:
 
 ```text
-validate active company-specific employment verification + references
+validate active exact employee + company + role verification + references
                     |
                     v
 insert SUBMISSIONS parent as PENDING
@@ -161,6 +165,10 @@ Interview experiences require a company-verified employee. They include a role, 
 All three contribution routes and repositories require a matching active, non-expired company verification. Missing verification returns `403`; accepted contributions are marked `VERIFIED` and remain `PENDING` until moderation. A frontend flag is never an authorization source.
 
 ## Employee Verification
+
+Every request includes both `companyId` and `roleId`. ADMIN sees the requested designation before deciding. A verified Data Engineer scope cannot authorize a Sales Manager contribution at the same company, a scope at another company, or any contribution after expiry. `ADMIN` remains independent: a normal ADMIN account has no contribution privilege unless it also owns an active employee scope. The repository repeats the authoritative scope check on the same Oracle connection and transaction used for the parent/subtype insert.
+
+Migration `07` backfills an old row only when all of that employee's company contributions identify one distinct role. Ambiguous or unsupported rows remain `ROLE_ID IS NULL`; they are visible for correction but cannot authorize and cannot be approved as a new active scope.
 
 Only active `EMPLOYEE` accounts may request verification. Current employees use `COMPANY_EMAIL_OTP` with a company-email address; former employees use `DOCUMENT` with a short proof type and safe external/reference identifier. A pending or active company verification blocks duplicates.
 
@@ -235,9 +243,9 @@ npm test
 npm run test:integration
 ```
 
-The 83-test unit suite covers authentication and safe profile changes, detailed login outcomes, SMTP configuration/content, hashed single-use reset tokens, controlled delivery errors, migration structure, rate limiting, rollback-on-delivery failure, atomic password replacement, public browse access, all three verified-employee gates, approved-only/bound public SQL, input validation, transaction rollback, and frontend accessibility/fallback behavior.
+The 94-test unit suite covers the prior authentication, recovery, moderation, privacy, and accessibility behavior plus exact role-scope authorization, ADMIN independence, invalidation rollback, migration/seed structure, safe scope fields, approved rating aggregates, and responsive browse sidebars.
 
-The live test requires Oracle, migration `06`, and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, detailed login outcomes, reset-token hash storage, SMTP-failure rollback with a mocked delivery boundary, valid/expired/invalid/used resets, old/new-password login, rate limiting, verification, contributions, approved-only publication, reporting, moderation history, aggregates, authorization, GET regressions, and forced rollback cases. A real external SMTP account is intentionally not used by the automated suite.
+The live test requires Oracle with migrations `06` and `07`, plus `JWT_SECRET`. Seed `08` is independently guarded and may already be present. It verifies generated identity values, detailed login outcomes, reset-token lifecycle, role-scoped verification and contributions, approved-only publication, reporting, moderation, aggregates, authorization, GET regressions, and rollback cases. A real external SMTP account is not used by the automated suite and must be proven manually with local credentials.
 
 Public registration always creates `account_role = 'USER'`. The fictional sample ADMIN hash is intentionally not a usable password. For manual local ADMIN testing, generate and apply a local BCrypt hash without committing it; the integration test instead promotes and deletes a temporary user.
 

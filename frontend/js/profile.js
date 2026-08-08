@@ -25,16 +25,16 @@ function render(user) {
   const list = document.querySelector('#verified-company-list');
   const empty = document.querySelector('#no-verified-companies');
   list.replaceChildren();
-  const companies = Array.isArray(user.verifiedCompanies) ? user.verifiedCompanies : [];
-  companies.forEach((company) => {
+  const scopes = Array.isArray(user.verifiedScopes) ? user.verifiedScopes : [];
+  scopes.forEach((scope) => {
     const item = document.createElement('li');
     const link = document.createElement('a');
-    link.href = `company-details.html?id=${encodeURIComponent(company.companyId)}`;
-    link.textContent = company.companyName;
-    item.append(link, document.createTextNode(` · ${company.employmentStatus.toLowerCase()} employee`));
+    link.href = `company-details.html?id=${encodeURIComponent(scope.companyId)}`;
+    link.textContent = scope.companyName;
+    item.append(link, document.createTextNode(` · ${scope.roleName}`));
     list.append(item);
   });
-  empty.hidden = companies.length > 0;
+  empty.hidden = scopes.length > 0;
   loadStatus.hidden = true;
   content.hidden = false;
 }

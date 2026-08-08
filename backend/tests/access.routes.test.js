@@ -109,24 +109,87 @@ for (const contribution of [
     const response = await request(contribution.path, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: '{}'
+      body: JSON.stringify({ roleId: 2 })
     });
     assert.equal(response.status, 403);
-    assert.equal(response.body.message, 'Employee verification is required for this company');
+    assert.equal(response.body.message, 'Employee verification is required for this company and designation');
   });
 
   test(`verified employee can POST ${contribution.label}`, async () => {
     verificationRepository.findActiveVerifiedEmployment = async () => ({
       verificationId: 9,
       companyId: 1,
+      roleId: 2,
       employmentStatus: 'CURRENT'
     });
     const response = await request(contribution.path, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: '{}'
+      body: JSON.stringify({ roleId: 2 })
     });
     assert.equal(response.status, 201);
     assert.equal(response.body.data.verificationStatus, 'VERIFIED');
   });
 }
+
+test('role-scoped middleware rejects malformed and unauthorized designations before handlers', async () => {
+  let calls = 0;
+  verificationRepository.findActiveVerifiedEmployment = async (userId, companyId, roleId) => {
+    calls += 1;
+    assert.deepEqual([userId, companyId, roleId], [8, 1, 3]);
+    return null;
+  };
+
+  const malformed = await request('/api/companies/1/salaries', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roleId: 'not-an-id' })
+  });
+  assert.equal(malformed.status, 400);
+  assert.equal(calls, 0);
+
+  const unauthorized = await request('/api/companies/1/salaries', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roleId: 3, employeeId: 999999 })
+  });
+  assert.equal(unauthorized.status, 403);
+  assert.equal(calls, 1);
+});
+
+test('ADMIN status is independent from exact employee contribution scope', async () => {
+  userRepository.findAuthorizationById = async () => ({
+    accountRole: 'ADMIN', accountStatus: 'ACTIVE'
+  });
+  try {
+    verificationRepository.findActiveVerifiedEmployment = async () => null;
+    const adminWithoutScope = await request('/api/companies/1/reviews', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roleId: 2 })
+    });
+    assert.equal(adminWithoutScope.status, 403);
+
+    verificationRepository.findActiveVerifiedEmployment = async (userId, companyId, roleId) => (
+      userId === 8 && companyId === 1 && roleId === 2
+        ? { verificationId: 9, companyId, roleId, employmentStatus: 'CURRENT' }
+        : null
+    );
+    const exactScope = await request('/api/companies/1/reviews', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roleId: 2 })
+    });
+    const otherDesignation = await request('/api/companies/1/reviews', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roleId: 3 })
+    });
+    assert.equal(exactScope.status, 201);
+    assert.equal(otherDesignation.status, 403);
+  } finally {
+    userRepository.findAuthorizationById = async () => ({
+      accountRole: 'USER', accountStatus: 'ACTIVE'
+    });
+  }
+});

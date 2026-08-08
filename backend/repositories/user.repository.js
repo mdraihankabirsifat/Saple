@@ -79,20 +79,24 @@ async function findAuthorizationById(userId) {
   return executeSingleRow(sql, { userId });
 }
 
-async function findActiveVerifiedCompaniesByUserId(userId) {
+async function findActiveVerifiedScopesByUserId(userId) {
   let connection;
   try {
     connection = await database.getConnection();
     const result = await connection.execute(
       `SELECT DISTINCT c.company_id AS "companyId", c.company_name AS "companyName",
-         e.employment_status AS "employmentStatus", ev.expires_at AS "expiresAt"
-       FROM employees e
+         ev.role_id AS "roleId", jr.role_name AS "roleName", ev.expires_at AS "expiresAt"
+       FROM users u
+       JOIN employees e ON e.user_id = u.user_id
        JOIN employment_verifications ev ON ev.employee_id = e.employee_id
        JOIN companies c ON c.company_id = ev.company_id
-       WHERE e.user_id = :userId
+       JOIN job_roles jr ON jr.role_id = ev.role_id
+       WHERE u.user_id = :userId
+         AND u.user_type = 'EMPLOYEE'
+         AND u.account_status = 'ACTIVE'
          AND ev.verification_status = 'VERIFIED'
          AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
-       ORDER BY c.company_name`,
+       ORDER BY c.company_name, jr.role_name`,
       { userId }
     );
     return result.rows;
@@ -231,7 +235,7 @@ module.exports = {
   findUserForPasswordResetByEmail,
   findSafeUserById,
   findAuthorizationById,
-  findActiveVerifiedCompaniesByUserId,
+  findActiveVerifiedScopesByUserId,
   updateFullName,
   findPasswordHashById,
   updatePasswordHash,

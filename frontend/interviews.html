@@ -27,7 +27,7 @@
         <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
             class="button button-secondary button-small" href="register.html">Create account</a>
           <details class="contribute-menu">
-            <summary class="button button-primary button-small">+ Contribute</summary>
+            <summary class="button button-primary button-small">Contribute</summary>
             <ul class="contribute-options">
               <li><a href="submit-salary.html">Submit salary</a></li>
               <li><a href="submit-review.html">Write a review</a></li>
@@ -48,7 +48,8 @@
         </div><a class="button button-primary" href="interview-experience.html" data-verified-contributor hidden>+ Share
           interview experience</a>
       </div>
-      <form id="interview-filters" class="filter-panel card">
+      <div class="browse-layout">
+      <form id="interview-filters" class="filter-panel card" aria-label="Interview filters">
         <div class="filter-grid">
           <div class="form-group"><label for="interview-company-filter">Company</label><select
               id="interview-company-filter">
@@ -76,9 +77,12 @@
         <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button
             class="button button-secondary" type="reset">Clear</button></div>
       </form>
-      <p id="interview-browse-status" class="state-message" role="status" aria-live="polite">Loading approved interview
-        experiences&hellip;</p>
-      <div id="interview-results" class="browse-results" aria-live="polite"></div>
+      <section class="browse-results-column" aria-label="Interview results">
+        <p id="interview-browse-status" class="state-message" role="status" aria-live="polite">Loading approved interview
+          experiences&hellip;</p>
+        <div id="interview-results" class="browse-results" aria-live="polite"></div>
+      </section>
+      </div>
     </div>
   </main>
   <footer class="site-footer">

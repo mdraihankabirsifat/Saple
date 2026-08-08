@@ -25,9 +25,9 @@ All single-column surrogate keys in these reference and workflow tables are Orac
 
 ## Employment verification relation
 
-- `employment_verifications` (`verification_id` **PK**, `employee_id` **FK**, `company_id` **FK**, `verification_method`, `company_email`, `proof_type`, `proof_reference`, `verification_status`, `requested_at`, `reviewed_at`, `expires_at`, `rejection_reason`, `reviewed_by` **FK**)
+- `employment_verifications` (`verification_id` **PK**, `employee_id` **FK**, `company_id` **FK**, `role_id` **FK** nullable for legacy rows, `verification_method`, `company_email`, `proof_type`, `proof_reference`, `verification_status`, `requested_at`, `reviewed_at`, `expires_at`, `rejection_reason`, `reviewed_by` **FK**)
 
-Verification is company-specific and preserves request history. Company email, safe proof reference, and rejection reason are private. Raw OTP values, document contents, and national identifiers are never stored.
+Migration `07_add_role_scoped_verification.sql` changes authorization from company-only to the exact employee/company/role tuple and adds `IX_EMP_VERIFY_SCOPE_STATUS`. It backfills only legacy employee/company pairs with one unambiguous contributed role. Ambiguous or unsupported legacy rows remain `NULL`, are identifiable for correction, and cannot authorize a new contribution. Company email, safe proof reference, and rejection reason are private.
 
 ## Submission supertype and subtypes
 
@@ -53,3 +53,7 @@ Reports point directly to a submission. Moderation actions form append-only audi
 - `vw_community_salary_summary`
 
 The salary views calculate ranges and contribution counts rather than storing derived values. Verified ranges use approved, verified submissions; community ranges use all approved salary submissions. Public views omit passwords, account identity, company verification email, proof references, rejection reasons, reporter identity, and internal moderation notes.
+
+## Populated-schema migration order
+
+Migration `06_create_password_reset_tokens.sql` is already completed in the current populated schema. Apply `07_add_role_scoped_verification.sql`, then the rerunnable `08_seed_demo_salary_reviews.sql`. Do not rerun destructive `02_create_tables.sql` or migration `06`. Seed `08` uses dedicated `saple.demo.*@example.invalid` accounts, valid role-scoped verifications, and guarded parent/subtype inserts; all figures and reviews are synthetic academic demonstration data.

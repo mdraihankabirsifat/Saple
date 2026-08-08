@@ -39,7 +39,7 @@ async function submitReview(userId, companyIdValue, input = {}) {
   const data = {
     userId,
     companyId: positiveId(companyIdValue, 'company ID'),
-    roleId: positiveId(input.roleId, 'role ID', true),
+    roleId: positiveId(input.roleId, 'role ID'),
     reviewTitle: text(input.reviewTitle, 'Review title', 200),
     overallRating: rating(input.overallRating, 'Overall rating'),
     workLifeBalanceRating: rating(input.workLifeBalanceRating, 'Work-life balance rating'),

@@ -28,7 +28,7 @@
         <div class="nav-actions"><a class="nav-text-link" href="login.html">Sign in</a><a
             class="button button-secondary button-small" href="register.html">Create account</a>
           <details class="contribute-menu">
-            <summary class="button button-primary button-small">+ Contribute</summary>
+            <summary class="button button-primary button-small">Contribute</summary>
             <ul class="contribute-options">
               <li><a href="submit-salary.html">Submit salary</a></li>
               <li><a href="submit-review.html">Write a review</a></li>
@@ -49,7 +49,8 @@
         </div><a class="button button-primary" href="submit-salary.html" data-verified-contributor hidden>+ Submit
           salary</a>
       </div>
-      <form id="salary-filters" class="filter-panel card">
+      <div class="browse-layout">
+      <form id="salary-filters" class="filter-panel card" aria-label="Salary filters">
         <div class="filter-grid">
           <div class="form-group"><label for="salary-company-filter">Company</label><select id="salary-company-filter">
               <option value="">All companies</option>
@@ -72,9 +73,12 @@
         <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button
             class="button button-secondary" type="reset">Clear</button></div>
       </form>
-      <p id="salary-browse-status" class="state-message" role="status" aria-live="polite">Loading approved salary
-        insights&hellip;</p>
-      <div id="salary-results" class="browse-results" aria-live="polite"></div>
+      <section class="browse-results-column" aria-label="Salary results">
+        <p id="salary-browse-status" class="state-message" role="status" aria-live="polite">Loading approved salary
+          insights&hellip;</p>
+        <div id="salary-results" class="browse-results" aria-live="polite"></div>
+      </section>
+      </div>
     </div>
   </main>
   <footer class="site-footer">

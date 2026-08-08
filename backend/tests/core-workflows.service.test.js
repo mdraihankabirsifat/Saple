@@ -34,10 +34,12 @@ test('verification request normalizes private evidence and maps authorization er
   let received;
   verificationRepository.createVerificationRequest = async (input) => { received = input; return { verificationId: 5 }; };
   await verificationService.requestVerification(8, '1', {
+    roleId: '2',
     employmentStatus: ' current ', verificationMethod: 'company_email_otp',
     companyEmail: ' Worker@Company.Test '
   });
   assert.equal(received.companyEmail, 'worker@company.test');
+  assert.equal(received.roleId, 2);
   assert.equal(received.proofReference, null);
 
   verificationRepository.createVerificationRequest = async () => {
@@ -45,6 +47,7 @@ test('verification request normalizes private evidence and maps authorization er
   };
   await assert.rejects(
     verificationService.requestVerification(8, 1, {
+      roleId: 2,
       employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP', companyEmail: 'a@b.test'
     }),
     (error) => error.statusCode === 403
@@ -65,7 +68,7 @@ test('verification decisions require rejection evidence and preserve allowed out
 
 test('review validation rejects unsafe fields and passes normalized valid data', async () => {
   const payload = {
-    roleId: '', reviewTitle: ' Strong team ', overallRating: 4.5,
+    roleId: 2, reviewTitle: ' Strong team ', overallRating: 4.5,
     workLifeBalanceRating: 4, careerGrowthRating: 4, managementRating: 3.5,
     cultureRating: 5, pros: ' Helpful peers ', cons: ' Slow procurement ',
     adviceToManagement: '', employmentStatus: 'current', reviewDate: '2026-01-15',
@@ -82,7 +85,7 @@ test('review validation rejects unsafe fields and passes normalized valid data',
   let received;
   reviewRepository.createReview = async (input) => { received = input; return { submissionId: 12 }; };
   await reviewService.submitReview(8, '1', payload);
-  assert.equal(received.roleId, null);
+  assert.equal(received.roleId, 2);
   assert.equal(received.reviewTitle, 'Strong team');
   assert.equal(received.isAnonymous, true);
 });

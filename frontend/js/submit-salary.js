@@ -1,5 +1,5 @@
-import { apiRequest, fetchApi } from './api.js';
-import { requireContributionAccess } from './contribution-access.js';
+import { apiRequest } from './api.js';
+import { populateVerifiedScopeSelects, requireContributionAccess } from './contribution-access.js';
 
 const salaryForm = document.querySelector('#salary-form');
 const companySelect = document.querySelector('#salary-company');
@@ -43,62 +43,10 @@ function showSignInRequired(message = 'Please sign in before submitting salary i
   formStatus.append(document.createElement('br'), signInLink);
 }
 
-async function loadCompanies(companies) {
-  companySelect.disabled = true;
-  companyLoadStatus.textContent = 'Loading from the Saple API...';
-  companyLoadStatus.classList.remove('error');
-
-  try {
-    const placeholder = new Option('Select a company', '');
-    companySelect.replaceChildren(placeholder);
-
-    if (!Array.isArray(companies) || companies.length === 0) {
-      companyLoadStatus.textContent = 'No companies are available yet.';
-      return;
-    }
-
-    companies.forEach((company) => {
-      if (company.companyId !== null && company.companyId !== undefined && company.companyName) {
-        companySelect.append(new Option(company.companyName, String(company.companyId)));
-      }
-    });
-
-    companySelect.disabled = false;
-    companyLoadStatus.textContent = 'Companies loaded from the live directory.';
-  } catch (error) {
-    companySelect.replaceChildren(new Option('Company list unavailable', ''));
-    companyLoadStatus.textContent = error.message;
-    companyLoadStatus.classList.add('error');
-  }
-}
-
-async function loadJobRoles() {
-  roleSelect.disabled = true;
-  roleLoadStatus.textContent = 'Loading job roles...';
-  roleLoadStatus.classList.remove('error');
-
-  try {
-    const roles = await fetchApi('/api/job-roles');
-    roleSelect.replaceChildren(new Option('Select a job role', ''));
-
-    if (!Array.isArray(roles) || roles.length === 0) {
-      roleLoadStatus.textContent = 'No job roles are available yet.';
-      return;
-    }
-
-    roles.forEach((role) => {
-      if (role.roleId !== null && role.roleId !== undefined && role.roleName) {
-        roleSelect.append(new Option(role.roleName, String(role.roleId)));
-      }
-    });
-
-    roleSelect.disabled = false;
-    roleLoadStatus.textContent = 'Job roles loaded from the Saple API.';
-  } catch (error) {
-    roleSelect.replaceChildren(new Option('Job roles unavailable', ''));
-    roleLoadStatus.textContent = error.message;
-    roleLoadStatus.classList.add('error');
-  }
+function loadVerifiedScopes(scopes) {
+  populateVerifiedScopeSelects(companySelect, roleSelect, scopes);
+  companyLoadStatus.textContent = 'Only companies in your active verification scopes are available.';
+  roleLoadStatus.textContent = 'Designations are limited to the selected verified company.';
 }
 
 function validateForm() {
@@ -223,7 +171,7 @@ salaryForm.addEventListener('submit', async (event) => {
     if (error.status === 401) {
       showSignInRequired('Your session is missing or expired. Please sign in again.');
     } else if (error.status === 403) {
-      showFormStatus('Employee verification is required for the selected company.', 'error');
+      showFormStatus('Employee verification is required for the selected company and designation.', 'error');
     } else {
       showFormStatus(error.message, 'error');
     }
@@ -236,5 +184,5 @@ salaryForm.addEventListener('submit', async (event) => {
 (async () => {
   const access = await requireContributionAccess('submit-salary.html');
   if (!access) return;
-  await Promise.all([loadCompanies(access.verifiedCompanies), loadJobRoles()]);
+  loadVerifiedScopes(access.verifiedScopes);
 })();

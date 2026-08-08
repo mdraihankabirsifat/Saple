@@ -58,6 +58,20 @@
   overflow-wrap: anywhere;
 }
 
+.company-heading-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+}
+
+.company-rating {
+  color: var(--saple-green-800);
+  font-size: 0.95rem;
+  font-weight: 780;
+  white-space: nowrap;
+}
+
 .company-profile .industry {
   margin: 0;
   color: var(--saple-green-700);

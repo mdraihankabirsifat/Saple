@@ -3,6 +3,7 @@ import { getCurrentUser, isAuthenticated } from './auth.js';
 
 const form = document.querySelector('#verification-form');
 const company = document.querySelector('#verification-company');
+const role = document.querySelector('#verification-role');
 const employmentStatus = document.querySelector('#verification-employment-status');
 const currentEvidence = document.querySelector('#current-evidence');
 const formerEvidence = document.querySelector('#former-evidence');
@@ -24,6 +25,7 @@ form.addEventListener('submit', async (event) => {
   if (!form.checkValidity()) { form.reportValidity(); return; }
   const current = employmentStatus.value === 'CURRENT';
   const body = {
+    roleId: Number(role.value),
     employmentStatus: employmentStatus.value,
     verificationMethod: current ? 'COMPANY_EMAIL_OTP' : 'DOCUMENT',
     ...(current ? { companyEmail: companyEmail.value } : { proofType: proofType.value, proofReference: proofReference.value })
@@ -42,9 +44,15 @@ form.addEventListener('submit', async (event) => {
     const user = await getCurrentUser();
     if (user.userType !== 'EMPLOYEE') { show('An employee account is required to request verification.', 'error'); form.hidden = true; return; }
     employmentStatus.value = user.employmentStatus || ''; updateEvidence();
-    const companies = await fetchApi('/api/companies');
+    const [companies, roles] = await Promise.all([
+      fetchApi('/api/companies'),
+      fetchApi('/api/job-roles')
+    ]);
     company.replaceChildren(new Option('Select a company', ''));
     companies.forEach((item) => company.append(new Option(item.companyName, item.companyId)));
+    role.replaceChildren(new Option('Select a designation', ''));
+    roles.forEach((item) => role.append(new Option(item.roleName, item.roleId)));
     company.disabled = false;
+    role.disabled = false;
   } catch (error) { show(error.message, 'error'); }
 })();

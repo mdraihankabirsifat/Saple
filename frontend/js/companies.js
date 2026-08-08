@@ -34,10 +34,18 @@ function salaryText(company) {
   return count ? `${Number(minimum).toLocaleString()} – ${Number(maximum).toLocaleString()} (${count})` : 'No salary data';
 }
 
+function ratingText(company) {
+  const count = Number(company.reviewCount) || 0;
+  if (!count) return 'No rating yet';
+  return `★ ${Number(company.averageRating).toFixed(1)} (${count} ${count === 1 ? 'review' : 'reviews'})`;
+}
+
 function createCompanyCard(company) {
   const article = document.createElement('article');
   const monogram = document.createElement('span');
   const heading = document.createElement('h3');
+  const headingLine = document.createElement('div');
+  const rating = document.createElement('span');
   const industry = document.createElement('p');
   const metadata = document.createElement('dl');
   const detailsLink = document.createElement('a');
@@ -45,17 +53,18 @@ function createCompanyCard(company) {
   monogram.setAttribute('aria-hidden', 'true');
   monogram.textContent = company.companyName?.trim().charAt(0).toUpperCase() || 'S';
   heading.textContent = company.companyName || 'Unnamed company'; metadata.className = 'company-meta';
+  headingLine.className = 'company-heading-line'; rating.className = 'company-rating';
+  rating.textContent = ratingText(company); headingLine.append(heading, rating);
   if (company.industry) { industry.className = 'industry'; industry.textContent = company.industry; }
   const location = [company.headquartersCity, company.country].filter(Boolean).join(', ');
   if (location) metadata.append(createMetaItem('Location', location));
   if (company.companySize) metadata.append(createMetaItem('Size', company.companySize));
   metadata.append(createMetaItem(fields.salarySource.value === 'VERIFIED' ? 'Verified pay' : 'Community pay', salaryText(company)));
-  metadata.append(createMetaItem('Reviews', company.reviewCount ? `${company.averageRating}/5 (${company.reviewCount})` : 'No reviews yet'));
   metadata.append(createMetaItem('Interviews', company.interviewCount ? String(company.interviewCount) : 'None yet'));
   detailsLink.className = 'card-link'; detailsLink.href = `company-details.html?id=${encodeURIComponent(company.companyId)}`;
   detailsLink.textContent = 'View company details →';
   detailsLink.setAttribute('aria-label', `View details for ${company.companyName || 'this company'}`);
-  article.append(monogram, heading); if (company.industry) article.append(industry);
+  article.append(monogram, headingLine); if (company.industry) article.append(industry);
   article.append(metadata, detailsLink); return article;
 }
 

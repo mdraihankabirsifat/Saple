@@ -137,11 +137,13 @@ async function loadVerifications() {
     items.forEach((item) => {
       const card = document.createElement('article'); card.className = 'admin-item';
       const title = document.createElement('h3'); title.textContent = `#${item.verificationId} · ${item.employeeName}`;
-      const context = document.createElement('p'); context.textContent = `${item.companyName} · ${item.employmentStatus} · ${item.verificationMethod}`;
+      const context = document.createElement('p'); context.textContent = `${item.companyName} · ${item.roleName || 'Legacy designation missing'} · ${item.employmentStatus} · ${item.verificationMethod}`;
       const evidence = document.createElement('p'); evidence.textContent = item.verificationMethod === 'COMPANY_EMAIL_OTP' ? `Company email: ${item.companyEmail}` : `${item.proofType}: ${item.proofReference}`;
       const reason = document.createElement('input'); reason.className = 'input'; reason.maxLength = 500; reason.placeholder = 'Rejection reason (required only to reject)'; reason.setAttribute('aria-label', `Rejection reason for verification ${item.verificationId}`);
       const actions = document.createElement('div'); actions.className = 'admin-item-actions';
       const verify = document.createElement('button'); verify.className = 'button button-primary button-small'; verify.type = 'button'; verify.textContent = 'Verify'; verify.addEventListener('click', () => decideVerification(item.verificationId, 'VERIFIED', reason));
+      verify.disabled = !item.roleId;
+      if (!item.roleId) verify.title = 'A legacy request without a designation must be rejected and re-requested.';
       const reject = document.createElement('button'); reject.className = 'button button-danger button-small'; reject.type = 'button'; reject.textContent = 'Reject'; reject.addEventListener('click', () => decideVerification(item.verificationId, 'REJECTED', reason));
       actions.append(verify, reject); card.append(title, context, evidence, reason, actions); verificationList.append(card);
     });

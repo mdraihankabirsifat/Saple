@@ -10,6 +10,7 @@ function positiveId(value, label) {
 
 async function requestVerification(userId, companyIdValue, input = {}) {
   const companyId = positiveId(companyIdValue, 'company ID');
+  const roleId = positiveId(input.roleId, 'role ID');
   const employmentStatus = typeof input.employmentStatus === 'string' ? input.employmentStatus.trim().toUpperCase() : '';
   const verificationMethod = typeof input.verificationMethod === 'string' ? input.verificationMethod.trim().toUpperCase() : '';
   const companyEmail = typeof input.companyEmail === 'string' ? input.companyEmail.trim().toLowerCase() : '';
@@ -32,7 +33,7 @@ async function requestVerification(userId, companyIdValue, input = {}) {
 
   try {
     return await verificationRepository.createVerificationRequest({
-      userId, companyId, employmentStatus, verificationMethod,
+      userId, companyId, roleId, employmentStatus, verificationMethod,
       companyEmail: verificationMethod === 'COMPANY_EMAIL_OTP' ? companyEmail : null,
       proofType: verificationMethod === 'DOCUMENT' ? proofType : null,
       proofReference: verificationMethod === 'DOCUMENT' ? proofReference : null
@@ -42,6 +43,7 @@ async function requestVerification(userId, companyIdValue, input = {}) {
       EMPLOYEE_REQUIRED: [403, error.message],
       EMPLOYMENT_STATUS_MISMATCH: [400, error.message],
       COMPANY_NOT_FOUND: [404, error.message],
+      ROLE_NOT_FOUND: [404, error.message],
       ACTIVE_VERIFICATION_EXISTS: [409, error.message]
     };
     if (mappings[error.sapleCode]) throw createHttpError(...mappings[error.sapleCode]);
@@ -74,6 +76,7 @@ async function decideVerification(reviewerUserId, value, input = {}) {
   } catch (error) {
     if (error.sapleCode === 'VERIFICATION_NOT_FOUND') throw createHttpError(404, error.message);
     if (error.sapleCode === 'INVALID_TRANSITION') throw createHttpError(409, error.message);
+    if (error.sapleCode === 'ROLE_REQUIRED') throw createHttpError(409, error.message);
     throw error;
   }
 }

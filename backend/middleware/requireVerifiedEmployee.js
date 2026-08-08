@@ -7,16 +7,22 @@ async function requireVerifiedEmployee(request, response, next) {
     return sendFailure(response, 400, 'Invalid company ID');
   }
 
+  const roleId = Number(request.body?.roleId);
+  if (!/^\d+$/.test(String(request.body?.roleId)) || !Number.isSafeInteger(roleId) || roleId <= 0) {
+    return sendFailure(response, 400, 'Invalid role ID');
+  }
+
   try {
     const verification = await verificationRepository.findActiveVerifiedEmployment(
       request.user.userId,
-      companyId
+      companyId,
+      roleId
     );
     if (!verification) {
       return sendFailure(
         response,
         403,
-        'Employee verification is required for this company'
+        'Employee verification is required for this company and designation'
       );
     }
     request.verifiedEmployment = verification;

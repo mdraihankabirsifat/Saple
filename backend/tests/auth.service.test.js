@@ -9,6 +9,7 @@ const originalMethods = {
   findUserByEmail: userRepository.findUserByEmail,
   findSafeUserById: userRepository.findSafeUserById,
   findAuthorizationById: userRepository.findAuthorizationById,
+  findActiveVerifiedScopesByUserId: userRepository.findActiveVerifiedScopesByUserId,
   createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee,
   updateFullName: userRepository.updateFullName,
   findPasswordHashById: userRepository.findPasswordHashById,
@@ -153,6 +154,24 @@ test('auth/me rejects suspended accounts and never returns a password hash', asy
   });
   const user = await authService.getCurrentUser(8);
   assert.equal('passwordHash' in user, false);
+});
+
+test('auth/me exposes only safe active company-role verification scopes', async () => {
+  userRepository.findSafeUserById = async () => ({
+    userId: 8, fullName: 'Scoped Employee', email: 'scoped@example.test', userType: 'EMPLOYEE',
+    accountRole: 'USER', accountStatus: 'ACTIVE', employmentStatus: 'CURRENT'
+  });
+  userRepository.findActiveVerifiedScopesByUserId = async () => [{
+    companyId: 1, companyName: 'Chaldal', roleId: 12, roleName: 'Data Engineer',
+    expiresAt: new Date('2030-01-01T00:00:00Z')
+  }];
+  const user = await authService.getCurrentUser(8);
+  assert.deepEqual(Object.keys(user.verifiedScopes[0]).sort(), [
+    'companyId', 'companyName', 'expiresAt', 'roleId', 'roleName'
+  ]);
+  assert.equal('employeeId' in user.verifiedScopes[0], false);
+  assert.equal('companyEmail' in user.verifiedScopes[0], false);
+  assert.equal('proofReference' in user.verifiedScopes[0], false);
 });
 
 test('profile update permits only a normalized full name', async () => {

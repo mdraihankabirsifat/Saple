@@ -17,10 +17,10 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 | File | Behavior |
 | --- | --- |
 | `index.html` | Homepage, search handoff, trust explanation, and CSS-animated decorative sapling-to-tree illustration |
-| `companies.html` | Live company grid with database-backed advanced filters and aggregate summaries |
-| `salaries.html` | Public approved salary ranges with company, role, location, range, and source filters |
-| `reviews.html` | Public approved reviews with company, role, location, and rating filters |
-| `interviews.html` | Public approved interviews with company, role, location, difficulty, and mode filters |
+| `companies.html` | Live company grid with approved rating/count beside each company name |
+| `salaries.html` | Public approved salary ranges with a desktop left filter sidebar |
+| `reviews.html` | Public approved reviews with a desktop left filter sidebar |
+| `interviews.html` | Public approved interviews with a desktop left filter sidebar |
 | `faq.html` | Accessible accordion explaining public access, verification, moderation, privacy, and project limits |
 | `about.html` | Academic purpose, workflow, technology, privacy model, disclaimer, and realistic future scope |
 | `company-details.html` | Live profile, benefits, salary ranges, approved reviews/interviews, and report dialog |
@@ -28,11 +28,11 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 | `forgot-password.html` | Registered-email reset-link request with loading and error states |
 | `reset-password.html` | In-memory URL-token consumption and matching new-password form |
 | `register.html` | Job-seeker or current/former-employee registration |
-| `profile.html` | Safe account view, name editing, password change, and verified-company list |
-| `submit-salary.html` | Company-verified employee pending salary contribution |
-| `submit-review.html` | Company-verified employee pending company review |
-| `interview-experience.html` | Company-verified employee pending interview experience |
-| `employee-verification.html` | Current/former employee verification request |
+| `profile.html` | Safe account view, name editing, password change, and verified company-role scopes |
+| `submit-salary.html` | Exact-scope employee pending salary contribution |
+| `submit-review.html` | Exact-scope employee pending company review |
+| `interview-experience.html` | Exact-scope employee pending interview experience |
+| `employee-verification.html` | Current/former employee company-and-designation request |
 | `admin.html` | Submission moderation, verification review, and report management |
 
 ## Authentication and Navigation
@@ -41,27 +41,27 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 
 The login-page recovery link opens `forgot-password.html`. The reset page reads the emailed token once, removes it from the visible address bar with `history.replaceState`, keeps it only in memory, and never logs or stores it. Both forms prevent duplicate submissions, announce outcomes through live status regions, and use the backend's controlled error messages.
 
-`js/nav.js` renders Home, Companies, Salaries, Reviews, Interviews, FAQ, and About consistently on every page, applies the active state and `aria-current`, and adds FAQ/About to every footer. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `+ Contribute` plus page CTAs only when `verifiedCompanies` contains an active company verification. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
+`js/nav.js` renders Home, Companies, Salaries, Reviews, Interviews, FAQ, and About consistently on every page, applies the active state and `aria-current`, and adds FAQ/About to every footer. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `Contribute` plus page CTAs only when `verifiedScopes` contains an active company-role verification. ADMIN status alone never reveals contribution access.
 
 ## Contribution Forms
 
-`js/contribution-access.js` hides each contribution form until `/api/auth/me` confirms at least one active company-specific verification. Signed-out and unverified users receive an employee-verification-required state with the appropriate sign-in or verification action. The company selector contains only companies the current user is verified for. Backend middleware and repository checks remain the security boundary.
+`js/contribution-access.js` hides each contribution form until `/api/auth/me` confirms at least one active company-role scope. The company selector is built only from those scopes; changing company rebuilds the role selector with only matching verified designations. One available company or role is preselected. Backend middleware and the same-transaction repository check remain the security boundary.
 
-Salary, review, and interview pages load verified companies and job roles from the API, perform native plus JavaScript validation, and submit structured JSON. A successful write confirms that the contribution was submitted for moderation; it does not imply public approval.
+Salary, review, and interview pages do not load arbitrary role choices. They submit the selected verified scope as structured JSON. A successful write confirms that the contribution was submitted for moderation; it does not imply public approval.
 
-Review submission requires an employee profile and includes five ratings, employment status, review date, pros/cons, optional advice, optional role, and anonymity. Interview submission includes role, date, difficulty, rounds, mode, result, duration, process, optional questions, and anonymity.
+Review submission now requires a role for all new rows and includes five ratings, employment status, review date, pros/cons, optional advice, and anonymity. Historical review rows may still have a null role, but they do not authorize new data.
 
-The employee-verification page checks the signed-in user and profile status. Current employees provide company-email metadata; former employees provide a proof type and safe reference. Its privacy notice makes clear that no document file or OTP is uploaded through this milestone.
+The employee-verification page requires both company and designation. Current employees provide company-email metadata; former employees provide a proof type and safe reference. ADMIN cards show the requested role before approval. No document file or OTP is uploaded.
 
 The review and interview forms share integrated numbered section headers, consistent cards, padding, field grids, status placement, and narrow-screen rules. Submit Salary retains its established fieldset layout while using the same guarded contribution behavior.
 
 ## Profile and Security
 
-`profile.html` displays only the safe `/api/auth/me` object and active verified companies. Users can normalize/change their full name and change their password by supplying the current password. Email is read-only because this milestone does not implement email-change verification. System roles, account/employment states, and verification values are display-only.
+`profile.html` displays only the safe `/api/auth/me` object and active verified company-role scopes. Users can normalize/change their full name and change their password by supplying the current password. Email is read-only. Evidence, employee IDs, reviewers, and proof references never enter this response.
 
 ## Company Detail and Public Safety
 
-The company detail page loads company, benefit, salary, review, and interview data in parallel. Reviews show rating aggregates and approved cards; interviews show approved process cards. Pending, rejected, and flagged rows never appear.
+The company list and detail header show the same one-decimal approved-review rating/count directly beside the company name, or `No rating yet`. The existing API query supplies these aggregates without N+1 requests. Pending, rejected, and flagged rows never affect the rating.
 
 The UI displays `Anonymous` whenever the API withholds `authorName`. It never tries to infer identity from session data or other fields. Content is rendered with DOM text nodes rather than untrusted HTML.
 
@@ -118,14 +118,14 @@ With Oracle and the backend running:
 4. As a normal account, confirm all three contribution pages show the verification-required state and direct POSTs return `403`.
 5. As the employee, request verification and confirm duplicate active requests are rejected.
 6. As ADMIN, inspect private evidence and verify or reject the request.
-7. Refresh the employee session; confirm `+ Contribute` appears and each form lists only verified companies.
-8. Submit salary, review, and interview records; confirm all remain absent from public pages until approved.
+7. Refresh the employee session; confirm `Contribute` appears and each form lists only verified company-role scopes.
+8. Manipulate company, role, and `employeeId` values; confirm malformed IDs return `400`, unauthorized exact scopes return `403`, and browser-supplied employee IDs are ignored.
 9. Approve them and confirm anonymous cards show no contributor identity.
 10. Open Profile, change the name, confirm email/system fields are read-only, and test current-password validation.
 11. Report an approved card; confirm duplicate reporting is rejected.
 12. As ADMIN, mark the report reviewing, inspect the target, flag/reject when appropriate, then resolve the report.
 13. Confirm flagged/rejected content disappears from public pages and review aggregates.
-14. Check keyboard use and desktop, tablet, and mobile widths for navigation/form/filter overflow.
+14. Check keyboard use and desktop, tablet, and mobile widths; the three browse filters must be left sidebars on desktop and move above results without overflow below 900px.
 15. Open FAQ and About from the header and footer on desktop/mobile; confirm their active states and use the FAQ with pointer, Enter/Space, Escape, Arrow keys, Home, and End.
 16. Configure SMTP, request a reset email, use the received link once, and confirm invalid, expired, reused, mismatched, and weak-password cases show controlled messages.
 17. View the homepage at desktop/tablet/mobile sizes, then enable reduced motion and disable JavaScript; confirm the mature decorative tree remains visible without overflow.
@@ -156,4 +156,4 @@ frontend/
 `-- admin.html
 ```
 
-ML and deployment are intentionally outside the current milestone.
+The standalone optional ML prototype lives outside the frontend; runtime UI integration and deployment remain deferred.

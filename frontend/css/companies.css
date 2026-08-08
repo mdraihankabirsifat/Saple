@@ -85,6 +85,20 @@
 
 .company-card h3 { margin-bottom: 0.4rem; font-size: 1.25rem; overflow-wrap: anywhere; }
 
+.company-heading-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+}
+
+.company-rating {
+  color: var(--saple-green-800);
+  font-size: 0.84rem;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
 .company-card .industry {
   margin-bottom: 1.1rem;
   color: var(--saple-green-700);

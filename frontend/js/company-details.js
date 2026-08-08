@@ -36,7 +36,15 @@ function renderCompany(company) {
   monogram.setAttribute('aria-hidden', 'true');
   heading.textContent = company.companyName || 'Company';
   heading.classList.remove('sr-only');
-  titleCopy.append(heading);
+  const headingLine = document.createElement('div');
+  const count = Number(company.reviewCount) || 0;
+  const ratingText = count
+    ? `★ ${Number(company.averageRating).toFixed(1)} (${count} ${count === 1 ? 'review' : 'reviews'})`
+    : 'No rating yet';
+  headingLine.className = 'company-heading-line';
+  headingLine.append(heading);
+  appendTextElement(headingLine, 'span', ratingText, 'company-rating');
+  titleCopy.append(headingLine);
 
   if (company.industry) appendTextElement(titleCopy, 'p', company.industry, 'industry');
   titleRow.append(titleCopy);

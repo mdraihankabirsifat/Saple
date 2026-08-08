@@ -228,6 +228,7 @@ async function main() {
     const normalVerification = await request(baseUrl, '/api/companies/1/verifications', {
       method: 'POST', token,
       body: {
+        roleId: 1,
         employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP',
         companyEmail: `normal.${uniqueSuffix}@company.test`
       }
@@ -236,6 +237,7 @@ async function main() {
     const verificationRequest = await request(baseUrl, '/api/companies/1/verifications', {
       method: 'POST', token: employeeToken,
       body: {
+        roleId: 1,
         employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP',
         companyEmail: `employee.${uniqueSuffix}@company.test`
       }
@@ -295,8 +297,8 @@ async function main() {
     assert.ok(verifiedRequest.expiresAt);
     const verifiedEmployeeProfile = await request(baseUrl, '/api/auth/me', { token: employeeToken });
     assert.equal(verifiedEmployeeProfile.status, 200);
-    assert.ok(verifiedEmployeeProfile.body.data.user.verifiedCompanies.some(
-      (item) => item.companyId === 1
+    assert.ok(verifiedEmployeeProfile.body.data.user.verifiedScopes.some(
+      (item) => item.companyId === 1 && item.roleId === 1
     ));
 
     const invalidCompany = await request(baseUrl, '/api/companies/999999999/salaries', {
@@ -306,7 +308,7 @@ async function main() {
     const invalidRole = await request(baseUrl, '/api/companies/1/salaries', {
       method: 'POST', token: employeeToken, body: salaryPayload({ roleId: 999999999 })
     });
-    assert.equal(invalidRole.status, 404);
+    assert.equal(invalidRole.status, 403);
     const invalidSalary = await request(baseUrl, '/api/companies/1/salaries', {
       method: 'POST', token: employeeToken, body: salaryPayload({ baseSalary: 0 })
     });
@@ -334,6 +336,7 @@ async function main() {
     const rejectedVerificationRequest = await request(baseUrl, '/api/companies/2/verifications', {
       method: 'POST', token: employeeToken,
       body: {
+        roleId: 2,
         employmentStatus: 'CURRENT', verificationMethod: 'COMPANY_EMAIL_OTP',
         companyEmail: `employee.${uniqueSuffix}@second-company.test`
       }

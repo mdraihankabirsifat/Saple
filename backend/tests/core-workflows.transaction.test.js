@@ -22,7 +22,7 @@ function mockConnection(execute) {
 
 function reviewInput() {
   return {
-    userId: 8, companyId: 1, roleId: null, reviewTitle: 'Title', overallRating: 4,
+    userId: 8, companyId: 1, roleId: 1, reviewTitle: 'Title', overallRating: 4,
     workLifeBalanceRating: 4, careerGrowthRating: 4, managementRating: 4,
     cultureRating: 4, pros: 'Pros', cons: 'Cons', adviceToManagement: null,
     employmentStatus: 'CURRENT', reviewDate: new Date('2026-01-01'), isAnonymous: true
@@ -35,8 +35,9 @@ test('review child-insert failure rolls back the parent submission', async () =>
     execution += 1;
     if (execution === 1) return { rows: [{ employeeId: 5, employmentStatus: 'CURRENT' }] };
     if (execution === 2) return { rows: [{ companyId: 1 }] };
-    if (execution === 3) return { rows: [{ verificationId: 9 }] };
-    if (execution === 4) return { outBinds: { submissionId: [12] } };
+    if (execution === 3) return { rows: [{ roleId: 1 }] };
+    if (execution === 4) return { rows: [{ verificationId: 9 }] };
+    if (execution === 5) return { outBinds: { submissionId: [12] } };
     throw new Error('child insert failed');
   });
   database.getConnection = async () => connection;
@@ -73,7 +74,7 @@ test('verification and report decisions roll back when their update fails', asyn
     let execution = 0;
     const connection = mockConnection(async () => {
       execution += 1;
-      if (execution === 1) return { rows: [{ verificationStatus: 'PENDING', reportStatus: 'OPEN' }] };
+      if (execution === 1) return { rows: [{ verificationStatus: 'PENDING', roleId: 1, reportStatus: 'OPEN' }] };
       throw new Error('update failed');
     });
     database.getConnection = async () => connection;

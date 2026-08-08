@@ -254,7 +254,7 @@ async function findVerification(verificationId) {
     const result = await connection.execute(
       `SELECT verification_id AS "verificationId", verification_status AS "verificationStatus",
           reviewed_by AS "reviewedBy", reviewed_at AS "reviewedAt", expires_at AS "expiresAt",
-          company_email AS "companyEmail", proof_reference AS "proofReference"
+          role_id AS "roleId", company_email AS "companyEmail", proof_reference AS "proofReference"
        FROM employment_verifications WHERE verification_id = :verificationId`,
       { verificationId }
     );

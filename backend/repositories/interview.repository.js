@@ -26,15 +26,15 @@ async function createInterview({
     if (!roleResult.rows[0]) throw repositoryError('ROLE_NOT_FOUND', 'Job role not found');
 
     const verification = await connection.execute(
-      `SELECT verification_id AS "verificationId" FROM employment_verifications
-       WHERE employee_id = :employeeId AND company_id = :companyId
-         AND verification_status = 'VERIFIED'
-         AND (expires_at IS NULL OR expires_at > SYSTIMESTAMP)
+      `SELECT ev.verification_id AS "verificationId" FROM employment_verifications ev
+       WHERE ev.employee_id = :employeeId AND ev.company_id = :companyId AND ev.role_id = :roleId
+         AND ev.verification_status = 'VERIFIED'
+         AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
        FETCH FIRST 1 ROW ONLY`,
-      { employeeId: user.employeeId, companyId }
+      { employeeId: user.employeeId, companyId, roleId }
     );
     if (!verification.rows[0]) {
-      throw repositoryError('VERIFICATION_REQUIRED', 'Employee verification is required for this company');
+      throw repositoryError('VERIFICATION_REQUIRED', 'Employee verification is required for this company and designation');
     }
     const verificationStatus = 'VERIFIED';
 

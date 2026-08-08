@@ -27,21 +27,19 @@ async function createReview({
 
     const companyResult = await connection.execute(`SELECT company_id AS "companyId" FROM companies WHERE company_id = :companyId`, { companyId });
     if (!companyResult.rows[0]) throw repositoryError('COMPANY_NOT_FOUND', 'Company not found');
-    if (roleId !== null) {
-      const roleResult = await connection.execute(`SELECT role_id AS "roleId" FROM job_roles WHERE role_id = :roleId`, { roleId });
-      if (!roleResult.rows[0]) throw repositoryError('ROLE_NOT_FOUND', 'Job role not found');
-    }
+    const roleResult = await connection.execute(`SELECT role_id AS "roleId" FROM job_roles WHERE role_id = :roleId`, { roleId });
+    if (!roleResult.rows[0]) throw repositoryError('ROLE_NOT_FOUND', 'Job role not found');
 
     const verificationResult = await connection.execute(
-      `SELECT verification_id AS "verificationId" FROM employment_verifications
-       WHERE employee_id = :employeeId AND company_id = :companyId
-         AND verification_status = 'VERIFIED'
-         AND (expires_at IS NULL OR expires_at > SYSTIMESTAMP)
+      `SELECT ev.verification_id AS "verificationId" FROM employment_verifications ev
+       WHERE ev.employee_id = :employeeId AND ev.company_id = :companyId AND ev.role_id = :roleId
+         AND ev.verification_status = 'VERIFIED'
+         AND (ev.expires_at IS NULL OR ev.expires_at > SYSTIMESTAMP)
        FETCH FIRST 1 ROW ONLY`,
-      { employeeId: employee.employeeId, companyId }
+      { employeeId: employee.employeeId, companyId, roleId }
     );
     if (!verificationResult.rows[0]) {
-      throw repositoryError('VERIFICATION_REQUIRED', 'Employee verification is required for this company');
+      throw repositoryError('VERIFICATION_REQUIRED', 'Employee verification is required for this company and designation');
     }
     const verificationStatus = 'VERIFIED';
     const parent = await connection.execute(

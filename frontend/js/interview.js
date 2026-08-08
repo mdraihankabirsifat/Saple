@@ -1,5 +1,5 @@
-import { apiRequest, fetchApi } from './api.js';
-import { requireContributionAccess } from './contribution-access.js';
+import { apiRequest } from './api.js';
+import { populateVerifiedScopeSelects, requireContributionAccess } from './contribution-access.js';
 
 const form = document.querySelector('#interview-form');
 const company = document.querySelector('#interview-company');
@@ -16,15 +16,8 @@ function signIn() {
   link.className = 'state-action-link'; link.textContent = 'Sign in to continue';
   status.append(document.createElement('br'), link);
 }
-async function loadOptions(companies) {
-  try {
-    const roles = await fetchApi('/api/job-roles');
-    company.replaceChildren(new Option('Select a company', ''));
-    companies.forEach((item) => company.append(new Option(item.companyName, item.companyId)));
-    role.replaceChildren(new Option('Select a job role', ''));
-    roles.forEach((item) => role.append(new Option(item.roleName, item.roleId)));
-    company.disabled = false; role.disabled = false;
-  } catch (error) { show(error.message, 'error'); }
+function loadOptions(scopes) {
+  populateVerifiedScopeSelects(company, role, scopes);
 }
 document.querySelector('#interview-date').max = new Date().toISOString().slice(0, 10);
 form.addEventListener('submit', async (event) => {
@@ -47,12 +40,12 @@ form.addEventListener('submit', async (event) => {
     show('Interview experience submitted for moderation.', 'success');
   } catch (error) {
     if (error.status === 401) signIn();
-    else if (error.status === 403) show('Employee verification is required for the selected company.', 'error');
+    else if (error.status === 403) show('Employee verification is required for the selected company and designation.', 'error');
     else show(error.message, 'error');
   }
   finally { submit.disabled = false; }
 });
 (async () => {
   const access = await requireContributionAccess('interview-experience.html');
-  if (access) await loadOptions(access.verifiedCompanies);
+  if (access) loadOptions(access.verifiedScopes);
 })();

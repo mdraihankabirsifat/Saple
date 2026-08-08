@@ -23,8 +23,8 @@ async function requireContributionAccess(returnTo) {
 
   try {
     const user = await getCurrentUser();
-    const verifiedCompanies = Array.isArray(user.verifiedCompanies) ? user.verifiedCompanies : [];
-    if (verifiedCompanies.length === 0) {
+    const verifiedScopes = Array.isArray(user.verifiedScopes) ? user.verifiedScopes : [];
+    if (verifiedScopes.length === 0) {
       accessState.hidden = false;
       accessState.className = 'access-state card';
       accessState.innerHTML = '<h2>Employee verification required</h2><p>Only verified current or former employees can contribute workplace data.</p>';
@@ -35,7 +35,7 @@ async function requireContributionAccess(returnTo) {
     }
     accessState.hidden = true;
     contributionLayout.hidden = false;
-    return { user, verifiedCompanies };
+    return { user, verifiedScopes };
   } catch (error) {
     accessState.hidden = false;
     accessState.className = 'access-state card';
@@ -44,4 +44,34 @@ async function requireContributionAccess(returnTo) {
   }
 }
 
-export { requireContributionAccess };
+function populateVerifiedScopeSelects(companySelect, roleSelect, scopes) {
+  const verifiedScopes = Array.isArray(scopes)
+    ? scopes.filter((scope) => scope.companyId && scope.companyName && scope.roleId && scope.roleName)
+    : [];
+  const companies = new Map();
+  verifiedScopes.forEach((scope) => companies.set(String(scope.companyId), scope.companyName));
+
+  companySelect.replaceChildren(new Option('Select a verified company', ''));
+  [...companies.entries()].sort((a, b) => a[1].localeCompare(b[1])).forEach(([id, name]) => {
+    companySelect.append(new Option(name, id));
+  });
+
+  const updateRoles = () => {
+    const matching = verifiedScopes.filter(
+      (scope) => String(scope.companyId) === companySelect.value
+    );
+    roleSelect.replaceChildren(new Option('Select a verified designation', ''));
+    matching.sort((a, b) => a.roleName.localeCompare(b.roleName)).forEach((scope) => {
+      roleSelect.append(new Option(scope.roleName, String(scope.roleId)));
+    });
+    roleSelect.disabled = matching.length === 0;
+    if (matching.length === 1) roleSelect.value = String(matching[0].roleId);
+  };
+
+  companySelect.addEventListener('change', updateRoles);
+  companySelect.disabled = companies.size === 0;
+  if (companies.size === 1) companySelect.value = companies.keys().next().value;
+  updateRoles();
+}
+
+export { populateVerifiedScopeSelects, requireContributionAccess };

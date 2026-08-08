@@ -51,7 +51,7 @@ test('auth-aware and verified-contributor navigation behavior remains connected'
   assert.match(script, /auth\.getCurrentUser\(\)/);
   assert.match(script, /currentUser\?\.accountRole === 'ADMIN'/);
   assert.match(script, /currentUser\?\.userType === 'EMPLOYEE'/);
-  assert.match(script, /verifiedCompanies/);
+  assert.match(script, /verifiedScopes/);
   assert.match(script, /updateContributionVisibility/);
 });
 
