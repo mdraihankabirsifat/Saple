@@ -34,6 +34,20 @@ async function findUserByEmail(email) {
   return executeSingleRow(sql, { email });
 }
 
+async function findUserForPasswordResetByEmail(email) {
+  const sql = `
+    SELECT
+      user_id AS "userId",
+      full_name AS "fullName",
+      email AS "email",
+      account_status AS "accountStatus"
+    FROM users
+    WHERE LOWER(email) = :email
+  `;
+
+  return executeSingleRow(sql, { email });
+}
+
 async function findSafeUserById(userId) {
   const sql = `
     SELECT
@@ -214,6 +228,7 @@ async function createUserWithOptionalEmployee({
 
 module.exports = {
   findUserByEmail,
+  findUserForPasswordResetByEmail,
   findSafeUserById,
   findAuthorizationById,
   findActiveVerifiedCompaniesByUserId,

@@ -1,6 +1,6 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Oracle 19c. It provides public approved company/salary/review/interview browsing, JWT authentication and safe profile changes, company-specific verified-employee contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
+The Saple backend connects Express 5 to Oracle 19c. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, company-specific verified-employee contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
 
 ## Prerequisites and Setup
 
@@ -26,7 +26,30 @@ DB_POOL_MAX=5
 DB_POOL_INCREMENT=1
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=replace_with_smtp_username
+SMTP_PASS=replace_with_smtp_password
+SMTP_FROM=Saple <no-reply@example.com>
+FRONTEND_URL=http://localhost:5500/
+PASSWORD_RESET_TOKEN_TTL_MINUTES=15
 ```
+
+Install dependencies with `npm install`; Nodemailer is included in `package.json`. For Gmail, enable two-step verification, create an App Password, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and `SMTP_SECURE=false`, then put the account and App Password in `SMTP_USER` and `SMTP_PASS`. Use provider-specific values for another SMTP service. Port `465` normally requires `SMTP_SECURE=true`. Never commit `backend/.env`.
+
+Apply Oracle scripts in this order for a clean local build:
+
+```sql
+@database/01_create_user.sql
+@database/02_create_tables.sql
+@database/03_insert_sample_data.sql
+@database/05_expand_reference_data.sql
+@database/06_create_password_reset_tokens.sql
+@database/04_test_queries.sql
+```
+
+For an existing populated schema, run only `06_create_password_reset_tokens.sql`. Do not rerun `02_create_tables.sql`, whose documented cleanup rebuilds the schema.
 
 ```bash
 npm run dev
@@ -59,6 +82,8 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/api/job-roles` | Public | Controlled job-role values |
 | POST | `/api/auth/register` | Public | Create a `NORMAL` or `EMPLOYEE` account |
 | POST | `/api/auth/login` | Public | Return JWT and safe user object |
+| POST | `/api/auth/forgot-password` | Public, rate-limited | Email a temporary password-reset link |
+| POST | `/api/auth/reset-password` | Public, rate-limited | Atomically consume a token and update the password |
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
 | PATCH | `/api/auth/me/password` | Bearer token | Change password with current password |
@@ -80,13 +105,23 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 
 Registration lowercases email, rejects duplicates with `409`, hashes passwords with BCrypt (12 rounds), and atomically creates an `EMPLOYEES` child for employee accounts. Employee registration requires `employmentStatus` of `CURRENT` or `FORMER`. Public input never accepts `account_role`.
 
-Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, algorithm, and expiration are verified. Every protected request also reloads the current `account_status` and `account_role`, so suspension, deactivation, or role changes take effect immediately. Invalid credentials and unavailable accounts use safe `401` responses. Use protected endpoints with:
+Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, algorithm, and expiration are verified. Every protected request also reloads the current `account_status` and `account_role`, so suspension, deactivation, or role changes take effect immediately. Login reports unknown email, incorrect password, suspended account, and deactivated account separately as required for this academic project. Use protected endpoints with:
 
 ```text
 Authorization: Bearer <token>
 ```
 
 `GET /api/auth/me` also returns active, non-expired company verifications as a safe `verifiedCompanies` list. Profile updates accept only `fullName`; email, account type, role, account status, employment status, and verification state cannot be changed there. Password changes require the current password, enforce the existing policy, and store a new BCrypt hash. Email remains read-only until a verified email-change workflow exists.
+
+### Password recovery
+
+`POST /api/auth/forgot-password` normalizes the email, checks account status, generates 32 cryptographically random bytes, stores only their SHA-256 hash, and sends the raw value only inside the temporary email link. Existing active tokens are revoked in the same Oracle transaction. SMTP delivery runs before commit; delivery failure rolls back both the new token and revocation changes and returns a controlled `503`.
+
+`POST /api/auth/reset-password` accepts `token`, `newPassword`, and `confirmPassword`. It enforces the existing 8-to-72-byte letter-and-number policy, locks the matching hash row, rejects expired/used/revoked tokens, updates the BCrypt hash, marks the token used, revokes other tokens, and commits once. The raw token is never returned or logged. The default expiry is 15 minutes.
+
+Both recovery endpoints use an in-memory IP/request-key limiter. This is suitable for the single-process academic deployment; multi-instance production deployment needs a shared rate-limit store. Detailed account-existence responses enable enumeration and are present only because the project requirements explicitly request them. A production service normally returns generic login and recovery messages.
+
+Saple uses stateless access JWTs without refresh-token storage. A successful password reset therefore cannot immediately revoke a JWT that was already issued; production revocation would require a token version or deny-list.
 
 ## Public Browse Queries
 
@@ -200,9 +235,9 @@ npm test
 npm run test:integration
 ```
 
-The 55-test unit suite covers authentication and safe profile changes, public browse access, all three verified-employee gates, approved-only/bound public SQL, input validation, transition rules, private/public mapping, exact calendar dates, forced rollback of salary, review, interview, verification, report, and moderation writes, plus shared FAQ/About navigation and accordion accessibility behavior.
+The 83-test unit suite covers authentication and safe profile changes, detailed login outcomes, SMTP configuration/content, hashed single-use reset tokens, controlled delivery errors, migration structure, rate limiting, rollback-on-delivery failure, atomic password replacement, public browse access, all three verified-employee gates, approved-only/bound public SQL, input validation, transaction rollback, and frontend accessibility/fallback behavior.
 
-The live test requires Oracle and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, registration/login, verification request and approval, salary/review/interview parent-child writes, approved-only public display, anonymous-field omission, report duplication and resolution, approved-content flagging, moderation history, salary aggregates, authorization, GET regressions, and rollback under forced constraint/write failures.
+The live test requires Oracle, migration `06`, and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, detailed login outcomes, reset-token hash storage, SMTP-failure rollback with a mocked delivery boundary, valid/expired/invalid/used resets, old/new-password login, rate limiting, verification, contributions, approved-only publication, reporting, moderation history, aggregates, authorization, GET regressions, and forced rollback cases. A real external SMTP account is intentionally not used by the automated suite.
 
 Public registration always creates `account_role = 'USER'`. The fictional sample ADMIN hash is intentionally not a usable password. For manual local ADMIN testing, generate and apply a local BCrypt hash without committing it; the integration test instead promotes and deletes a temporary user.
 
@@ -211,5 +246,8 @@ Public registration always creates `account_role = 'USER'`. The fictional sample
 - Keep `.env`, credentials, JWT secrets, and real verification evidence untracked.
 - SQL uses bind variables; raw Oracle errors are not returned.
 - Password hashes are never present in API responses.
+- Raw password-reset tokens exist only in memory and the outgoing link; Oracle stores SHA-256 hashes only.
 - ADMIN endpoints require authentication and role authorization.
-- Real OTP/document transport, ML, advanced recommendations, and deployment are intentionally outside core completion.
+- Detailed login/recovery messages allow account enumeration; production systems should use generic responses.
+- Existing stateless JWTs are not immediately revoked by password reset.
+- Real employment-verification OTP/document transport, shared rate limiting, ML, advanced recommendations, and deployment are intentionally outside core completion.

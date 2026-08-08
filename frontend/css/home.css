@@ -18,9 +18,9 @@
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(290px, 0.75fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
   align-items: center;
-  gap: clamp(2.5rem, 7vw, 6rem);
+  gap: clamp(1.5rem, 5vw, 4.5rem);
 }
 
 .hero-content h1 {
@@ -44,50 +44,105 @@
   gap: 0.8rem;
 }
 
-.hero-panel {
-  padding: clamp(1.5rem, 4vw, 2.2rem);
-  border: 1px solid #cfe2d8;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-}
-
-.hero-panel h2 {
-  margin-bottom: 1rem;
-  font-size: 1.35rem;
-}
-
-.feature-list {
+.hero-tree {
+  width: min(100%, 470px);
   margin: 0;
-  padding: 0;
-  list-style: none;
+  justify-self: end;
 }
 
-.feature-list li {
-  padding: 0.78rem 0 0.78rem 1.75rem;
-  position: relative;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-secondary);
+.saple-tree {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
 }
 
-.feature-list li:last-child {
-  border-bottom: 0;
+.tree-ground {
+  opacity: 0.9;
 }
 
-.feature-list li::before {
-  width: 1.1rem;
-  height: 1.1rem;
-  display: grid;
-  position: absolute;
-  left: 0;
-  top: 0.95rem;
-  place-items: center;
-  border-radius: 50%;
-  color: #ffffff;
-  background: var(--saple-green-600);
-  content: "\2713";
-  font-size: 0.7rem;
-  font-weight: 800;
+.tree-seed {
+  fill: var(--saple-green-900);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: seed-appear 0.38s ease-out 0.08s both;
+}
+
+.tree-stroke {
+  fill: none;
+  stroke: url(#saple-trunk-gradient);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.tree-shoot {
+  stroke-width: 6;
+  stroke-dasharray: 60;
+  animation: draw-shoot 0.55s cubic-bezier(0.3, 0.7, 0.3, 1) 0.35s both;
+}
+
+.tree-trunk {
+  stroke-width: 15;
+  stroke-dasharray: 330;
+  animation: draw-trunk 1.2s cubic-bezier(0.25, 0.75, 0.3, 1) 0.72s both;
+}
+
+.tree-branch {
+  stroke-width: 9;
+  stroke-dasharray: 170;
+}
+
+.tree-twig {
+  stroke-width: 5;
+  stroke-dasharray: 85;
+}
+
+.branch-1 { animation: draw-branch 0.7s ease-out 1.35s both; }
+.branch-2 { animation: draw-branch 0.75s ease-out 1.58s both; }
+.branch-3 { animation: draw-branch 0.7s ease-out 1.78s both; }
+.branch-4 { animation: draw-branch 0.68s ease-out 1.98s both; }
+.branch-5 { animation: draw-branch 0.62s ease-out 2.18s both; }
+
+.leaf-cluster {
+  fill: var(--saple-green-600);
+  stroke: var(--saple-green-800);
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.leaf-cluster ellipse:nth-child(2n) { fill: var(--saple-green-500); }
+.leaf-cluster ellipse:nth-child(3n) { fill: var(--saple-green-700); }
+.leaves-1 { animation: reveal-leaves 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) 1.82s both; }
+.leaves-2 { animation: reveal-leaves 0.52s cubic-bezier(0.2, 0.8, 0.3, 1) 2.05s both; }
+.leaves-3 { animation: reveal-leaves 0.52s cubic-bezier(0.2, 0.8, 0.3, 1) 2.28s both; }
+.leaves-4 { animation: reveal-leaves 0.52s cubic-bezier(0.2, 0.8, 0.3, 1) 2.5s both; }
+.leaves-5 { animation: reveal-leaves 0.58s cubic-bezier(0.2, 0.8, 0.3, 1) 2.72s both; }
+
+@keyframes seed-appear {
+  from { opacity: 0; transform: scale(0.55); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes draw-shoot {
+  from { stroke-dashoffset: 60; opacity: 0.45; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes draw-trunk {
+  from { stroke-dashoffset: 330; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes draw-branch {
+  from { stroke-dashoffset: 170; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes reveal-leaves {
+  from { opacity: 0; transform: scale(0.45); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .home-search-wrap {
@@ -264,13 +319,8 @@
 }
 
 @media (max-width: 900px) {
-  .hero-grid,
   .salary-explainer {
     grid-template-columns: 1fr;
-  }
-
-  .hero-panel {
-    max-width: 620px;
   }
 
   .trust-grid,
@@ -280,6 +330,17 @@
 
   .contribution-cta {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-tree {
+    width: min(88vw, 410px);
+    justify-self: center;
   }
 }
 
@@ -301,5 +362,16 @@
   .hero-actions .button,
   .cta-actions .button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tree-seed,
+  .tree-shoot,
+  .tree-trunk,
+  .tree-branch,
+  .tree-twig,
+  .leaf-cluster {
+    animation: none;
   }
 }

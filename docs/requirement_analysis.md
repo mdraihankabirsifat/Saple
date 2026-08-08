@@ -16,15 +16,16 @@ Saple is a BUET CSE database project for trustworthy company research. It helps 
 
 1. Register normal or current/former employee accounts and store only BCrypt password hashes.
 2. Log in with normalized email and receive an expiring, issuer/audience-bound JWT.
-3. Search and browse companies, details, benefits, and job roles.
-4. Display Verified and Community salary ranges calculated from approved database rows.
-5. Submit salary, review, and interview contributions as atomic parent/subtype transactions.
-6. Keep every new contribution `PENDING` until ADMIN moderation.
-7. Approve, reject, or flag through an atomic status-update plus immutable audit action.
-8. Request company-specific employment verification and let ADMIN verify or reject it.
-9. Publish only approved reviews/interviews and enforce anonymous public display.
-10. Let authenticated users report concrete public review/interview submissions once.
-11. Let ADMIN inspect, review, resolve, or dismiss reports and moderate the target through the audited submission workflow.
+3. Request a rate-limited email password-reset link and atomically consume its temporary hashed token.
+4. Search and browse companies, details, benefits, and job roles.
+5. Display Verified and Community salary ranges calculated from approved database rows.
+6. Submit salary, review, and interview contributions as atomic parent/subtype transactions.
+7. Keep every new contribution `PENDING` until ADMIN moderation.
+8. Approve, reject, or flag through an atomic status-update plus immutable audit action.
+9. Request company-specific employment verification and let ADMIN verify or reject it.
+10. Publish only approved reviews/interviews and enforce anonymous public display.
+11. Let authenticated users report concrete public review/interview submissions once.
+12. Let ADMIN inspect, review, resolve, or dismiss reports and moderate the target through the audited submission workflow.
 
 Benefits are maintained as reference/sample data in the current project; there is no public benefit-submission workflow.
 
@@ -60,8 +61,9 @@ The Community Salary Range includes every approved salary, verified or unverifie
 - Oracle SQL is isolated in repositories and uses bind variables and explicit projections.
 - Multi-step writes commit only after every step succeeds and roll back on failure.
 - Public APIs omit passwords, private evidence, reporter identity, internal notes, and raw Oracle errors.
+- Oracle stores only password-reset token hashes; delivery failure and token consumption have explicit rollback boundaries.
 - The responsive Vanilla JavaScript frontend supports keyboard focus, semantic labels, live status messages, and reduced motion.
 
 ## Deferred Post-Core Scope
 
-Real OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, cloud deployment, and production session enhancements are outside core completion.
+Real employment-verification OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, cloud deployment, shared rate limiting, and production session revocation are outside core completion.

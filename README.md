@@ -7,8 +7,8 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 | Layer | Available now |
 | --- | --- |
 | Oracle database | Tables, constraints, indexes, fictional workflow samples, 50 sourced employer references, 55 additional job roles, analytical queries, and synchronized identity generators |
-| Express backend | Public company/salary/review/interview queries, advanced bound filters, account/profile APIs, verified-employee contribution policy, reporting, and transactional ADMIN workflows |
-| Frontend | Public Browse pages, guarded Contribute forms, profile/security controls, verification requests, reporting, and the existing responsive ADMIN dashboard |
+| Express backend | Public company/salary/review/interview queries, advanced bound filters, account/profile APIs, SMTP password recovery, verified-employee contribution policy, reporting, and transactional ADMIN workflows |
+| Frontend | Public Browse pages, email password recovery, guarded Contribute forms, profile/security controls, verification requests, reporting, an animated homepage tree, and the responsive ADMIN dashboard |
 | Deferred | ML features and deployment automation |
 
 ## Core Features
@@ -19,6 +19,7 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - Job-seeker and current/former-employee registration with BCrypt password hashing and signed JWT sessions
 - Company-specific verified-employee-only salary, review, and interview submissions, enforced by middleware and repositories
 - Safe profile name editing, read-only email, and current-password-protected password changes
+- Temporary single-use email password resets with SHA-256 token storage and BCrypt password replacement
 - Company-specific employee verification requests using company email metadata or a safe document reference
 - ADMIN review of pending verification requests
 - Approved-only public reviews and interview experiences with server-enforced anonymous display
@@ -47,7 +48,8 @@ Pending, rejected, and flagged salaries do not affect either public range.
 - Oracle Database 19c
 - Node.js, Express 5, and node-oracledb Thin mode
 - BCrypt and JSON Web Tokens
-- HTML5, CSS, and Vanilla JavaScript ES modules
+- Nodemailer SMTP delivery
+- HTML5, CSS, inline SVG, and Vanilla JavaScript ES modules
 
 ## Quick Start
 
@@ -60,12 +62,15 @@ Run these files as the intended schema owner:
 @database/02_create_tables.sql
 @database/03_insert_sample_data.sql
 @database/05_expand_reference_data.sql
+@database/06_create_password_reset_tokens.sql
 @database/04_test_queries.sql
 ```
 
 `03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to every identity populated with explicit sample IDs: `USERS`, `EMPLOYEES`, `COMPANIES`, `JOB_ROLES`, `BENEFITS`, `EMPLOYMENT_VERIFICATIONS`, `SUBMISSIONS`, `REPORTS`, and `MODERATION_ACTIONS`.
 
 `05_expand_reference_data.sql` is additive and repeatable. It uses case-insensitive `MERGE` operations to add 50 real employer reference rows and 55 roles without deleting developer data or duplicating names. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview data is seeded.
+
+`06_create_password_reset_tokens.sql` is a one-time additive migration. On an existing Saple schema, run only `06`; do not rerun the destructive cleanup in `02_create_tables.sql`. It stores only unique SHA-256 token hashes and creates the user/state lookup index used by password recovery.
 
 `01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
 
@@ -89,7 +94,17 @@ DB_POOL_MAX=5
 DB_POOL_INCREMENT=1
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=replace_with_smtp_username
+SMTP_PASS=replace_with_smtp_password
+SMTP_FROM=Saple <no-reply@example.com>
+FRONTEND_URL=http://localhost:5500/
+PASSWORD_RESET_TOKEN_TTL_MINUTES=15
 ```
+
+For Gmail SMTP, enable two-step verification and create an App Password; use `smtp.gmail.com`, port `587`, `SMTP_SECURE=false`, the Google account as `SMTP_USER`, and the App Password as `SMTP_PASS`. Port `465` normally uses `SMTP_SECURE=true`. Other SMTP providers work with their corresponding host, port, security, and credentials. Put credentials only in ignored `backend/.env`, never in source or documentation.
 
 ```bash
 npm run dev
@@ -121,6 +136,8 @@ Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3
 | GET | `/api/reviews` | Public | Approved reviews across companies |
 | GET | `/api/interviews` | Public | Approved interviews across companies |
 | POST | `/api/auth/register`, `/api/auth/login` | Public | Create/authenticate an account |
+| POST | `/api/auth/forgot-password` | Public, rate-limited | Send a temporary reset link through configured SMTP |
+| POST | `/api/auth/reset-password` | Public, rate-limited | Consume a reset token and atomically replace the password |
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
 | PATCH | `/api/auth/me/password` | Bearer token | Change password after current-password check |
@@ -148,6 +165,7 @@ See [backend/README.md](backend/README.md) for contracts and transaction rules.
 | `faq.html`, `about.html` | Accessible project guidance, privacy boundaries, methodology, and academic disclaimer |
 | `company-details.html?id=<id>` | Profile, benefits, salary data, approved reviews/interviews, and reporting |
 | `login.html`, `register.html` | Authentication and account creation |
+| `forgot-password.html`, `reset-password.html` | Temporary email password-reset request and completion |
 | `profile.html` | Safe profile view, name edit, verified companies, and password change |
 | `submit-salary.html`, `submit-review.html`, `interview-experience.html` | Verified-employee-only contribution forms |
 | `employee-verification.html` | Employee verification request |
@@ -164,7 +182,9 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 55 tests covering authentication/profile behavior, public browse routes, all three verified contribution gates, input validation, SQL filter binding, ADMIN rules, privacy, transaction rollbacks, shared information navigation, responsive safeguards, and FAQ accessibility behavior. The live Oracle workflow covers authentication, all three contribution types, identity generators, verification, ADMIN authorization, reports, anonymous display, public publication, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
+The unit suite currently contains 83 tests covering authentication/profile behavior, detailed login outcomes, password-reset hashing/delivery/transactions/rate limiting, controlled error handling, migration structure, public browse routes, all three verified contribution gates, input validation, SQL filter binding, ADMIN rules, privacy, transaction rollbacks, shared information navigation, responsive safeguards, the tree fallback, and FAQ accessibility behavior. The live Oracle workflow covers the pre-existing core workflows plus the reset-token database lifecycle; real SMTP delivery still requires the environment-level steps below.
+
+To test recovery manually, apply migration `06`, configure SMTP, start both applications, request a link from `forgot-password.html`, and open the received link. Confirm the old password fails, the new password succeeds, and reuse of the same link is rejected. Also test an expired row and an unavailable SMTP server. Never paste a reset link into logs or issue trackers.
 
 ## Security Notes
 
@@ -174,10 +194,13 @@ The unit suite currently contains 55 tests covering authentication/profile behav
 - SQL is contained in repositories and uses bind variables.
 - Protected requests recheck the current account status and role in Oracle; ADMIN routes do not rely on frontend hiding or a stale token role.
 - Sample identities, companies, content, evidence references, and credentials are fictional.
+- Detailed unknown-email and incorrect-password messages are included for this academic requirement, but they permit account enumeration. Production systems normally use one generic authentication/recovery response.
+- JWT access tokens are stateless. A password reset changes the stored password but cannot immediately revoke an already issued JWT without a token-version or deny-list design.
+- The reset limiter is in process memory; production deployment across multiple instances would require a shared rate-limit store.
 
 ## Deferred Scope
 
-Real OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, deployment, and production-grade session/password-recovery improvements are intentionally outside core completion.
+Real employment-verification OTP delivery, uploaded document storage, ML/risk scoring, recommendation systems, advanced analytics, deployment, production-grade session revocation, shared rate limiting, and email-delivery monitoring are intentionally outside core completion.
 
 ## Presentation Demo
 

@@ -16,7 +16,7 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 
 | File | Behavior |
 | --- | --- |
-| `index.html` | Homepage, search handoff, and trust explanation |
+| `index.html` | Homepage, search handoff, trust explanation, and CSS-animated decorative sapling-to-tree illustration |
 | `companies.html` | Live company grid with database-backed advanced filters and aggregate summaries |
 | `salaries.html` | Public approved salary ranges with company, role, location, range, and source filters |
 | `reviews.html` | Public approved reviews with company, role, location, and rating filters |
@@ -25,6 +25,8 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 | `about.html` | Academic purpose, workflow, technology, privacy model, disclaimer, and realistic future scope |
 | `company-details.html` | Live profile, benefits, salary ranges, approved reviews/interviews, and report dialog |
 | `login.html` | JWT session creation and safe local `returnTo` redirects |
+| `forgot-password.html` | Registered-email reset-link request with loading and error states |
+| `reset-password.html` | In-memory URL-token consumption and matching new-password form |
 | `register.html` | Job-seeker or current/former-employee registration |
 | `profile.html` | Safe account view, name editing, password change, and verified-company list |
 | `submit-salary.html` | Company-verified employee pending salary contribution |
@@ -36,6 +38,8 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 ## Authentication and Navigation
 
 `js/auth.js` stores only the JWT and safe user object in `sessionStorage`; passwords are never stored. `js/api.js` attaches `Authorization: Bearer <token>` only to requests marked authenticated and clears stale state after authenticated `401` responses.
+
+The login-page recovery link opens `forgot-password.html`. The reset page reads the emailed token once, removes it from the visible address bar with `history.replaceState`, keeps it only in memory, and never logs or stores it. Both forms prevent duplicate submissions, announce outcomes through live status regions, and use the backend's controlled error messages.
 
 `js/nav.js` renders Home, Companies, Salaries, Reviews, Interviews, FAQ, and About consistently on every page, applies the active state and `aria-current`, and adds FAQ/About to every footer. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `+ Contribute` plus page CTAs only when `verifiedCompanies` contains an active company verification. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
 
@@ -89,6 +93,7 @@ Pending submissions allow all three decisions. Approved reported submissions all
 | `js/salaries.js`, `js/reviews.js`, `js/interviews.js` | Approved-data browse filters and safe card rendering |
 | `js/company-details.js` | Public company content and reporting |
 | `js/login.js`, `js/register.js` | Account flows |
+| `js/forgot-password.js`, `js/reset-password.js` | Temporary email password recovery |
 | `js/profile.js` | Safe profile and password changes |
 | `js/contribution-access.js` | Verified-company form guard and allowed-company list |
 | `js/submit-salary.js` | Salary form options, validation, and POST |
@@ -100,6 +105,8 @@ Pending submissions allow all three decisions. Approved reported submissions all
 ## Design and Accessibility
 
 The established styles remain in `css/common.css` and page-specific files. New controls reuse existing colors, spacing, typography, buttons, cards, status messages, and responsive behavior. Forms keep explicit labels, keyboard focus, live status/error regions, native constraints, and narrow-screen layouts. Confirmation/report interactions use native dialogs. The FAQ uses native buttons with linked regions, visible expanded state, single-open behavior, Escape collapse, and Arrow/Home/End focus movement.
+
+The homepage tree is decorative inline SVG with CSS path drawing and staggered leaf groups. It plays once in about 3.3 seconds, requires no JavaScript or external asset, keeps the mature tree as its base/final state, stacks below the hero text on small screens, and disables every animation under `prefers-reduced-motion: reduce`.
 
 ## Manual Test Checklist
 
@@ -120,6 +127,8 @@ With Oracle and the backend running:
 13. Confirm flagged/rejected content disappears from public pages and review aggregates.
 14. Check keyboard use and desktop, tablet, and mobile widths for navigation/form/filter overflow.
 15. Open FAQ and About from the header and footer on desktop/mobile; confirm their active states and use the FAQ with pointer, Enter/Space, Escape, Arrow keys, Home, and End.
+16. Configure SMTP, request a reset email, use the received link once, and confirm invalid, expired, reused, mismatched, and weak-password cases show controlled messages.
+17. View the homepage at desktop/tablet/mobile sizes, then enable reduced motion and disable JavaScript; confirm the mature decorative tree remains visible without overflow.
 
 ## Frontend Structure
 
@@ -137,6 +146,8 @@ frontend/
 |-- company-details.html
 |-- login.html
 |-- register.html
+|-- forgot-password.html
+|-- reset-password.html
 |-- profile.html
 |-- submit-salary.html
 |-- submit-review.html

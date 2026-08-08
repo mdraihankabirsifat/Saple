@@ -57,8 +57,8 @@ test('auth-aware and verified-contributor navigation behavior remains connected'
 
 test('FAQ has fourteen uniquely linked, initially collapsed accessible regions', () => {
   const html = readFrontend('faq.html');
-  const buttons = [...html.matchAll(/<button id="([^"]+)" class="faq-question"[^>]+aria-expanded="false" aria-controls="([^"]+)" data-faq-button>/g)];
-  const panels = [...html.matchAll(/<div id="([^"]+)" class="faq-answer" role="region" aria-labelledby="([^"]+)" hidden>/g)];
+  const buttons = [...html.matchAll(/<button id="([^"]+)" class="faq-question"[^>]+aria-expanded="false"\s+aria-controls="([^"]+)"\s+data-faq-button>/g)];
+  const panels = [...html.matchAll(/<div id="([^"]+)" class="faq-answer" role="region"\s+aria-labelledby="([^"]+)"\s+hidden>/g)];
 
   assert.equal(buttons.length, 14);
   assert.equal(panels.length, 14);
@@ -76,8 +76,9 @@ test('FAQ and About describe implemented boundaries without exposing private val
 
   assert.match(content, /Administrator status does not automatically grant contribution rights/);
   assert.match(content, /current Saple implementation enforces the approved company/);
-  assert.match(content, /does not yet store or enforce a separate designation scope/);
-  assert.match(content, /self-service email forgot-password flow is not operational yet/);
+  assert.match(content, /does not yet store or enforce a\s+separate designation scope/);
+  assert.match(content, /temporary,\s+single-use reset link/);
+  assert.match(content, /never emails the existing password/);
   assert.match(content, /ML is not active in the current build/);
   assert.match(content, /at least 50 moderator-reviewed historical records/);
   assert.match(content, /synthetic (?:academic )?demonstration data/i);

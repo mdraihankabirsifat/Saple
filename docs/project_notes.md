@@ -14,6 +14,7 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - Company-specific employee verification is reviewed by an ADMIN and expires after 12 months.
 - Users can report submissions once; ADMIN users triage and resolve reports.
 - Content actions reuse the locked, immutable-audit submission moderation workflow.
+- Password recovery sends a temporary single-use link while Oracle retains only its SHA-256 token hash.
 
 ## Status Rules
 
@@ -27,11 +28,11 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 
 ## Privacy Boundary
 
-Public responses must not expose user IDs, email addresses, verification evidence, reporter identity, or moderation internals. Company-email metadata and proof references are available only inside ADMIN verification endpoints. The project does not store raw OTPs, document uploads, national IDs, or production credentials.
+Public responses must not expose user IDs, email addresses, verification evidence, reporter identity, moderation internals, or raw password-reset tokens. Company-email metadata and proof references are available only inside ADMIN verification endpoints. The project does not store raw OTPs, document uploads, national IDs, or production credentials.
 
 ## Current Scope Boundary
 
-Authentication, salary contributions, moderation, employee verification, reviews, interviews, reporting, public display, ADMIN dashboard integration, rollback tests, and documentation are implemented. ML and deployment remain deferred.
+Authentication, SMTP password recovery, salary contributions, moderation, employee verification, reviews, interviews, reporting, public display, ADMIN dashboard integration, rollback tests, and documentation are implemented. Real SMTP and reset-table execution still require local credentials and Oracle. ML and deployment remain deferred.
 
 ## Presentation-Day Demo Sequence
 
@@ -60,6 +61,8 @@ Do not commit the demo password, its generated hash, or local credentials.
 ## Recommended Report Screenshots
 
 - Homepage and company search
+- Homepage seed-to-tree hero illustration and reduced-motion state
+- Forgot-password request and reset-password forms
 - Company profile with benefits and both salary ranges
 - Registration/login and one contribution form
 - Pending submission queue and subtype detail

@@ -41,7 +41,7 @@
 .password-toggle { height: 34px; padding: 0 0.65rem; position: absolute; top: 6px; right: 6px; border: 0; border-radius: 0.4rem; color: var(--saple-green-700); background: var(--saple-green-50); font-size: 0.82rem; font-weight: 750; cursor: pointer; }
 
 .auth-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.link-button { padding: 0; border: 0; color: var(--saple-green-700); background: transparent; font: inherit; font-size: 0.88rem; font-weight: 700; }
+.link-button { padding: 0; border: 0; color: var(--saple-green-700); background: transparent; font: inherit; font-size: 0.88rem; font-weight: 700; text-decoration: underline; text-underline-offset: 0.2rem; cursor: pointer; }
 .link-button:disabled { color: var(--text-secondary); cursor: not-allowed; opacity: 0.72; }
 
 .auth-submit { width: 100%; margin-top: 0.25rem; }

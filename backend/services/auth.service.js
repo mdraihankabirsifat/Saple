@@ -1,7 +1,11 @@
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const authConfig = require('../config/auth');
+const mailConfig = require('../config/mail');
 const userRepository = require('../repositories/user.repository');
+const passwordResetRepository = require('../repositories/password-reset.repository');
+const mailService = require('./mail.service');
 const createHttpError = require('../utils/httpError');
 
 const PASSWORD_SALT_ROUNDS = 12;
@@ -40,6 +44,13 @@ function toSafeUser(user, verifiedCompanies = []) {
     verifiedCompanies,
     ...(user.createdAt ? { createdAt: user.createdAt } : {})
   };
+}
+
+function unavailableAccountError(accountStatus) {
+  if (accountStatus === 'SUSPENDED') {
+    return createHttpError(403, 'This account is suspended. Contact an administrator for assistance.');
+  }
+  return createHttpError(403, 'This account is deactivated. Contact an administrator for assistance.');
 }
 
 async function register(input = {}) {
@@ -102,16 +113,19 @@ async function login(input = {}) {
   const email = normalizeEmail(input.email);
   const password = input.password;
 
-  if (!validateEmail(email) || typeof password !== 'string' || password.length === 0) {
-    throw createHttpError(401, 'Invalid email or password.');
+  if (!validateEmail(email)) {
+    throw createHttpError(400, 'A valid email address is required');
+  }
+  if (typeof password !== 'string' || password.length === 0) {
+    throw createHttpError(400, 'Password is required');
   }
 
   const user = await userRepository.findUserByEmail(email);
   const passwordMatches = await bcrypt.compare(password, user?.passwordHash || DUMMY_PASSWORD_HASH);
 
-  if (!user || !passwordMatches || user.accountStatus !== 'ACTIVE') {
-    throw createHttpError(401, 'Invalid email or password.');
-  }
+  if (!user) throw createHttpError(401, 'No account was found with that email address.');
+  if (!passwordMatches) throw createHttpError(401, 'Incorrect password.');
+  if (user.accountStatus !== 'ACTIVE') throw unavailableAccountError(user.accountStatus);
 
   const token = jwt.sign(
     {
@@ -135,6 +149,103 @@ async function login(input = {}) {
     token,
     user: toSafeUser(user, verifiedCompanies)
   };
+}
+
+async function forgotPassword(input = {}) {
+  const email = normalizeEmail(input.email);
+
+  if (!validateEmail(email)) throw createHttpError(400, 'A valid email address is required');
+
+  const user = await userRepository.findUserForPasswordResetByEmail(email);
+  if (!user) throw createHttpError(404, 'No account was found with that email address.');
+  if (user.accountStatus !== 'ACTIVE') throw unavailableAccountError(user.accountStatus);
+
+  let expiresMinutes;
+  let frontendUrl;
+  try {
+    expiresMinutes = mailConfig.getPasswordResetTokenTtlMinutes();
+    frontendUrl = mailConfig.getFrontendUrl();
+  } catch (error) {
+    throw createHttpError(503, 'Password recovery is not configured. Please try again later.');
+  }
+
+  const rawToken = crypto.randomBytes(32).toString('base64url');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+  const resetUrl = new URL('reset-password.html', frontendUrl);
+  resetUrl.searchParams.set('token', rawToken);
+
+  try {
+    await passwordResetRepository.createTokenWithDelivery({
+      userId: user.userId,
+      tokenHash,
+      expiresMinutes,
+      deliver: async () => {
+        try {
+          await mailService.sendPasswordResetEmail({
+            recipientName: user.fullName,
+            recipientEmail: user.email,
+            resetUrl: resetUrl.toString(),
+            expiresMinutes
+          });
+        } catch (error) {
+          throw createHttpError(503, 'We could not send the password-reset email. Please try again later.');
+        }
+      }
+    });
+  } catch (error) {
+    if (error.statusCode) throw error;
+    if (error.sapleCode === 'ACCOUNT_NOT_FOUND') {
+      throw createHttpError(404, 'No account was found with that email address.');
+    }
+    if (error.sapleCode === 'ACCOUNT_UNAVAILABLE') {
+      throw createHttpError(403, 'This account cannot reset its password. Contact an administrator for assistance.');
+    }
+    throw error;
+  }
+
+  return { emailSent: true };
+}
+
+async function resetPassword(input = {}) {
+  const token = typeof input.token === 'string' ? input.token.trim() : '';
+  const newPassword = input.newPassword;
+  const confirmPassword = input.confirmPassword;
+
+  if (token.length < 20 || token.length > 200 || !/^[A-Za-z0-9_-]+$/.test(token)) {
+    throw createHttpError(400, 'This password-reset link is invalid.');
+  }
+  if (typeof newPassword !== 'string' || typeof confirmPassword !== 'string') {
+    throw createHttpError(400, 'New password and confirmation are required');
+  }
+  if (newPassword !== confirmPassword) {
+    throw createHttpError(400, 'New password and confirmation do not match');
+  }
+  if (!validatePassword(newPassword)) {
+    throw createHttpError(400, 'New password must contain 8 to 72 bytes, including a letter and a number');
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const passwordHash = await bcrypt.hash(newPassword, PASSWORD_SALT_ROUNDS);
+
+  try {
+    await passwordResetRepository.consumeTokenAndUpdatePassword({ tokenHash, passwordHash });
+  } catch (error) {
+    if (error.sapleCode === 'EXPIRED_TOKEN') {
+      throw createHttpError(410, 'This password-reset link has expired.');
+    }
+    if (error.sapleCode === 'USED_TOKEN') {
+      throw createHttpError(409, 'This password-reset link has already been used.');
+    }
+    if (error.sapleCode === 'INVALID_TOKEN') {
+      throw createHttpError(400, 'This password-reset link is invalid.');
+    }
+    if (error.sapleCode === 'ACCOUNT_UNAVAILABLE') {
+      throw createHttpError(403, 'This account cannot reset its password. Contact an administrator for assistance.');
+    }
+    throw error;
+  }
+
+  return { passwordReset: true };
 }
 
 async function getCurrentUser(userId) {
@@ -197,6 +308,8 @@ async function changePassword(userId, input = {}) {
 module.exports = {
   register,
   login,
+  forgotPassword,
+  resetPassword,
   getCurrentUser,
   updateProfile,
   changePassword

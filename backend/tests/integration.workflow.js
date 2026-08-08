@@ -1,11 +1,13 @@
 require('dotenv').config({ quiet: true });
 
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const app = require('../app');
 const database = require('../config/database');
 const adminRepository = require('../repositories/admin.repository');
 const salaryRepository = require('../repositories/salary.repository');
 const workflowTestRepository = require('../repositories/workflow-test.repository');
+const mailService = require('../services/mail.service');
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET must be set when running the integration workflow');
@@ -194,7 +196,14 @@ async function main() {
       body: { email: normalEmail, password: 'WrongPassword123' }
     });
     assert.equal(wrongPassword.status, 401);
-    assert.equal(wrongPassword.body.message, 'Invalid email or password.');
+    assert.equal(wrongPassword.body.message, 'Incorrect password.');
+
+    const unknownLogin = await request(baseUrl, '/api/auth/login', {
+      method: 'POST',
+      body: { email: `missing.${uniqueSuffix}@example.test`, password }
+    });
+    assert.equal(unknownLogin.status, 401);
+    assert.equal(unknownLogin.body.message, 'No account was found with that email address.');
 
     const login = await request(baseUrl, '/api/auth/login', {
       method: 'POST',
@@ -635,7 +644,128 @@ async function main() {
     const submissionCountAfterFailure = await workflowTestRepository.countSubmissionsForUser(employeeUserId);
     assert.equal(submissionCountAfterFailure, submissionCountBeforeFailure);
 
-    console.log('Integration workflow passed: auth, verification, review/interview publication, reporting, moderation rollback, anonymous display, salary aggregates, and GET regressions.');
+    process.env.FRONTEND_URL = 'http://localhost:5500/';
+    process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES = '15';
+    let deliveredResetUrl;
+    mailService.sendPasswordResetEmail = async ({ resetUrl }) => {
+      deliveredResetUrl = resetUrl;
+      throw new Error('simulated SMTP failure');
+    };
+
+    const failedRecovery = await request(baseUrl, '/api/auth/forgot-password', {
+      method: 'POST', body: { email: normalEmail.toUpperCase() }
+    });
+    assert.equal(failedRecovery.status, 503);
+    assert.equal(
+      failedRecovery.body.message,
+      'We could not send the password-reset email. Please try again later.'
+    );
+    const failedRawToken = new URL(deliveredResetUrl).searchParams.get('token');
+    const failedHash = crypto.createHash('sha256').update(failedRawToken).digest('hex');
+    let resetConnection = await database.getConnection();
+    let resetResult;
+    try {
+      resetResult = await resetConnection.execute(
+        `SELECT COUNT(*) AS "count" FROM password_reset_tokens WHERE token_hash = :tokenHash`,
+        { tokenHash: failedHash }
+      );
+    } finally {
+      await resetConnection.close();
+    }
+    assert.equal(Number(resetResult.rows[0].count), 0);
+
+    mailService.sendPasswordResetEmail = async ({ resetUrl }) => { deliveredResetUrl = resetUrl; };
+    const recovery = await request(baseUrl, '/api/auth/forgot-password', {
+      method: 'POST', body: { email: normalEmail.toUpperCase() }
+    });
+    assert.equal(recovery.status, 200);
+    assert.equal('token' in recovery.body.data, false);
+    const resetToken = new URL(deliveredResetUrl).searchParams.get('token');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    resetConnection = await database.getConnection();
+    try {
+      resetResult = await resetConnection.execute(
+        `SELECT token_hash AS "tokenHash", used_at AS "usedAt", revoked_at AS "revokedAt"
+         FROM password_reset_tokens WHERE user_id = :userId AND token_hash = :tokenHash`,
+        { userId, tokenHash: resetTokenHash }
+      );
+    } finally {
+      await resetConnection.close();
+    }
+    assert.equal(resetResult.rows[0].tokenHash, resetTokenHash);
+    assert.notEqual(resetResult.rows[0].tokenHash, resetToken);
+    assert.equal(resetResult.rows[0].usedAt, null);
+    assert.equal(resetResult.rows[0].revokedAt, null);
+
+    const newPassword = 'IntegrationReset456';
+    const reset = await request(baseUrl, '/api/auth/reset-password', {
+      method: 'POST',
+      body: { token: resetToken, newPassword, confirmPassword: newPassword }
+    });
+    assert.equal(reset.status, 200);
+    const reusedReset = await request(baseUrl, '/api/auth/reset-password', {
+      method: 'POST',
+      body: { token: resetToken, newPassword, confirmPassword: newPassword }
+    });
+    assert.equal(reusedReset.status, 409);
+
+    const oldPasswordLogin = await request(baseUrl, '/api/auth/login', {
+      method: 'POST', body: { email: normalEmail, password }
+    });
+    assert.equal(oldPasswordLogin.status, 401);
+    assert.equal(oldPasswordLogin.body.message, 'Incorrect password.');
+    const resetPasswordLogin = await request(baseUrl, '/api/auth/login', {
+      method: 'POST', body: { email: normalEmail, password: newPassword }
+    });
+    assert.equal(resetPasswordLogin.status, 200);
+    assert.equal(resetPasswordLogin.body.data.user.accountRole, 'ADMIN');
+
+    const expiredRawToken = crypto.randomBytes(32).toString('base64url');
+    const expiredHash = crypto.createHash('sha256').update(expiredRawToken).digest('hex');
+    resetConnection = await database.getConnection();
+    try {
+      await resetConnection.execute(
+        `INSERT INTO password_reset_tokens (user_id, token_hash, created_at, expires_at)
+         VALUES (
+           :userId,
+           :tokenHash,
+           SYSTIMESTAMP - NUMTODSINTERVAL(20, 'MINUTE'),
+           SYSTIMESTAMP - NUMTODSINTERVAL(5, 'MINUTE')
+         )`,
+        { userId, tokenHash: expiredHash }
+      );
+      await resetConnection.commit();
+    } finally {
+      await resetConnection.close();
+    }
+    const expiredReset = await request(baseUrl, '/api/auth/reset-password', {
+      method: 'POST',
+      body: { token: expiredRawToken, newPassword: 'ExpiredReset123', confirmPassword: 'ExpiredReset123' }
+    });
+    assert.equal(expiredReset.status, 410);
+    const invalidReset = await request(baseUrl, '/api/auth/reset-password', {
+      method: 'POST',
+      body: {
+        token: crypto.randomBytes(32).toString('base64url'),
+        newPassword: 'InvalidReset123',
+        confirmPassword: 'InvalidReset123'
+      }
+    });
+    assert.equal(invalidReset.status, 400);
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const allowedRecovery = await request(baseUrl, '/api/auth/forgot-password', {
+        method: 'POST', body: { email: normalEmail }
+      });
+      assert.equal(allowedRecovery.status, 200);
+    }
+    const limitedRecovery = await request(baseUrl, '/api/auth/forgot-password', {
+      method: 'POST', body: { email: normalEmail }
+    });
+    assert.equal(limitedRecovery.status, 429);
+
+    console.log('Integration workflow passed: auth/password reset, verification, review/interview publication, reporting, moderation rollback, anonymous display, salary aggregates, and GET regressions.');
   } finally {
     await workflowTestRepository.cleanupWorkflowUsers(normalEmail, employeeEmail);
   }

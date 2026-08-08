@@ -19,6 +19,29 @@ async function login(request, response, next) {
   }
 }
 
+async function forgotPassword(request, response, next) {
+  try {
+    const result = await authService.forgotPassword(request.body);
+    return sendSuccess(
+      response,
+      200,
+      'Password-reset email sent. Check your inbox and spam or junk folder.',
+      result
+    );
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function resetPassword(request, response, next) {
+  try {
+    const result = await authService.resetPassword(request.body);
+    return sendSuccess(response, 200, 'Password reset successfully. You can now sign in.', result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getCurrentUser(request, response, next) {
   try {
     const user = await authService.getCurrentUser(request.user.userId);
@@ -49,6 +72,8 @@ async function changePassword(request, response, next) {
 module.exports = {
   register,
   login,
+  forgotPassword,
+  resetPassword,
   getCurrentUser,
   updateProfile,
   changePassword

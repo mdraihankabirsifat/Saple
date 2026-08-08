@@ -1,13 +1,16 @@
 # Saple Relational Schema 
 
-This document reflects the Oracle 19c implementation in `database/02_create_tables.sql`. Primary keys are marked **PK**, foreign keys **FK**, and unique candidate keys **UK**.
+This document reflects the Oracle 19c implementation in `database/02_create_tables.sql` plus additive migrations. Primary keys are marked **PK**, foreign keys **FK**, and unique candidate keys **UK**.
 
 ## Account and employee relations
 
 - `users` (`user_id` **PK**, `full_name`, `email` **UK**, `password_hash`, `user_type`, `account_role`, `account_status`, `created_at`, `updated_at`)
 - `employees` (`employee_id` **PK**, `user_id` **FK/UK**, `employment_status`, `created_at`)
+- `password_reset_tokens` (`reset_token_id` **PK**, `user_id` **FK**, `token_hash` **UK**, `expires_at`, `used_at`, `revoked_at`, `created_at`) from migration `06_create_password_reset_tokens.sql`
 
 `user_type` distinguishes NORMAL accounts from EMPLOYEE accounts. `account_role` independently represents USER or ADMIN authorization. An employee profile belongs to exactly one user; the application must ensure that user has `user_type = 'EMPLOYEE'`.
+
+Password-reset rows retain only a 64-character SHA-256 token hash. Expiration and mutually exclusive used/revoked timestamps enforce single-use recovery history; deleting a user cascades only to that user's reset tokens.
 
 ## Company reference relations
 

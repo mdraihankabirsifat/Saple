@@ -167,9 +167,10 @@
           <h2><button id="faq-question-11" class="faq-question" type="button" aria-expanded="false"
               aria-controls="faq-answer-11" data-faq-button>11. How does the forgot-password process work?</button></h2>
           <div id="faq-answer-11" class="faq-answer" role="region" aria-labelledby="faq-question-11" hidden>
-            <p>The current build supports changing a password from an authenticated profile after confirming the current
-              password. A self-service email forgot-password flow is not operational yet; stronger verified email
-              recovery is listed as future scope.</p>
+            <p>Enter the registered email on the Forgot Password page. When SMTP is configured, Saple sends a temporary,
+              single-use reset link; it never emails the existing password. The link expires after the configured short
+              period, which defaults to 15 minutes. Check spam or junk folders if delivery is delayed. This academic
+              workflow demonstrates secure token handling but is not a production availability guarantee.</p>
           </div>
         </article>
 

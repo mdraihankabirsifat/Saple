@@ -60,16 +60,66 @@
             <a class="button button-secondary" href="salaries.html">Browse salary insights</a>
           </div>
         </div>
-        <aside class="hero-panel" aria-label="What you can research on Saple">
-          <p class="eyebrow">Research with context</p>
-          <h2>Useful signals, clearly explained</h2>
-          <ul class="feature-list">
-            <li>Public company and benefit information</li>
-            <li>Verified and community salary ranges</li>
-            <li>Anonymous sharing with internal accountability</li>
-            <li>Moderated submissions before publication</li>
-          </ul>
-        </aside>
+        <figure class="hero-tree" aria-hidden="true">
+          <svg class="saple-tree" viewBox="0 0 480 420" role="presentation" focusable="false">
+            <defs>
+              <linearGradient id="saple-trunk-gradient" x1="0" y1="1" x2="0.65" y2="0">
+                <stop offset="0" stop-color="#123c2d" />
+                <stop offset="1" stop-color="#27805e" />
+              </linearGradient>
+              <linearGradient id="saple-ground-gradient" x1="0" x2="1">
+                <stop offset="0" stop-color="#e7f3ed" stop-opacity="0" />
+                <stop offset="0.5" stop-color="#b9dccb" />
+                <stop offset="1" stop-color="#e7f3ed" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+
+            <ellipse class="tree-ground" cx="242" cy="371" rx="176" ry="15" fill="url(#saple-ground-gradient)" />
+            <ellipse class="tree-seed" cx="242" cy="360" rx="11" ry="7" transform="rotate(-14 242 360)" />
+
+            <path class="tree-shoot tree-stroke" d="M242 357 C239 340 238 323 243 306" />
+            <path class="tree-trunk tree-stroke" d="M242 357 C219 315 257 287 237 244 C217 201 259 173 246 111" />
+
+            <g class="tree-branches" fill="none">
+              <path class="tree-branch branch-1 tree-stroke" d="M239 293 C205 271 175 246 158 214" />
+              <path class="tree-branch branch-2 tree-stroke" d="M238 249 C278 231 309 207 327 174" />
+              <path class="tree-branch branch-3 tree-stroke" d="M239 213 C204 192 184 169 173 139" />
+              <path class="tree-branch branch-4 tree-stroke" d="M245 178 C278 159 296 135 305 108" />
+              <path class="tree-branch branch-5 tree-stroke" d="M246 145 C229 128 218 109 215 88" />
+              <path class="tree-twig branch-1 tree-stroke" d="M193 259 C181 239 178 222 180 204" />
+              <path class="tree-twig branch-2 tree-stroke" d="M290 221 C312 220 331 214 348 202" />
+              <path class="tree-twig branch-3 tree-stroke" d="M201 184 C183 181 167 174 153 162" />
+              <path class="tree-twig branch-4 tree-stroke" d="M279 156 C297 157 315 152 329 142" />
+            </g>
+
+            <g class="leaf-cluster leaves-1">
+              <ellipse cx="145" cy="208" rx="32" ry="19" transform="rotate(22 145 208)" />
+              <ellipse cx="174" cy="195" rx="31" ry="20" transform="rotate(-18 174 195)" />
+              <ellipse cx="184" cy="226" rx="29" ry="18" transform="rotate(14 184 226)" />
+            </g>
+            <g class="leaf-cluster leaves-2">
+              <ellipse cx="326" cy="171" rx="34" ry="20" transform="rotate(-20 326 171)" />
+              <ellipse cx="352" cy="195" rx="30" ry="18" transform="rotate(18 352 195)" />
+              <ellipse cx="306" cy="205" rx="32" ry="19" transform="rotate(11 306 205)" />
+            </g>
+            <g class="leaf-cluster leaves-3">
+              <ellipse cx="157" cy="145" rx="32" ry="19" transform="rotate(15 157 145)" />
+              <ellipse cx="188" cy="128" rx="35" ry="21" transform="rotate(-16 188 128)" />
+              <ellipse cx="197" cy="162" rx="31" ry="19" transform="rotate(21 197 162)" />
+            </g>
+            <g class="leaf-cluster leaves-4">
+              <ellipse cx="306" cy="105" rx="34" ry="20" transform="rotate(-19 306 105)" />
+              <ellipse cx="337" cy="132" rx="31" ry="19" transform="rotate(17 337 132)" />
+              <ellipse cx="292" cy="142" rx="33" ry="20" transform="rotate(9 292 142)" />
+            </g>
+            <g class="leaf-cluster leaves-5">
+              <ellipse cx="216" cy="82" rx="31" ry="18" transform="rotate(22 216 82)" />
+              <ellipse cx="250" cy="66" rx="38" ry="22" transform="rotate(-7 250 66)" />
+              <ellipse cx="277" cy="88" rx="32" ry="19" transform="rotate(17 277 88)" />
+              <ellipse cx="243" cy="105" rx="35" ry="21" transform="rotate(-12 243 105)" />
+            </g>
+          </svg>
+        </figure>
       </div>
     </section>
 

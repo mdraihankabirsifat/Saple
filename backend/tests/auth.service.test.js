@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/user.repository');
 const authService = require('../services/auth.service');
 
@@ -75,7 +76,7 @@ test('registration rejects duplicate normalized email with 409', async () => {
   );
 });
 
-test('login returns a minimal signed JWT and safe user data', async () => {
+test('login returns a minimal signed JWT with existing ADMIN role behavior and safe user data', async () => {
   process.env.JWT_SECRET = 'test-only-secret-that-is-long-enough-for-tests';
   process.env.JWT_EXPIRES_IN = '1h';
   const passwordHash = await bcrypt.hash('password1', 4);
@@ -85,7 +86,7 @@ test('login returns a minimal signed JWT and safe user data', async () => {
     email: 'person@example.com',
     passwordHash,
     userType: 'NORMAL',
-    accountRole: 'USER',
+    accountRole: 'ADMIN',
     accountStatus: 'ACTIVE',
     employmentStatus: null
   });
@@ -97,15 +98,41 @@ test('login returns a minimal signed JWT and safe user data', async () => {
 
   assert.equal(typeof result.token, 'string');
   assert.equal(result.user.userId, 8);
+  assert.equal(result.user.accountRole, 'ADMIN');
+  assert.equal(jwt.decode(result.token).role, 'ADMIN');
   assert.equal('passwordHash' in result.user, false);
 });
 
-test('unknown users and wrong passwords share the same generic login error', async () => {
+test('login distinguishes an unknown normalized email from an incorrect password', async () => {
   userRepository.findUserByEmail = async () => null;
 
   await assert.rejects(
-    authService.login({ email: 'missing@example.com', password: 'wrong' }),
-    (error) => error.statusCode === 401 && error.message === 'Invalid email or password.'
+    authService.login({ email: ' MISSING@example.com ', password: 'wrong' }),
+    (error) => error.statusCode === 401
+      && error.message === 'No account was found with that email address.'
+  );
+
+  userRepository.findUserByEmail = async () => ({
+    userId: 8,
+    passwordHash: await bcrypt.hash('correct1', 4),
+    accountStatus: 'ACTIVE'
+  });
+  await assert.rejects(
+    authService.login({ email: 'person@example.com', password: 'wrong1' }),
+    (error) => error.statusCode === 401 && error.message === 'Incorrect password.'
+  );
+});
+
+test('login returns a controlled account-status message after valid credentials', async () => {
+  userRepository.findUserByEmail = async () => ({
+    userId: 8,
+    passwordHash: await bcrypt.hash('correct1', 4),
+    accountStatus: 'SUSPENDED'
+  });
+
+  await assert.rejects(
+    authService.login({ email: 'person@example.com', password: 'correct1' }),
+    (error) => error.statusCode === 403 && /account is suspended/i.test(error.message)
   );
 });
 
