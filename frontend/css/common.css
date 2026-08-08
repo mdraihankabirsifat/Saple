@@ -622,6 +622,33 @@ main {
   background: #092119;
 }
 
+.footer-information {
+  padding-block: 1rem;
+  border-top: 1px solid rgba(197, 210, 204, 0.16);
+}
+
+.footer-information-links {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  list-style: none;
+}
+
+.footer-information-links a {
+  color: #dbe6e1;
+  font-weight: 700;
+  text-decoration: none;
+  text-underline-offset: 0.2rem;
+}
+
+.footer-information-links a:hover,
+.footer-information-links a[aria-current="page"] {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
 .footer-bottom-content {
   min-height: 64px;
   padding-block: 1rem;
@@ -653,7 +680,7 @@ main {
   outline-offset: 3px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1050px) {
   .navbar {
     min-height: 66px;
     flex-wrap: wrap;

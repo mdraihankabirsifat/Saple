@@ -1,0 +1,140 @@
+.info-hero {
+  padding-block: clamp(3.5rem, 8vw, 6rem);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--saple-green-50), #ffffff 68%);
+}
+
+.info-hero-content {
+  max-width: 760px;
+}
+
+.info-hero h1 {
+  margin-bottom: 1rem;
+  font-size: clamp(2.35rem, 6vw, 4.4rem);
+  letter-spacing: -0.04em;
+}
+
+.info-hero p:last-child {
+  max-width: 68ch;
+  margin-bottom: 0;
+  color: var(--text-secondary);
+  font-size: clamp(1rem, 2vw, 1.16rem);
+}
+
+.faq-list {
+  max-width: 900px;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.faq-item {
+  overflow: clip;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.faq-item h2 {
+  margin: 0;
+}
+
+.faq-question {
+  width: 100%;
+  min-height: 64px;
+  padding: 1rem 3.5rem 1rem 1.25rem;
+  position: relative;
+  border: 0;
+  color: var(--saple-green-900);
+  background: transparent;
+  font-weight: 780;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-question::after {
+  width: 1.75rem;
+  height: 1.75rem;
+  position: absolute;
+  top: 50%;
+  right: 1.15rem;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  content: "+";
+  color: var(--saple-green-700);
+  background: var(--saple-green-100);
+  font-size: 1.2rem;
+}
+
+.faq-question[aria-expanded="true"] {
+  background: var(--saple-green-50);
+}
+
+.faq-question[aria-expanded="true"]::after {
+  content: "\2212";
+}
+
+.faq-answer {
+  padding: 1.1rem 1.25rem 1.3rem;
+  border-top: 1px solid var(--border);
+}
+
+.faq-answer p,
+.faq-answer ul {
+  max-width: 74ch;
+}
+
+.faq-answer p:last-child,
+.faq-answer ul:last-child {
+  margin-bottom: 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.info-card {
+  padding: clamp(1.35rem, 3vw, 2rem);
+}
+
+.info-card h2 {
+  margin-bottom: 0.75rem;
+  font-size: 1.35rem;
+}
+
+.info-card p:last-child,
+.info-card ul:last-child {
+  margin-bottom: 0;
+}
+
+.info-card-wide {
+  grid-column: 1 / -1;
+}
+
+.info-card-note {
+  border-left: 4px solid var(--saple-green-600);
+}
+
+.info-list {
+  padding-left: 1.2rem;
+}
+
+@media (max-width: 700px) {
+  .info-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .info-card-wide {
+    grid-column: auto;
+  }
+
+  .faq-question {
+    padding-left: 1rem;
+    padding-right: 3.15rem;
+  }
+}

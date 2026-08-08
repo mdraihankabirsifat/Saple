@@ -200,7 +200,7 @@ npm test
 npm run test:integration
 ```
 
-The 47-test unit suite covers authentication and safe profile changes, public browse access, all three verified-employee gates, approved-only/bound public SQL, input validation, transition rules, private/public mapping, exact calendar dates, and forced rollback of salary, review, interview, verification, report, and moderation writes.
+The 55-test unit suite covers authentication and safe profile changes, public browse access, all three verified-employee gates, approved-only/bound public SQL, input validation, transition rules, private/public mapping, exact calendar dates, forced rollback of salary, review, interview, verification, report, and moderation writes, plus shared FAQ/About navigation and accordion accessibility behavior.
 
 The live test requires Oracle and `JWT_SECRET`. It creates unique users and cleans them afterward while verifying generated identity values, registration/login, verification request and approval, salary/review/interview parent-child writes, approved-only public display, anonymous-field omission, report duplication and resolution, approved-content flagging, moderation history, salary aggregates, authorization, GET regressions, and rollback under forced constraint/write failures.
 

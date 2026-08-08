@@ -2,17 +2,77 @@ const navigationToggle = document.querySelector('[data-nav-toggle]');
 const navigationMenu = document.querySelector('[data-nav-menu]');
 const contributionMenu = document.querySelector('.contribute-menu');
 const authModuleUrl = new URL('./auth.js', document.currentScript.src);
-const browseDestinations = {
-  Companies: 'companies.html',
-  Salaries: 'salaries.html',
-  Reviews: 'reviews.html',
-  Interviews: 'interviews.html'
-};
+const publicNavigation = [
+  { label: 'Home', destination: 'index.html', pages: ['index.html'] },
+  { label: 'Companies', destination: 'companies.html', pages: ['companies.html', 'company-details.html'] },
+  { label: 'Salaries', destination: 'salaries.html', pages: ['salaries.html', 'submit-salary.html'] },
+  { label: 'Reviews', destination: 'reviews.html', pages: ['reviews.html', 'submit-review.html'] },
+  { label: 'Interviews', destination: 'interviews.html', pages: ['interviews.html', 'interview-experience.html'] },
+  { label: 'FAQ', destination: 'faq.html', pages: ['faq.html'] },
+  { label: 'About', destination: 'about.html', pages: ['about.html'] }
+];
 
-document.querySelectorAll('.nav-links a').forEach((link) => {
-  const destination = browseDestinations[link.textContent.trim()];
-  if (destination) link.href = destination;
-});
+function currentPageName() {
+  return window.location.pathname.split('/').pop() || 'index.html';
+}
+
+function renderPublicNavigation() {
+  const navigationList = document.querySelector('.nav-links');
+
+  if (!navigationList) return;
+
+  const pageName = currentPageName();
+  navigationList.replaceChildren(...publicNavigation.map((item) => {
+    const listItem = document.createElement('li');
+    const link = document.createElement('a');
+
+    link.href = item.destination;
+    link.textContent = item.label;
+
+    if (item.pages.includes(pageName)) {
+      link.classList.add('active');
+      link.setAttribute('aria-current', 'page');
+    }
+
+    listItem.append(link);
+    return listItem;
+  }));
+}
+
+function renderFooterInformationLinks() {
+  const footer = document.querySelector('.site-footer');
+  const footerBottom = footer?.querySelector('.footer-bottom');
+
+  if (!footer || !footerBottom || footer.querySelector('[data-footer-information]')) return;
+
+  const wrapper = document.createElement('div');
+  const navigation = document.createElement('nav');
+  const list = document.createElement('ul');
+  const pageName = currentPageName();
+
+  wrapper.className = 'footer-information container';
+  wrapper.dataset.footerInformation = '';
+  navigation.setAttribute('aria-label', 'Project information');
+  list.className = 'footer-information-links';
+
+  publicNavigation.filter(({ label }) => ['FAQ', 'About'].includes(label)).forEach((item) => {
+    const listItem = document.createElement('li');
+    const link = document.createElement('a');
+
+    link.href = item.destination;
+    link.textContent = item.label;
+    if (item.pages.includes(pageName)) link.setAttribute('aria-current', 'page');
+    listItem.append(link);
+    list.append(listItem);
+  });
+
+  navigation.append(list);
+  wrapper.append(navigation);
+  footer.insertBefore(wrapper, footerBottom);
+}
+
+renderPublicNavigation();
+renderFooterInformationLinks();
 
 function updateContributionVisibility(user) {
   const verified = Array.isArray(user?.verifiedCompanies) && user.verifiedCompanies.length > 0;
@@ -44,13 +104,13 @@ if (navigationToggle && navigationMenu) {
   });
 
   navigationMenu.addEventListener('click', (event) => {
-    if (event.target.closest('a') && window.matchMedia('(max-width: 900px)').matches) {
+    if (event.target.closest('a') && window.matchMedia('(max-width: 1050px)').matches) {
       closeNavigation();
     }
   });
 
   window.addEventListener('resize', () => {
-    if (!window.matchMedia('(max-width: 900px)').matches) {
+    if (!window.matchMedia('(max-width: 1050px)').matches) {
       closeNavigation();
     }
   });

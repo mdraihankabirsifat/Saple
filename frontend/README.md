@@ -21,6 +21,8 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 | `salaries.html` | Public approved salary ranges with company, role, location, range, and source filters |
 | `reviews.html` | Public approved reviews with company, role, location, and rating filters |
 | `interviews.html` | Public approved interviews with company, role, location, difficulty, and mode filters |
+| `faq.html` | Accessible accordion explaining public access, verification, moderation, privacy, and project limits |
+| `about.html` | Academic purpose, workflow, technology, privacy model, disclaimer, and realistic future scope |
 | `company-details.html` | Live profile, benefits, salary ranges, approved reviews/interviews, and report dialog |
 | `login.html` | JWT session creation and safe local `returnTo` redirects |
 | `register.html` | Job-seeker or current/former-employee registration |
@@ -35,7 +37,7 @@ Open `http://localhost:5500/index.html`. A static server is required for reliabl
 
 `js/auth.js` stores only the JWT and safe user object in `sessionStorage`; passwords are never stored. `js/api.js` attaches `Authorization: Bearer <token>` only to requests marked authenticated and clears stale state after authenticated `401` responses.
 
-`js/nav.js` keeps Companies, Salaries, Reviews, and Interviews as public Browse links for every visitor. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `+ Contribute` plus page CTAs only when `verifiedCompanies` contains an active company verification. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
+`js/nav.js` renders Home, Companies, Salaries, Reviews, Interviews, FAQ, and About consistently on every page, applies the active state and `aria-current`, and adds FAQ/About to every footer. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `+ Contribute` plus page CTAs only when `verifiedCompanies` contains an active company verification. Registration offers only `NORMAL` and `EMPLOYEE`; ADMIN access cannot be requested publicly.
 
 ## Contribution Forms
 
@@ -81,6 +83,7 @@ Pending submissions allow all three decisions. Approved reported submissions all
 | `js/api.js` | API base URL, token-aware JSON requests, safe errors |
 | `js/auth.js` | Session storage and current-user lookup |
 | `js/nav.js` | Responsive navigation, identity, sign-out, employee link |
+| `js/faq.js` | Single-open FAQ state and accordion keyboard navigation |
 | `js/companies.js` | Directory loading and search |
 | `js/browse-shared.js` | Shared public browse options, queries, metadata, and links |
 | `js/salaries.js`, `js/reviews.js`, `js/interviews.js` | Approved-data browse filters and safe card rendering |
@@ -96,7 +99,7 @@ Pending submissions allow all three decisions. Approved reported submissions all
 
 ## Design and Accessibility
 
-The established styles remain in `css/common.css` and page-specific files. New controls reuse existing colors, spacing, typography, buttons, cards, status messages, and responsive behavior. Forms keep explicit labels, keyboard focus, live status/error regions, native constraints, and narrow-screen layouts. Confirmation/report interactions use native dialogs.
+The established styles remain in `css/common.css` and page-specific files. New controls reuse existing colors, spacing, typography, buttons, cards, status messages, and responsive behavior. Forms keep explicit labels, keyboard focus, live status/error regions, native constraints, and narrow-screen layouts. Confirmation/report interactions use native dialogs. The FAQ uses native buttons with linked regions, visible expanded state, single-open behavior, Escape collapse, and Arrow/Home/End focus movement.
 
 ## Manual Test Checklist
 
@@ -116,6 +119,7 @@ With Oracle and the backend running:
 12. As ADMIN, mark the report reviewing, inspect the target, flag/reject when appropriate, then resolve the report.
 13. Confirm flagged/rejected content disappears from public pages and review aggregates.
 14. Check keyboard use and desktop, tablet, and mobile widths for navigation/form/filter overflow.
+15. Open FAQ and About from the header and footer on desktop/mobile; confirm their active states and use the FAQ with pointer, Enter/Space, Escape, Arrow keys, Home, and End.
 
 ## Frontend Structure
 
@@ -128,6 +132,8 @@ frontend/
 |-- salaries.html
 |-- reviews.html
 |-- interviews.html
+|-- faq.html
+|-- about.html
 |-- company-details.html
 |-- login.html
 |-- register.html

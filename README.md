@@ -145,6 +145,7 @@ See [backend/README.md](backend/README.md) for contracts and transaction rules.
 | `salaries.html` | Public approved salary aggregates and filters |
 | `reviews.html` | Public approved workplace reviews and filters |
 | `interviews.html` | Public approved interview experiences and filters |
+| `faq.html`, `about.html` | Accessible project guidance, privacy boundaries, methodology, and academic disclaimer |
 | `company-details.html?id=<id>` | Profile, benefits, salary data, approved reviews/interviews, and reporting |
 | `login.html`, `register.html` | Authentication and account creation |
 | `profile.html` | Safe profile view, name edit, verified companies, and password change |
@@ -163,7 +164,7 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 47 tests covering authentication/profile behavior, public browse routes, all three verified contribution gates, input validation, SQL filter binding, ADMIN rules, privacy, and transaction rollbacks. The live Oracle workflow covers authentication, all three contribution types, identity generators, verification, ADMIN authorization, reports, anonymous display, public publication, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
+The unit suite currently contains 55 tests covering authentication/profile behavior, public browse routes, all three verified contribution gates, input validation, SQL filter binding, ADMIN rules, privacy, transaction rollbacks, shared information navigation, responsive safeguards, and FAQ accessibility behavior. The live Oracle workflow covers authentication, all three contribution types, identity generators, verification, ADMIN authorization, reports, anonymous display, public publication, salary aggregates, and forced rollback cases. Integration tests create uniquely named rows and clean them afterward; configure Oracle and `JWT_SECRET` first.
 
 ## Security Notes
 
