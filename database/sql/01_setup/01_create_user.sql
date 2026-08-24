@@ -1,3 +1,0 @@
--- Optional one-time database setup.
--- The SAPLE Oracle user/schema owner was created manually in Navicat.
--- This file is not required when the SAPLE schema already exists.

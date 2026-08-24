@@ -1,7 +1,7 @@
--- FINAL SCHEMA FOR PRESENTATION OR A COMPLETELY FRESH DATABASE.
--- DO NOT EXECUTE THIS FILE ON THE EXISTING POPULATED SAPLE SCHEMA.
--- This file represents the final Saple schema after migrations 06 and 07.
--- Use the original numbered migrations for an existing database.
+-- FINAL CONSOLIDATED SAPLE SCHEMA.
+-- Use only when creating a completely fresh database.
+-- Do not execute on the existing populated SAPLE schema.
+-- Historical migrations remain available in Git history.
 
 -- ================================================================
 -- 1. ACCOUNTS AND IDENTITY

@@ -1,3 +1,6 @@
+-- READ-ONLY TEACHER DEMONSTRATION.
+-- Safe to execute on the existing populated SAPLE schema.
+
 PROMPT ================================================================
 PROMPT 1. Project schema summary: 14 base tables and 4 views
 PROMPT ================================================================

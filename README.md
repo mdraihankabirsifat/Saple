@@ -55,35 +55,27 @@ Pending, rejected, and flagged salaries do not affect either public range.
 
 ### 1. Prepare Oracle
 
-Run these files as the intended schema owner:
+For a completely fresh database, run these files as the intended schema owner:
 
 ```sql
-@database/sql/01_setup/01_create_user.sql
-@database/sql/02_schema/02_create_tables.sql
-@database/sql/03_data/03_insert_sample_data.sql
-@database/sql/03_data/05_expand_reference_data.sql
-@database/sql/02_schema/06_create_password_reset_tokens.sql
-@database/sql/02_schema/07_add_role_scoped_verification.sql
-@database/sql/03_data/08_seed_demo_salary_reviews.sql
-@database/sql/04_validation/04_test_queries.sql
+@database/sql/01_final_schema.sql
+@database/sql/02_final_demo_data.sql
+@database/sql/03_schema_and_data_demo.sql
 ```
 
-`database/sql/03_data/03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to every identity populated with explicit sample IDs: `USERS`, `EMPLOYEES`, `COMPANIES`, `JOB_ROLES`, `BENEFITS`, `EMPLOYMENT_VERIFICATIONS`, `SUBMISSIONS`, `REPORTS`, and `MODERATION_ACTIONS`.
+`database/sql/01_final_schema.sql` creates the complete 14-table, four-view Oracle schema, including password recovery and role-scoped employment verification. Use it only for a fresh database.
 
-`database/sql/03_data/05_expand_reference_data.sql` is additive and repeatable. It uses case-insensitive `MERGE` operations to add 50 real employer reference rows and 55 roles without deleting developer data or duplicating names. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview data is seeded.
+`database/sql/02_final_demo_data.sql` loads the consolidated base, reference, and synthetic demonstration data. It also synchronizes identity generators populated with explicit IDs. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview claims are imported as submissions.
 
-`database/sql/02_schema/06_create_password_reset_tokens.sql` was the one-time additive password-recovery migration. It stores only unique SHA-256 token hashes and creates the user/state lookup index; it is already present in the current populated database.
+`database/sql/03_schema_and_data_demo.sql` is read-only and verifies the completed schema and representative data.
 
-For the current existing populated database, migration `06` is already completed. Apply only this exact next order:
+For the existing populated database, run only:
 
 ```sql
-@database/sql/02_schema/07_add_role_scoped_verification.sql
-@database/sql/03_data/08_seed_demo_salary_reviews.sql
+@database/sql/03_schema_and_data_demo.sql
 ```
 
-Do not rerun `02` or `06`. Migration `07` adds nullable `ROLE_ID`, safely backfills only unambiguous legacy rows, and leaves unresolved rows unauthorized. Seed `08` is rerunnable and adds clearly marked synthetic academic salaries and reviews without deleting or duplicating existing data. Its salary figures are fictional, not official company data, and are not trustworthy ML training data.
-
-`database/sql/01_setup/01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `database/sql/02_schema/02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
+Do not execute the schema or data loader on the populated schema. Historical setup, migrations, seeds, and validation scripts remain recoverable through Git history, including commit `89d9c4aa724e210f84c305647688cf0a6052d2fe`.
 
 ### 2. Start the backend
 
@@ -193,9 +185,9 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 94 tests, including focused coverage for exact company-role authorization, ADMIN independence, transaction rollback, migration/seed structure, safe verified-scope responses, approved rating queries, and responsive filter layouts, alongside all prior authentication, recovery, moderation, privacy, tree, FAQ, and navigation tests.
+The unit suite currently contains 94 tests, including focused coverage for exact company-role authorization, ADMIN independence, transaction rollback, consolidated schema/data structure, safe verified-scope responses, approved rating queries, and responsive filter layouts, alongside all prior authentication, recovery, moderation, privacy, tree, FAQ, and navigation tests.
 
-To test recovery locally, do not rerun migration `06`: configure SMTP and `FRONTEND_URL`, restart the backend, call a clearly unknown address and confirm the exact `404` response, then request a link for an active account. Confirm SMTP acceptance, a 64-character database hash, old-password failure, new-password success, one-time use, expiry handling, and rollback on SMTP failure. Never paste a reset link into logs or issue trackers. Detailed unknown-email responses are an academic requirement; production systems normally use a generic response to reduce account enumeration.
+To test recovery locally, do not rerun any database setup file: configure SMTP and `FRONTEND_URL`, restart the backend, call a clearly unknown address and confirm the exact `404` response, then request a link for an active account. Confirm SMTP acceptance, a 64-character database hash, old-password failure, new-password success, one-time use, expiry handling, and rollback on SMTP failure. Never paste a reset link into logs or issue trackers. Detailed unknown-email responses are an academic requirement; production systems normally use a generic response to reduce account enumeration.
 
 ## Security Notes
 

@@ -32,7 +32,7 @@ Public responses must not expose user IDs, email addresses, verification evidenc
 
 ## Current Scope Boundary
 
-Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, reviews, interviews, reporting, rating display, responsive Browse sidebars, ADMIN integration, rollback tests, and documentation are implemented. Migration `06` is already complete; `07` and rerunnable synthetic seed `08` are the next populated-schema order. Real SMTP delivery still requires local provider credentials. The standalone ML prototype is implemented, while runtime integration and deployment remain deferred.
+Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, reviews, interviews, reporting, rating display, responsive Browse sidebars, ADMIN integration, rollback tests, and documentation are implemented. The current repository exposes one consolidated schema, one consolidated demonstration-data loader, and one read-only verification script. Real SMTP delivery still requires local provider credentials. The standalone ML prototype is implemented, while runtime integration and deployment remain deferred.
 
 ## Presentation-Day Demo Sequence
 
@@ -70,10 +70,10 @@ Do not commit the demo password, its generated hash, or local credentials.
 - Employee verification request and ADMIN verification card
 - Approved anonymous review and interview cards
 - Report dialog and ADMIN report-resolution controls
-- Oracle schema/ERD and representative `database/sql/04_validation/04_test_queries.sql` results
+- Oracle schema/ERD and representative `database/sql/03_schema_and_data_demo.sql` results
 
 ## Password-recovery live diagnostic
 
 Start the backend before testing the browser and call `POST /api/auth/forgot-password` directly. An unknown normalized email must return `404`, `success: false`, and `No account was found with that email address.` without a token row. A registered active account is proven only when configured SMTP accepts delivery; then verify a 64-character hash, one-time link use, old/new-password login, and rollback under SMTP failure. Never print environment values or reset URLs. This detailed unknown-email response is an academic requirement; a production system normally uses a generic response to reduce account enumeration.
 
-The synthetic `08` salaries/reviews are classroom presentation content, not official employer data and not trustworthy ML training history. The optional model remains decision-support only, stays inactive below 50 final moderator-reviewed historical records for a role, and never replaces the human moderator.
+The synthetic salaries/reviews in `database/sql/02_final_demo_data.sql` are classroom presentation content, not official employer data and not trustworthy ML training history. The optional model remains decision-support only, stays inactive below 50 final moderator-reviewed historical records for a role, and never replaces the human moderator.

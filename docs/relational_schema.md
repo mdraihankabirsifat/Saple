@@ -1,12 +1,12 @@
 # Saple Relational Schema 
 
-This document reflects the Oracle 19c implementation in `database/sql/02_schema/02_create_tables.sql` plus additive migrations. Primary keys are marked **PK**, foreign keys **FK**, and unique candidate keys **UK**.
+This document reflects the complete Oracle 19c implementation in `database/sql/01_final_schema.sql`. Primary keys are marked **PK**, foreign keys **FK**, and unique candidate keys **UK**.
 
 ## Account and employee relations
 
 - `users` (`user_id` **PK**, `full_name`, `email` **UK**, `password_hash`, `user_type`, `account_role`, `account_status`, `created_at`, `updated_at`)
 - `employees` (`employee_id` **PK**, `user_id` **FK/UK**, `employment_status`, `created_at`)
-- `password_reset_tokens` (`reset_token_id` **PK**, `user_id` **FK**, `token_hash` **UK**, `expires_at`, `used_at`, `revoked_at`, `created_at`) from migration `database/sql/02_schema/06_create_password_reset_tokens.sql`
+- `password_reset_tokens` (`reset_token_id` **PK**, `user_id` **FK**, `token_hash` **UK**, `expires_at`, `used_at`, `revoked_at`, `created_at`)
 
 `user_type` distinguishes NORMAL accounts from EMPLOYEE accounts. `account_role` independently represents USER or ADMIN authorization. An employee profile belongs to exactly one user; the application must ensure that user has `user_type = 'EMPLOYEE'`.
 
@@ -27,7 +27,7 @@ All single-column surrogate keys in these reference and workflow tables are Orac
 
 - `employment_verifications` (`verification_id` **PK**, `employee_id` **FK**, `company_id` **FK**, `role_id` **FK** nullable for legacy rows, `verification_method`, `company_email`, `proof_type`, `proof_reference`, `verification_status`, `requested_at`, `reviewed_at`, `expires_at`, `rejection_reason`, `reviewed_by` **FK**)
 
-Migration `database/sql/02_schema/07_add_role_scoped_verification.sql` changes authorization from company-only to the exact employee/company/role tuple and adds `IX_EMP_VERIFY_SCOPE_STATUS`. It backfills only legacy employee/company pairs with one unambiguous contributed role. Ambiguous or unsupported legacy rows remain `NULL`, are identifiable for correction, and cannot authorize a new contribution. Company email, safe proof reference, and rejection reason are private.
+The final schema scopes authorization to the exact employee/company/role tuple and includes `IX_EMP_VERIFY_SCOPE_STATUS`. `ROLE_ID` remains nullable for compatibility with legacy records, but a row without a role cannot authorize a new contribution. Company email, safe proof reference, and rejection reason are private.
 
 ## Submission supertype and subtypes
 
@@ -54,6 +54,6 @@ Reports point directly to a submission. Moderation actions form append-only audi
 
 The salary views calculate ranges and contribution counts rather than storing derived values. Verified ranges use approved, verified submissions; community ranges use all approved salary submissions. Public views omit passwords, account identity, company verification email, proof references, rejection reasons, reporter identity, and internal moderation notes.
 
-## Populated-schema migration order
+## Simplified SQL workflow
 
-Migration `database/sql/02_schema/06_create_password_reset_tokens.sql` is already completed in the current populated schema. Apply `database/sql/02_schema/07_add_role_scoped_verification.sql`, then the rerunnable `database/sql/03_data/08_seed_demo_salary_reviews.sql`. Do not rerun destructive `database/sql/02_schema/02_create_tables.sql` or migration `06`. Seed `08` uses dedicated `saple.demo.*@example.invalid` accounts, valid role-scoped verifications, and guarded parent/subtype inserts; all figures and reviews are synthetic academic demonstration data.
+For a fresh database, run `database/sql/01_final_schema.sql`, then `database/sql/02_final_demo_data.sql`, and finish with the read-only `database/sql/03_schema_and_data_demo.sql` verification. For the existing populated database, run only the read-only demonstration file. Historical migrations remain recoverable through Git history.

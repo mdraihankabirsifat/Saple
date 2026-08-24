@@ -14,13 +14,15 @@ test.afterEach(() => {
   database.getConnection = originalGetConnection;
 });
 
-test('migration 07 preserves unresolved legacy rows and installs exact-scope integrity objects', () => {
-  const sql = read('database/sql/02_schema/07_add_role_scoped_verification.sql');
-  assert.match(sql, /ADD \(\s*role_id NUMBER\s*\)/i);
-  assert.match(sql, /HAVING COUNT\(DISTINCT role_id\) = 1/i);
-  assert.match(sql, /FOREIGN KEY \(role_id\) REFERENCES job_roles \(role_id\)/i);
-  assert.match(sql, /employee_id,\s*company_id,\s*role_id,\s*verification_status/i);
-  assert.doesNotMatch(sql, /role_id NUMBER NOT NULL/i);
+test('final schema directly creates nullable role-scoped verification integrity objects', () => {
+  const sql = read('database/sql/01_final_schema.sql');
+  const table = sql.match(/CREATE TABLE employment_verifications\s*\([\s\S]*?\n\);/i)?.[0];
+
+  assert.ok(table);
+  assert.match(table, /^\s*role_id\s+NUMBER\s*,\s*$/im);
+  assert.match(table, /CONSTRAINT fk_emp_verify_role FOREIGN KEY \(role_id\)[\s\S]*?REFERENCES job_roles \(role_id\)/i);
+  assert.doesNotMatch(table, /^\s*role_id\s+NUMBER\s+NOT NULL/im);
+  assert.match(sql, /CREATE INDEX ix_emp_verify_scope_status\s+ON employment_verifications \(employee_id, company_id, role_id, verification_status\)/i);
 });
 
 test('all three contribution repositories enforce role ID in the transactional verification query', () => {
@@ -84,8 +86,8 @@ test('verified-scope frontend controls never load arbitrary contribution roles',
   }
 });
 
-test('seed 08 is guarded, synthetic, role-scoped, and dense by construction', () => {
-  const sql = read('database/sql/03_data/08_seed_demo_salary_reviews.sql');
+test('consolidated demonstration data is guarded, synthetic, role-scoped, and dense by construction', () => {
+  const sql = read('database/sql/02_final_demo_data.sql');
   assert.match(sql, /saple\.demo\.c.*@example\.invalid/i);
   assert.match(sql, /FOR salary_number IN 1\.\.5 LOOP/i);
   assert.match(sql, /FOR review_number IN 1\.\.3 LOOP/i);

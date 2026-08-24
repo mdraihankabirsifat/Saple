@@ -38,20 +38,15 @@ PASSWORD_RESET_TOKEN_TTL_MINUTES=15
 
 Install dependencies with `npm install`; Nodemailer is included in `package.json`. For Gmail, enable two-step verification, create an App Password, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and `SMTP_SECURE=false`, then put the account and App Password in `SMTP_USER` and `SMTP_PASS`. Use provider-specific values for another SMTP service. Port `465` normally requires `SMTP_SECURE=true`. Never commit `backend/.env`.
 
-Apply Oracle scripts in this order for a clean local build:
+For a completely fresh database, apply the consolidated Oracle files in this order:
 
 ```sql
-@database/sql/01_setup/01_create_user.sql
-@database/sql/02_schema/02_create_tables.sql
-@database/sql/03_data/03_insert_sample_data.sql
-@database/sql/03_data/05_expand_reference_data.sql
-@database/sql/02_schema/06_create_password_reset_tokens.sql
-@database/sql/02_schema/07_add_role_scoped_verification.sql
-@database/sql/03_data/08_seed_demo_salary_reviews.sql
-@database/sql/04_validation/04_test_queries.sql
+@database/sql/01_final_schema.sql
+@database/sql/02_final_demo_data.sql
+@database/sql/03_schema_and_data_demo.sql
 ```
 
-For the current existing populated schema, `database/sql/02_schema/06_create_password_reset_tokens.sql` is already completed. Run `database/sql/02_schema/07_add_role_scoped_verification.sql`, then `database/sql/03_data/08_seed_demo_salary_reviews.sql`. Do not rerun `database/sql/02_schema/02_create_tables.sql` or migration `06`. Migration `07` deliberately keeps unresolved legacy roles nullable and unauthorized; seed `08` is rerunnable synthetic academic data and does not delete existing rows.
+For the existing populated schema, run only `database/sql/03_schema_and_data_demo.sql`. It is read-only. Do not rerun the consolidated schema or data loader. Historical migrations remain recoverable through Git history.
 
 ```bash
 npm run dev
@@ -168,7 +163,7 @@ All three contribution routes and repositories require a matching active, non-ex
 
 Every request includes both `companyId` and `roleId`. ADMIN sees the requested designation before deciding. A verified Data Engineer scope cannot authorize a Sales Manager contribution at the same company, a scope at another company, or any contribution after expiry. `ADMIN` remains independent: a normal ADMIN account has no contribution privilege unless it also owns an active employee scope. The repository repeats the authoritative scope check on the same Oracle connection and transaction used for the parent/subtype insert.
 
-Migration `07` backfills an old row only when all of that employee's company contributions identify one distinct role. Ambiguous or unsupported rows remain `ROLE_ID IS NULL`; they are visible for correction but cannot authorize and cannot be approved as a new active scope.
+Legacy rows whose designation could not be assigned unambiguously may remain `ROLE_ID IS NULL`; they are visible for correction but cannot authorize and cannot be approved as a new active scope.
 
 Only active `EMPLOYEE` accounts may request verification. Current employees use `COMPANY_EMAIL_OTP` with a company-email address; former employees use `DOCUMENT` with a short proof type and safe external/reference identifier. A pending or active company verification blocks duplicates.
 
@@ -200,7 +195,7 @@ Public review/interview repositories explicitly select only approved fields. `au
 
 ## Identity Synchronization
 
-After sample inserts and `COMMIT`, `database/sql/03_data/03_insert_sample_data.sql` runs `START WITH LIMIT VALUE` for:
+After its base sample section and `COMMIT`, `database/sql/02_final_demo_data.sql` runs `START WITH LIMIT VALUE` for:
 
 - `USERS.USER_ID`
 - `EMPLOYEES.EMPLOYEE_ID`
@@ -216,7 +211,7 @@ This advances each identity beyond explicit sample IDs without changing constrai
 
 ## Expanded Reference Data
 
-Run `database/sql/03_data/05_expand_reference_data.sql` after the base sample script. Its case-insensitive `MERGE` statements add 50 company references (35 Bangladesh-focused and 15 international) plus 55 cross-industry job roles without modifying the schema or deleting existing data. Company sources are recorded in `database/company_seed_sources.md`. These are employer-directory records only; Saple never imports third-party salary, review, or interview claims as submissions.
+The reference-data section of `database/sql/02_final_demo_data.sql` uses case-insensitive `MERGE` statements to add 50 company references (35 Bangladesh-focused and 15 international) plus 55 cross-industry job roles without deleting developer data or duplicating names. Company sources are recorded in `database/company_seed_sources.md`. These are employer-directory records only; Saple never imports third-party salary, review, or interview claims as submissions.
 
 ## Architecture
 
@@ -243,9 +238,9 @@ npm test
 npm run test:integration
 ```
 
-The 94-test unit suite covers the prior authentication, recovery, moderation, privacy, and accessibility behavior plus exact role-scope authorization, ADMIN independence, invalidation rollback, migration/seed structure, safe scope fields, approved rating aggregates, and responsive browse sidebars.
+The 94-test unit suite covers the prior authentication, recovery, moderation, privacy, and accessibility behavior plus exact role-scope authorization, ADMIN independence, invalidation rollback, consolidated schema/data structure, safe scope fields, approved rating aggregates, and responsive browse sidebars.
 
-The live test requires Oracle with migrations `06` and `07`, plus `JWT_SECRET`. Seed `08` is independently guarded and may already be present. It verifies generated identity values, detailed login outcomes, reset-token lifecycle, role-scoped verification and contributions, approved-only publication, reporting, moderation, aggregates, authorization, GET regressions, and rollback cases. A real external SMTP account is not used by the automated suite and must be proven manually with local credentials.
+The live test requires an Oracle database already prepared with the consolidated schema and data, plus `JWT_SECRET`. It verifies generated identity values, detailed login outcomes, reset-token lifecycle, role-scoped verification and contributions, approved-only publication, reporting, moderation, aggregates, authorization, GET regressions, and rollback cases. A real external SMTP account is not used by the automated suite and must be proven manually with local credentials.
 
 Public registration always creates `account_role = 'USER'`. The fictional sample ADMIN hash is intentionally not a usable password. For manual local ADMIN testing, generate and apply a local BCrypt hash without committing it; the integration test instead promotes and deletes a temporary user.
 
