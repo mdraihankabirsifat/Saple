@@ -55,11 +55,6 @@ CREATE TABLE password_reset_tokens (
     CONSTRAINT ck_password_reset_state CHECK (used_at IS NULL OR revoked_at IS NULL)
 );
 
-COMMENT ON TABLE password_reset_tokens IS
-    'Single-use, expiring password-reset token hashes for Saple accounts.';
-COMMENT ON COLUMN password_reset_tokens.token_hash IS
-    'SHA-256 hash of a cryptographically random token; the raw token is never stored.';
-
 -- ================================================================
 -- 2. COMPANY REFERENCE DATA
 -- ================================================================
@@ -73,7 +68,7 @@ CREATE TABLE companies (
     country           VARCHAR2(100) NOT NULL,
     website           VARCHAR2(255),
     company_size      VARCHAR2(30),
-    description       CLOB,
+    description       CLOB, --character large object
     created_at        TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at        TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT pk_companies PRIMARY KEY (company_id),

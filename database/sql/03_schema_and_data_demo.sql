@@ -1,9 +1,7 @@
--- READ-ONLY TEACHER DEMONSTRATION.
--- Safe to execute on the existing populated SAPLE schema.
 
-PROMPT ================================================================
-PROMPT 1. Project schema summary: 14 base tables and 4 views
-PROMPT ================================================================
+-- ================================================================
+-- 1. Project schema summary: 14 base tables and 4 views
+-- ================================================================
 
 SELECT 'BASE TABLES' AS object_group,
        14 AS expected_count,
@@ -28,9 +26,9 @@ WHERE view_name IN (
     'VW_COMMUNITY_SALARY_SUMMARY'
 );
 
-PROMPT ================================================================
-PROMPT 2. All Saple base-table names
-PROMPT ================================================================
+-- ================================================================
+-- 2. All Saple base-table names
+-- ================================================================
 
 SELECT table_name
 FROM user_tables
@@ -52,9 +50,9 @@ WHERE table_name IN (
 )
 ORDER BY table_name;
 
-PROMPT ================================================================
-PROMPT 3. Important columns, data types and nullability
-PROMPT ================================================================
+-- ================================================================
+-- 3. Important columns, data types and nullability
+-- ================================================================
 
 SELECT table_name,
        column_id,
@@ -75,9 +73,9 @@ WHERE table_name IN (
 )
 ORDER BY table_name, column_id;
 
-PROMPT ================================================================
-PROMPT 4. Primary keys and unique keys
-PROMPT ================================================================
+-- ================================================================
+-- 4. Primary keys and unique keys
+-- ================================================================
 
 SELECT c.table_name,
        c.constraint_name,
@@ -102,9 +100,9 @@ WHERE c.constraint_type IN ('P', 'U')
 GROUP BY c.table_name, c.constraint_name, c.constraint_type, c.status
 ORDER BY c.table_name, key_type, c.constraint_name;
 
-PROMPT ================================================================
-PROMPT 5. Foreign-key relationships
-PROMPT ================================================================
+-- ================================================================
+-- 5. Foreign-key relationships
+-- ================================================================
 
 SELECT child.table_name AS child_table,
        child_col.column_name AS child_column,
@@ -131,9 +129,9 @@ WHERE child.constraint_type = 'R'
   )
 ORDER BY child.table_name, child.constraint_name, child_col.position;
 
-PROMPT ================================================================
-PROMPT 6. Important named check constraints
-PROMPT ================================================================
+-- ================================================================
+-- 6. Important named check constraints
+-- ================================================================
 
 SELECT table_name,
        constraint_name,
@@ -151,9 +149,9 @@ WHERE constraint_type = 'C'
   )
 ORDER BY table_name, constraint_name;
 
-PROMPT ================================================================
-PROMPT 7. Indexes and their columns
-PROMPT ================================================================
+-- ================================================================
+-- 7. Indexes and their columns
+-- ================================================================
 
 SELECT i.table_name,
        i.index_name,
@@ -174,9 +172,9 @@ WHERE i.table_name IN (
 GROUP BY i.table_name, i.index_name, i.uniqueness, i.status
 ORDER BY i.table_name, i.index_name;
 
-PROMPT ================================================================
-PROMPT 8. Migration verification
-PROMPT ================================================================
+-- ================================================================
+-- 8. Migration verification
+-- ================================================================
 
 SELECT 'TABLE' AS object_type,
        'PASSWORD_RESET_TOKENS' AS object_name,
@@ -206,9 +204,9 @@ FROM user_indexes
 WHERE table_name = 'EMPLOYMENT_VERIFICATIONS'
   AND index_name = 'IX_EMP_VERIFY_SCOPE_STATUS';
 
-PROMPT ================================================================
-PROMPT 9. Row count of every Saple base table
-PROMPT ================================================================
+-- ================================================================
+-- 9. Row count of every Saple base table
+-- ================================================================
 
 SELECT 'USERS' AS table_name, COUNT(*) AS row_count FROM users
 UNION ALL SELECT 'EMPLOYEES', COUNT(*) FROM employees
@@ -226,9 +224,9 @@ UNION ALL SELECT 'REPORTS', COUNT(*) FROM reports
 UNION ALL SELECT 'MODERATION_ACTIONS', COUNT(*) FROM moderation_actions
 ORDER BY table_name;
 
-PROMPT ================================================================
-PROMPT 10. Up to 10 verified salary-summary rows
-PROMPT ================================================================
+-- ================================================================
+-- 10. Up to 10 verified salary-summary rows
+-- ================================================================
 
 SELECT company_id,
        company_name,
@@ -244,9 +242,9 @@ FROM vw_verified_salary_summary
 ORDER BY company_name, role_name, currency, pay_period
 FETCH FIRST 10 ROWS ONLY;
 
-PROMPT ================================================================
-PROMPT 11. Up to 10 community salary-summary rows
-PROMPT ================================================================
+-- ================================================================
+-- 11. Up to 10 community salary-summary rows
+-- ================================================================
 
 SELECT company_id,
        company_name,
@@ -262,9 +260,9 @@ FROM vw_community_salary_summary
 ORDER BY company_name, role_name, currency, pay_period
 FETCH FIRST 10 ROWS ONLY;
 
-PROMPT ================================================================
-PROMPT 12. Up to 10 approved company reviews
-PROMPT ================================================================
+-- ================================================================
+-- 12. Up to 10 approved company reviews
+-- ================================================================
 
 SELECT submission_id,
        company_id,
@@ -288,9 +286,9 @@ FROM vw_public_approved_reviews
 ORDER BY submitted_at DESC, submission_id DESC
 FETCH FIRST 10 ROWS ONLY;
 
-PROMPT ================================================================
-PROMPT 13. Up to 10 approved interview experiences
-PROMPT ================================================================
+-- ================================================================
+-- 13. Up to 10 approved interview experiences
+-- ================================================================
 
 SELECT s.submission_id,
        c.company_name,
@@ -317,9 +315,9 @@ WHERE s.submission_type = 'INTERVIEW'
 ORDER BY s.submitted_at DESC, s.submission_id DESC
 FETCH FIRST 10 ROWS ONLY;
 
-PROMPT ================================================================
-PROMPT 14. Up to 10 employment-verification records without private evidence
-PROMPT ================================================================
+-- ================================================================
+-- 14. Up to 10 employment-verification records without private evidence
+-- ================================================================
 
 SELECT ev.verification_id,
        c.company_name,
@@ -337,9 +335,9 @@ LEFT JOIN job_roles jr
 ORDER BY ev.requested_at DESC, ev.verification_id DESC
 FETCH FIRST 10 ROWS ONLY;
 
-PROMPT ================================================================
-PROMPT 15. Up to 10 moderation-action records without internal notes
-PROMPT ================================================================
+-- ================================================================
+-- 15. Up to 10 moderation-action records without internal notes
+-- ================================================================
 
 SELECT action_id,
        submission_id,
@@ -351,9 +349,9 @@ FROM moderation_actions
 ORDER BY action_at DESC, action_id DESC
 FETCH FIRST 10 ROWS ONLY;
 
-PROMPT ================================================================
-PROMPT 16. Final schema health summary
-PROMPT ================================================================
+-- ================================================================
+-- 16. Final schema health summary
+-- ================================================================
 
 SELECT 'BASE TABLE COUNT' AS health_check,
        14 AS expected_count,
