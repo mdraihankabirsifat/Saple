@@ -1,6 +1,6 @@
 -- Saple additive seed 08: deterministic synthetic academic demonstration data
 --
--- Run after 07_add_role_scoped_verification.sql. This script targets only the
+-- Run after database/sql/02_schema/07_add_role_scoped_verification.sql. This script targets only the
 -- four original sample companies and the fifty companies introduced by 05.
 -- All generated accounts use the saple.demo.*@example.invalid convention.
 -- Salary figures are fictional BDT/month examples, are not official company

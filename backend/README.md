@@ -41,17 +41,17 @@ Install dependencies with `npm install`; Nodemailer is included in `package.json
 Apply Oracle scripts in this order for a clean local build:
 
 ```sql
-@database/01_create_user.sql
-@database/02_create_tables.sql
-@database/03_insert_sample_data.sql
-@database/05_expand_reference_data.sql
-@database/06_create_password_reset_tokens.sql
-@database/07_add_role_scoped_verification.sql
-@database/08_seed_demo_salary_reviews.sql
-@database/04_test_queries.sql
+@database/sql/01_setup/01_create_user.sql
+@database/sql/02_schema/02_create_tables.sql
+@database/sql/03_data/03_insert_sample_data.sql
+@database/sql/03_data/05_expand_reference_data.sql
+@database/sql/02_schema/06_create_password_reset_tokens.sql
+@database/sql/02_schema/07_add_role_scoped_verification.sql
+@database/sql/03_data/08_seed_demo_salary_reviews.sql
+@database/sql/04_validation/04_test_queries.sql
 ```
 
-For the current existing populated schema, `06_create_password_reset_tokens.sql` is already completed. Run `07_add_role_scoped_verification.sql`, then `08_seed_demo_salary_reviews.sql`. Do not rerun `02_create_tables.sql` or `06`. Migration `07` deliberately keeps unresolved legacy roles nullable and unauthorized; seed `08` is rerunnable synthetic academic data and does not delete existing rows.
+For the current existing populated schema, `database/sql/02_schema/06_create_password_reset_tokens.sql` is already completed. Run `database/sql/02_schema/07_add_role_scoped_verification.sql`, then `database/sql/03_data/08_seed_demo_salary_reviews.sql`. Do not rerun `database/sql/02_schema/02_create_tables.sql` or migration `06`. Migration `07` deliberately keeps unresolved legacy roles nullable and unauthorized; seed `08` is rerunnable synthetic academic data and does not delete existing rows.
 
 ```bash
 npm run dev
@@ -200,7 +200,7 @@ Public review/interview repositories explicitly select only approved fields. `au
 
 ## Identity Synchronization
 
-After sample inserts and `COMMIT`, `database/03_insert_sample_data.sql` runs `START WITH LIMIT VALUE` for:
+After sample inserts and `COMMIT`, `database/sql/03_data/03_insert_sample_data.sql` runs `START WITH LIMIT VALUE` for:
 
 - `USERS.USER_ID`
 - `EMPLOYEES.EMPLOYEE_ID`
@@ -216,7 +216,7 @@ This advances each identity beyond explicit sample IDs without changing constrai
 
 ## Expanded Reference Data
 
-Run `database/05_expand_reference_data.sql` after the base sample script. Its case-insensitive `MERGE` statements add 50 company references (35 Bangladesh-focused and 15 international) plus 55 cross-industry job roles without modifying the schema or deleting existing data. Company sources are recorded in `database/company_seed_sources.md`. These are employer-directory records only; Saple never imports third-party salary, review, or interview claims as submissions.
+Run `database/sql/03_data/05_expand_reference_data.sql` after the base sample script. Its case-insensitive `MERGE` statements add 50 company references (35 Bangladesh-focused and 15 international) plus 55 cross-industry job roles without modifying the schema or deleting existing data. Company sources are recorded in `database/company_seed_sources.md`. These are employer-directory records only; Saple never imports third-party salary, review, or interview claims as submissions.
 
 ## Architecture
 

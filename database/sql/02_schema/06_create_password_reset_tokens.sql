@@ -1,5 +1,5 @@
 -- Saple password-reset token migration for Oracle Database 19c
--- Run once after 02_create_tables.sql. It is safe to run before or after
+-- Run once after database/sql/02_schema/02_create_tables.sql. It is safe to run before or after
 -- the sample/reference data scripts because it adds no sample rows.
 
 CREATE TABLE password_reset_tokens (

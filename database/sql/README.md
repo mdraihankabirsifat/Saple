@@ -1,6 +1,6 @@
 # Saple Database Schema - Teacher Presentation Guide
 
-This folder is a clean study and fresh-install representation of the implemented Saple database. The original numbered files in `database/` remain the operational history.
+This folder keeps Saple's operational SQL history and teacher-facing schema material organized by purpose.
 
 ## What the database files mean
 
@@ -12,19 +12,70 @@ This folder is a clean study and fresh-install representation of the implemented
 - **Views:** saved queries that derive safe public or analytical results from base tables.
 - **ERD:** the entity-relationship diagram showing tables, keys, and relationships visually.
 
-`01_create_user.sql` creates the Oracle SAPLE user/schema owner.
+## Folder layout
 
-`02_create_tables.sql` creates the main database structure.
+### `01_setup`
 
-`06_create_password_reset_tokens.sql` adds password-reset support.
+Contains the one-time Oracle user/schema-owner creation script.
 
-`07_add_role_scoped_verification.sql` adds role-scoped verification.
+### `02_schema`
 
-`03`, `05` and `08` insert data; they do not define the main schema.
+Contains the main schema and additive structural migrations.
 
-`04` contains test queries.
+### `03_data`
 
-> **Warning:** `01_final_schema.sql` is intended for studying or creating a completely fresh database. Do not execute it in the existing populated SAPLE schema.
+Contains sample, reference and synthetic demonstration data.
+
+### `04_validation`
+
+Contains normal schema and workflow test queries.
+
+### `05_presentation`
+
+Contains the clean consolidated schema and read-only teacher demonstration queries.
+
+Schema files define database structure.
+
+Data files populate the tables.
+
+Validation files inspect or test the database.
+
+Presentation files make the completed schema easier to explain.
+
+## File purposes
+
+`01_setup/01_create_user.sql` creates the Oracle SAPLE user/schema owner.
+
+`02_schema/02_create_tables.sql` creates the main database structure.
+
+`02_schema/06_create_password_reset_tokens.sql` adds password-reset support.
+
+`02_schema/07_add_role_scoped_verification.sql` adds role-scoped verification.
+
+`03_data/03_insert_sample_data.sql`, `03_data/05_expand_reference_data.sql`, and `03_data/08_seed_demo_salary_reviews.sql` insert data; they do not define the main schema.
+
+`04_validation/04_test_queries.sql` contains test queries.
+
+## Original historical execution order
+
+This order explains how the project developed over time. It does not mean all scripts should be rerun on the existing populated database.
+
+1. `01_setup/01_create_user.sql`
+2. `02_schema/02_create_tables.sql`
+3. `03_data/03_insert_sample_data.sql`
+4. `04_validation/04_test_queries.sql`
+5. `03_data/05_expand_reference_data.sql`
+6. `02_schema/06_create_password_reset_tokens.sql`
+7. `02_schema/07_add_role_scoped_verification.sql`
+8. `03_data/08_seed_demo_salary_reviews.sql`
+
+## Safety warnings
+
+> Do not run `02_create_tables.sql` on the existing populated SAPLE schema because it contains rebuild/cleanup logic.
+
+> Do not run `05_presentation/01_final_schema.sql` on the existing populated SAPLE schema. It is for explanation or a completely fresh installation.
+
+> For the teacher demonstration, use only the read-only `05_presentation/02_schema_demo_queries.sql` file.
 
 ## 1. Accounts and identity
 

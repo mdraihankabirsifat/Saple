@@ -15,7 +15,7 @@ test.afterEach(() => {
 });
 
 test('migration 07 preserves unresolved legacy rows and installs exact-scope integrity objects', () => {
-  const sql = read('database/07_add_role_scoped_verification.sql');
+  const sql = read('database/sql/02_schema/07_add_role_scoped_verification.sql');
   assert.match(sql, /ADD \(\s*role_id NUMBER\s*\)/i);
   assert.match(sql, /HAVING COUNT\(DISTINCT role_id\) = 1/i);
   assert.match(sql, /FOREIGN KEY \(role_id\) REFERENCES job_roles \(role_id\)/i);
@@ -85,7 +85,7 @@ test('verified-scope frontend controls never load arbitrary contribution roles',
 });
 
 test('seed 08 is guarded, synthetic, role-scoped, and dense by construction', () => {
-  const sql = read('database/08_seed_demo_salary_reviews.sql');
+  const sql = read('database/sql/03_data/08_seed_demo_salary_reviews.sql');
   assert.match(sql, /saple\.demo\.c.*@example\.invalid/i);
   assert.match(sql, /FOR salary_number IN 1\.\.5 LOOP/i);
   assert.match(sql, /FOR review_number IN 1\.\.3 LOOP/i);

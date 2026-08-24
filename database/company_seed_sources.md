@@ -1,6 +1,6 @@
 # Company seed sources
 
-The additive seed in `05_expand_reference_data.sql` contains public employer reference data only. It does not create salary, review, interview, verification, or user records. Metadata was checked against the organizations' official pages on 2026-08-08. Headquarters is the global headquarters for international organizations and the principal Bangladesh office for Bangladesh-focused entries. Company-size values are broad discoverability buckets, not exact live headcounts.
+The additive seed in `database/sql/03_data/05_expand_reference_data.sql` contains public employer reference data only. It does not create salary, review, interview, verification, or user records. Metadata was checked against the organizations' official pages on 2026-08-08. Headquarters is the global headquarters for international organizations and the principal Bangladesh office for Bangladesh-focused entries. Company-size values are broad discoverability buckets, not exact live headcounts.
 
 | Company | Official source | Metadata supported |
 |---|---|---|

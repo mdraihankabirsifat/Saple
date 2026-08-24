@@ -1,6 +1,6 @@
 -- Additive reference-data expansion for Saple.
 --
--- Run after 03_insert_sample_data.sql. MERGE keeps this script idempotent and
+-- Run after database/sql/03_data/03_insert_sample_data.sql. MERGE keeps this script idempotent and
 -- preserves all fictional demonstration records and user-generated content.
 -- Company metadata sources are recorded in company_seed_sources.md.
 

@@ -7,7 +7,7 @@ const repositoryRoot = path.resolve(__dirname, '../..');
 
 test('Oracle reset-token migration enforces hashed single-use expiring storage', () => {
   const migration = fs.readFileSync(
-    path.join(repositoryRoot, 'database/06_create_password_reset_tokens.sql'),
+    path.join(repositoryRoot, 'database/sql/02_schema/06_create_password_reset_tokens.sql'),
     'utf8'
   );
 

@@ -58,32 +58,32 @@ Pending, rejected, and flagged salaries do not affect either public range.
 Run these files as the intended schema owner:
 
 ```sql
-@database/01_create_user.sql
-@database/02_create_tables.sql
-@database/03_insert_sample_data.sql
-@database/05_expand_reference_data.sql
-@database/06_create_password_reset_tokens.sql
-@database/07_add_role_scoped_verification.sql
-@database/08_seed_demo_salary_reviews.sql
-@database/04_test_queries.sql
+@database/sql/01_setup/01_create_user.sql
+@database/sql/02_schema/02_create_tables.sql
+@database/sql/03_data/03_insert_sample_data.sql
+@database/sql/03_data/05_expand_reference_data.sql
+@database/sql/02_schema/06_create_password_reset_tokens.sql
+@database/sql/02_schema/07_add_role_scoped_verification.sql
+@database/sql/03_data/08_seed_demo_salary_reviews.sql
+@database/sql/04_validation/04_test_queries.sql
 ```
 
-`03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to every identity populated with explicit sample IDs: `USERS`, `EMPLOYEES`, `COMPANIES`, `JOB_ROLES`, `BENEFITS`, `EMPLOYMENT_VERIFICATIONS`, `SUBMISSIONS`, `REPORTS`, and `MODERATION_ACTIONS`.
+`database/sql/03_data/03_insert_sample_data.sql` commits its explicit fictional rows, then applies `START WITH LIMIT VALUE` to every identity populated with explicit sample IDs: `USERS`, `EMPLOYEES`, `COMPANIES`, `JOB_ROLES`, `BENEFITS`, `EMPLOYMENT_VERIFICATIONS`, `SUBMISSIONS`, `REPORTS`, and `MODERATION_ACTIONS`.
 
-`05_expand_reference_data.sql` is additive and repeatable. It uses case-insensitive `MERGE` operations to add 50 real employer reference rows and 55 roles without deleting developer data or duplicating names. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview data is seeded.
+`database/sql/03_data/05_expand_reference_data.sql` is additive and repeatable. It uses case-insensitive `MERGE` operations to add 50 real employer reference rows and 55 roles without deleting developer data or duplicating names. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview data is seeded.
 
-`06_create_password_reset_tokens.sql` was the one-time additive password-recovery migration. It stores only unique SHA-256 token hashes and creates the user/state lookup index; it is already present in the current populated database.
+`database/sql/02_schema/06_create_password_reset_tokens.sql` was the one-time additive password-recovery migration. It stores only unique SHA-256 token hashes and creates the user/state lookup index; it is already present in the current populated database.
 
 For the current existing populated database, migration `06` is already completed. Apply only this exact next order:
 
 ```sql
-@database/07_add_role_scoped_verification.sql
-@database/08_seed_demo_salary_reviews.sql
+@database/sql/02_schema/07_add_role_scoped_verification.sql
+@database/sql/03_data/08_seed_demo_salary_reviews.sql
 ```
 
 Do not rerun `02` or `06`. Migration `07` adds nullable `ROLE_ID`, safely backfills only unambiguous legacy rows, and leaves unresolved rows unauthorized. Seed `08` is rerunnable and adds clearly marked synthetic academic salaries and reviews without deleting or duplicating existing data. Its salary figures are fictional, not official company data, and are not trustworthy ML training data.
 
-`01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
+`database/sql/01_setup/01_create_user.sql` is empty. Use an existing Oracle user with the required object privileges. The cleanup block in `database/sql/02_schema/02_create_tables.sql` rebuilds Saple objects, so inspect it before running against data that must be retained.
 
 ### 2. Start the backend
 

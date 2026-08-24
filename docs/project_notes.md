@@ -70,7 +70,7 @@ Do not commit the demo password, its generated hash, or local credentials.
 - Employee verification request and ADMIN verification card
 - Approved anonymous review and interview cards
 - Report dialog and ADMIN report-resolution controls
-- Oracle schema/ERD and representative `04_test_queries.sql` results
+- Oracle schema/ERD and representative `database/sql/04_validation/04_test_queries.sql` results
 
 ## Password-recovery live diagnostic
 
