@@ -440,17 +440,3 @@ WHERE s.submission_type = 'SALARY'
   AND s.submission_status = 'APPROVED'
 GROUP BY s.company_id, c.company_name, ss.role_id, jr.role_name,
          ss.currency, ss.pay_period;
-
--- ================================================================
--- 9. CROSS-TABLE APPLICATION RULES
--- ================================================================
--- The application enforces these rules that ordinary CHECK constraints cannot:
--- * employees.user_id belongs to a users row whose user_type is EMPLOYEE.
--- * reviewed_by, resolved_by, and moderator_user_id identify ACTIVE ADMIN users.
--- * current employees use COMPANY_EMAIL_OTP and former employees use DOCUMENT.
--- * at most one active verification request exists per employee/company/role.
--- * legacy employment-verification rows with a NULL role cannot authorize a contribution.
--- * each subtype row matches submissions.submission_type.
--- * submission verification is valid for its specific employee/company/role scope.
--- * timestamps and allowed status transitions follow the application workflow.
--- * moderation_actions rows are append-only during normal application operation.
