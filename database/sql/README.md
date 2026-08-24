@@ -32,15 +32,26 @@ Contains normal schema and workflow test queries.
 
 ### `05_presentation`
 
-Contains the clean consolidated schema and read-only teacher demonstration queries.
+Contains the three simplified teacher-facing scripts derived from the historical development files.
 
-Schema files define database structure.
+The eight numbered scripts in `01_setup`, `02_schema`, `03_data`, and `04_validation` remain the development and migration history. The three presentation files provide the same completed project in a simpler DDL, DML, and DQL form:
 
-Data files populate the tables.
+```text
+01_final_schema.sql
+    Final database structure: DDL
 
-Validation files inspect or test the database.
+02_final_demo_data.sql
+    Consolidated project data: DML
 
-Presentation files make the completed schema easier to explain.
+03_schema_and_data_demo.sql
+    Safe teacher demonstration: DQL
+```
+
+DDL defines the structure.
+
+DML populates the structure.
+
+DQL reads and demonstrates the structure and data.
 
 ## File purposes
 
@@ -75,7 +86,9 @@ This order explains how the project developed over time. It does not mean all sc
 
 > Do not run `05_presentation/01_final_schema.sql` on the existing populated SAPLE schema. It is for explanation or a completely fresh installation.
 
-> For the teacher demonstration, use only the read-only `05_presentation/02_schema_demo_queries.sql` file.
+> Do not run `05_presentation/02_final_demo_data.sql` on the existing populated SAPLE schema. It consolidates the historical data scripts for a completely fresh database.
+
+> Only `05_presentation/03_schema_and_data_demo.sql` is safe and necessary to execute during the teacher demonstration.
 
 ## 1. Accounts and identity
 

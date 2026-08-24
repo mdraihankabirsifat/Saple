@@ -1,5 +1,32 @@
 PROMPT ================================================================
-PROMPT 1. The 14 Saple base tables
+PROMPT 1. Project schema summary: 14 base tables and 4 views
+PROMPT ================================================================
+
+SELECT 'BASE TABLES' AS object_group,
+       14 AS expected_count,
+       COUNT(*) AS actual_count
+FROM user_tables
+WHERE table_name IN (
+    'USERS', 'EMPLOYEES', 'PASSWORD_RESET_TOKENS', 'COMPANIES',
+    'JOB_ROLES', 'BENEFITS', 'COMPANY_BENEFITS',
+    'EMPLOYMENT_VERIFICATIONS', 'SUBMISSIONS', 'SALARY_SUBMISSIONS',
+    'COMPANY_REVIEWS', 'INTERVIEW_EXPERIENCES', 'REPORTS',
+    'MODERATION_ACTIONS'
+)
+UNION ALL
+SELECT 'VIEWS',
+       4,
+       COUNT(*)
+FROM user_views
+WHERE view_name IN (
+    'VW_PUBLIC_COMPANIES',
+    'VW_PUBLIC_APPROVED_REVIEWS',
+    'VW_VERIFIED_SALARY_SUMMARY',
+    'VW_COMMUNITY_SALARY_SUMMARY'
+);
+
+PROMPT ================================================================
+PROMPT 2. All Saple base-table names
 PROMPT ================================================================
 
 SELECT table_name
@@ -23,7 +50,7 @@ WHERE table_name IN (
 ORDER BY table_name;
 
 PROMPT ================================================================
-PROMPT 2. Columns, data types and nullability
+PROMPT 3. Important columns, data types and nullability
 PROMPT ================================================================
 
 SELECT table_name,
@@ -34,7 +61,7 @@ SELECT table_name,
        data_precision,
        data_scale,
        nullable,
-       data_default
+       identity_column
 FROM user_tab_columns
 WHERE table_name IN (
     'USERS', 'EMPLOYEES', 'PASSWORD_RESET_TOKENS', 'COMPANIES',
@@ -46,7 +73,7 @@ WHERE table_name IN (
 ORDER BY table_name, column_id;
 
 PROMPT ================================================================
-PROMPT 3. Primary keys and unique keys
+PROMPT 4. Primary keys and unique keys
 PROMPT ================================================================
 
 SELECT c.table_name,
@@ -73,7 +100,7 @@ GROUP BY c.table_name, c.constraint_name, c.constraint_type, c.status
 ORDER BY c.table_name, key_type, c.constraint_name;
 
 PROMPT ================================================================
-PROMPT 4. Foreign-key relationships
+PROMPT 5. Foreign-key relationships
 PROMPT ================================================================
 
 SELECT child.table_name AS child_table,
@@ -102,7 +129,7 @@ WHERE child.constraint_type = 'R'
 ORDER BY child.table_name, child.constraint_name, child_col.position;
 
 PROMPT ================================================================
-PROMPT 5. Important named check constraints
+PROMPT 6. Important named check constraints
 PROMPT ================================================================
 
 SELECT table_name,
@@ -122,7 +149,7 @@ WHERE constraint_type = 'C'
 ORDER BY table_name, constraint_name;
 
 PROMPT ================================================================
-PROMPT 6. Indexes and their columns
+PROMPT 7. Indexes and their columns
 PROMPT ================================================================
 
 SELECT i.table_name,
@@ -145,49 +172,25 @@ GROUP BY i.table_name, i.index_name, i.uniqueness, i.status
 ORDER BY i.table_name, i.index_name;
 
 PROMPT ================================================================
-PROMPT 7. The 4 Saple views
+PROMPT 8. Migration verification
 PROMPT ================================================================
 
-SELECT view_name,
-       text_length,
-       read_only
-FROM user_views
-WHERE view_name IN (
-    'VW_PUBLIC_COMPANIES',
-    'VW_PUBLIC_APPROVED_REVIEWS',
-    'VW_VERIFIED_SALARY_SUMMARY',
-    'VW_COMMUNITY_SALARY_SUMMARY'
-)
-ORDER BY view_name;
-
-PROMPT ================================================================
-PROMPT 8. Password-reset table presence
-PROMPT ================================================================
-
-SELECT 'PASSWORD_RESET_TOKENS' AS object_name,
+SELECT 'TABLE' AS object_type,
+       'PASSWORD_RESET_TOKENS' AS object_name,
        CASE WHEN COUNT(*) = 1 THEN 'PRESENT' ELSE 'MISSING' END AS result
 FROM user_tables
-WHERE table_name = 'PASSWORD_RESET_TOKENS';
-
-PROMPT ================================================================
-PROMPT 9. Role-scoped verification column presence and nullability
-PROMPT ================================================================
-
-SELECT table_name,
-       column_name,
-       data_type,
-       nullable
+WHERE table_name = 'PASSWORD_RESET_TOKENS'
+UNION ALL
+SELECT 'COLUMN',
+       'EMPLOYMENT_VERIFICATIONS.ROLE_ID',
+       CASE WHEN COUNT(*) = 1 THEN 'PRESENT' ELSE 'MISSING' END
 FROM user_tab_columns
 WHERE table_name = 'EMPLOYMENT_VERIFICATIONS'
-  AND column_name = 'ROLE_ID';
-
-PROMPT ================================================================
-PROMPT 10. Role foreign key and supporting scope index
-PROMPT ================================================================
-
-SELECT 'FOREIGN KEY' AS object_type,
-       'FK_EMP_VERIFY_ROLE' AS object_name,
-       CASE WHEN COUNT(*) = 1 THEN 'PRESENT' ELSE 'MISSING' END AS result
+  AND column_name = 'ROLE_ID'
+UNION ALL
+SELECT 'FOREIGN KEY',
+       'FK_EMP_VERIFY_ROLE',
+       CASE WHEN COUNT(*) = 1 THEN 'PRESENT' ELSE 'MISSING' END
 FROM user_constraints
 WHERE table_name = 'EMPLOYMENT_VERIFICATIONS'
   AND constraint_name = 'FK_EMP_VERIFY_ROLE'
@@ -201,7 +204,7 @@ WHERE table_name = 'EMPLOYMENT_VERIFICATIONS'
   AND index_name = 'IX_EMP_VERIFY_SCOPE_STATUS';
 
 PROMPT ================================================================
-PROMPT 11. Optional row counts for all 14 base tables
+PROMPT 9. Row count of every Saple base table
 PROMPT ================================================================
 
 SELECT 'USERS' AS table_name, COUNT(*) AS row_count FROM users
@@ -221,7 +224,7 @@ UNION ALL SELECT 'MODERATION_ACTIONS', COUNT(*) FROM moderation_actions
 ORDER BY table_name;
 
 PROMPT ================================================================
-PROMPT 12A. Up to 10 verified salary-summary rows
+PROMPT 10. Up to 10 verified salary-summary rows
 PROMPT ================================================================
 
 SELECT company_id,
@@ -239,7 +242,7 @@ ORDER BY company_name, role_name, currency, pay_period
 FETCH FIRST 10 ROWS ONLY;
 
 PROMPT ================================================================
-PROMPT 12B. Up to 10 community salary-summary rows
+PROMPT 11. Up to 10 community salary-summary rows
 PROMPT ================================================================
 
 SELECT company_id,
@@ -255,3 +258,137 @@ SELECT company_id,
 FROM vw_community_salary_summary
 ORDER BY company_name, role_name, currency, pay_period
 FETCH FIRST 10 ROWS ONLY;
+
+PROMPT ================================================================
+PROMPT 12. Up to 10 approved company reviews
+PROMPT ================================================================
+
+SELECT submission_id,
+       company_id,
+       company_name,
+       role_id,
+       role_name,
+       review_title,
+       overall_rating,
+       work_life_balance_rating,
+       career_growth_rating,
+       management_rating,
+       culture_rating,
+       pros,
+       cons,
+       advice_to_management,
+       employment_status,
+       review_date,
+       verification_status,
+       submitted_at
+FROM vw_public_approved_reviews
+ORDER BY submitted_at DESC, submission_id DESC
+FETCH FIRST 10 ROWS ONLY;
+
+PROMPT ================================================================
+PROMPT 13. Up to 10 approved interview experiences
+PROMPT ================================================================
+
+SELECT s.submission_id,
+       c.company_name,
+       jr.role_name,
+       ie.interview_date,
+       ie.difficulty_level,
+       ie.rounds_count,
+       ie.interview_mode,
+       ie.result_status,
+       ie.duration_days,
+       ie.process_description,
+       ie.questions_summary,
+       s.verification_status,
+       s.submitted_at
+FROM submissions s
+JOIN interview_experiences ie
+  ON ie.submission_id = s.submission_id
+JOIN companies c
+  ON c.company_id = s.company_id
+JOIN job_roles jr
+  ON jr.role_id = ie.role_id
+WHERE s.submission_type = 'INTERVIEW'
+  AND s.submission_status = 'APPROVED'
+ORDER BY s.submitted_at DESC, s.submission_id DESC
+FETCH FIRST 10 ROWS ONLY;
+
+PROMPT ================================================================
+PROMPT 14. Up to 10 employment-verification records without private evidence
+PROMPT ================================================================
+
+SELECT ev.verification_id,
+       c.company_name,
+       jr.role_name,
+       ev.verification_method,
+       ev.verification_status,
+       ev.requested_at,
+       ev.reviewed_at,
+       ev.expires_at
+FROM employment_verifications ev
+JOIN companies c
+  ON c.company_id = ev.company_id
+LEFT JOIN job_roles jr
+  ON jr.role_id = ev.role_id
+ORDER BY ev.requested_at DESC, ev.verification_id DESC
+FETCH FIRST 10 ROWS ONLY;
+
+PROMPT ================================================================
+PROMPT 15. Up to 10 moderation-action records without internal notes
+PROMPT ================================================================
+
+SELECT action_id,
+       submission_id,
+       action_type,
+       previous_status,
+       new_status,
+       action_at
+FROM moderation_actions
+ORDER BY action_at DESC, action_id DESC
+FETCH FIRST 10 ROWS ONLY;
+
+PROMPT ================================================================
+PROMPT 16. Final schema health summary
+PROMPT ================================================================
+
+SELECT 'BASE TABLE COUNT' AS health_check,
+       14 AS expected_count,
+       COUNT(*) AS actual_count,
+       CASE WHEN COUNT(*) = 14 THEN 'PASS' ELSE 'CHECK' END AS result
+FROM user_tables
+WHERE table_name IN (
+    'USERS', 'EMPLOYEES', 'PASSWORD_RESET_TOKENS', 'COMPANIES',
+    'JOB_ROLES', 'BENEFITS', 'COMPANY_BENEFITS',
+    'EMPLOYMENT_VERIFICATIONS', 'SUBMISSIONS', 'SALARY_SUBMISSIONS',
+    'COMPANY_REVIEWS', 'INTERVIEW_EXPERIENCES', 'REPORTS',
+    'MODERATION_ACTIONS'
+)
+UNION ALL
+SELECT 'VIEW COUNT',
+       4,
+       COUNT(*),
+       CASE WHEN COUNT(*) = 4 THEN 'PASS' ELSE 'CHECK' END
+FROM user_views
+WHERE view_name IN (
+    'VW_PUBLIC_COMPANIES',
+    'VW_PUBLIC_APPROVED_REVIEWS',
+    'VW_VERIFIED_SALARY_SUMMARY',
+    'VW_COMMUNITY_SALARY_SUMMARY'
+)
+UNION ALL
+SELECT 'INVALID REQUIRED OBJECTS',
+       0,
+       COUNT(*),
+       CASE WHEN COUNT(*) = 0 THEN 'PASS' ELSE 'CHECK' END
+FROM user_objects
+WHERE object_name IN (
+    'USERS', 'EMPLOYEES', 'PASSWORD_RESET_TOKENS', 'COMPANIES',
+    'JOB_ROLES', 'BENEFITS', 'COMPANY_BENEFITS',
+    'EMPLOYMENT_VERIFICATIONS', 'SUBMISSIONS', 'SALARY_SUBMISSIONS',
+    'COMPANY_REVIEWS', 'INTERVIEW_EXPERIENCES', 'REPORTS',
+    'MODERATION_ACTIONS', 'VW_PUBLIC_COMPANIES',
+    'VW_PUBLIC_APPROVED_REVIEWS', 'VW_VERIFIED_SALARY_SUMMARY',
+    'VW_COMMUNITY_SALARY_SUMMARY'
+)
+  AND status = 'INVALID';

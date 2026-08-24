@@ -1,6 +1,6 @@
--- PRESENTATION / FRESH-INSTALL SCHEMA
+-- FINAL SCHEMA FOR PRESENTATION OR A COMPLETELY FRESH DATABASE.
+-- DO NOT EXECUTE THIS FILE ON THE EXISTING POPULATED SAPLE SCHEMA.
 -- This file represents the final Saple schema after migrations 06 and 07.
--- Do not run it inside the existing populated SAPLE schema.
 -- Use the original numbered migrations for an existing database.
 
 -- ================================================================
