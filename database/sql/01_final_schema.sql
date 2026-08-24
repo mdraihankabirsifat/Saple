@@ -1,8 +1,3 @@
--- FINAL CONSOLIDATED SAPLE SCHEMA.
--- Use only when creating a completely fresh database.
--- Do not execute on the existing populated SAPLE schema.
--- Historical migrations remain available in Git history.
-
 -- ================================================================
 -- 1. ACCOUNTS AND IDENTITY
 -- ================================================================
@@ -17,7 +12,7 @@ CREATE TABLE users (
     user_type      VARCHAR2(10) DEFAULT 'NORMAL' NOT NULL,
     account_role   VARCHAR2(10) DEFAULT 'USER' NOT NULL,
     account_status VARCHAR2(15) DEFAULT 'ACTIVE' NOT NULL,
-    created_at     TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
+    created_at     TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL, --more precision than DATE
     updated_at     TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
     CONSTRAINT pk_users PRIMARY KEY (user_id),
     CONSTRAINT uk_users_email UNIQUE (email),
