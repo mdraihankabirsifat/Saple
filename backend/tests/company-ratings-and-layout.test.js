@@ -37,6 +37,7 @@ test('company list and detail queries aggregate approved review ratings without 
     assert.match(sql, /LEFT JOIN[\s\S]*review_stats/i);
     assert.match(sql, /"reviewCount"/);
     assert.match(sql, /"averageRating"/);
+    assert.match(sql, /c\.website AS "website"/i);
   });
 });
 

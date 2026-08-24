@@ -1,5 +1,6 @@
 import { apiRequest, fetchApi } from './api.js';
 import { getToken } from './auth.js';
+import { createCompanyLogo } from './company-logo.js';
 
 const statusMessage = document.querySelector('#details-status');
 const companyContent = document.querySelector('#company-content');
@@ -30,10 +31,9 @@ function renderCompany(company) {
   companyProfile.replaceChildren();
 
   const titleRow = document.createElement('div');
-  const monogram = appendTextElement(titleRow, 'span', company.companyName?.trim().charAt(0).toUpperCase() || 'S', 'company-profile-mark');
+  const logo = createCompanyLogo(company.companyName, company.website);
   const titleCopy = document.createElement('div');
   titleRow.className = 'company-title-row';
-  monogram.setAttribute('aria-hidden', 'true');
   heading.textContent = company.companyName || 'Company';
   heading.classList.remove('sr-only');
   const headingLine = document.createElement('div');
@@ -47,7 +47,7 @@ function renderCompany(company) {
   titleCopy.append(headingLine);
 
   if (company.industry) appendTextElement(titleCopy, 'p', company.industry, 'industry');
-  titleRow.append(titleCopy);
+  titleRow.append(logo, titleCopy);
   companyProfile.append(titleRow);
 
   const metadata = document.createElement('div');
