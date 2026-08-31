@@ -38,6 +38,18 @@ function isAuthenticated() {
   return Boolean(getToken());
 }
 
+async function logout() {
+  let revoked = false;
+  try {
+    const { apiRequest } = await import('./api.js');
+    await apiRequest('/api/auth/logout', { method: 'POST', auth: true });
+    revoked = true;
+  } finally {
+    clearSession();
+  }
+  return revoked;
+}
+
 async function getCurrentUser() {
   if (!getToken()) {
     return null;
@@ -56,5 +68,6 @@ export {
   setStoredUser,
   clearSession,
   isAuthenticated,
-  getCurrentUser
+  getCurrentUser,
+  logout
 };

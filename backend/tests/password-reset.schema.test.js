@@ -22,17 +22,17 @@ test('final Oracle schema enforces hashed single-use expiring reset-token storag
   assert.doesNotMatch(schema, /raw_token|token_value|reset_link/i);
 });
 
-test('reset-token repository uses bound values and explicit transactions', () => {
+test('reset-token repository uses PostgreSQL parameters and explicit transactions', () => {
   const repository = fs.readFileSync(
     path.join(repositoryRoot, 'backend/repositories/password-reset.repository.js'),
     'utf8'
   );
 
-  assert.match(repository, /:tokenHash/);
-  assert.match(repository, /:passwordHash/);
-  assert.match(repository, /NUMTODSINTERVAL\(:expiresMinutes, 'MINUTE'\)/);
+  assert.match(repository, /WHERE prt\.token_hash = \$1/);
+  assert.match(repository, /SET password_hash = \$1/);
+  assert.match(repository, /\$3 \* INTERVAL '1 minute'/);
   assert.match(repository, /FOR UPDATE/);
-  assert.match(repository, /connection\.commit\(\)/);
-  assert.match(repository, /connection\.rollback\(\)/);
+  assert.match(repository, /client\.query\('COMMIT'\)/);
+  assert.match(repository, /client\.query\('ROLLBACK'\)/);
   assert.doesNotMatch(repository, /`[^`]*\$\{tokenHash\}/);
 });

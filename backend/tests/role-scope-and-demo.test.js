@@ -8,10 +8,10 @@ const salaryRepository = require('../repositories/salary.repository');
 
 const projectRoot = path.join(__dirname, '..', '..');
 const read = (relativePath) => fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
-const originalGetConnection = database.getConnection;
+const originalGetClient = database.getClient;
 
 test.afterEach(() => {
-  database.getConnection = originalGetConnection;
+  database.getClient = originalGetClient;
 });
 
 test('final schema directly creates nullable role-scoped verification integrity objects', () => {
@@ -32,25 +32,26 @@ test('all three contribution repositories enforce role ID in the transactional v
     'backend/repositories/interview.repository.js'
   ]) {
     const source = read(filename);
-    assert.match(source, /ev?\.role_id = :roleId/);
+    assert.match(source, /ev?\.role_id = \$3/);
     assert.match(source, /verification_status = 'VERIFIED'/);
-    assert.match(source, /expires_at IS NULL OR .*expires_at > SYSTIMESTAMP/);
-    assert.match(source, /connection\.commit\(\)/);
-    assert.match(source, /connection\.rollback\(\)/);
+    assert.match(source, /expires_at IS NULL OR .*expires_at > CURRENT_TIMESTAMP/);
+    assert.match(source, /client\.query\('COMMIT'\)/);
+    assert.match(source, /client\.query\('ROLLBACK'\)/);
   }
 });
 
 test('a scope becoming invalid before salary insertion rejects and rolls back without a parent row', async () => {
   const calls = [];
-  const state = { commits: 0, rollbacks: 0, closes: 0 };
-  database.getConnection = async () => ({
-    execute: async (sql, binds) => {
-      calls.push({ sql, binds });
+  const state = { commits: 0, rollbacks: 0, releases: 0 };
+  database.getClient = async () => ({
+    query: async (sql, values) => {
+      if (sql === 'BEGIN') return {};
+      if (sql === 'COMMIT') { state.commits += 1; return {}; }
+      if (sql === 'ROLLBACK') { state.rollbacks += 1; return {}; }
+      calls.push({ sql, values });
       return { rows: [] };
     },
-    commit: async () => { state.commits += 1; },
-    rollback: async () => { state.rollbacks += 1; },
-    close: async () => { state.closes += 1; }
+    release: () => { state.releases += 1; }
   });
 
   await assert.rejects(
@@ -63,9 +64,9 @@ test('a scope becoming invalid before salary insertion rejects and rolls back wi
     (error) => error.sapleCode === 'VERIFICATION_REQUIRED'
   );
   assert.equal(calls.length, 1);
-  assert.match(calls[0].sql, /ev\.role_id = :roleId/);
-  assert.deepEqual(calls[0].binds, { userId: 8, companyId: 1, roleId: 12 });
-  assert.deepEqual(state, { commits: 0, rollbacks: 1, closes: 1 });
+  assert.match(calls[0].sql, /ev\.role_id = \$3/);
+  assert.deepEqual(calls[0].values, [8, 1, 12]);
+  assert.deepEqual(state, { commits: 0, rollbacks: 1, releases: 1 });
 });
 
 test('verified-scope frontend controls never load arbitrary contribution roles', () => {

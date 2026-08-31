@@ -34,7 +34,8 @@ test.before(async () => {
   process.env.JWT_SECRET = 'route-test-secret-with-sufficient-local-entropy-only';
   userRepository.findAuthorizationById = async () => ({
     accountRole: 'USER',
-    accountStatus: 'ACTIVE'
+    accountStatus: 'ACTIVE',
+    tokenVersion: 0
   });
   companyRepository.findAllCompanies = async () => [{ companyId: 1, companyName: 'Test Co' }];
   browseRepository.findPublicSalaryInsights = async () => [{ companyId: 1, roleId: 1 }];
@@ -44,7 +45,7 @@ test.before(async () => {
   reviewService.submitReview = async () => ({ submissionId: 11, verificationStatus: 'VERIFIED' });
   interviewService.submitInterview = async () => ({ submissionId: 12, verificationStatus: 'VERIFIED' });
 
-  token = jwt.sign({ userId: 8, role: 'USER' }, process.env.JWT_SECRET, {
+  token = jwt.sign({ userId: 8, role: 'USER', tokenVersion: 0 }, process.env.JWT_SECRET, {
     algorithm: authConfig.JWT_ALGORITHM,
     issuer: authConfig.JWT_ISSUER,
     audience: authConfig.JWT_AUDIENCE,
@@ -159,7 +160,7 @@ test('role-scoped middleware rejects malformed and unauthorized designations bef
 
 test('ADMIN status is independent from exact employee contribution scope', async () => {
   userRepository.findAuthorizationById = async () => ({
-    accountRole: 'ADMIN', accountStatus: 'ACTIVE'
+    accountRole: 'ADMIN', accountStatus: 'ACTIVE', tokenVersion: 0
   });
   try {
     verificationRepository.findActiveVerifiedEmployment = async () => null;
@@ -189,7 +190,7 @@ test('ADMIN status is independent from exact employee contribution scope', async
     assert.equal(otherDesignation.status, 403);
   } finally {
     userRepository.findAuthorizationById = async () => ({
-      accountRole: 'USER', accountStatus: 'ACTIVE'
+      accountRole: 'USER', accountStatus: 'ACTIVE', tokenVersion: 0
     });
   }
 });

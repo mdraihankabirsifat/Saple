@@ -333,6 +333,33 @@ async function main() {
     const publicCountAfter = await workflowTestRepository.countCommunityContributions(1);
     assert.equal(publicCountAfter, publicCountBefore);
 
+    const ownSubmissions = await request(baseUrl, '/api/auth/me/submissions', {
+      token: employeeToken
+    });
+    assert.equal(ownSubmissions.status, 200);
+    assert.ok(ownSubmissions.body.data.submissions.some(
+      (item) => item.submissionId === validSalary.body.data.submissionId
+    ));
+    const ownSubmission = await request(
+      baseUrl,
+      `/api/auth/me/submissions/${validSalary.body.data.submissionId}`,
+      { token: employeeToken }
+    );
+    assert.equal(ownSubmission.status, 200);
+    assert.equal(ownSubmission.body.data.submission.submissionId, validSalary.body.data.submissionId);
+    const anotherUsersSubmission = await request(
+      baseUrl,
+      `/api/auth/me/submissions/${validSalary.body.data.submissionId}`,
+      { token }
+    );
+    assert.equal(anotherUsersSubmission.status, 403);
+    const missingOwnSubmission = await request(
+      baseUrl,
+      '/api/auth/me/submissions/999999999',
+      { token: employeeToken }
+    );
+    assert.equal(missingOwnSubmission.status, 404);
+
     const rejectedVerificationRequest = await request(baseUrl, '/api/companies/2/verifications', {
       method: 'POST', token: employeeToken,
       body: {
@@ -665,16 +692,10 @@ async function main() {
     );
     const failedRawToken = new URL(deliveredResetUrl).searchParams.get('token');
     const failedHash = crypto.createHash('sha256').update(failedRawToken).digest('hex');
-    let resetConnection = await database.getConnection();
-    let resetResult;
-    try {
-      resetResult = await resetConnection.execute(
-        `SELECT COUNT(*) AS "count" FROM password_reset_tokens WHERE token_hash = :tokenHash`,
-        { tokenHash: failedHash }
-      );
-    } finally {
-      await resetConnection.close();
-    }
+    let resetResult = await database.query(
+      'SELECT COUNT(*)::INTEGER AS "count" FROM password_reset_tokens WHERE token_hash = $1',
+      [failedHash]
+    );
     assert.equal(Number(resetResult.rows[0].count), 0);
 
     mailService.sendPasswordResetEmail = async ({ resetUrl }) => { deliveredResetUrl = resetUrl; };
@@ -686,16 +707,11 @@ async function main() {
     const resetToken = new URL(deliveredResetUrl).searchParams.get('token');
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-    resetConnection = await database.getConnection();
-    try {
-      resetResult = await resetConnection.execute(
-        `SELECT token_hash AS "tokenHash", used_at AS "usedAt", revoked_at AS "revokedAt"
-         FROM password_reset_tokens WHERE user_id = :userId AND token_hash = :tokenHash`,
-        { userId, tokenHash: resetTokenHash }
-      );
-    } finally {
-      await resetConnection.close();
-    }
+    resetResult = await database.query(
+      `SELECT token_hash AS "tokenHash", used_at AS "usedAt", revoked_at AS "revokedAt"
+       FROM password_reset_tokens WHERE user_id = $1 AND token_hash = $2`,
+      [userId, resetTokenHash]
+    );
     assert.equal(resetResult.rows[0].tokenHash, resetTokenHash);
     assert.notEqual(resetResult.rows[0].tokenHash, resetToken);
     assert.equal(resetResult.rows[0].usedAt, null);
@@ -726,22 +742,14 @@ async function main() {
 
     const expiredRawToken = crypto.randomBytes(32).toString('base64url');
     const expiredHash = crypto.createHash('sha256').update(expiredRawToken).digest('hex');
-    resetConnection = await database.getConnection();
-    try {
-      await resetConnection.execute(
-        `INSERT INTO password_reset_tokens (user_id, token_hash, created_at, expires_at)
-         VALUES (
-           :userId,
-           :tokenHash,
-           SYSTIMESTAMP - NUMTODSINTERVAL(20, 'MINUTE'),
-           SYSTIMESTAMP - NUMTODSINTERVAL(5, 'MINUTE')
-         )`,
-        { userId, tokenHash: expiredHash }
-      );
-      await resetConnection.commit();
-    } finally {
-      await resetConnection.close();
-    }
+    await database.query(
+      `INSERT INTO password_reset_tokens (user_id, token_hash, created_at, expires_at)
+       VALUES (
+         $1, $2, CURRENT_TIMESTAMP - INTERVAL '20 minutes',
+         CURRENT_TIMESTAMP - INTERVAL '5 minutes'
+       )`,
+      [userId, expiredHash]
+    );
     const expiredReset = await request(baseUrl, '/api/auth/reset-password', {
       method: 'POST',
       body: { token: expiredRawToken, newPassword: 'ExpiredReset123', confirmPassword: 'ExpiredReset123' }
@@ -767,6 +775,16 @@ async function main() {
       method: 'POST', body: { email: normalEmail }
     });
     assert.equal(limitedRecovery.status, 429);
+
+    const logout = await request(baseUrl, '/api/auth/logout', {
+      method: 'POST',
+      token: employeeToken
+    });
+    assert.equal(logout.status, 200);
+    const revokedEmployeeSession = await request(baseUrl, '/api/auth/me', {
+      token: employeeToken
+    });
+    assert.equal(revokedEmployeeSession.status, 401);
 
     console.log('Integration workflow passed: auth/password reset, verification, review/interview publication, reporting, moderation rollback, anonymous display, salary aggregates, and GET regressions.');
   } finally {

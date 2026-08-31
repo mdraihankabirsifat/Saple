@@ -101,7 +101,7 @@ async function register(input = {}) {
 
     return toSafeUser(user);
   } catch (error) {
-    if (error.errorNum === 1) {
+    if (error.code === '23505') {
       throw createHttpError(409, 'An account with this email already exists');
     }
 
@@ -130,7 +130,8 @@ async function login(input = {}) {
   const token = jwt.sign(
     {
       userId: user.userId,
-      role: user.accountRole
+      role: user.accountRole,
+      tokenVersion: user.tokenVersion
     },
     authConfig.getJwtSecret(),
     {
@@ -305,6 +306,41 @@ async function changePassword(userId, input = {}) {
   return { passwordChanged: true };
 }
 
+async function logout(userId) {
+  if (!await userRepository.incrementTokenVersion(userId)) {
+    throw createHttpError(401, 'Authenticated account is unavailable');
+  }
+  return { loggedOut: true };
+}
+
+function withoutOwnerIdentity(submission) {
+  const { ownerUserId, ...safeSubmission } = submission;
+  return safeSubmission;
+}
+
+async function getOwnSubmissions(userId) {
+  const submissions = await userRepository.findSubmissionsByOwner(userId);
+  return submissions.map(withoutOwnerIdentity);
+}
+
+async function getOwnSubmission(userId, submissionIdInput) {
+  const submissionId = Number(submissionIdInput);
+  if (
+    !/^\d+$/.test(String(submissionIdInput))
+    || !Number.isSafeInteger(submissionId)
+    || submissionId <= 0
+  ) {
+    throw createHttpError(400, 'Invalid submission ID');
+  }
+
+  const submission = await userRepository.findPrivateSubmissionById(submissionId);
+  if (!submission) throw createHttpError(404, 'Submission not found');
+  if (submission.ownerUserId !== userId) {
+    throw createHttpError(403, 'You do not have access to this submission');
+  }
+  return withoutOwnerIdentity(submission);
+}
+
 module.exports = {
   register,
   login,
@@ -312,5 +348,8 @@ module.exports = {
   resetPassword,
   getCurrentUser,
   updateProfile,
-  changePassword
+  changePassword,
+  logout,
+  getOwnSubmissions,
+  getOwnSubmission
 };

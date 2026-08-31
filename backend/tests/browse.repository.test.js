@@ -3,21 +3,18 @@ const assert = require('node:assert/strict');
 const database = require('../config/database');
 const browseRepository = require('../repositories/browse.repository');
 
-const originalGetConnection = database.getConnection;
+const originalQuery = database.query;
 
 test.afterEach(() => {
-  database.getConnection = originalGetConnection;
+  database.query = originalQuery;
 });
 
 test('public browse SQL enforces approved-only rows and binds every filter', async () => {
   const calls = [];
-  database.getConnection = async () => ({
-    execute: async (sql, binds) => {
-      calls.push({ sql, binds });
-      return { rows: [] };
-    },
-    close: async () => {}
-  });
+  database.query = async (sql, values) => {
+    calls.push({ sql, values });
+    return { rows: [] };
+  };
 
   await browseRepository.findPublicSalaryInsights({
     companyId: 4,
@@ -42,20 +39,16 @@ test('public browse SQL enforces approved-only rows and binds every filter', asy
   });
 
   assert.equal(calls.length, 3);
-  calls.forEach(({ sql, binds }) => {
+  calls.forEach(({ sql, values }) => {
     assert.match(sql, /s\.submission_status = 'APPROVED'/);
-    assert.match(sql, /:companyId/);
-    assert.match(sql, /:roleId/);
-    assert.match(sql, /:locationPattern/);
-    assert.equal(binds.companyId, 4);
-    assert.equal(binds.roleId, 2);
-    assert.equal(binds.locationPattern, '%DHAKA%');
+    assert.match(sql, /\$1/);
+    assert.match(sql, /\$2/);
+    assert.match(sql, /\$3/);
+    assert.deepEqual(values.slice(0, 3), [4, 2, '%DHAKA%']);
     assert.equal(sql.includes('40000'), false);
     assert.equal(sql.includes('90000'), false);
   });
-  assert.equal(calls[0].binds.minSalary, 40000);
-  assert.equal(calls[0].binds.maxSalary, 90000);
-  assert.equal(calls[1].binds.minRating, 4);
-  assert.equal(calls[2].binds.difficultyLevel, 'MEDIUM');
-  assert.equal(calls[2].binds.interviewMode, 'ONLINE');
+  assert.deepEqual(calls[0].values, [4, 2, '%DHAKA%', 40000, 90000]);
+  assert.deepEqual(calls[1].values, [4, 2, '%DHAKA%', 4]);
+  assert.deepEqual(calls[2].values, [4, 2, '%DHAKA%', 'MEDIUM', 'ONLINE']);
 });

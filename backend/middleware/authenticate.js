@@ -34,6 +34,8 @@ async function authenticate(request, response, next) {
     if (
       !Number.isSafeInteger(payload.userId)
       || payload.userId <= 0
+      || !Number.isSafeInteger(payload.tokenVersion)
+      || payload.tokenVersion < 0
       || !['USER', 'ADMIN'].includes(payload.role)
     ) {
       return sendFailure(response, 401, 'Invalid or expired authentication token');
@@ -42,6 +44,9 @@ async function authenticate(request, response, next) {
     const account = await userRepository.findAuthorizationById(payload.userId);
     if (!account || account.accountStatus !== 'ACTIVE') {
       return sendFailure(response, 401, 'Authenticated account is unavailable');
+    }
+    if (account.tokenVersion !== payload.tokenVersion) {
+      return sendFailure(response, 401, 'Authentication token has been revoked');
     }
 
     request.user = {

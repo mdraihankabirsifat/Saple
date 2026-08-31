@@ -8,21 +8,18 @@ const companyRepository = require('../repositories/company.repository');
 
 const projectRoot = path.join(__dirname, '..', '..');
 const read = (relativePath) => fs.readFileSync(path.join(projectRoot, relativePath), 'utf8');
-const originalGetConnection = database.getConnection;
+const originalQuery = database.query;
 
 test.afterEach(() => {
-  database.getConnection = originalGetConnection;
+  database.query = originalQuery;
 });
 
 test('company list and detail queries aggregate approved review ratings without N+1 requests', async () => {
   const calls = [];
-  database.getConnection = async () => ({
-    execute: async (sql, binds) => {
-      calls.push({ sql, binds });
-      return { rows: [] };
-    },
-    close: async () => {}
-  });
+  database.query = async (sql, values) => {
+    calls.push({ sql, values });
+    return { rows: [] };
+  };
   await companyRepository.findAllCompanies({
     search: '', industry: '', location: '', companySize: '', roleId: null,
     minSalary: null, maxSalary: null, hasSalaryData: false, minRating: null,
@@ -37,7 +34,7 @@ test('company list and detail queries aggregate approved review ratings without 
     assert.match(sql, /LEFT JOIN[\s\S]*review_stats/i);
     assert.match(sql, /"reviewCount"/);
     assert.match(sql, /"averageRating"/);
-    assert.match(sql, /c\.website AS "website"/i);
+    assert.match(sql, /c\.website(?: AS "website")?/i);
   });
 });
 

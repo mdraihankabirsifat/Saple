@@ -170,9 +170,16 @@ async function updateAuthenticationNavigation() {
     signOutButton.className = 'nav-text-link nav-sign-out';
     signOutButton.type = 'button';
     signOutButton.textContent = 'Sign out';
-    signOutButton.addEventListener('click', () => {
-      auth.clearSession();
-      window.location.assign('index.html');
+    signOutButton.addEventListener('click', async () => {
+      signOutButton.disabled = true;
+      signOutButton.textContent = 'Signing out…';
+      try {
+        await auth.logout();
+      } catch (error) {
+        console.warn('Server-side token revocation could not be confirmed.');
+      } finally {
+        window.location.assign('index.html');
+      }
     });
 
     let verificationLink = navigationActions.querySelector('[data-verification-link]');

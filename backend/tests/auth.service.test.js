@@ -13,7 +13,10 @@ const originalMethods = {
   createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee,
   updateFullName: userRepository.updateFullName,
   findPasswordHashById: userRepository.findPasswordHashById,
-  updatePasswordHash: userRepository.updatePasswordHash
+  updatePasswordHash: userRepository.updatePasswordHash,
+  incrementTokenVersion: userRepository.incrementTokenVersion,
+  findSubmissionsByOwner: userRepository.findSubmissionsByOwner,
+  findPrivateSubmissionById: userRepository.findPrivateSubmissionById
 };
 
 test.afterEach(() => {
@@ -89,6 +92,7 @@ test('login returns a minimal signed JWT with existing ADMIN role behavior and s
     userType: 'NORMAL',
     accountRole: 'ADMIN',
     accountStatus: 'ACTIVE',
+    tokenVersion: 4,
     employmentStatus: null
   });
 
@@ -101,6 +105,7 @@ test('login returns a minimal signed JWT with existing ADMIN role behavior and s
   assert.equal(result.user.userId, 8);
   assert.equal(result.user.accountRole, 'ADMIN');
   assert.equal(jwt.decode(result.token).role, 'ADMIN');
+  assert.equal(jwt.decode(result.token).tokenVersion, 4);
   assert.equal('passwordHash' in result.user, false);
 });
 
@@ -219,4 +224,48 @@ test('password change requires the current password and stores only a new hash',
   assert.equal(result.passwordChanged, true);
   assert.notEqual(storedHash, 'changed1');
   assert.equal(await bcrypt.compare('changed1', storedHash), true);
+});
+
+test('logout increments the database token version', async () => {
+  let revokedUserId;
+  userRepository.incrementTokenVersion = async (userId) => {
+    revokedUserId = userId;
+    return { tokenVersion: 5 };
+  };
+
+  const result = await authService.logout(8);
+  assert.equal(revokedUserId, 8);
+  assert.deepEqual(result, { loggedOut: true });
+});
+
+test('owner-scoped submissions hide internal ownership and reject IDOR attempts', async () => {
+  userRepository.findSubmissionsByOwner = async (userId) => [{
+    submissionId: 12,
+    ownerUserId: userId,
+    submissionType: 'SALARY'
+  }];
+  userRepository.findPrivateSubmissionById = async (submissionId) => ({
+    submissionId,
+    ownerUserId: 8,
+    submissionType: 'SALARY'
+  });
+
+  const list = await authService.getOwnSubmissions(8);
+  assert.equal(list[0].submissionId, 12);
+  assert.equal('ownerUserId' in list[0], false);
+
+  const owned = await authService.getOwnSubmission(8, '12');
+  assert.equal(owned.submissionId, 12);
+  assert.equal('ownerUserId' in owned, false);
+
+  await assert.rejects(
+    authService.getOwnSubmission(9, '12'),
+    (error) => error.statusCode === 403
+  );
+
+  userRepository.findPrivateSubmissionById = async () => null;
+  await assert.rejects(
+    authService.getOwnSubmission(8, '999'),
+    (error) => error.statusCode === 404
+  );
 });

@@ -1,76 +1,72 @@
-const oracledb = require('oracledb');
+const { Pool, types } = require('pg');
 
-oracledb.outFormat = oracledb.OUT_FORMAT_OBJECT;
-oracledb.fetchAsString = [oracledb.CLOB];
+// Saple IDs and constrained NUMERIC values remain inside JavaScript's safe range.
+// Parsing them here preserves the existing numeric API response shapes.
+types.setTypeParser(20, (value) => Number(value));
+types.setTypeParser(1700, (value) => Number(value));
 
 let pool;
 
 function readPositiveInteger(name, defaultValue) {
   const rawValue = process.env[name];
 
-  if (rawValue === undefined || rawValue.trim() === '') {
-    return defaultValue;
-  }
+  if (rawValue === undefined || rawValue.trim() === '') return defaultValue;
 
   const value = Number(rawValue);
-
-  if (!Number.isInteger(value) || value < 0) {
-    throw new Error(`${name} must be a non-negative integer`);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error(`${name} must be a positive integer`);
   }
-
   return value;
 }
 
-async function initializePool() {
-  const requiredVariables = ['DB_USER', 'DB_PASSWORD', 'DB_CONNECT_STRING'];
-  const missingVariables = requiredVariables.filter(
-    (name) => !process.env[name] || process.env[name].trim() === ''
-  );
-
-  if (missingVariables.length > 0) {
-    throw new Error(`Missing required database configuration: ${missingVariables.join(', ')}`);
-  }
-
-  const poolMin = readPositiveInteger('DB_POOL_MIN', 1);
-  const poolMax = readPositiveInteger('DB_POOL_MAX', 5);
-  const poolIncrement = readPositiveInteger('DB_POOL_INCREMENT', 1);
-
-  if (poolMax < 1 || poolMin > poolMax || poolIncrement < 1) {
-    throw new Error('Database pool settings are invalid');
-  }
-
-  pool = await oracledb.createPool({
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    connectString: process.env.DB_CONNECT_STRING,
-    poolMin,
-    poolMax,
-    poolIncrement
-  });
-
-  console.log('Saple database pool initialized.');
+function readBoolean(name, defaultValue) {
+  const rawValue = process.env[name];
+  if (rawValue === undefined || rawValue.trim() === '') return defaultValue;
+  if (rawValue === 'true') return true;
+  if (rawValue === 'false') return false;
+  throw new Error(`${name} must be true or false`);
 }
 
-async function getConnection() {
-  if (!pool) {
-    throw new Error('Database pool has not been initialized');
+async function initializePool() {
+  const connectionString = process.env.DATABASE_URL?.trim();
+  if (!connectionString) {
+    throw new Error('Missing required database configuration: DATABASE_URL');
   }
 
-  return pool.getConnection();
+  pool = new Pool({
+    connectionString,
+    max: readPositiveInteger('DB_POOL_MAX', 10),
+    idleTimeoutMillis: readPositiveInteger('DB_IDLE_TIMEOUT_MS', 30000),
+    connectionTimeoutMillis: readPositiveInteger('DB_CONNECTION_TIMEOUT_MS', 10000),
+    ssl: readBoolean('DB_SSL', true) ? { rejectUnauthorized: false } : false
+  });
+
+  pool.on('error', (error) => {
+    console.error('Unexpected idle PostgreSQL client error:', error.message);
+  });
+
+  await pool.query('SELECT 1 AS ok');
+  console.log('Saple PostgreSQL pool initialized.');
+}
+
+function requirePool() {
+  if (!pool) throw new Error('Database pool has not been initialized');
+  return pool;
+}
+
+async function query(text, values = []) {
+  return requirePool().query(text, values);
+}
+
+async function getClient() {
+  return requirePool().connect();
 }
 
 async function closePool() {
-  if (!pool) {
-    return;
-  }
-
-  await pool.close(10);
+  if (!pool) return;
+  await pool.end();
   pool = undefined;
   console.log('Database pool closed.');
 }
 
-module.exports = {
-  initializePool,
-  getConnection,
-  closePool
-};
+module.exports = { initializePool, query, getClient, closePool };

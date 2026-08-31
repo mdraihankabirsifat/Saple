@@ -1,75 +1,65 @@
 const database = require('../config/database');
 
-async function executeQuery(sql, binds = {}) {
-  let connection;
-  try {
-    connection = await database.getConnection();
-    const result = await connection.execute(sql, binds);
-    return result.rows;
-  } finally {
-    if (connection) await connection.close();
-  }
+async function executeQuery(sql, values = []) {
+  const result = await database.query(sql, values);
+  return result.rows;
 }
 
-function addSharedFilters(filters, conditions, binds, aliases) {
+function addSharedFilters(filters, conditions, values, aliases) {
+  const bind = (value) => {
+    values.push(value);
+    return `$${values.length}`;
+  };
   if (filters.companyId !== null) {
-    conditions.push(`${aliases.company}.company_id = :companyId`);
-    binds.companyId = filters.companyId;
+    conditions.push(`${aliases.company}.company_id = ${bind(filters.companyId)}`);
   }
   if (filters.roleId !== null) {
-    conditions.push(`${aliases.detail}.role_id = :roleId`);
-    binds.roleId = filters.roleId;
+    conditions.push(`${aliases.detail}.role_id = ${bind(filters.roleId)}`);
   }
   if (filters.location) {
+    const placeholder = bind(`%${filters.location.toUpperCase()}%`);
     conditions.push(`(
-      UPPER(${aliases.company}.headquarters_city) LIKE :locationPattern
-      OR UPPER(${aliases.company}.country) LIKE :locationPattern
+      UPPER(${aliases.company}.headquarters_city) LIKE ${placeholder}
+      OR UPPER(${aliases.company}.country) LIKE ${placeholder}
     )`);
-    binds.locationPattern = `%${filters.location.toUpperCase()}%`;
   }
+  return bind;
 }
 
 async function findPublicSalaryInsights(filters) {
   const conditions = ["s.submission_status = 'APPROVED'"];
   const having = [];
-  const binds = {};
-  addSharedFilters(filters, conditions, binds, { company: 'c', detail: 'ss' });
-
+  const values = [];
+  const bind = addSharedFilters(filters, conditions, values, { company: 'c', detail: 'ss' });
   const selectedMinimum = filters.salarySource === 'VERIFIED'
-    ? "MIN(CASE WHEN s.verification_status = 'VERIFIED' THEN ss.base_salary END)"
+    ? "MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')"
     : 'MIN(ss.base_salary)';
   const selectedMaximum = filters.salarySource === 'VERIFIED'
-    ? "MAX(CASE WHEN s.verification_status = 'VERIFIED' THEN ss.base_salary END)"
+    ? "MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')"
     : 'MAX(ss.base_salary)';
 
   if (filters.salarySource === 'VERIFIED') {
-    having.push("COUNT(CASE WHEN s.verification_status = 'VERIFIED' THEN 1 END) > 0");
+    having.push("COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED') > 0");
   }
-  if (filters.minSalary !== null) {
-    having.push(`${selectedMaximum} >= :minSalary`);
-    binds.minSalary = filters.minSalary;
-  }
-  if (filters.maxSalary !== null) {
-    having.push(`${selectedMinimum} <= :maxSalary`);
-    binds.maxSalary = filters.maxSalary;
-  }
+  if (filters.minSalary !== null) having.push(`${selectedMaximum} >= ${bind(filters.minSalary)}`);
+  if (filters.maxSalary !== null) having.push(`${selectedMinimum} <= ${bind(filters.maxSalary)}`);
 
   return executeQuery(`
     SELECT c.company_id AS "companyId", c.company_name AS "companyName",
-      c.headquarters_city AS "headquartersCity", c.country AS "country",
+      c.headquarters_city AS "headquartersCity", c.country,
       jr.role_id AS "roleId", jr.role_name AS "roleName",
-      ss.currency AS "currency", ss.pay_period AS "payPeriod",
+      ss.currency, ss.pay_period AS "payPeriod",
       MIN(ss.base_salary) AS "communityMinimumSalary",
       MAX(ss.base_salary) AS "communityMaximumSalary",
       ROUND(AVG(ss.base_salary), 2) AS "communityAverageSalary",
-      COUNT(*) AS "communityContributionCount",
-      MIN(CASE WHEN s.verification_status = 'VERIFIED' THEN ss.base_salary END)
+      COUNT(*)::INTEGER AS "communityContributionCount",
+      MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')
         AS "verifiedMinimumSalary",
-      MAX(CASE WHEN s.verification_status = 'VERIFIED' THEN ss.base_salary END)
+      MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')
         AS "verifiedMaximumSalary",
-      ROUND(AVG(CASE WHEN s.verification_status = 'VERIFIED' THEN ss.base_salary END), 2)
+      ROUND(AVG(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED'), 2)
         AS "verifiedAverageSalary",
-      COUNT(CASE WHEN s.verification_status = 'VERIFIED' THEN 1 END)
+      COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED')::INTEGER
         AS "verifiedContributionCount"
     FROM submissions s
     JOIN salary_submissions ss ON ss.submission_id = s.submission_id
@@ -80,30 +70,25 @@ async function findPublicSalaryInsights(filters) {
       jr.role_id, jr.role_name, ss.currency, ss.pay_period
     ${having.length ? `HAVING ${having.join('\n      AND ')}` : ''}
     ORDER BY c.company_name, jr.role_name, ss.currency, ss.pay_period
-  `, binds);
+  `, values);
 }
 
 async function findPublicReviews(filters) {
-  const conditions = [
-    "s.submission_type = 'REVIEW'",
-    "s.submission_status = 'APPROVED'"
-  ];
-  const binds = {};
-  addSharedFilters(filters, conditions, binds, { company: 'c', detail: 'cr' });
+  const conditions = ["s.submission_type = 'REVIEW'", "s.submission_status = 'APPROVED'"];
+  const values = [];
+  const bind = addSharedFilters(filters, conditions, values, { company: 'c', detail: 'cr' });
   if (filters.minRating !== null) {
-    conditions.push('cr.overall_rating >= :minRating');
-    binds.minRating = filters.minRating;
+    conditions.push(`cr.overall_rating >= ${bind(filters.minRating)}`);
   }
-
   return executeQuery(`
     SELECT s.submission_id AS "submissionId", c.company_id AS "companyId",
       c.company_name AS "companyName", c.headquarters_city AS "headquartersCity",
-      c.country AS "country", cr.role_id AS "roleId", jr.role_name AS "roleName",
+      c.country, cr.role_id AS "roleId", jr.role_name AS "roleName",
       cr.review_title AS "reviewTitle", cr.overall_rating AS "overallRating",
       cr.work_life_balance_rating AS "workLifeBalanceRating",
       cr.career_growth_rating AS "careerGrowthRating",
       cr.management_rating AS "managementRating", cr.culture_rating AS "cultureRating",
-      cr.pros AS "pros", cr.cons AS "cons", cr.advice_to_management AS "adviceToManagement",
+      cr.pros, cr.cons, cr.advice_to_management AS "adviceToManagement",
       cr.employment_status AS "employmentStatus", cr.review_date AS "reviewDate",
       s.verification_status AS "verificationStatus", s.approved_at AS "approvedAt",
       CASE WHEN s.is_anonymous = 0 THEN u.full_name ELSE NULL END AS "authorName"
@@ -114,29 +99,23 @@ async function findPublicReviews(filters) {
     JOIN users u ON u.user_id = s.user_id
     WHERE ${conditions.join('\n      AND ')}
     ORDER BY s.approved_at DESC, s.submission_id DESC
-  `, binds);
+  `, values);
 }
 
 async function findPublicInterviews(filters) {
-  const conditions = [
-    "s.submission_type = 'INTERVIEW'",
-    "s.submission_status = 'APPROVED'"
-  ];
-  const binds = {};
-  addSharedFilters(filters, conditions, binds, { company: 'c', detail: 'ie' });
+  const conditions = ["s.submission_type = 'INTERVIEW'", "s.submission_status = 'APPROVED'"];
+  const values = [];
+  const bind = addSharedFilters(filters, conditions, values, { company: 'c', detail: 'ie' });
   if (filters.difficultyLevel) {
-    conditions.push('ie.difficulty_level = :difficultyLevel');
-    binds.difficultyLevel = filters.difficultyLevel;
+    conditions.push(`ie.difficulty_level = ${bind(filters.difficultyLevel)}`);
   }
   if (filters.interviewMode) {
-    conditions.push('ie.interview_mode = :interviewMode');
-    binds.interviewMode = filters.interviewMode;
+    conditions.push(`ie.interview_mode = ${bind(filters.interviewMode)}`);
   }
-
   return executeQuery(`
     SELECT s.submission_id AS "submissionId", c.company_id AS "companyId",
       c.company_name AS "companyName", c.headquarters_city AS "headquartersCity",
-      c.country AS "country", ie.role_id AS "roleId", jr.role_name AS "roleName",
+      c.country, ie.role_id AS "roleId", jr.role_name AS "roleName",
       ie.interview_date AS "interviewDate", ie.difficulty_level AS "difficultyLevel",
       ie.rounds_count AS "roundsCount", ie.interview_mode AS "interviewMode",
       ie.result_status AS "resultStatus", ie.duration_days AS "durationDays",
@@ -150,11 +129,7 @@ async function findPublicInterviews(filters) {
     JOIN users u ON u.user_id = s.user_id
     WHERE ${conditions.join('\n      AND ')}
     ORDER BY s.approved_at DESC, s.submission_id DESC
-  `, binds);
+  `, values);
 }
 
-module.exports = {
-  findPublicSalaryInsights,
-  findPublicReviews,
-  findPublicInterviews
-};
+module.exports = { findPublicSalaryInsights, findPublicReviews, findPublicInterviews };

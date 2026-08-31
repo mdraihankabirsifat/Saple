@@ -8,9 +8,12 @@ const router = express.Router();
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post('/logout', authenticate, authController.logout);
 router.post('/forgot-password', passwordResetRateLimit, authController.forgotPassword);
 router.post('/reset-password', createPasswordResetRateLimit({ limit: 10 }), authController.resetPassword);
 router.get('/me', authenticate, authController.getCurrentUser);
+router.get('/me/submissions', authenticate, authController.getOwnSubmissions);
+router.get('/me/submissions/:submissionId', authenticate, authController.getOwnSubmission);
 router.patch('/me', authenticate, authController.updateProfile);
 router.patch('/me/password', authenticate, authController.changePassword);
 

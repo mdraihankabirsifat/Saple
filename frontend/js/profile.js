@@ -7,6 +7,8 @@ const profileForm = document.querySelector('#profile-form');
 const passwordForm = document.querySelector('#password-form');
 const profileStatus = document.querySelector('#profile-status');
 const passwordStatus = document.querySelector('#password-status');
+const contributionsStatus = document.querySelector('#contributions-status');
+const contributionsList = document.querySelector('#contributions-list');
 
 function show(element, message, type = '') {
   element.textContent = message;
@@ -39,6 +41,25 @@ function render(user) {
   content.hidden = false;
 }
 
+function renderContributions(submissions) {
+  contributionsList.replaceChildren();
+  if (submissions.length === 0) {
+    contributionsStatus.textContent = 'You have not submitted any contributions yet.';
+    return;
+  }
+  submissions.forEach((submission) => {
+    const item = document.createElement('li');
+    const heading = document.createElement('strong');
+    const metadata = document.createElement('span');
+    heading.textContent = `${submission.submissionType} · ${submission.companyName}`;
+    metadata.textContent = `${submission.submissionStatus} · ${submission.roleName || 'No designation'}`;
+    item.append(heading, metadata);
+    contributionsList.append(item);
+  });
+  contributionsStatus.hidden = true;
+  contributionsList.hidden = false;
+}
+
 profileForm.addEventListener('submit', async (event) => {
   event.preventDefault(); profileStatus.hidden = true;
   if (!profileForm.checkValidity()) { profileForm.reportValidity(); return; }
@@ -64,7 +85,11 @@ passwordForm.addEventListener('submit', async (event) => {
         newPassword: document.querySelector('#new-password').value
       }
     });
-    passwordForm.reset(); show(passwordStatus, 'Password changed successfully.', 'success');
+    passwordForm.reset();
+    show(passwordStatus, 'Password changed. Please sign in again.', 'success');
+    const { clearSession } = await import('./auth.js');
+    clearSession();
+    window.setTimeout(() => window.location.replace('login.html'), 800);
   } catch (error) { show(passwordStatus, error.message, 'error'); }
   finally { button.disabled = false; }
 });
@@ -74,6 +99,10 @@ passwordForm.addEventListener('submit', async (event) => {
     window.location.replace('login.html?returnTo=profile.html');
     return;
   }
-  try { render(await getCurrentUser()); }
+  try {
+    render(await getCurrentUser());
+    const data = await apiRequest('/api/auth/me/submissions', { auth: true });
+    renderContributions(data.submissions);
+  }
   catch (error) { loadStatus.textContent = error.message; loadStatus.classList.add('error'); }
 })();

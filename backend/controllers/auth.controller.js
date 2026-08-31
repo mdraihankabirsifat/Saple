@@ -69,6 +69,36 @@ async function changePassword(request, response, next) {
   }
 }
 
+async function logout(request, response, next) {
+  try {
+    const result = await authService.logout(request.user.userId);
+    return sendSuccess(response, 200, 'Signed out successfully', result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getOwnSubmissions(request, response, next) {
+  try {
+    const submissions = await authService.getOwnSubmissions(request.user.userId);
+    return sendSuccess(response, 200, 'Your submissions retrieved successfully', { submissions });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getOwnSubmission(request, response, next) {
+  try {
+    const submission = await authService.getOwnSubmission(
+      request.user.userId,
+      request.params.submissionId
+    );
+    return sendSuccess(response, 200, 'Your submission retrieved successfully', { submission });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -76,5 +106,8 @@ module.exports = {
   resetPassword,
   getCurrentUser,
   updateProfile,
-  changePassword
+  changePassword,
+  logout,
+  getOwnSubmissions,
+  getOwnSubmission
 };
