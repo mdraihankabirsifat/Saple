@@ -185,8 +185,17 @@ async function findBenefitsByCompanyId(companyId) {
   `, [companyId]);
 }
 
-async function findSalarySummary(viewName, companyId) {
-  // viewName is selected only by the two private callers below, never from request input.
+const SALARY_SUMMARY_VIEWS = Object.freeze({
+  VERIFIED: 'vw_verified_salary_summary',
+  COMMUNITY: 'vw_community_salary_summary'
+});
+
+async function findSalarySummary(source, companyId) {
+  const viewName = SALARY_SUMMARY_VIEWS[source];
+  if (!viewName) {
+    throw new Error('Unsupported salary summary source');
+  }
+
   return executeQuery(`
     SELECT role_id AS "roleId", role_name AS "roleName", currency,
       pay_period AS "payPeriod", minimum_salary AS "minimumSalary",
@@ -199,9 +208,9 @@ async function findSalarySummary(viewName, companyId) {
 }
 
 const findVerifiedSalarySummary = (companyId) =>
-  findSalarySummary('vw_verified_salary_summary', companyId);
+  findSalarySummary('VERIFIED', companyId);
 const findCommunitySalarySummary = (companyId) =>
-  findSalarySummary('vw_community_salary_summary', companyId);
+  findSalarySummary('COMMUNITY', companyId);
 
 module.exports = {
   findAllCompanies, findCompanyFilterOptions, findCompanyById, findBenefitsByCompanyId,

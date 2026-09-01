@@ -1,19 +1,20 @@
 # 🌱 Saple
 
-Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current milestone provides public approved-data browsing, company-specific verified-employee contributions, account/profile management, and administrator review workflows through Oracle, Express, and the existing responsive Vanilla JavaScript interface.
+Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current runtime uses Supabase-hosted PostgreSQL behind Express while preserving the original Oracle 19c implementation as the earlier database milestone.
 
 ## Current Implementation
 
 | Layer | Available now |
 | --- | --- |
-| Oracle database | Tables, constraints, indexes, role-scoped verification, 54 scripted company references, dense guarded synthetic demo content, analytical queries, and synchronized identity generators |
+| Supabase PostgreSQL | Active 14-table/four-view runtime, constraints, indexes, role-scoped verification, 54 scripted company references, dense guarded synthetic demo content, analytical queries, and synchronized identities |
 | Express backend | Public company/salary/review/interview queries, approved-review ratings, account/profile APIs, SMTP password recovery, exact company-role contribution policy, reporting, and transactional ADMIN workflows |
 | Frontend | Responsive sidebar Browse pages, rating headers, email password recovery, verified-scope Contribute forms, profile/security controls, verification requests, reporting, the homepage tree, and ADMIN dashboard |
+| Preserved Oracle milestone | The three consolidated Oracle SQL files remain under `database/sql/` for project history, reference, and the 40% milestone |
 | Optional ML | Standalone minimal moderation-risk prototype implemented; runtime/backend/admin integration remains deferred |
 
 ## Core Features
 
-- Public company, salary, review, and interview directories with approved-only Oracle queries
+- Public company, salary, review, and interview directories with approved-only PostgreSQL queries
 - Company filtering by name, industry, approved-data job role, salary range/source, location, size, rating, and data availability
 - 50 real employer references (35 Bangladesh-focused and 15 international) with documented official sources, plus 55 additional cross-industry roles
 - Job-seeker and current/former-employee registration with BCrypt password hashing and signed JWT sessions
@@ -26,13 +27,15 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - Authenticated reports with duplicate prevention, ADMIN triage, resolution, and dismissal
 - ADMIN submission queue, subtype detail, approve/reject/flag controls, and immutable moderation history
 - Atomic parent/child contribution inserts and atomic `SUBMISSIONS` plus `MODERATION_ACTIONS` writes
+- Database-backed token-version logout and password-change/reset session revocation
+- Owner-only My Contributions API and profile section with explicit IDOR protection
 - Existing responsive design, accessible forms, and no frontend build step
 
 ## Trust, Privacy, and Publication
 
 Every contribution retains its owner internally for authorization and moderation. Public review and interview responses expose an author name only when `is_anonymous = 0`; they never expose user IDs, email addresses, verification evidence, or moderation internals. Only `APPROVED` submissions are public.
 
-Employee verification is scoped to an exact employee, company, and job role. Salary, review, and interview POST requests require an active account and a non-expired `VERIFIED` row matching both submitted IDs; ADMIN status grants no contribution access by itself. The authoritative check and insert use the same Oracle connection and transaction. Legacy verification rows whose role could not be inferred safely remain nullable and cannot authorize new contributions. Evidence metadata is available only to ADMIN endpoints.
+Employee verification is scoped to an exact employee, company, and job role. Salary, review, and interview POST requests require an active account and a non-expired `VERIFIED` row matching both submitted IDs; ADMIN status grants no contribution access by itself. The authoritative check and insert use the same PostgreSQL client and transaction. Legacy verification rows whose role could not be inferred safely remain nullable and cannot authorize new contributions. Evidence metadata is available only to ADMIN endpoints.
 
 Reported approved content can be flagged or rejected using the same locked, audited moderation transaction. This immediately removes it from approved-only public reads. Report resolution remains a separate recorded ADMIN action.
 
@@ -45,37 +48,27 @@ Pending, rejected, and flagged salaries do not affect either public range.
 
 ## Technology Stack
 
-- Oracle Database 19c
-- Node.js, Express 5, and node-oracledb Thin mode
+- Supabase-hosted PostgreSQL
+- Node.js, Express 5, `pg`, and visible raw parameterized SQL
 - BCrypt and JSON Web Tokens
 - Nodemailer SMTP delivery
 - HTML5, CSS, inline SVG, and Vanilla JavaScript ES modules
 
 ## Quick Start
 
-### 1. Prepare Oracle
+### 1. Prepare Supabase PostgreSQL
 
-For a completely fresh database, run these files as the intended schema owner:
-
-```sql
-@database/sql/01_final_schema.sql
-@database/sql/02_final_demo_data.sql
-@database/sql/03_schema_and_data_demo.sql
-```
-
-`database/sql/01_final_schema.sql` creates the complete 14-table, four-view Oracle schema, including password recovery and role-scoped employment verification. Use it only for a fresh database.
-
-`database/sql/02_final_demo_data.sql` loads the consolidated base, reference, and synthetic demonstration data. It also synchronizes identity generators populated with explicit IDs. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview claims are imported as submissions.
-
-`database/sql/03_schema_and_data_demo.sql` is read-only and verifies the completed schema and representative data.
-
-For the existing populated database, run only:
+Create a Supabase project and run these files in its SQL editor:
 
 ```sql
-@database/sql/03_schema_and_data_demo.sql
+database/postgres/01_final_schema_postgres.sql
+database/postgres/02_final_demo_data_postgres.sql
+database/postgres/03_schema_and_data_demo_postgres.sql
 ```
 
-Do not execute the schema or data loader on the populated schema. Historical setup, migrations, seeds, and validation scripts remain recoverable through Git history, including commit `89d9c4aa724e210f84c305647688cf0a6052d2fe`.
+`database/postgres/01_final_schema_postgres.sql` creates the 14-table/four-view PostgreSQL schema, including `token_version`; the data file loads the complete demonstration dataset and synchronizes identities. The third file is read-only validation. Detailed setup is in [docs/supabase_setup.md](docs/supabase_setup.md).
+
+The original Oracle files remain unchanged under `database/sql/`. They are not used by the active backend. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview claims are imported as submissions.
 
 ### 2. Start the backend
 
@@ -85,16 +78,13 @@ From `backend/`:
 npm install
 ```
 
-Copy `.env.example` to `.env`, then set the Oracle connection and a long random `JWT_SECRET`:
+Copy `.env.example` to `.env`, then set the Supabase PostgreSQL connection and a long random `JWT_SECRET`:
 
 ```env
 PORT=3000
-DB_USER=SAPLE
-DB_PASSWORD=your_local_password
-DB_CONNECT_STRING=localhost:1521/ORCLPDB
-DB_POOL_MIN=1
-DB_POOL_MAX=5
-DB_POOL_INCREMENT=1
+DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:6543/postgres
+DB_SSL=true
+DB_POOL_MAX=10
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 SMTP_HOST=smtp.example.com
@@ -127,7 +117,7 @@ Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/api/health`, `/api/health/database` | Public | Process and Oracle health |
+| GET | `/api/health`, `/api/health/database` | Public | Process and Supabase PostgreSQL health |
 | GET | `/api/companies` | Public | Advanced company search and aggregate filters |
 | GET | `/api/companies/filter-options` | Public | Distinct industry/location/size options |
 | GET | `/api/companies/:companyId` | Public | Company profile |
@@ -139,9 +129,12 @@ Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3
 | GET | `/api/reviews` | Public | Approved reviews across companies |
 | GET | `/api/interviews` | Public | Approved interviews across companies |
 | POST | `/api/auth/register`, `/api/auth/login` | Public | Create/authenticate an account |
+| POST | `/api/auth/logout` | Bearer token | Revoke the current JWT through `token_version` |
 | POST | `/api/auth/forgot-password` | Public, rate-limited | Send a temporary reset link through configured SMTP |
 | POST | `/api/auth/reset-password` | Public, rate-limited | Consume a reset token and atomically replace the password |
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
+| GET | `/api/auth/me/submissions` | Bearer token | Owner's private contribution list |
+| GET | `/api/auth/me/submissions/:submissionId` | Owner token | Owner-only contribution detail |
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
 | PATCH | `/api/auth/me/password` | Bearer token | Change password after current-password check |
 | GET | `/api/job-roles` | Public | Controlled job-role choices |
@@ -185,26 +178,26 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 94 tests, including focused coverage for exact company-role authorization, ADMIN independence, transaction rollback, consolidated schema/data structure, safe verified-scope responses, approved rating queries, and responsive filter layouts, alongside all prior authentication, recovery, moderation, privacy, tree, FAQ, and navigation tests.
+The unit suite currently contains 112 tests, including PostgreSQL parameterization, token revocation, ownership/IDOR, exact company-role authorization, ADMIN independence, transaction rollback, schema/data structure, privacy, database health, and frontend behavior.
 
 To test recovery locally, do not rerun any database setup file: configure SMTP and `FRONTEND_URL`, restart the backend, call a clearly unknown address and confirm the exact `404` response, then request a link for an active account. Confirm SMTP acceptance, a 64-character database hash, old-password failure, new-password success, one-time use, expiry handling, and rollback on SMTP failure. Never paste a reset link into logs or issue trackers. Detailed unknown-email responses are an academic requirement; production systems normally use a generic response to reduce account enumeration.
 
 ## Security Notes
 
-- Never commit `.env`, Oracle credentials, JWT secrets, real proof material, or test passwords.
+- Never commit `.env`, Supabase database credentials, JWT secrets, real proof material, or test passwords.
 - Public registration cannot create an administrator.
-- Password hashes and raw Oracle errors are never returned to clients.
-- SQL is contained in repositories and uses bind variables.
-- Protected requests recheck the current account status and role in Oracle; ADMIN routes do not rely on frontend hiding or a stale token role.
+- Password hashes and raw PostgreSQL errors are never returned to clients.
+- SQL is contained in repositories and uses PostgreSQL positional parameters.
+- Protected requests recheck current status, role, and `token_version` in PostgreSQL; ADMIN routes never rely on frontend hiding or stale token roles.
 - Sample identities, companies, content, evidence references, and credentials are fictional.
 - Detailed unknown-email and incorrect-password messages are included for this academic requirement, but they permit account enumeration. Production systems normally use one generic authentication/recovery response.
-- JWT access tokens are stateless. A password reset changes the stored password but cannot immediately revoke an already issued JWT without a token-version or deny-list design.
+- Logout, password change, and password reset increment `USERS.token_version`, so older JWTs fail immediately.
 - The reset limiter is in process memory; production deployment across multiple instances would require a shared rate-limit store.
 
 ## Deferred Scope
 
-Real employment-verification OTP delivery, uploaded document storage, runtime/backend/admin integration of ML scores, recommendation systems, advanced analytics, deployment, production-grade session revocation, shared rate limiting, and email-delivery monitoring are intentionally outside core completion. The standalone minimal ML prototype is implemented as decision support only. It stays inactive for a role below 50 final moderator-reviewed historical records, excludes synthetic demonstration data as trustworthy evidence, and never replaces the human moderator.
+Real employment-verification OTP delivery, uploaded document storage, runtime/backend/admin integration of ML scores, recommendation systems, advanced analytics, deployment, shared rate limiting, and email-delivery monitoring remain outside core completion. The standalone ML prototype is not integrated into the runtime.
 
 ## Presentation Demo
 
-Use the end-to-end sequence in [docs/project_notes.md](docs/project_notes.md): browse a company, register/login, submit and moderate salary data, demonstrate company-specific verification, publish anonymous review/interview contributions, and resolve a report through audited target moderation. The same document lists recommended report screenshots.
+Use [docs/60_percent_demo_checklist.md](docs/60_percent_demo_checklist.md) for the evaluation sequence and [docs/60_percent_compliance.md](docs/60_percent_compliance.md) for requirement-to-file evidence.

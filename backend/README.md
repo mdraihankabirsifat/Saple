@@ -1,14 +1,16 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Oracle 19c. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, exact company-and-designation verified contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
+The Saple backend connects Express 5 to Supabase-hosted PostgreSQL through the `pg` driver and raw SQL. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, exact company-and-designation verified contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
 
 ## Prerequisites and Setup
 
-- Node.js 18 or newer and npm
-- Oracle Database 19c with the Saple scripts applied
-- Network access to the Oracle listener
+See [../docs/supabase_setup.md](../docs/supabase_setup.md) for the full Supabase walkthrough.
 
-node-oracledb runs in Thin mode; Oracle Instant Client is not required.
+- Node.js 18 or newer and npm
+- A Supabase project with the Saple PostgreSQL scripts applied
+- A server-side Supabase PostgreSQL connection string
+
+The browser never connects to Supabase directly; Express remains the security boundary.
 
 ```bash
 npm install
@@ -18,12 +20,11 @@ Copy `.env.example` to `.env` and configure:
 
 ```env
 PORT=3000
-DB_USER=SAPLE
-DB_PASSWORD=your_local_password
-DB_CONNECT_STRING=localhost:1521/ORCLPDB
-DB_POOL_MIN=1
-DB_POOL_MAX=5
-DB_POOL_INCREMENT=1
+DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:6543/postgres
+DB_SSL=true
+DB_POOL_MAX=10
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONNECTION_TIMEOUT_MS=10000
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 SMTP_HOST=smtp.example.com
@@ -38,32 +39,32 @@ PASSWORD_RESET_TOKEN_TTL_MINUTES=15
 
 Install dependencies with `npm install`; Nodemailer is included in `package.json`. For Gmail, enable two-step verification, create an App Password, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and `SMTP_SECURE=false`, then put the account and App Password in `SMTP_USER` and `SMTP_PASS`. Use provider-specific values for another SMTP service. Port `465` normally requires `SMTP_SECURE=true`. Never commit `backend/.env`.
 
-For a completely fresh database, apply the consolidated Oracle files in this order:
+For a completely fresh Supabase project, execute the PostgreSQL files in this order:
 
 ```sql
-@database/sql/01_final_schema.sql
-@database/sql/02_final_demo_data.sql
-@database/sql/03_schema_and_data_demo.sql
+database/postgres/01_final_schema_postgres.sql
+database/postgres/02_final_demo_data_postgres.sql
+database/postgres/03_schema_and_data_demo_postgres.sql
 ```
 
-For the existing populated schema, run only `database/sql/03_schema_and_data_demo.sql`. It is read-only. Do not rerun the consolidated schema or data loader. Historical migrations remain recoverable through Git history.
+Run the third PostgreSQL file at any time for read-only validation. The original Oracle files remain preserved under `database/sql/` as the prior milestone and are not used by the active backend.
 
 ```bash
 npm run dev
 # or: npm start
 ```
 
-The Oracle pool initializes before HTTP listening. The default address is `http://localhost:3000`.
+The PostgreSQL pool initializes before HTTP listening. The default address is `http://localhost:3000`.
 
 ## Endpoint Reference
 
-Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors expose a safe application message, not raw Oracle details.
+Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors expose a safe application message, not raw PostgreSQL details.
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
 | GET | `/` | Public | API welcome |
 | GET | `/api/health` | Public | Express health |
-| GET | `/api/health/database` | Public | Oracle health |
+| GET | `/api/health/database` | Public | Supabase PostgreSQL health |
 | GET | `/api/companies` | Public | Filter companies and approved-data aggregates |
 | GET | `/api/companies/filter-options` | Public | Distinct industry, location, and size choices |
 | GET | `/api/companies/:companyId` | Public | Company detail |
@@ -79,9 +80,12 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/api/job-roles` | Public | Controlled job-role values |
 | POST | `/api/auth/register` | Public | Create a `NORMAL` or `EMPLOYEE` account |
 | POST | `/api/auth/login` | Public | Return JWT and safe user object |
+| POST | `/api/auth/logout` | Bearer token | Increment token version and revoke the current JWT |
 | POST | `/api/auth/forgot-password` | Public, rate-limited | Email a temporary password-reset link |
 | POST | `/api/auth/reset-password` | Public, rate-limited | Atomically consume a token and update the password |
 | GET | `/api/auth/me` | Bearer token | Current safe user profile |
+| GET | `/api/auth/me/submissions` | Bearer token | Current user's private contribution list |
+| GET | `/api/auth/me/submissions/:submissionId` | Owner token | Owner-only private contribution detail |
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
 | PATCH | `/api/auth/me/password` | Bearer token | Change password with current password |
 | POST | `/api/companies/:companyId/salaries` | Verified exact company-role scope | Create a pending salary contribution |
@@ -102,7 +106,7 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 
 Registration lowercases email, rejects duplicates with `409`, hashes passwords with BCrypt (12 rounds), and atomically creates an `EMPLOYEES` child for employee accounts. Employee registration requires `employmentStatus` of `CURRENT` or `FORMER`. Public input never accepts `account_role`.
 
-Login returns a minimal HS256 JWT with `userId` and `role`. Issuer, audience, algorithm, and expiration are verified. Every protected request also reloads the current `account_status` and `account_role`, so suspension, deactivation, or role changes take effect immediately. Login reports unknown email, incorrect password, suspended account, and deactivated account separately as required for this academic project. Use protected endpoints with:
+Login returns a minimal HS256 JWT with `userId`, `role`, and `tokenVersion`. Issuer, audience, algorithm, and expiration are verified. Every protected request reloads current `account_status`, `account_role`, and `token_version`, so suspension, role changes, and revocation take effect immediately.
 
 ```text
 Authorization: Bearer <token>
@@ -112,7 +116,7 @@ Authorization: Bearer <token>
 
 ### Password recovery
 
-`POST /api/auth/forgot-password` normalizes the email, checks account status, generates 32 cryptographically random bytes, stores only their SHA-256 hash, and sends the raw value only inside the temporary email link. Existing active tokens are revoked in the same Oracle transaction. SMTP delivery runs before commit; delivery failure rolls back both the new token and revocation changes and returns a controlled `503`.
+`POST /api/auth/forgot-password` normalizes the email, checks account status, generates 32 cryptographically random bytes, stores only their SHA-256 hash, and sends the raw value only inside the temporary email link. Existing active tokens are revoked in the same PostgreSQL transaction. SMTP delivery runs before commit; delivery failure rolls back both the new token and revocation changes and returns a controlled `503`.
 
 Live diagnosis must start the actual backend and call the route directly. An unknown valid email returns `404`, `success: false`, and exactly `No account was found with that email address.` without inserting a token. For a real account, verify provider acceptance, a 64-character stored hash, one-time reset behavior, and rollback under an invalid SMTP configuration. Required local names are `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, and `FRONTEND_URL`; never print their values. The detailed unknown-email response is an academic choice and should normally be generic in production.
 
@@ -120,15 +124,15 @@ Live diagnosis must start the actual backend and call the route directly. An unk
 
 Both recovery endpoints use an in-memory IP/request-key limiter. This is suitable for the single-process academic deployment; multi-instance production deployment needs a shared rate-limit store. Detailed account-existence responses enable enumeration and are present only because the project requirements explicitly request them. A production service normally returns generic login and recovery messages.
 
-Saple uses stateless access JWTs without refresh-token storage. A successful password reset therefore cannot immediately revoke a JWT that was already issued; production revocation would require a token version or deny-list.
+Saple signs short-lived access JWTs and stores no refresh tokens. Every protected request reloads the current database role, status, and `token_version`. Logout, password change, and password reset increment that version, immediately invalidating older JWTs.
 
 ## Public Browse Queries
 
-The top-level `GET /api/salaries`, `/api/reviews`, and `/api/interviews` endpoints require no token and select approved rows only. They support bound company/role/location filters; salaries add range and `COMMUNITY|VERIFIED` source filters, reviews add minimum rating, and interviews add difficulty/mode. Public company filtering uses Oracle CTEs, `LEFT JOIN`, `EXISTS`, `GROUP BY`, aggregates, and bound predicates for name, industry, role, location, salary source/range, size, rating, and available-data flags.
+The top-level `GET /api/salaries`, `/api/reviews`, and `/api/interviews` endpoints require no token and select approved rows only. They support bound company/role/location filters; salaries add range and `COMMUNITY|VERIFIED` source filters, reviews add minimum rating, and interviews add difficulty/mode. Public company filtering uses PostgreSQL CTEs, `LEFT JOIN`, `EXISTS`, `GROUP BY`, aggregates, and bound predicates for name, industry, role, location, salary source/range, size, rating, and available-data flags.
 
 ## Transactional Contributions
 
-Salary, review, and interview repositories each use one Oracle connection:
+Salary, review, and interview repositories each use one checked-out PostgreSQL client:
 
 ```text
 validate active exact employee + company + role verification + references
@@ -147,7 +151,7 @@ Any error rolls back the whole unit, preventing orphan parents. All values are v
 
 ### Salary input
 
-The salary body contains `roleId`, positive `baseSalary`, optional nonnegative `additionalCompensation`, three-letter uppercase `currency`, `MONTHLY|YEARLY` pay period, experience from `0` to `60`, controlled employment/work-mode values, salary year `2000`–`2100`, and boolean `isAnonymous`.
+The salary body contains `roleId`, positive `baseSalary`, optional nonnegative `additionalCompensation`, three-letter uppercase `currency`, `MONTHLY|YEARLY` pay period, experience from `0` to `60`, controlled employment/work-mode values, salary year `2000`-`2100`, and boolean `isAnonymous`.
 
 ### Review input
 
@@ -155,13 +159,13 @@ Reviews require an active employee account whose profile status matches the supp
 
 ### Interview input
 
-Interview experiences require a company-verified employee. They include a role, nonfuture date, difficulty, `1`–`20` rounds, mode, result, duration `0`–`365` days, process description, optional question summary, and boolean anonymity.
+Interview experiences require a company-verified employee. They include a role, nonfuture date, difficulty, `1`-`20` rounds, mode, result, duration `0`-`365` days, process description, optional question summary, and boolean anonymity.
 
 All three contribution routes and repositories require a matching active, non-expired company verification. Missing verification returns `403`; accepted contributions are marked `VERIFIED` and remain `PENDING` until moderation. A frontend flag is never an authorization source.
 
 ## Employee Verification
 
-Every request includes both `companyId` and `roleId`. ADMIN sees the requested designation before deciding. A verified Data Engineer scope cannot authorize a Sales Manager contribution at the same company, a scope at another company, or any contribution after expiry. `ADMIN` remains independent: a normal ADMIN account has no contribution privilege unless it also owns an active employee scope. The repository repeats the authoritative scope check on the same Oracle connection and transaction used for the parent/subtype insert.
+Every request includes both `companyId` and `roleId`. ADMIN sees the requested designation before deciding. A verified Data Engineer scope cannot authorize a Sales Manager contribution at the same company, a scope at another company, or any contribution after expiry. `ADMIN` remains independent: a normal ADMIN account has no contribution privilege unless it also owns an active employee scope. The repository repeats the authoritative scope check on the same PostgreSQL client and transaction used for the parent/subtype insert.
 
 Legacy rows whose designation could not be assigned unambiguously may remain `ROLE_ID IS NULL`; they are visible for correction but cannot authorize and cannot be approved as a new active scope.
 
@@ -171,7 +175,7 @@ ADMIN users can inspect the private evidence metadata and move a `PENDING` reque
 
 ## Submission Moderation
 
-ADMIN authority comes from the current Oracle `USERS.ACCOUNT_ROLE`, reached only after JWT verification. Missing/invalid authentication or an unavailable account returns `401`; an active non-ADMIN account returns `403`.
+ADMIN authority comes from the current PostgreSQL `USERS.ACCOUNT_ROLE`, reached only after JWT verification. Missing/invalid authentication or an unavailable account returns `401`; an active non-ADMIN account returns `403`.
 
 Allowed transitions are:
 
@@ -195,7 +199,7 @@ Public review/interview repositories explicitly select only approved fields. `au
 
 ## Identity Synchronization
 
-After its base sample section and `COMMIT`, `database/sql/02_final_demo_data.sql` runs `START WITH LIMIT VALUE` for:
+The active PostgreSQL seed uses `setval` with `pg_get_serial_sequence` for:
 
 - `USERS.USER_ID`
 - `EMPLOYEES.EMPLOYEE_ID`
@@ -207,19 +211,19 @@ After its base sample section and `COMMIT`, `database/sql/02_final_demo_data.sql
 - `REPORTS.REPORT_ID`
 - `MODERATION_ACTIONS.ACTION_ID`
 
-This advances each identity beyond explicit sample IDs without changing constraints. Live rollback probes confirmed a generated `VERIFICATION_ID` greater than `4` and `REPORT_ID` greater than `2`.
+This advances every generated identity beyond explicit sample IDs. The preserved Oracle seed still contains its original `START WITH LIMIT VALUE` synchronization.
 
 ## Expanded Reference Data
 
-The reference-data section of `database/sql/02_final_demo_data.sql` uses case-insensitive `MERGE` statements to add 50 company references (35 Bangladesh-focused and 15 international) plus 55 cross-industry job roles without deleting developer data or duplicating names. Company sources are recorded in `database/company_seed_sources.md`. These are employer-directory records only; Saple never imports third-party salary, review, or interview claims as submissions.
+The PostgreSQL seed uses `INSERT ... ON CONFLICT DO NOTHING` to add the same 50 company references (35 Bangladesh-focused and 15 international) and 55 cross-industry roles as the preserved Oracle `MERGE` seed. Company sources are recorded in `database/company_seed_sources.md`.
 
 ## Architecture
 
-Application flow is `routes -> controllers -> services -> repositories`. Services own validation and application rules. All Oracle SQL and transaction boundaries stay in repositories.
+Application flow is `routes -> controllers -> services -> repositories`. Services own validation and application rules. All PostgreSQL SQL and transaction boundaries stay in repositories.
 
 ```text
 backend/
-|-- config/          # Oracle pool and JWT settings
+|-- config/          # PostgreSQL pool and JWT settings
 |-- controllers/     # HTTP translation
 |-- middleware/      # Authentication, ADMIN guard, and errors
 |-- repositories/    # SQL and transaction handling
@@ -238,19 +242,19 @@ npm test
 npm run test:integration
 ```
 
-The 94-test unit suite covers the prior authentication, recovery, moderation, privacy, and accessibility behavior plus exact role-scope authorization, ADMIN independence, invalidation rollback, consolidated schema/data structure, safe scope fields, approved rating aggregates, and responsive browse sidebars.
+The 112-test unit suite covers authentication, token revocation, ownership/IDOR, PostgreSQL parameterization, recovery, moderation, privacy, accessibility, exact role-scope authorization, ADMIN independence, rollback behavior, database health, and schema/data structure.
 
-The live test requires an Oracle database already prepared with the consolidated schema and data, plus `JWT_SECRET`. It verifies generated identity values, detailed login outcomes, reset-token lifecycle, role-scoped verification and contributions, approved-only publication, reporting, moderation, aggregates, authorization, GET regressions, and rollback cases. A real external SMTP account is not used by the automated suite and must be proven manually with local credentials.
+The live test requires a Supabase PostgreSQL database already prepared with the consolidated schema and data, plus `JWT_SECRET`. It verifies generated identity values, detailed login outcomes, reset-token lifecycle, role-scoped verification and contributions, approved-only publication, reporting, moderation, aggregates, authorization, GET regressions, and rollback cases. A real external SMTP account is not used by the automated suite and must be proven manually with local credentials.
 
 Public registration always creates `account_role = 'USER'`. The fictional sample ADMIN hash is intentionally not a usable password. For manual local ADMIN testing, generate and apply a local BCrypt hash without committing it; the integration test instead promotes and deletes a temporary user.
 
 ## Security and Deferred Scope
 
 - Keep `.env`, credentials, JWT secrets, and real verification evidence untracked.
-- SQL uses bind variables; raw Oracle errors are not returned.
+- SQL uses bind variables; raw PostgreSQL errors are not returned.
 - Password hashes are never present in API responses.
-- Raw password-reset tokens exist only in memory and the outgoing link; Oracle stores SHA-256 hashes only.
+- Raw password-reset tokens exist only in memory and the outgoing link; PostgreSQL stores SHA-256 hashes only.
 - ADMIN endpoints require authentication and role authorization.
 - Detailed login/recovery messages allow account enumeration; production systems should use generic responses.
-- Existing stateless JWTs are not immediately revoked by password reset.
+- Logout, password changes, and password resets immediately revoke older JWTs through `token_version`.
 - Real employment-verification OTP/document transport, shared rate limiting, ML, advanced recommendations, and deployment are intentionally outside core completion.

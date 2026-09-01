@@ -110,7 +110,7 @@ The homepage tree is decorative inline SVG with CSS path drawing and staggered l
 
 ## Manual Test Checklist
 
-With Oracle and the backend running:
+With Supabase PostgreSQL configured and the backend running:
 
 1. Register a job seeker and an employee; confirm Current/Former is required only for the employee.
 2. Sign in, refresh, and confirm `/api/auth/me` restores the session and navigation.

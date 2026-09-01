@@ -449,5 +449,28 @@ WHERE s.submission_type = 'SALARY'
 GROUP BY s.company_id, c.company_name, ss.role_id, jr.role_name,
          ss.currency, ss.pay_period;
 
-COMMIT;
+-- Express is the only application database client. Supabase browser roles
+-- receive no direct table/view access when those roles exist.
+DO $saple_security$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+        REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+        REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            REVOKE ALL ON TABLES FROM anon;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            REVOKE ALL ON SEQUENCES FROM anon;
+    END IF;
 
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+        REVOKE ALL ON ALL TABLES IN SCHEMA public FROM authenticated;
+        REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM authenticated;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            REVOKE ALL ON TABLES FROM authenticated;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public
+            REVOKE ALL ON SEQUENCES FROM authenticated;
+    END IF;
+END
+$saple_security$;
+
+COMMIT;

@@ -12,7 +12,7 @@ async function getDatabaseHealth(request, response, next) {
     return sendSuccess(
       response,
       200,
-      'Oracle database connection is healthy',
+      'Supabase PostgreSQL database connection is healthy',
       connectionTest
     );
   } catch (error) {
