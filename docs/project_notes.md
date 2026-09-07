@@ -32,7 +32,7 @@ Public responses must not expose user IDs, email addresses, verification evidenc
 
 ## Current Scope Boundary
 
-Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, reviews, interviews, reporting, rating display, responsive Browse sidebars, ADMIN integration, rollback tests, and documentation are implemented. The current repository exposes one consolidated schema, one consolidated demonstration-data loader, and one read-only verification script. Real SMTP delivery still requires local provider credentials. The standalone ML prototype is implemented, while runtime integration and deployment remain deferred.
+Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, reviews, interviews, reporting, rating display, responsive Browse sidebars, ADMIN integration, rollback tests, and documentation are implemented. The current repository exposes one consolidated schema, one consolidated demonstration-data loader, and one read-only verification script. Real SMTP delivery still requires provider credentials. The standalone ML prototype is implemented while runtime integration remains deferred. Repository-level Render hosting is implemented; creating the cloud service still requires the owner's accounts and secrets.
 
 ## Presentation-Day Demo Sequence
 

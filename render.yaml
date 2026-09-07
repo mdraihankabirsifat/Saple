@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://json.schemastore.org/render.json
+services:
+  - type: web
+    name: saple
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev --prefix backend
+    startCommand: npm start --prefix backend
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_SSL
+        value: "true"
+      - key: DB_POOL_MAX
+        value: "5"
+      - key: DB_IDLE_TIMEOUT_MS
+        value: "30000"
+      - key: DB_CONNECTION_TIMEOUT_MS
+        value: "10000"
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: PASSWORD_RESET_TOKEN_TTL_MINUTES
+        value: "15"

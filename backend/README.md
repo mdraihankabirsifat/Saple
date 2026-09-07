@@ -20,11 +20,12 @@ Copy `.env.example` to `.env` and configure:
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:6543/postgres
+DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:5432/postgres
 DB_SSL=true
-DB_POOL_MAX=10
+DB_POOL_MAX=5
 DB_IDLE_TIMEOUT_MS=30000
 DB_CONNECTION_TIMEOUT_MS=10000
+CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 SMTP_HOST=smtp.example.com
@@ -54,7 +55,7 @@ npm run dev
 # or: npm start
 ```
 
-The PostgreSQL pool initializes before HTTP listening. The default address is `http://localhost:3000`.
+The PostgreSQL pool initializes before HTTP listening. The default local address is `http://localhost:3000`. Express also serves the existing `frontend/` directory for one-origin hosting; see [../docs/deployment.md](../docs/deployment.md).
 
 ## Endpoint Reference
 
@@ -62,7 +63,8 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
-| GET | `/` | Public | API welcome |
+| GET | `/` | Public | Static Saple homepage |
+| GET | `/api` | Public | API welcome |
 | GET | `/api/health` | Public | Express health |
 | GET | `/api/health/database` | Public | Supabase PostgreSQL health |
 | GET | `/api/companies` | Public | Filter companies and approved-data aggregates |
@@ -221,6 +223,8 @@ The PostgreSQL seed uses `INSERT ... ON CONFLICT DO NOTHING` to add the same 50 
 
 Application flow is `routes -> controllers -> services -> repositories`. Services own validation and application rules. All PostgreSQL SQL and transaction boundaries stay in repositories.
 
+All API routes are registered before static frontend hosting, so frontend files cannot shadow an API endpoint. Production uses one Render origin. CORS permits the documented local frontend origins and optional exact `CORS_ORIGINS`; it is never configured as an unrestricted authenticated cross-origin policy. Render enables exactly one trusted proxy hop for meaningful request IPs.
+
 ```text
 backend/
 |-- config/          # PostgreSQL pool and JWT settings
@@ -242,7 +246,7 @@ npm test
 npm run test:integration
 ```
 
-The 112-test unit suite covers authentication, token revocation, ownership/IDOR, PostgreSQL parameterization, recovery, moderation, privacy, accessibility, exact role-scope authorization, ADMIN independence, rollback behavior, database health, and schema/data structure.
+The 119-test unit suite covers authentication, token revocation, ownership/IDOR, PostgreSQL parameterization, recovery, moderation, privacy, accessibility, exact role-scope authorization, ADMIN independence, rollback behavior, database health, hosting configuration, and schema/data structure.
 
 The live test requires a Supabase PostgreSQL database already prepared with the consolidated schema and data, plus `JWT_SECRET`. It verifies generated identity values, detailed login outcomes, reset-token lifecycle, role-scoped verification and contributions, approved-only publication, reporting, moderation, aggregates, authorization, GET regressions, and rollback cases. A real external SMTP account is not used by the automated suite and must be proven manually with local credentials.
 
@@ -257,4 +261,4 @@ Public registration always creates `account_role = 'USER'`. The fictional sample
 - ADMIN endpoints require authentication and role authorization.
 - Detailed login/recovery messages allow account enumeration; production systems should use generic responses.
 - Logout, password changes, and password resets immediately revoke older JWTs through `token_version`.
-- Real employment-verification OTP/document transport, shared rate limiting, ML, advanced recommendations, and deployment are intentionally outside core completion.
+- Real employment-verification OTP/document transport, shared rate limiting, ML, advanced recommendations, and live cloud-resource creation remain outside core completion. Repository-level Render hosting configuration is available in `render.yaml`.

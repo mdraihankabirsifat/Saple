@@ -156,4 +156,4 @@ frontend/
 `-- admin.html
 ```
 
-The standalone optional ML prototype lives outside the frontend; runtime UI integration and deployment remain deferred.
+The standalone optional ML prototype lives outside the frontend and its runtime UI integration remains deferred. For production, Express serves these unchanged files from the same Render origin as the API; see [../docs/deployment.md](../docs/deployment.md).

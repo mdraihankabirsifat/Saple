@@ -37,7 +37,7 @@ async function startServer() {
   try {
     await database.initializePool();
 
-    server = app.listen(port, () => {
+    server = app.listen(port, '0.0.0.0', () => {
       console.log(`Saple API running on port ${port}.`);
     });
   } catch (error) {

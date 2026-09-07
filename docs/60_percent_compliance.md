@@ -18,6 +18,7 @@
 | Role-aware frontend | ADMIN dashboard, verification link, verified-scope contribution controls, role display | `frontend/js/nav.js`, `frontend/profile.html`, `frontend/admin.html` | Compare NORMAL, EMPLOYEE, and ADMIN sessions | Implemented |
 | Error feedback | Forms render safe backend error messages and loading states | `frontend/js/` | Trigger 400/401/403/409 cases | Implemented |
 | Supabase database | `pg.Pool`, SSL option, health check, raw SQL, graceful shutdown | `backend/config/database.js`, `backend/repositories/health.repository.js` | `GET /api/health/database` | Implemented; live credentials required |
+| Public hosting | One Render Node service serves static frontend and API with same-origin requests, restricted CORS, and one-hop proxy trust | `render.yaml`, `backend/app.js`, `backend/config/hosting.js`, `frontend/js/api.js` | Open `/`, `/api`, and health routes on the Render domain | Repository configuration implemented; account deployment required |
 | Transactions | Contributions, moderation, verification/report decisions, and reset flow use explicit transactions | repository transaction files | Run rollback tests and live workflow | Implemented |
 | Approved-only publication | Public SQL filters `submission_status = APPROVED` | browse/review/interview repositories and views | Submit pending, then approve and refresh | Implemented |
 | Salary trust ranges | Verified = APPROVED + VERIFIED; Community = all APPROVED | PostgreSQL views and browse repository | Compare ranges before/after approval | Implemented |

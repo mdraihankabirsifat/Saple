@@ -8,7 +8,7 @@ const originalCreateTransport = nodemailer.createTransport;
 const originalInfo = console.info;
 const environmentNames = [
   'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM',
-  'FRONTEND_URL', 'PASSWORD_RESET_TOKEN_TTL_MINUTES'
+  'FRONTEND_URL', 'PASSWORD_RESET_TOKEN_TTL_MINUTES', 'RENDER', 'RENDER_EXTERNAL_URL'
 ];
 const originalEnvironment = Object.fromEntries(environmentNames.map((name) => [name, process.env[name]]));
 
@@ -51,6 +51,20 @@ test('mail configuration parses typed SMTP and reset values', () => {
   process.env.SMTP_SECURE = 'false';
   process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES = '0';
   assert.throws(() => mailConfig.getPasswordResetTokenTtlMinutes(), /1 to 1440/);
+});
+
+test('password recovery uses Render external URL only when FRONTEND_URL is absent', () => {
+  delete process.env.FRONTEND_URL;
+  process.env.RENDER = 'true';
+  process.env.RENDER_EXTERNAL_URL = 'https://saple-example.onrender.com';
+  assert.equal(mailConfig.getFrontendUrl(), 'https://saple-example.onrender.com/');
+
+  process.env.FRONTEND_URL = 'https://custom.example.test/recovery';
+  assert.equal(mailConfig.getFrontendUrl(), 'https://custom.example.test/recovery/');
+
+  delete process.env.FRONTEND_URL;
+  process.env.RENDER_EXTERNAL_URL = 'https://user:password@saple-example.onrender.com';
+  assert.throws(mailConfig.getFrontendUrl, /without credentials/);
 });
 
 test('mail service sends text and HTML without logging credentials or the raw reset token', async () => {

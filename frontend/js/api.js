@@ -1,6 +1,36 @@
 import { clearSession, getToken } from './auth.js';
 
-const API_BASE_URL = 'http://localhost:3000';
+function normalizeApiBaseUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+
+  try {
+    const url = new URL(value.trim());
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
+    url.hash = '';
+    url.search = '';
+    return url.toString().replace(/\/$/, '');
+  } catch (error) {
+    return null;
+  }
+}
+
+function resolveApiBaseUrl(location = window.location, override = window.SAPLE_API_BASE_URL) {
+  const configuredOverride = normalizeApiBaseUrl(override);
+  if (configuredOverride) return configuredOverride;
+
+  const isSeparateLocalFrontend = (
+    ['localhost', '127.0.0.1'].includes(location.hostname)
+    && location.port === '5500'
+  );
+
+  if (isSeparateLocalFrontend) {
+    return `http://${location.hostname}:3000`;
+  }
+
+  return location.origin;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 async function apiRequest(path, options = {}) {
   const {
@@ -70,5 +100,7 @@ function fetchApi(path) {
 export {
   API_BASE_URL,
   apiRequest,
-  fetchApi
+  fetchApi,
+  normalizeApiBaseUrl,
+  resolveApiBaseUrl
 };

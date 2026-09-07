@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const hostingConfig = require('./config/hosting');
 const healthRoutes = require('./routes/health.routes');
 const companyRoutes = require('./routes/company.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -18,12 +20,17 @@ const errorHandler = require('./middleware/errorHandler');
 const { sendSuccess } = require('./utils/apiResponse');
 
 const app = express();
+const frontendDirectory = path.resolve(__dirname, '..', 'frontend');
 
-app.use(cors());
+if (hostingConfig.isRenderEnvironment()) {
+  app.set('trust proxy', 1);
+}
+
+app.use(cors(hostingConfig.createCorsOptionsDelegate()));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (request, response) => {
+app.get('/api', (request, response) => {
   return sendSuccess(response, 200, 'Welcome to the Saple API');
 });
 
@@ -38,6 +45,8 @@ app.use('/api/companies', interviewRoutes);
 app.use('/api/companies', salaryRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/submissions', reportRoutes);
+
+app.use(express.static(frontendDirectory));
 
 app.use(notFound);
 app.use(errorHandler);

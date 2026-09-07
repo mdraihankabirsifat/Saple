@@ -6,7 +6,7 @@ Saple uses Supabase only as a hosted PostgreSQL database. Authentication remains
 
 1. Create a Supabase project.
 2. In **Project Settings > Database**, copy a PostgreSQL connection string.
-3. Prefer the transaction pooler string for ordinary local development. Replace its password placeholder locally.
+3. For a persistent Render service on an IPv4 network, prefer the Session pooler string when direct connectivity is unsuitable. Copy the exact value from **Connect** and replace its password placeholder privately.
 4. Never paste the connection string into source, documentation, screenshots, or Git.
 
 ## 2. Create the database
@@ -27,11 +27,12 @@ From `backend/`, copy `.env.example` to `.env`. Preserve any existing local SMTP
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://postgres.project_ref:your_private_password@your_pooler_host:6543/postgres
+DATABASE_URL=postgresql://postgres.project_ref:your_private_password@your_pooler_host:5432/postgres
 DB_SSL=true
-DB_POOL_MAX=10
+DB_POOL_MAX=5
 DB_IDLE_TIMEOUT_MS=30000
 DB_CONNECTION_TIMEOUT_MS=10000
+CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 ```
@@ -99,6 +100,10 @@ npm run provision:demo-users
 Public registration always creates `account_role = USER`. Only this internal server-side script provisions the ADMIN demo account. It hashes all passwords with BCrypt and never prints them.
 
 The EMPLOYEE account still needs an approved company-role verification before it can contribute; ADMIN status does not grant that verification.
+
+## Public deployment
+
+For one-origin Render hosting, follow [deployment.md](deployment.md). Do not rerun the schema or seed merely to deploy an already populated Supabase project.
 
 ## 7. Supabase security model
 

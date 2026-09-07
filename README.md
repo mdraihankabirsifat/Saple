@@ -82,9 +82,12 @@ Copy `.env.example` to `.env`, then set the Supabase PostgreSQL connection and a
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:6543/postgres
+DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:5432/postgres
 DB_SSL=true
-DB_POOL_MAX=10
+DB_POOL_MAX=5
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONNECTION_TIMEOUT_MS=10000
+CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 SMTP_HOST=smtp.example.com
@@ -113,10 +116,18 @@ python -m http.server 5500 --directory frontend
 
 Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3000`.
 
+### 4. Public hosting
+
+The repository includes a Render Blueprint that serves this same frontend and the Express API from one HTTPS origin. Hosted frontend requests use their current origin; the separate `localhost:5500` frontend continues to use the backend on port `3000`.
+
+See [docs/deployment.md](docs/deployment.md) for the Supabase connection choice, Render environment variables, deployment steps, verification URLs, optional SMTP configuration, and free-service cold-start behavior.
+
 ## API Overview
 
 | Method | Endpoint | Access | Purpose |
 | --- | --- | --- | --- |
+| GET | `/` | Public | Static Saple homepage |
+| GET | `/api` | Public | API welcome response |
 | GET | `/api/health`, `/api/health/database` | Public | Process and Supabase PostgreSQL health |
 | GET | `/api/companies` | Public | Advanced company search and aggregate filters |
 | GET | `/api/companies/filter-options` | Public | Distinct industry/location/size options |
@@ -178,7 +189,7 @@ npm test
 npm run test:integration
 ```
 
-The unit suite currently contains 112 tests, including PostgreSQL parameterization, token revocation, ownership/IDOR, exact company-role authorization, ADMIN independence, transaction rollback, schema/data structure, privacy, database health, and frontend behavior.
+The unit suite currently contains 119 tests, including PostgreSQL parameterization, token revocation, ownership/IDOR, exact company-role authorization, ADMIN independence, transaction rollback, schema/data structure, privacy, database health, hosting configuration, and frontend behavior.
 
 To test recovery locally, do not rerun any database setup file: configure SMTP and `FRONTEND_URL`, restart the backend, call a clearly unknown address and confirm the exact `404` response, then request a link for an active account. Confirm SMTP acceptance, a 64-character database hash, old-password failure, new-password success, one-time use, expiry handling, and rollback on SMTP failure. Never paste a reset link into logs or issue trackers. Detailed unknown-email responses are an academic requirement; production systems normally use a generic response to reduce account enumeration.
 
@@ -196,7 +207,7 @@ To test recovery locally, do not rerun any database setup file: configure SMTP a
 
 ## Deferred Scope
 
-Real employment-verification OTP delivery, uploaded document storage, runtime/backend/admin integration of ML scores, recommendation systems, advanced analytics, deployment, shared rate limiting, and email-delivery monitoring remain outside core completion. The standalone ML prototype is not integrated into the runtime.
+Real employment-verification OTP delivery, uploaded document storage, runtime/backend/admin integration of ML scores, recommendation systems, advanced analytics, shared rate limiting, live cloud-resource creation, and email-delivery monitoring remain outside core completion. Repository-level Render deployment configuration is implemented, but account-side deployment still requires the owner's Supabase and Render credentials. The standalone ML prototype is not integrated into the runtime.
 
 ## Presentation Demo
 

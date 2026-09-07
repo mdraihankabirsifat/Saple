@@ -24,9 +24,15 @@ function getPasswordResetTokenTtlMinutes() {
 }
 
 function getFrontendUrl() {
-  const rawUrl = process.env.FRONTEND_URL?.trim();
+  const configuredUrl = process.env.FRONTEND_URL?.trim();
+  const renderUrl = process.env.RENDER === 'true'
+    ? process.env.RENDER_EXTERNAL_URL?.trim()
+    : '';
+  const rawUrl = configuredUrl || renderUrl;
 
-  if (!rawUrl) throw new Error('FRONTEND_URL is required for password recovery');
+  if (!rawUrl) {
+    throw new Error('FRONTEND_URL is required for password recovery outside Render');
+  }
 
   let url;
   try {

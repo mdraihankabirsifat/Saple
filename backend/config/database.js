@@ -45,8 +45,14 @@ async function initializePool() {
     console.error('Unexpected idle PostgreSQL client error:', error.message);
   });
 
-  await pool.query('SELECT 1 AS ok');
-  console.log('Saple PostgreSQL pool initialized.');
+  try {
+    await pool.query('SELECT 1 AS ok');
+    console.log('Saple PostgreSQL pool initialized.');
+  } catch (error) {
+    await pool.end();
+    pool = undefined;
+    throw error;
+  }
 }
 
 function requirePool() {
