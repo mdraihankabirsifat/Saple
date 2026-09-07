@@ -47,6 +47,12 @@ export function getCompanyLogoUrl(website) {
   return domain ? `${HUNTER_LOGO_BASE_URL}${encodeURIComponent(domain)}` : null;
 }
 
+export function getCompanyLogoUrls(website) {
+  const domain = normalizeCompanyDomain(website);
+  // Send only the validated public domain, never paths, queries or account data.
+  return domain ? [getCompanyLogoUrl(domain), `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`] : [];
+}
+
 export function getCompanyInitials(companyName) {
   const words = typeof companyName === 'string'
     ? companyName.trim().match(/[\p{L}\p{N}]+/gu) || []
@@ -64,7 +70,7 @@ export function createCompanyLogo(companyName, website, documentRef = globalThis
     : 'Company';
   const container = documentRef.createElement('div');
   const fallback = documentRef.createElement('span');
-  const logoUrl = getCompanyLogoUrl(website);
+  const logoUrls = getCompanyLogoUrls(website);
 
   container.className = 'company-logo';
   fallback.className = 'company-logo-fallback';
@@ -73,14 +79,17 @@ export function createCompanyLogo(companyName, website, documentRef = globalThis
   fallback.setAttribute('aria-label', `${accessibleName} company initials`);
   container.append(fallback);
 
-  if (!logoUrl) return container;
+  if (!logoUrls.length) return container;
 
   const image = documentRef.createElement('img');
   let settled = false;
+  let attempt = 0;
 
   image.className = 'company-logo-image';
   image.alt = `${accessibleName} company logo`;
-  image.loading = 'lazy';
+  // Observe the visible container: a hidden native-lazy image may never load.
+  image.loading = 'eager';
+  image.width = image.height = 88;
   image.decoding = 'async';
   image.referrerPolicy = 'no-referrer';
   image.hidden = true;
@@ -94,13 +103,21 @@ export function createCompanyLogo(companyName, website, documentRef = globalThis
 
   image.addEventListener('error', () => {
     if (settled) return;
+    attempt += 1;
+    if (attempt < logoUrls.length) { image.src = logoUrls[attempt]; return; }
     settled = true;
     image.removeAttribute('src');
     image.hidden = true;
     fallback.hidden = false;
-  }, { once: true });
+  });
 
-  image.src = logoUrl;
   container.prepend(image);
+  if (typeof IntersectionObserver !== 'undefined') {
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      observer.disconnect(); image.src = logoUrls[0];
+    }, { rootMargin: '200px' });
+    observer.observe(container);
+  } else image.src = logoUrls[0];
   return container;
 }

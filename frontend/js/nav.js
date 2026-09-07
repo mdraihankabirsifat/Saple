@@ -2,6 +2,24 @@ const navigationToggle = document.querySelector('[data-nav-toggle]');
 const navigationMenu = document.querySelector('[data-nav-menu]');
 const contributionMenu = document.querySelector('.contribute-menu');
 const authModuleUrl = new URL('./auth.js', document.currentScript.src);
+const themeToggle = document.createElement('button');
+themeToggle.type = 'button';
+themeToggle.className = 'theme-toggle';
+themeToggle.dataset.themeToggle = '';
+themeToggle.setAttribute('aria-label', 'Dark mode');
+themeToggle.setAttribute('aria-pressed', String(document.documentElement.dataset.theme === 'dark'));
+const themeIcon = document.createElement('span');
+themeIcon.className = 'theme-icon';
+themeIcon.setAttribute('aria-hidden', 'true');
+themeToggle.append(themeIcon);
+themeToggle.title = 'Toggle light / dark mode';
+themeToggle.addEventListener('click', () => window.SapleTheme?.toggle());
+document.querySelector('.navbar')?.insertBefore(themeToggle, navigationToggle);
+// Track the actual header height when authenticated actions or mobile menus change.
+const siteHeader = document.querySelector('.site-header');
+if (siteHeader && typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(() => document.documentElement.style.setProperty('--header-height', `${siteHeader.offsetHeight}px`)).observe(siteHeader);
+}
 const publicNavigation = [
   { label: 'Home', destination: 'index.html', pages: ['index.html'] },
   { label: 'Companies', destination: 'companies.html', pages: ['companies.html', 'company-details.html'] },
@@ -127,6 +145,7 @@ document.addEventListener('keydown', (event) => {
     return;
   }
 
+  if (navigationMenu?.classList.contains('is-open')) navigationToggle?.focus();
   closeNavigation();
 
   if (contributionMenu?.open) {

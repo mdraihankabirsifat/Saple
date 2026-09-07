@@ -1,7 +1,7 @@
 .info-hero {
   padding-block: clamp(3.5rem, 8vw, 6rem);
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(135deg, var(--saple-green-50), #ffffff 68%);
+  background: linear-gradient(135deg, var(--saple-green-50), var(--surface) 68%);
 }
 
 .info-hero-content {

@@ -140,7 +140,7 @@ test('shared and information-page styles guard mobile navigation and overflow', 
   const commonCss = readFrontend('css/common.css');
   const informationCss = readFrontend('css/info-pages.css');
 
-  assert.match(commonCss, /overflow-x:\s*hidden/);
+  assert.match(commonCss, /overflow-wrap:\s*anywhere/);
   assert.match(commonCss, /@media \(max-width: 1050px\)[\s\S]*?\.nav-menu\.is-open/);
   assert.match(informationCss, /@media \(max-width: 700px\)/);
   assert.match(informationCss, /grid-template-columns:\s*minmax\(0, 1fr\)/);

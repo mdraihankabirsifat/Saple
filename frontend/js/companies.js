@@ -1,4 +1,7 @@
 import { fetchApi } from './api.js';
+import { createCompanyLogo } from './company-logo.js';
+import { paginate, pageNumbers, sortCompanies, SORT_OPTIONS } from './company-directory.js';
+import { createSalaryRange } from './salary-range.js';
 
 const form = document.querySelector('#company-search-form');
 const fields = {
@@ -27,11 +30,11 @@ function createMetaItem(label, value) {
 }
 
 function salaryText(company) {
-  const verified = fields.salarySource.value === 'VERIFIED';
+  const verified = appliedQuery.get('salarySource') === 'VERIFIED';
   const count = verified ? company.verifiedSalaryCount : company.communitySalaryCount;
   const minimum = verified ? company.verifiedMinimumSalary : company.communityMinimumSalary;
   const maximum = verified ? company.verifiedMaximumSalary : company.communityMaximumSalary;
-  return count ? `${Number(minimum).toLocaleString()} – ${Number(maximum).toLocaleString()} (${count})` : 'No salary data';
+  return Number(count) > 0 ? `${Number(minimum).toLocaleString()} – ${Number(maximum).toLocaleString()} (${count})` : 'No salary data';
 }
 
 function ratingText(company) {
@@ -42,16 +45,14 @@ function ratingText(company) {
 
 function createCompanyCard(company) {
   const article = document.createElement('article');
-  const monogram = document.createElement('span');
+  const logo = createCompanyLogo(company.companyName, company.website);
   const heading = document.createElement('h3');
   const headingLine = document.createElement('div');
   const rating = document.createElement('span');
   const industry = document.createElement('p');
   const metadata = document.createElement('dl');
   const detailsLink = document.createElement('a');
-  article.className = 'company-card'; monogram.className = 'company-monogram';
-  monogram.setAttribute('aria-hidden', 'true');
-  monogram.textContent = company.companyName?.trim().charAt(0).toUpperCase() || 'S';
+  article.className = 'company-card';
   heading.textContent = company.companyName || 'Unnamed company'; metadata.className = 'company-meta';
   headingLine.className = 'company-heading-line'; rating.className = 'company-rating';
   rating.textContent = ratingText(company); headingLine.append(heading, rating);
@@ -59,36 +60,94 @@ function createCompanyCard(company) {
   const location = [company.headquartersCity, company.country].filter(Boolean).join(', ');
   if (location) metadata.append(createMetaItem('Location', location));
   if (company.companySize) metadata.append(createMetaItem('Size', company.companySize));
-  metadata.append(createMetaItem(fields.salarySource.value === 'VERIFIED' ? 'Verified pay' : 'Community pay', salaryText(company)));
+  metadata.append(createMetaItem(appliedQuery.get('salarySource') === 'VERIFIED' ? 'Verified pay' : 'Community pay', salaryText(company)));
   metadata.append(createMetaItem('Interviews', company.interviewCount ? String(company.interviewCount) : 'None yet'));
   detailsLink.className = 'card-link'; detailsLink.href = `company-details.html?id=${encodeURIComponent(company.companyId)}`;
   detailsLink.textContent = 'View company details →';
   detailsLink.setAttribute('aria-label', `View details for ${company.companyName || 'this company'}`);
-  article.append(monogram, headingLine); if (company.industry) article.append(industry);
+  article.append(logo, headingLine); if (company.industry) article.append(industry);
   article.append(metadata, detailsLink); return article;
 }
+
+const sortInput = document.querySelector('#company-sort');
+const heading = document.querySelector('#company-results-heading');
+const summary = document.querySelector('#company-result-summary');
+const pagination = document.querySelector('#company-pagination');
+const range = createSalaryRange(document.querySelector('#salary-range-control'), fields.minSalary, fields.maxSalary);
+let appliedQuery = new URLSearchParams();
+let companies = [];
+let page = 1;
+let requestId = 0;
+let loadedKey = null;
 
 function queryFromForm() {
   const query = new URLSearchParams();
   Object.entries(fields).forEach(([name, input]) => {
-    const value = input.type === 'checkbox' ? (input.checked ? 'true' : '') : input.value.trim();
-    if (value && !(name === 'salarySource' && value === 'COMMUNITY')) query.set(name, value);
+    const value = input.type === 'checkbox' ? (input.checked ? 'true' : '')
+      : name === 'minSalary' ? range.values.min : name === 'maxSalary' ? range.values.max : input.value.trim();
+    if (value !== null && value !== '' && !(name === 'salarySource' && value === 'COMMUNITY')) query.set(name, value);
   });
+  if (sortInput.value !== 'name-asc') query.set('sort', sortInput.value);
   return query;
 }
-
-async function loadCompanies() {
-  companyList.replaceChildren(); companyList.setAttribute('aria-busy', 'true');
-  statusMessage.hidden = false; statusMessage.textContent = 'Loading companies…';
-  statusMessage.classList.remove('error');
-  const query = queryFromForm();
-  window.history.replaceState({}, '', `${window.location.pathname}${query.size ? `?${query}` : ''}`);
+function writeUrl(push = false) {
+  const query = new URLSearchParams(appliedQuery);
+  if (page > 1) query.set('page', page);
+  const url = `${window.location.pathname}${query.size ? `?${query}` : ''}${window.location.hash}`;
+  if (push && url !== `${location.pathname}${location.search}${location.hash}`) history.pushState({}, '', url);
+  else history.replaceState({}, '', url);
+}
+function focusResults() {
+  heading.focus({ preventScroll: true });
+  heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+}
+function renderResults(focus = false) {
+  const result = paginate(sortCompanies(companies, appliedQuery.get('sort') || 'name-asc', appliedQuery.get('salarySource')), page);
+  page = result.page;
+  companyList.replaceChildren(...result.items.map(createCompanyCard));
+  summary.textContent = `Showing ${result.start}–${result.end} of ${result.total} companies.`;
+  statusMessage.hidden = result.total > 0;
+  statusMessage.textContent = result.total ? '' : 'No companies match these filters. Try clearing a filter.';
+  pagination.replaceChildren();
+  function button(label, destination, current = false, disabled = false) {
+    const control = document.createElement('button');
+    control.type = 'button'; control.className = 'button button-secondary'; control.textContent = label;
+    control.disabled = disabled;
+    control.setAttribute('aria-label', /^\d+$/.test(label) ? `Page ${label}` : `${label} page`);
+    if (current) control.setAttribute('aria-current', 'page');
+    control.addEventListener('click', () => { page = destination; writeUrl(true); renderResults(true); });
+    pagination.append(control);
+  }
+  if (result.pages > 1) {
+    button('Previous', page - 1, false, page === 1);
+    pageNumbers(page, result.pages).forEach((number) => {
+      if (typeof number === 'number') button(String(number), number, page === number);
+      else { const gap = document.createElement('span'); gap.textContent = number; gap.setAttribute('aria-hidden', 'true'); pagination.append(gap); }
+    });
+    button('Next', page + 1, false, page === result.pages);
+  }
+  writeUrl();
+  if (focus) focusResults();
+}
+async function loadCompanies(focus = false) {
+  const id = ++requestId;
+  const query = new URLSearchParams(appliedQuery); query.delete('sort');
+  document.querySelector('#active-filter-count').textContent = String([...query.keys()].length);
+  if (loadedKey === query.toString()) {
+    companyList.setAttribute('aria-busy', 'false'); statusMessage.classList.remove('error');
+    renderResults(focus); return;
+  }
+  companyList.replaceChildren(); pagination.replaceChildren(); summary.textContent = '';
+  companyList.setAttribute('aria-busy', 'true');
+  statusMessage.hidden = false; statusMessage.textContent = 'Loading companies...'; statusMessage.classList.remove('error');
   try {
-    const companies = await fetchApi(`/api/companies${query.size ? `?${query}` : ''}`);
-    if (!companies.length) { statusMessage.textContent = 'No companies matched these database filters.'; return; }
-    statusMessage.hidden = true; companies.forEach((item) => companyList.append(createCompanyCard(item)));
-  } catch (error) { statusMessage.textContent = error.message; statusMessage.classList.add('error'); }
-  finally { companyList.setAttribute('aria-busy', 'false'); }
+    const response = await fetchApi(`/api/companies${query.size ? `?${query}` : ''}`);
+    if (id !== requestId) return;
+    companies = response; loadedKey = query.toString(); renderResults(focus);
+  } catch (error) {
+    if (id !== requestId) return;
+    statusMessage.textContent = error.message; statusMessage.classList.add('error');
+  } finally { if (id === requestId) companyList.setAttribute('aria-busy', 'false'); }
 }
 
 async function loadOptions() {
@@ -104,16 +163,45 @@ async function loadOptions() {
 function restoreQuery() {
   const query = new URLSearchParams(window.location.search);
   Object.entries(fields).forEach(([name, input]) => {
-    const value = query.get(name);
-    if (value === null) return;
-    if (input.type === 'checkbox') input.checked = value === 'true';
-    else input.value = value;
+    const saved = query.get(name);
+    if (saved && input.tagName === 'SELECT' && ![...input.options].some((option) => option.value === saved)
+      && !['salarySource', 'minRating'].includes(name)) input.append(new Option(saved, saved));
+    if (input.type === 'checkbox') input.checked = query.get(name) === 'true';
+    else input.value = query.get(name) ?? (name === 'salarySource' ? 'COMMUNITY' : '');
+    input.setCustomValidity('');
   });
+  sortInput.value = SORT_OPTIONS.includes(query.get('sort')) ? query.get('sort') : 'name-asc';
+  range.sync(); appliedQuery = queryFromForm(); page = Number(query.get('page')) || 1;
 }
-
-form.addEventListener('submit', (event) => { event.preventDefault(); loadCompanies(); });
-form.addEventListener('reset', () => setTimeout(loadCompanies));
+const sidebar = document.querySelector('#directory-filters');
+const layout = document.querySelector('.directory-layout');
+const dialog = document.querySelector('#directory-filter-dialog');
+const filterToggle = document.querySelector('#directory-filter-toggle');
+const mobile = matchMedia('(max-width: 1050px)');
+filterToggle.addEventListener('click', () => {
+  dialog.append(sidebar); dialog.showModal(); filterToggle.setAttribute('aria-expanded', 'true');
+  document.body.classList.add('filters-open'); document.querySelector('#close-directory-filters').focus();
+});
+function closeFilters() { if (dialog.open) dialog.close(); }
+dialog.addEventListener('close', () => {
+  layout.prepend(sidebar); filterToggle.setAttribute('aria-expanded', 'false');
+  document.body.classList.remove('filters-open');
+  if (mobile.matches) filterToggle.focus();
+});
+document.querySelector('#close-directory-filters').addEventListener('click', closeFilters);
+mobile.addEventListener('change', () => { if (!mobile.matches) closeFilters(); });
+function applyFilters() {
+  range.sync(); appliedQuery = queryFromForm(); page = 1; writeUrl(true); closeFilters(); loadCompanies(true);
+}
+form.addEventListener('submit', (event) => { event.preventDefault(); applyFilters(); });
+form.addEventListener('reset', () => setTimeout(() => {
+  Object.values(fields).forEach((input) => input.setCustomValidity(''));
+  applyFilters();
+}));
+sortInput.addEventListener('change', () => { if (!mobile.matches && form.checkValidity()) applyFilters(); });
+window.addEventListener('popstate', () => { closeFilters(); restoreQuery(); loadCompanies(true); });
 (async () => {
-  try { await loadOptions(); restoreQuery(); await loadCompanies(); }
-  catch (error) { statusMessage.textContent = error.message; statusMessage.classList.add('error'); }
+  try { await loadOptions(); }
+  catch { /* The directory remains usable if optional filter lookups fail. */ }
+  restoreQuery(); await loadCompanies();
 })();

@@ -14,9 +14,9 @@
   padding: clamp(1.5rem, 5vw, 3rem);
   position: relative;
   overflow: hidden;
-  border: 1px solid #cfe2d8;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, #ffffff 0%, var(--saple-green-50) 100%);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--saple-green-50) 100%);
   box-shadow: var(--shadow-sm);
 }
 
@@ -48,9 +48,9 @@
   z-index: 1;
   overflow: hidden;
   box-sizing: border-box;
-  border: 1px solid #cfe2d8;
+  border: 1px solid var(--border);
   border-radius: 1rem;
-  background: #ffffff;
+  background: var(--surface);
   box-shadow: 0 8px 20px rgba(31, 107, 77, 0.14);
 }
 
@@ -114,10 +114,10 @@
 
 .profile-meta span {
   padding: 0.35rem 0.7rem;
-  border: 1px solid #cfe2d8;
+  border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--saple-green-900);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--surface);
   font-size: 0.88rem;
 }
 
@@ -203,7 +203,7 @@
   background: var(--saple-green-50);
 }
 
-.salary-panel.community { background: #fffbf1; }
+.salary-panel.community { background: var(--warning-surface); }
 
 .salary-panel-heading {
   margin-bottom: 1rem;

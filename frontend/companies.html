@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Browse and search real company records available on Saple.">
   <title>Companies | Saple</title>
+  <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/forms.css">
   <link rel="stylesheet" href="css/companies.css">
@@ -41,7 +42,7 @@
     </nav>
   </header>
 
-  <main class="page-main">
+  <main class="page-main directory-main">
     <section class="container" aria-labelledby="companies-heading">
       <div class="directory-header">
         <div class="page-header">
@@ -49,31 +50,56 @@
           <h1 id="companies-heading">Find your next workplace.</h1>
           <p>Search the live Saple directory by company name, industry, city, or country.</p>
         </div>
+      </div>
+      <button id="directory-filter-toggle" class="button button-secondary" type="button" aria-controls="directory-filters" aria-expanded="false">Filters / Sort <span id="active-filter-count" class="badge">0</span></button>
+      <div class="directory-layout">
+      <aside id="directory-filters" class="directory-sidebar card" aria-labelledby="filters-heading">
+        <div class="filter-heading"><h2 id="filters-heading">Filters &amp; sort</h2><button id="close-directory-filters" class="button button-secondary button-small" type="button">Close</button></div>
         <form id="company-search-form" class="search-form" role="search">
           <div class="directory-filter-grid">
-            <div class="form-group"><label for="company-search">Company name search</label><input id="company-search" name="search" type="search" maxlength="100" placeholder="Name or keyword" autocomplete="off"></div>
+            <div class="form-group"><label for="company-search">Company name</label><input id="company-search" name="search" type="search" maxlength="100" placeholder="Name or keyword" autocomplete="off"></div>
             <div class="form-group"><label for="company-industry">Industry</label><select id="company-industry"><option value="">All industries</option></select></div>
-            <div class="form-group"><label for="company-role">Job role</label><select id="company-role"><option value="">All approved-data roles</option></select></div>
+            <div class="form-group"><label for="company-role">Job role</label><select id="company-role"><option value="">All roles</option></select></div>
             <div class="form-group"><label for="company-location">Location</label><select id="company-location"><option value="">All locations</option></select></div>
-            <div class="form-group"><label for="company-min-salary">Minimum salary</label><input id="company-min-salary" type="number" min="0" step="0.01"></div>
-            <div class="form-group"><label for="company-max-salary">Maximum salary</label><input id="company-max-salary" type="number" min="0" step="0.01"></div>
             <div class="form-group"><label for="company-salary-source">Salary source</label><select id="company-salary-source"><option value="COMMUNITY">Community</option><option value="VERIFIED">Verified</option></select></div>
-            <div class="form-group"><label for="company-size">Company size</label><select id="company-size"><option value="">Any available size</option></select></div>
+            <div class="form-group"><label for="company-size">Company size</label><select id="company-size"><option value="">Any size</option></select></div>
             <div class="form-group"><label for="company-rating">Minimum rating</label><select id="company-rating"><option value="">Any rating</option><option value="3">3+</option><option value="4">4+</option><option value="4.5">4.5+</option></select></div>
           </div>
+          <fieldset class="salary-range-control" id="salary-range-control">
+            <legend>Salary range <span>(BDT)</span></legend>
+            <div class="dual-range-track">
+              <input type="range" min="0" max="500000" value="0" data-range-min aria-label="Minimum salary handle">
+              <input type="range" min="0" max="500000" value="500000" data-range-max aria-label="Maximum salary handle">
+            </div>
+            <div class="salary-value-boxes">
+              <div class="form-group"><label for="company-min-salary">Minimum BDT</label><input id="company-min-salary" type="text" inputmode="decimal" placeholder="No minimum" autocomplete="off"></div>
+              <div class="form-group"><label for="company-max-salary">Maximum BDT</label><input id="company-max-salary" type="text" inputmode="decimal" placeholder="No maximum" autocomplete="off"></div>
+            </div>
+          </fieldset>
+          <div class="form-group directory-sort"><label for="company-sort">Sort by</label><select id="company-sort">
+            <option value="name-asc">Company name A&ndash;Z</option><option value="name-desc">Company name Z&ndash;A</option>
+            <option value="rating-desc">Highest rating</option><option value="rating-asc">Lowest rating</option>
+            <option value="salary-desc">Highest salary</option><option value="salary-asc">Lowest salary</option>
+          </select></div>
           <div class="directory-checks"><label><input id="company-has-salary" type="checkbox"> Has salary data</label><label><input id="company-has-reviews" type="checkbox"> Has reviews</label><label><input id="company-has-interviews" type="checkbox"> Has interviews</label></div>
           <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button id="clear-search" class="button button-secondary" type="reset">Clear</button></div>
         </form>
-      </div>
+      </aside>
+      <section class="directory-results" aria-label="Company results">
       <div class="results-header">
-        <h2 id="company-results-heading">Companies</h2><span class="badge">Live directory</span>
+        <h2 id="company-results-heading" tabindex="-1">Companies</h2><span class="badge">Live directory</span>
       </div>
+      <p id="company-result-summary" class="result-summary" role="status"></p>
       <p id="company-status" class="state-message" role="status" aria-live="polite">Loading companies&hellip;</p>
-      <div id="company-list" class="company-grid" aria-labelledby="company-results-heading" aria-live="polite"
+      <div id="company-list" class="company-grid" aria-labelledby="company-results-heading"
         aria-busy="true"></div>
+      <nav id="company-pagination" class="pagination" aria-label="Company result pages"></nav>
+      </section>
+      </div>
     </section>
   </main>
 
+  <dialog id="directory-filter-dialog" aria-labelledby="filters-heading"></dialog>
   <footer class="site-footer">
     <div class="footer-main container">
       <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html"

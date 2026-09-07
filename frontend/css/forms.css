@@ -114,7 +114,7 @@
   cursor: pointer;
 }
 
-.choice-card:hover { border-color: #9cc6b2; }
+.choice-card:hover { border-color: var(--border-hover); }
 .choice-card:has(input:checked) { border-color: var(--saple-green-600); background: var(--saple-green-50); }
 .choice-card input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--saple-green-700); }
 
@@ -137,7 +137,7 @@
 
 .trust-notice {
   padding: 1rem 1.1rem;
-  border: 1px solid #c9e4d6;
+  border: 1px solid var(--success-border);
   border-radius: var(--radius-md);
   color: var(--saple-green-900);
   background: var(--saple-green-50);

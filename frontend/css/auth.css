@@ -56,3 +56,29 @@
   .auth-intro { max-width: 620px; }
   .auth-card { max-width: none; }
 }
+
+.register-main { padding-block: 1.5rem; }
+.register-main .auth-layout { grid-template-columns: minmax(0, 0.65fr) minmax(0, 1.4fr); gap: 2.5rem; }
+.register-main .auth-card { width: 100%; max-width: none; padding: 1.4rem 1.6rem; }
+.register-main .auth-intro h1 { font-size: clamp(2rem, 3vw, 2.8rem); }
+.register-main .auth-card > p { margin-bottom: 0.7rem; }
+.register-main .auth-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem 1rem; align-items: start; }
+.register-main .form-group { gap: 0.2rem; align-content: start; }
+.register-main .form-group input { min-height: 44px; padding-block: 0.5rem; }
+.register-main .field-error { min-height: 2.35em; font-size: 0.8rem; line-height: 1.15; }
+.register-main .field-error:empty { display: block; }
+.register-main .form-section + .form-section { margin: 0; padding: 0; border: 0; }
+.register-main .form-section legend { font-size: 0.92rem; }
+.register-main .choice-group { gap: 0.4rem; }
+.register-main .choice-card { min-width: 0; padding: 0.5rem; min-height: 44px; font-size: 0.85rem; gap: 0.4rem; }
+.register-main .auth-submit { grid-column: 1 / -1; }
+.register-main .auth-switch { margin: 0.5rem 0 0; }
+.register-main #register-status { margin: 0.5rem 0; padding: 0.45rem 0.7rem; font-size: 0.85rem; }
+@media (max-width: 1050px) {
+  .register-main .auth-layout, .register-main .auth-form { grid-template-columns: minmax(0, 1fr); }
+  .register-main .auth-layout { max-width: 700px; gap: 1.5rem; }
+  .register-main .auth-intro h1 { font-size: 2rem; }
+  .register-main .auth-points { margin-top: 0.75rem; }
+  .register-main .auth-card { padding: 1.25rem; }
+  .register-main .choice-card { font-size: 0.95rem; }
+}

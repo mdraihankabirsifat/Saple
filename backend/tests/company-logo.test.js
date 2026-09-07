@@ -86,7 +86,7 @@ test('missing and invalid websites render clean initials without an image elemen
   assert.equal(invalid.children[0].textContent, 'EL');
 });
 
-test('an unavailable remote logo stays hidden and falls back once without an error loop', async () => {
+test('an unavailable remote logo tries a second provider then remains on initials without an error loop', async () => {
   const { createCompanyLogo } = await helperModule;
   const logo = createCompanyLogo('Unavailable Company', 'no-logo.invalid', fakeDocument);
   const [image, fallback] = logo.children;
@@ -95,10 +95,12 @@ test('an unavailable remote logo stays hidden and falls back once without an err
   assert.equal(image.hidden, true);
   assert.equal(fallback.hidden, false);
   image.emit('error');
+  assert.equal(image.src, 'https://icons.duckduckgo.com/ip3/no-logo.invalid.ico');
+  assert.equal(image.hidden, true);
+  image.emit('error');
   assert.equal(image.src, undefined);
   assert.equal(image.hidden, true);
   assert.equal(fallback.hidden, false);
-  assert.equal(image.listeners.has('error'), false);
   image.emit('error');
   assert.equal(fallback.hidden, false);
 });
@@ -111,11 +113,17 @@ test('an available logo replaces the fallback with accessible responsive image m
   assert.equal(getCompanyInitials('ACI'), 'AC');
   assert.equal(image.src, 'https://logos.hunter.io/aci-bd.com');
   assert.equal(image.alt, 'ACI company logo');
-  assert.equal(image.loading, 'lazy');
+  assert.equal(image.loading, 'eager');
   assert.equal(image.decoding, 'async');
   image.emit('load');
   assert.equal(image.hidden, false);
   assert.equal(fallback.hidden, true);
+});
+
+test('directory cards share the logo helper and lazy loading observes the visible container', () => {
+  assert.match(read('frontend/js/companies.js'), /createCompanyLogo\(company\.companyName, company\.website\)/);
+  assert.match(helperSource, /observer\.observe\(container\)/);
+  assert.match(helperSource, /image\.referrerPolicy = 'no-referrer'/);
 });
 
 test('company details integrates the reusable helper and responsive logo styling', () => {
