@@ -105,7 +105,7 @@ async function updateSubmissionStatusWithAudit(input) {
     }
 
     await client.query(`
-      UPDATE submissions SET submission_status = $1,
+      UPDATE submissions SET submission_status = $1::varchar,
         approved_at = CASE WHEN $1 = 'APPROVED' THEN CURRENT_TIMESTAMP ELSE NULL END,
         updated_at = CURRENT_TIMESTAMP
       WHERE submission_id = $2

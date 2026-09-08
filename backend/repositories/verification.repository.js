@@ -153,7 +153,7 @@ async function decideVerification({ verificationId, reviewerUserId, status, reje
 
     await client.query(`
       UPDATE employment_verifications SET
-        verification_status = $1, reviewed_at = CURRENT_TIMESTAMP, reviewed_by = $2,
+        verification_status = $1::varchar, reviewed_at = CURRENT_TIMESTAMP, reviewed_by = $2,
         expires_at = CASE WHEN $1 = 'VERIFIED'
           THEN CURRENT_TIMESTAMP + INTERVAL '12 months' ELSE NULL END,
         rejection_reason = $3

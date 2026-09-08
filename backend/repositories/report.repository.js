@@ -96,7 +96,7 @@ async function updateReportStatus(input) {
     await client.query(`
       UPDATE reports SET report_status = $1,
         resolved_at = CASE WHEN $2 THEN CURRENT_TIMESTAMP ELSE NULL END,
-        resolved_by = CASE WHEN $2 THEN $3 ELSE NULL END,
+        resolved_by = CASE WHEN $2 THEN $3::bigint ELSE NULL END,
         resolution_note = CASE WHEN $2 THEN $4 ELSE NULL END
       WHERE report_id = $5
     `, [status, terminal, resolverUserId, resolutionNote, reportId]);

@@ -186,6 +186,14 @@ async function cleanupWorkflowUsers(normalEmail, employeeEmail) {
   const client = await database.getClient();
   try {
     await client.query('BEGIN');
+    // Remove the fixture employee's verification before deleting its reviewer.
+    await client.query(`
+      DELETE FROM employment_verifications
+      WHERE employee_id IN (
+        SELECT e.employee_id FROM employees e JOIN users u ON u.user_id = e.user_id
+        WHERE u.email = ANY($1::TEXT[])
+      )
+    `, [[normalEmail, employeeEmail]]);
     await client.query(`
       DELETE FROM submissions
       WHERE user_id IN (SELECT user_id FROM users WHERE email = ANY($1::TEXT[]))

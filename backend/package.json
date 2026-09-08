@@ -8,7 +8,13 @@
     "dev": "nodemon server.js",
     "test": "node --test",
     "test:integration": "node tests/integration.workflow.js",
-    "provision:demo-users": "node scripts/provisionDemoUsers.js"
+    "provision:demo-users": "node scripts/provisionDemoUsers.js",
+    "local:up": "node scripts/localApp.js up",
+    "local:down": "node scripts/localApp.js down",
+    "local:status": "node scripts/localApp.js ps",
+    "local:logs": "node scripts/localApp.js logs",
+    "local:accounts": "node scripts/localApp.js accounts",
+    "local:test": "node scripts/localApp.js test"
   },
   "private": true,
   "dependencies": {
