@@ -2,6 +2,16 @@ const navigationToggle = document.querySelector('[data-nav-toggle]');
 const navigationMenu = document.querySelector('[data-nav-menu]');
 const contributionMenu = document.querySelector('.contribute-menu');
 const authModuleUrl = new URL('./auth.js', document.currentScript.src);
+const offlineModuleUrl = new URL('./offline-cache.js', document.currentScript.src);
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  navigator.serviceWorker.register(new URL('../sw.js', document.currentScript.src).href).catch(() => {});
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data === 'SAPLE_OFFLINE_PAGE') import(offlineModuleUrl.href).then((offline) => offline.showOfflineNotice()).catch(() => {});
+  });
+  navigator.serviceWorker.controller?.postMessage('SAPLE_OFFLINE_STATUS');
+}
+window.addEventListener('offline', () => import(offlineModuleUrl.href).then((offline) => offline.showOfflineNotice()).catch(() => {}));
+if (!navigator.onLine) import(offlineModuleUrl.href).then((offline) => offline.showOfflineNotice()).catch(() => {});
 const themeToggle = document.createElement('button');
 themeToggle.type = 'button';
 themeToggle.className = 'theme-toggle';

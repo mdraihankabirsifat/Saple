@@ -2,6 +2,7 @@ node_modules/
 .env
 *.log
 backend/.env
+.env.local
 ml/.venv/
 ml/**/__pycache__/
 ml/.pytest_cache/

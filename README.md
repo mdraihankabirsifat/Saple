@@ -56,6 +56,31 @@ Pending, rejected, and flagged salaries do not affect either public range.
 
 ## Quick Start
 
+### Local fallback when Render or Supabase is unavailable
+
+Start Docker Desktop with Linux containers, then run from the repository root:
+
+```bash
+npm run local:up --prefix backend
+```
+
+Open **http://localhost:3000**. This starts the same frontend and API with an independent PostgreSQL database containing the existing synthetic demo dataset. The first run downloads Docker images and installs the API dependencies; later starts reuse them. It does not need Supabase credentials or change `backend/.env`.
+
+Local changes persist in the `saple-local` Docker volume. They do **not** sync to Supabase, and existing hosted accounts do not automatically exist locally. Register a local account, or run `npm run local:accounts --prefix backend` to provision the three demo roles. Their emails are `saple.demo.normal@example.invalid`, `saple.demo.employee@example.invalid`, and `saple.demo.admin@example.invalid`; their generated passwords are in the ignored root `.env.local` file under the corresponding `SAPLE_LOCAL_*_PASSWORD` keys. Re-running that command resets those local demo accounts' passwords. Keep `.env.local` private and retain it with the local database.
+
+```bash
+npm run local:status --prefix backend
+npm run local:logs --prefix backend
+npm run local:test --prefix backend
+npm run local:down --prefix backend
+```
+
+`local:down` stops the local app without deleting its database. The API is bound to localhost:3000 and PostgreSQL to localhost:5433. Local password-reset email requires separately configured SMTP; no production mail credentials are copied into the containers.
+
+The hosted site also supports **cached public browsing** after an online visit to this version. A service worker saves the static pages, and successful public API responses are retained for up to seven days, limited to 30 requests and roughly 1.5 million characters per browser origin. If the API times out or returns a server error, matching saved results appear with their timestamp and an offline notice. Use **Try reconnecting** to refresh, or **Clear saved data** to remove saved public responses. New filters or companies that were never loaded may be unavailable offline. Account/admin responses and writes are never cached or queued; explicit access-denied or deleted-resource responses are not replaced with cached content.
+
+This requires one successful online visit after deployment; it cannot recover a site that this browser has never cached. Browser storage can also be cleared or evicted. Cached browsing is not a replica or backup of the hosted database. Docker's initialization behavior is documented in its [PostgreSQL pre-seeding guide](https://docs.docker.com/guides/pre-seeding/); browser offline support follows the [service worker lifecycle](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
+
 ### 1. Prepare Supabase PostgreSQL
 
 Create a Supabase project and run these files in its SQL editor:

@@ -1,0 +1,47 @@
+name: saple-local
+services:
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: saple_local
+      POSTGRES_USER: saple_local
+      POSTGRES_PASSWORD: ${SAPLE_LOCAL_DB_PASSWORD:?Run npm run local:up --prefix backend}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/postgres/01_final_schema_postgres.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/postgres/02_final_demo_data_postgres.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U saple_local -d saple_local"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 10s
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: "3000"
+      DATABASE_URL: postgresql://saple_local:${SAPLE_LOCAL_DB_PASSWORD}@database:5432/saple_local
+      DB_SSL: "false"
+      DB_POOL_MAX: "5"
+      JWT_SECRET: ${SAPLE_LOCAL_JWT_SECRET:?Run npm run local:up --prefix backend}
+      FRONTEND_URL: http://localhost:3000/
+      DEMO_NORMAL_PASSWORD: ${SAPLE_LOCAL_NORMAL_PASSWORD}
+      DEMO_EMPLOYEE_PASSWORD: ${SAPLE_LOCAL_EMPLOYEE_PASSWORD}
+      DEMO_ADMIN_PASSWORD: ${SAPLE_LOCAL_ADMIN_PASSWORD}
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/database').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+volumes:
+  postgres_data:

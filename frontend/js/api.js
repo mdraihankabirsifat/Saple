@@ -1,4 +1,5 @@
 import { clearSession, getToken } from './auth.js';
+import { isCacheable, cacheKey, savePublicData, readPublicData, removePublicData, showOfflineNotice, markLive } from './offline-cache.js';
 
 function normalizeApiBaseUrl(value) {
   if (typeof value !== 'string' || !value.trim()) return null;
@@ -61,15 +62,35 @@ async function apiRequest(path, options = {}) {
   }
 
   let response;
+  const cacheable = isCacheable(path, method, auth, customHeaders);
+  const key = cacheable ? cacheKey(API_BASE_URL, path) : null;
+  const controller = cacheable ? new AbortController() : null;
+  const timeout = controller ? setTimeout(() => controller.abort(), 8000) : null;
+  function offlineResult() {
+    if (!cacheable) return null;
+    const saved = readPublicData(key);
+    showOfflineNotice(key, saved?.savedAt);
+    return saved;
+  }
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       headers,
+      ...(controller ? { signal: controller.signal } : {}),
       ...(body !== undefined ? { body: JSON.stringify(body) } : {})
     });
   } catch (error) {
+    const saved = offlineResult();
+    if (saved) return saved.data;
     throw new Error('Unable to connect to the Saple API. Make sure the backend is running.');
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+
+  if (response.status >= 500) {
+    const saved = offlineResult();
+    if (saved) return saved.data;
   }
 
   let responseBody;
@@ -77,10 +98,16 @@ async function apiRequest(path, options = {}) {
   try {
     responseBody = await response.json();
   } catch (error) {
+    if (response.ok) {
+      const saved = offlineResult();
+      if (saved) return saved.data;
+    }
     throw new Error('The Saple API returned an invalid response.');
   }
 
   if (!response.ok || !responseBody.success) {
+    // An explicit deletion or access denial must never revive stale content.
+    if (cacheable && [401, 403, 404, 410].includes(response.status)) removePublicData(key);
     if (auth && response.status === 401) {
       clearSession();
     }
@@ -90,6 +117,7 @@ async function apiRequest(path, options = {}) {
     throw apiError;
   }
 
+  if (cacheable) { savePublicData(key, responseBody.data); markLive(key); }
   return responseBody.data;
 }
 

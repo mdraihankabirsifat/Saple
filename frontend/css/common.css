@@ -826,6 +826,8 @@ main {
 }
 
 /* Shared hierarchy and responsive safeguards for all public and account pages. */
+.offline-notice { width: min(1160px, calc(100% - 1.5rem)); margin: 0 auto 1.25rem; padding: 0.85rem 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; border: 1px solid var(--warning); border-radius: var(--radius-sm); background: var(--warning-surface); color: var(--warning); }
+.offline-notice p { flex: 1 1 320px; margin: 0; }
 [hidden] { display: none !important; }
 body { overflow-wrap: anywhere; }
 main, section, article, form, .nav-menu > *, .auth-layout > * { min-width: 0; }
