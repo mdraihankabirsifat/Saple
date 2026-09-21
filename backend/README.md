@@ -255,10 +255,11 @@ Public registration always creates `account_role = 'USER'`. The fictional sample
 ## Security and Deferred Scope
 
 - Keep `.env`, credentials, JWT secrets, and real verification evidence untracked.
-- SQL uses bind variables; raw PostgreSQL errors are not returned.
+- SQL uses parameterized queries (`$1`, `$2`, …); raw PostgreSQL errors are not returned.
 - Password hashes are never present in API responses.
 - Raw password-reset tokens exist only in memory and the outgoing link; PostgreSQL stores SHA-256 hashes only.
 - ADMIN endpoints require authentication and role authorization.
-- Detailed login/recovery messages allow account enumeration; production systems should use generic responses.
+- Password recovery returns one generic answer for every address. Sign-in still distinguishes an unknown address from a wrong password, a deliberate usability choice that does reveal whether an address is registered.
 - Logout, password changes, and password resets immediately revoke older JWTs through `token_version`.
-- Real employment-verification OTP/document transport, shared rate limiting, ML, advanced recommendations, and live cloud-resource creation remain outside core completion. Repository-level Render hosting configuration is available in `render.yaml`.
+- Real employment-verification OTP/document transport, shared rate limiting, ML runtime integration, advanced recommendations, and live cloud-resource creation remain outside core completion. `render.yaml` defines a new `saple-academic` service; read `docs/security-and-safe-deployment.md` before using it.
+- Security headers, rate limits, the Saple Guide, email diagnostics and the representative/jobs API are documented in the root `README.md` and `docs/`.

@@ -1,239 +1,476 @@
 # 🌱 Saple
 
-Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform built as a BUET CSE database project. The current runtime uses Supabase-hosted PostgreSQL behind Express while preserving the original Oracle 19c implementation as the earlier database milestone.
+**Saple is an independent BUET CSE academic project for company and career
+insights.** It brings together company profiles, salary ranges, moderated
+workplace reviews, interview experiences and job postings — and shows how
+trustworthy each piece of information is, and why.
 
-## Current Implementation
+Saple is not affiliated with, endorsed by, or an official login or careers
+service for any company it lists.
 
-| Layer | Available now |
-| --- | --- |
-| Supabase PostgreSQL | Active 14-table/four-view runtime, constraints, indexes, role-scoped verification, 54 scripted company references, dense guarded synthetic demo content, analytical queries, and synchronized identities |
-| Express backend | Public company/salary/review/interview queries, approved-review ratings, account/profile APIs, SMTP password recovery, exact company-role contribution policy, reporting, and transactional ADMIN workflows |
-| Frontend | Responsive sidebar Browse pages, rating headers, email password recovery, verified-scope Contribute forms, profile/security controls, verification requests, reporting, the homepage tree, and ADMIN dashboard |
-| Preserved Oracle milestone | The three consolidated Oracle SQL files remain under `database/sql/` for project history, reference, and the 40% milestone |
-| Optional ML | Standalone minimal moderation-risk prototype implemented; runtime/backend/admin integration remains deferred |
+> **Status.** The code, schema, migrations, tests and documentation are
+> complete for this phase. The site is **not currently deployed**: the previous
+> Render service was flagged by Google Web Risk, suspended and deleted.
+> Redeployment, email delivery, the AI provider and the Google review are owner
+> actions; see [What still needs your accounts](#what-still-needs-your-accounts).
 
-## Core Features
+---
 
-- Public company, salary, review, and interview directories with approved-only PostgreSQL queries
-- Company filtering by name, industry, approved-data job role, salary range/source, location, size, rating, and data availability
-- 50 real employer references (35 Bangladesh-focused and 15 international) with documented official sources, plus 55 additional cross-industry roles
-- Job-seeker and current/former-employee registration with BCrypt password hashing and signed JWT sessions
-- Exact company-and-designation verified-employee-only salary, review, and interview submissions, enforced by middleware and the write transaction
-- Safe profile name editing, read-only email, and current-password-protected password changes
-- Temporary single-use email password resets with SHA-256 token storage and BCrypt password replacement
-- Company-and-designation employee verification requests using company email metadata or a safe document reference
-- ADMIN review of pending verification requests
-- Approved-only public reviews and interview experiences with server-enforced anonymous display
-- Authenticated reports with duplicate prevention, ADMIN triage, resolution, and dismissal
-- ADMIN submission queue, subtype detail, approve/reject/flag controls, and immutable moderation history
-- Atomic parent/child contribution inserts and atomic `SUBMISSIONS` plus `MODERATION_ACTIONS` writes
-- Database-backed token-version logout and password-change/reset session revocation
-- Owner-only My Contributions API and profile section with explicit IDOR protection
-- Existing responsive design, accessible forms, and no frontend build step
+## Contents
 
-## Trust, Privacy, and Publication
+- [Architecture](#architecture)
+- [Actors and permissions](#actors-and-permissions)
+- [Trust model](#trust-model)
+- [Database](#database)
+- [Running locally](#running-locally)
+- [Configuration](#configuration)
+- [API](#api)
+- [Frontend pages](#frontend-pages)
+- [Tests](#tests)
+- [Security](#security)
+- [What still needs your accounts](#what-still-needs-your-accounts)
+- [Presentation sequence](#presentation-sequence)
+- [Known limitations](#known-limitations)
+- [Documentation map](#documentation-map)
 
-Every contribution retains its owner internally for authorization and moderation. Public review and interview responses expose an author name only when `is_anonymous = 0`; they never expose user IDs, email addresses, verification evidence, or moderation internals. Only `APPROVED` submissions are public.
+---
 
-Employee verification is scoped to an exact employee, company, and job role. Salary, review, and interview POST requests require an active account and a non-expired `VERIFIED` row matching both submitted IDs; ADMIN status grants no contribution access by itself. The authoritative check and insert use the same PostgreSQL client and transaction. Legacy verification rows whose role could not be inferred safely remain nullable and cannot authorize new contributions. Evidence metadata is available only to ADMIN endpoints.
+## Architecture
 
-Reported approved content can be flagged or rejected using the same locked, audited moderation transaction. This immediately removes it from approved-only public reads. Report resolution remains a separate recorded ADMIN action.
-
-## Salary Range Concepts
-
-- **Verified Salary Range:** approved salary submissions whose verification status is `VERIFIED`.
-- **Community Salary Range:** all approved salary submissions, verified or unverified.
-
-Pending, rejected, and flagged salaries do not affect either public range.
-
-## Technology Stack
-
-- Supabase-hosted PostgreSQL
-- Node.js, Express 5, `pg`, and visible raw parameterized SQL
-- BCrypt and JSON Web Tokens
-- Nodemailer SMTP delivery
-- HTML5, CSS, inline SVG, and Vanilla JavaScript ES modules
-
-## Quick Start
-
-### Local fallback when Render or Supabase is unavailable
-
-Start Docker Desktop with Linux containers, then run from the repository root:
-
-```bash
-npm run local:up --prefix backend
+```text
+Browser (vanilla HTML, CSS and JavaScript modules; no build step, no CDN)
+   │  HTTPS, one origin — strict self-only Content-Security-Policy
+   ▼
+Express 5 on Node.js
+   routes → controllers → services → repositories
+   │  raw parameterized SQL through `pg`; every multi-step write is one transaction
+   ▼
+PostgreSQL on Supabase  (21 tables, 5 views)
 ```
 
-Open **http://localhost:3000**. This starts the same frontend and API with an independent PostgreSQL database containing the existing synthetic demo dataset. The first run downloads Docker images and installs the API dependencies; later starts reuse them. It does not need Supabase credentials or change `backend/.env`.
+| Layer | Technology |
+|-------|------------|
+| Database | PostgreSQL (Supabase), additive migrations, CHECK / FK / partial unique constraints |
+| Backend | Node.js, Express 5, `pg`, BCrypt, JSON Web Tokens, Nodemailer |
+| Frontend | HTML5, CSS custom-property design tokens, inline SVG, vanilla ES modules |
+| Optional | An OpenAI-compatible AI provider for the Saple Guide; a standalone ML prototype in `ml/` |
 
-Local changes persist in the `saple-local` Docker volume. They do **not** sync to Supabase, and existing hosted accounts do not automatically exist locally. Register a local account, or run `npm run local:accounts --prefix backend` to provision the three demo roles. Their emails are `saple.demo.normal@example.invalid`, `saple.demo.employee@example.invalid`, and `saple.demo.admin@example.invalid`; their generated passwords are in the ignored root `.env.local` file under the corresponding `SAPLE_LOCAL_*_PASSWORD` keys. Re-running that command resets those local demo accounts' passwords. Keep `.env.local` private and retain it with the local database.
+The browser never talks to Supabase directly: there is no Supabase client, anon
+key or service-role key in the frontend. The Oracle 19c files under
+`database/sql/` are the preserved earlier course milestone and are not used at
+runtime.
+
+---
+
+## Actors and permissions
+
+| Capability | Public | Job seeker | Employee | Representative | Admin |
+|------------|:-----:|:-----:|:-----:|:-----:|:-----:|
+| Browse approved companies, salaries, reviews, interviews | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Browse published jobs and announcements, use the Saple Guide | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage own profile and password | | ✓ | ✓ | ✓ | ✓ |
+| Receive private notifications | | ✓ | ✓ | ✓ | ✓ |
+| Report a public contribution (once each) | | ✓ | ✓ | ✓ | ✓ |
+| Apply to a job, track and withdraw own applications | | ✓ | ✓ | | |
+| Request verification for an exact company and role | | | ✓ | | |
+| Contribute salary / review / interview within a verified scope | | | ✓ | | |
+| Request a company representative assignment | | ✓ | ✓ | | |
+| Decide verification requests — **own companies only** | | | | ✓ | ✓ (all) |
+| Create, publish, close, archive vacancies — **own companies only** | | | | ✓ | close any |
+| Review applications — **own companies only** | | | | ✓ | view any |
+| Approve / reject / revoke representative assignments | | | | | ✓ |
+| Moderate contributions, triage reports, manage announcements | | | | | ✓ |
+
+- Registration always creates an ordinary account. It can never create an
+  administrator or a representative.
+- A representative is an ordinary account that an administrator has bound to
+  one or more companies. A company can have several.
+- Any number of administrators is supported; none is hard-coded.
+- Every protected request reloads status, role, token version and active
+  company scopes from PostgreSQL. Revoking an assignment, suspending an account
+  or changing a password takes effect on the very next request, even while an
+  older JWT is still within its lifetime.
+- Being a representative for a company grants no right to contribute there,
+  and being an administrator grants no contribution rights at all.
+
+---
+
+## Trust model
+
+**Approved-only publication.** Every contribution starts `PENDING` and is
+invisible until an administrator approves it. Each decision writes an
+immutable moderation record and notifies the contributor.
+
+**Two salary ranges.**
+
+- **Verified Salary Range** — approved salaries from contributors verified for
+  that exact company and role.
+- **Community Salary Range** — every approved salary.
+
+Both show their contribution count; pending, rejected and flagged salaries
+affect neither.
+
+**Anonymous publicly, accountable internally.** A contribution can be shown
+without its author's name, but Saple keeps the internal link so reports can be
+investigated and decisions audited.
+
+**Exact-scope verification.** Verification for one company never implies
+another, and one role never implies another. A request is decided by an active
+representative of that company, with administrators as oversight and fallback.
+Current employees give a company email address (no code is sent); former
+employees give a proof reference (no file is uploaded).
+
+---
+
+## Database
+
+The active schema is `database/postgres/01_final_schema_postgres.sql`:
+**21 tables and 5 views**.
+
+| Domain | Tables |
+|--------|--------|
+| Accounts | `users`, `employees`, `password_reset_tokens`, `notifications` |
+| Verification and representatives | `employment_verifications`, `company_representatives`, `representative_assignment_actions` |
+| Company reference | `companies`, `job_roles`, `benefits`, `company_benefits` |
+| Contributions | `submissions`, `salary_submissions`, `company_reviews`, `interview_experiences` |
+| Moderation and announcements | `reports`, `moderation_actions`, `announcements` |
+| Jobs | `job_postings`, `job_applications`, `job_application_status_history` |
+
+Views: `vw_public_companies`, `vw_public_approved_reviews`,
+`vw_verified_salary_summary`, `vw_community_salary_summary`,
+`vw_public_open_jobs`.
+
+- **ERD:** [`ERD.pdf`](ERD.pdf), [`docs/ERD.html`](docs/ERD.html) and
+  [`docs/ERD.md`](docs/ERD.md), all generated from the schema file by
+  `node docs/tools/build-erd.js`. A test fails if they go stale.
+- **Relational schema, constraints, cardinalities and status transitions:**
+  [`docs/relational_schema.md`](docs/relational_schema.md).
+
+### Status transitions
+
+| Entity | Allowed transitions |
+|--------|---------------------|
+| Submission | `PENDING → APPROVED / REJECTED / FLAGGED`; `APPROVED → REJECTED / FLAGGED`; `FLAGGED → REJECTED` |
+| Verification | `PENDING → VERIFIED / REJECTED`; verified rows stop authorizing after 12 months |
+| Report | `OPEN → REVIEWING`; `OPEN / REVIEWING → RESOLVED / DISMISSED` |
+| Representative assignment | `PENDING → ACTIVE / REJECTED`; `ACTIVE → REVOKED` |
+| Job posting | `DRAFT → PUBLISHED → CLOSED → ARCHIVED` |
+| Application (reviewer) | `SUBMITTED → UNDER_REVIEW / SHORTLISTED / ACCEPTED / REJECTED`; `UNDER_REVIEW → SHORTLISTED / ACCEPTED / REJECTED`; `SHORTLISTED → ACCEPTED / REJECTED` |
+| Application (applicant) | `SUBMITTED / UNDER_REVIEW / SHORTLISTED → WITHDRAWN` |
+
+Rejections, revocations, application acceptances and rejections require a
+written reason. Every transition is one transaction: row lock, status change,
+history row and notification together.
+
+### Setting up Supabase
+
+**Existing project** (already running the 14-table schema): apply the four
+additive migrations in order, rehearsing on a backup first —
+[`database/postgres/migrations/README.md`](database/postgres/migrations/README.md).
+
+```text
+001_account_roles_and_company_representatives.sql
+002_jobs_and_applications.sql
+003_announcements_and_notifications.sql
+004_public_job_views_and_grants.sql
+```
+
+**Fresh project:** run `01_final_schema_postgres.sql`, then optionally the
+synthetic `02_final_demo_data_postgres.sql` (fresh projects only), then the
+read-only `03_schema_and_data_demo_postgres.sql`, which should report
+21 tables and 5 views. More detail: [`docs/supabase_setup.md`](docs/supabase_setup.md).
+
+Both paths were verified to produce an identical schema — every table, column,
+constraint, index and view — by running them against an in-process PostgreSQL
+engine (PGlite). The migrations preserved every existing row. They have **not**
+yet been run on the live Supabase project.
+
+Company provenance is in
+[`database/company_seed_sources.md`](database/company_seed_sources.md). All
+people, salaries, reviews, interviews, vacancies and applications in the demo
+data are synthetic and labelled as such.
+
+---
+
+## Running locally
+
+### Same origin (recommended)
 
 ```bash
-npm run local:status --prefix backend
-npm run local:logs --prefix backend
-npm run local:test --prefix backend
+cd backend
+npm ci
+cp .env.example .env     # then set DATABASE_URL and JWT_SECRET
+npm start                # http://localhost:3000
+```
+
+Express serves the frontend and the API from one origin, so no CORS setup is
+needed. Without `DATABASE_URL` the server refuses to start with
+`Missing required database configuration: DATABASE_URL` — deliberately, rather
+than serving a half-working site.
+
+### A separate static server
+
+Live Server, `python -m http.server` and similar work on any local port,
+including 5500 and 5501:
+
+```bash
+python -m http.server 5501 --directory frontend
+```
+
+The frontend detects a local static origin and sends API calls to
+`http://localhost:3000`. Ports 5500 and 5501 on `localhost` and `127.0.0.1`
+are already in the CORS allow-list; add any other exact origin to
+`CORS_ORIGINS`. A developer can point a *local* page at a different backend by
+setting `localStorage['saple.api-base-url']`; on a deployed site that override
+is ignored unless it names the page's own origin.
+
+If the API is unreachable, pages say which of eleven failure kinds occurred —
+network, timeout, CORS, an HTML page where JSON was expected, server error,
+database unavailable, sign-in required, forbidden, not found, conflict, rate
+limited — with a Retry button. Technical detail appears only on local hosts.
+
+### Docker fallback
+
+With Docker Desktop running:
+
+```bash
+npm run local:up --prefix backend      # http://localhost:3000, own PostgreSQL on :5433
+npm run local:accounts --prefix backend
 npm run local:down --prefix backend
 ```
 
-`local:down` stops the local app without deleting its database. The API is bound to localhost:3000 and PostgreSQL to localhost:5433. Local password-reset email requires separately configured SMTP; no production mail credentials are copied into the containers.
+This uses an independent local database seeded with the synthetic demo data. It
+needs no Supabase credentials and never touches `backend/.env`. Generated demo
+passwords are written to the ignored root `.env.local`.
 
-The hosted site also supports **cached public browsing** after an online visit to this version. A service worker saves the static pages, and successful public API responses are retained for up to seven days, limited to 30 requests and roughly 1.5 million characters per browser origin. If the API times out or returns a server error, matching saved results appear with their timestamp and an offline notice. Use **Try reconnecting** to refresh, or **Clear saved data** to remove saved public responses. New filters or companies that were never loaded may be unavailable offline. Account/admin responses and writes are never cached or queued; explicit access-denied or deleted-resource responses are not replaced with cached content.
+### Offline browsing
 
-This requires one successful online visit after deployment; it cannot recover a site that this browser has never cached. Browser storage can also be cleared or evicted. Cached browsing is not a replica or backup of the hosted database. Docker's initialization behavior is documented in its [PostgreSQL pre-seeding guide](https://docs.docker.com/guides/pre-seeding/); browser offline support follows the [service worker lifecycle](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers).
+After one online visit, a service worker keeps the public pages available
+offline, and public API responses are cached for up to seven days (30
+requests, about 1.5 million characters). Account, notification, application,
+representative, admin and Saple Guide data are never cached, by an explicit
+allow-list.
 
-### 1. Prepare Supabase PostgreSQL
+---
 
-Create a Supabase project and run these files in its SQL editor:
+## Configuration
 
-```sql
-database/postgres/01_final_schema_postgres.sql
-database/postgres/02_final_demo_data_postgres.sql
-database/postgres/03_schema_and_data_demo_postgres.sql
-```
+All values go in `backend/.env` locally, or the host's private environment
+settings. `backend/.env.example` lists every name with placeholders only.
 
-`database/postgres/01_final_schema_postgres.sql` creates the 14-table/four-view PostgreSQL schema, including `token_version`; the data file loads the complete demonstration dataset and synchronizes identities. The third file is read-only validation. Detailed setup is in [docs/supabase_setup.md](docs/supabase_setup.md).
+| Variable | Required | Purpose |
+|----------|:--------:|---------|
+| `DATABASE_URL` | yes | Supabase Session-pooler connection string |
+| `JWT_SECRET` | yes | Long random signing secret |
+| `JWT_EXPIRES_IN` | | Default `1d` |
+| `DB_SSL`, `DB_POOL_MAX`, `DB_IDLE_TIMEOUT_MS`, `DB_CONNECTION_TIMEOUT_MS` | | Pool settings |
+| `CORS_ORIGINS` | | Extra exact origins; empty for same-origin hosting |
+| `FRONTEND_URL` | for recovery | Public origin used in reset links |
+| `PASSWORD_RESET_TOKEN_TTL_MINUTES` | | Default `15` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | for email | See [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md) |
+| `SECURITY_CONTACT` | | `mailto:` or `https:` address published in `security.txt` |
+| `AI_ENABLED`, `AI_API_KEY`, `AI_API_BASE_URL`, `AI_MODEL`, `AI_TIMEOUT_MS`, `AI_MAX_OUTPUT_TOKENS` | | Optional; see [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md) |
 
-The original Oracle files remain unchanged under `database/sql/`. They are not used by the active backend. Company provenance is documented in [database/company_seed_sources.md](database/company_seed_sources.md); no third-party salary, review, or interview claims are imported as submissions.
+---
 
-### 2. Start the backend
+## API
 
-From `backend/`:
+Every `/api` response — including 404, 413, 429 and 500 — is JSON:
+`{ "success": boolean, "message": string, "data"?: ... }`.
 
-```bash
-npm install
-```
-
-Copy `.env.example` to `.env`, then set the Supabase PostgreSQL connection and a long random `JWT_SECRET`:
-
-```env
-PORT=3000
-DATABASE_URL=postgresql://postgres.project_ref:your_password@your_pooler_host:5432/postgres
-DB_SSL=true
-DB_POOL_MAX=5
-DB_IDLE_TIMEOUT_MS=30000
-DB_CONNECTION_TIMEOUT_MS=10000
-CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
-JWT_SECRET=replace_with_a_long_random_secret
-JWT_EXPIRES_IN=1d
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=replace_with_smtp_username
-SMTP_PASS=replace_with_smtp_password
-SMTP_FROM=Saple <no-reply@example.com>
-FRONTEND_URL=http://localhost:5500/
-PASSWORD_RESET_TOKEN_TTL_MINUTES=15
-```
-
-For Gmail SMTP, enable two-step verification and create an App Password; use `smtp.gmail.com`, port `587`, `SMTP_SECURE=false`, the Google account as `SMTP_USER`, and the App Password as `SMTP_PASS`. Port `465` normally uses `SMTP_SECURE=true`. Other SMTP providers work with their corresponding host, port, security, and credentials. Put credentials only in ignored `backend/.env`, never in source or documentation.
-
-```bash
-npm run dev
-```
-
-### 3. Serve the frontend
-
-From the repository root:
-
-```bash
-python -m http.server 5500 --directory frontend
-```
-
-Open `http://localhost:5500/index.html`; the API defaults to `http://localhost:3000`.
-
-### 4. Public hosting
-
-The repository includes a Render Blueprint that serves this same frontend and the Express API from one HTTPS origin. Hosted frontend requests use their current origin; the separate `localhost:5500` frontend continues to use the backend on port `3000`.
-
-See [docs/deployment.md](docs/deployment.md) for the Supabase connection choice, Render environment variables, deployment steps, verification URLs, optional SMTP configuration, and free-service cold-start behavior.
-
-## API Overview
+**Access:** *Public*; *Signed in* (any active account); *Owner* (only the
+account the record belongs to); *Job seeker* (`USER` role); *Verified scope*
+(active verification for that exact company and role); *Representative*
+(active assignment for the company involved); *Admin*.
 
 | Method | Endpoint | Access | Purpose |
-| --- | --- | --- | --- |
-| GET | `/` | Public | Static Saple homepage |
-| GET | `/api` | Public | API welcome response |
-| GET | `/api/health`, `/api/health/database` | Public | Process and Supabase PostgreSQL health |
-| GET | `/api/companies` | Public | Advanced company search and aggregate filters |
-| GET | `/api/companies/filter-options` | Public | Distinct industry/location/size options |
-| GET | `/api/companies/:companyId` | Public | Company profile |
-| GET | `/api/companies/:companyId/benefits` | Public | Company benefits |
-| GET | `/api/companies/:companyId/salary-summary` | Public | Verified/community salary summaries |
-| GET | `/api/companies/:companyId/reviews` | Public | Approved reviews and rating summary |
-| GET | `/api/companies/:companyId/interviews` | Public | Approved interview experiences |
-| GET | `/api/salaries` | Public | Approved verified/community salary aggregates |
-| GET | `/api/reviews` | Public | Approved reviews across companies |
-| GET | `/api/interviews` | Public | Approved interviews across companies |
-| POST | `/api/auth/register`, `/api/auth/login` | Public | Create/authenticate an account |
-| POST | `/api/auth/logout` | Bearer token | Revoke the current JWT through `token_version` |
-| POST | `/api/auth/forgot-password` | Public, rate-limited | Send a temporary reset link through configured SMTP |
-| POST | `/api/auth/reset-password` | Public, rate-limited | Consume a reset token and atomically replace the password |
-| GET | `/api/auth/me` | Bearer token | Current safe user profile |
-| GET | `/api/auth/me/submissions` | Bearer token | Owner's private contribution list |
-| GET | `/api/auth/me/submissions/:submissionId` | Owner token | Owner-only contribution detail |
-| PATCH | `/api/auth/me` | Bearer token | Change full name only |
-| PATCH | `/api/auth/me/password` | Bearer token | Change password after current-password check |
-| GET | `/api/job-roles` | Public | Controlled job-role choices |
-| POST | `/api/companies/:companyId/salaries` | Verified exact company-role scope | Pending salary contribution |
-| POST | `/api/companies/:companyId/reviews` | Verified exact company-role scope | Pending company review |
-| POST | `/api/companies/:companyId/interviews` | Verified exact company-role scope | Pending interview experience |
-| POST | `/api/companies/:companyId/verifications` | Employee token | Pending company-role verification request |
-| POST | `/api/submissions/:submissionId/reports` | Bearer token | Report a submission |
-| GET/PATCH | `/api/admin/submissions/*` | ADMIN token | Queue, detail, decisions, and history |
-| GET/PATCH | `/api/admin/verifications/*` | ADMIN token | Pending queue, detail, and decision |
-| GET/PATCH | `/api/admin/reports/*` | ADMIN token | Report queue, detail, and status |
+|--------|----------|--------|---------|
+| GET | `/`, `/robots.txt`, `/sitemap.xml`, `/.well-known/security.txt` | Public | Site, crawler rules, public-page sitemap, security contact |
+| GET | `/api`, `/api/health`, `/api/health/database` | Public | Welcome, process health, database readiness |
+| GET | `/api/stats/overview` | Public | Live public counts for the homepage |
+| GET | `/api/announcements` | Public | Announcements inside their schedule |
+| GET | `/api/companies`, `/api/companies/filter-options` | Public | Company search and filter options |
+| GET | `/api/companies/:id`, `…/benefits`, `…/salary-summary`, `…/reviews`, `…/interviews` | Public | Company profile and approved data |
+| GET | `/api/salaries`, `/api/reviews`, `/api/interviews`, `/api/job-roles` | Public | Approved data across companies |
+| GET | `/api/jobs`, `/api/jobs/filter-options`, `/api/jobs/:jobId` | Public | Published, in-deadline jobs only |
+| GET | `/api/assistant/status` | Public | Whether the guide can use a provider (never which one) |
+| POST | `/api/assistant/messages` | Public, rate-limited | Ask the Saple Guide |
+| POST | `/api/auth/register`, `/api/auth/login` | Public, rate-limited | Create account (always `USER`), sign in |
+| POST | `/api/auth/forgot-password`, `/api/auth/reset-password` | Public, rate-limited | Generic-answer recovery; single-use reset |
+| POST | `/api/auth/logout` | Signed in | Revoke the current session |
+| GET / PATCH | `/api/auth/me`, `/api/auth/me/password` | Signed in | Profile, name change, password change |
+| GET | `/api/auth/me/submissions[/:id]` | Owner | Own contributions |
+| POST | `/api/companies/:id/salaries`, `…/reviews`, `…/interviews` | Verified scope | New `PENDING` contribution |
+| POST | `/api/companies/:id/verifications` | Signed in (employee) | Verification request |
+| POST | `/api/submissions/:id/reports` | Signed in, rate-limited | Report once |
+| POST | `/api/jobs/:jobId/applications` | Job seeker, rate-limited | Apply once before the deadline |
+| GET | `/api/me/applications[/:id]` | Owner | Own applications and history |
+| PATCH | `/api/me/applications/:id/withdraw` | Owner | Withdraw while open |
+| GET | `/api/me/notifications`, `/api/me/notifications/unread-count` | Owner | Private notifications |
+| PATCH | `/api/me/notifications/:id/read`, `/api/me/notifications/read-all` | Owner | Mark read |
+| GET / POST | `/api/me/representative-assignments` | Signed in, rate-limited | Own assignments; request one |
+| GET | `/api/representative/workspace` | Representative | Active company scopes |
+| GET / PATCH | `/api/representative/verifications[/:id][/status]` | Representative (own companies) | Verification queue and decisions |
+| GET / POST / PUT / PATCH | `/api/representative/jobs…`, `/api/representative/companies/:id/jobs` | Representative (own companies) | Vacancy management |
+| GET / PATCH | `/api/representative/applications[/:id][/status]` | Representative (own companies) | Application review |
+| GET / PATCH | `/api/admin/submissions/…` | Admin | Moderation queue, detail, decisions, history |
+| GET / PATCH | `/api/admin/verifications/…` | Admin | All verification requests, fallback decisions |
+| GET / PATCH | `/api/admin/reports/…` | Admin | Report triage |
+| GET / PATCH | `/api/admin/representative-assignments/…` | Admin | Approve, reject, revoke; history |
+| GET / POST / PUT / PATCH | `/api/admin/announcements/…` | Admin | Announcement management |
+| GET / PATCH | `/api/admin/jobs/…`, `/api/admin/applications/…` | Admin | Oversight across all companies |
 
-See [backend/README.md](backend/README.md) for contracts and transaction rules.
+Contracts and transaction rules: [`backend/README.md`](backend/README.md).
 
-## Frontend Pages
+---
+
+## Frontend pages
 
 | Page | Purpose |
-| --- | --- |
-| `index.html` | Homepage, search handoff, and trust model |
-| `companies.html` | Live company directory and search |
-| `salaries.html` | Public approved salary aggregates and filters |
-| `reviews.html` | Public approved workplace reviews and filters |
-| `interviews.html` | Public approved interview experiences and filters |
-| `faq.html`, `about.html` | Accessible project guidance, privacy boundaries, methodology, and academic disclaimer |
-| `company-details.html?id=<id>` | Profile, benefits, salary data, approved reviews/interviews, and reporting |
-| `login.html`, `register.html` | Authentication and account creation |
-| `forgot-password.html`, `reset-password.html` | Temporary email password-reset request and completion |
-| `profile.html` | Safe profile view, name edit, verified company-role scopes, and password change |
-| `submit-salary.html`, `submit-review.html`, `interview-experience.html` | Verified-employee-only contribution forms |
-| `employee-verification.html` | Employee verification request |
-| `admin.html` | Submission moderation, verification review, and report management |
+|------|---------|
+| `index.html` | Homepage: identity, trust model, live counts, featured companies and jobs, pathways |
+| `companies.html`, `company-details.html?id=` | Directory, profile, benefits, both salary ranges, reviews, interviews, reporting |
+| `salaries.html`, `reviews.html`, `interviews.html` | Approved data across companies |
+| `jobs.html`, `job-details.html?id=` | Job board with filters; job detail and application |
+| `my-applications.html` | Own applications, status history, withdrawal |
+| `representative.html` | Company workspace: verification queue, vacancies, applications |
+| `admin.html` | Moderation, verifications, reports, representative assignments, announcements, jobs oversight |
+| `profile.html` | Name, password, verified scopes, contributions, representative request |
+| `login.html`, `register.html`, `forgot-password.html`, `reset-password.html` | Account flows |
+| `employee-verification.html`, `submit-salary.html`, `submit-review.html`, `interview-experience.html` | Verification and contribution |
+| `about.html`, `faq.html`, `privacy.html`, `terms.html`, `security.html`, `contact.html` | Project information and policies |
 
-See [frontend/README.md](frontend/README.md) for UI behavior and manual checks.
+Every page carries the site-identity statement and non-affiliation disclaimer,
+a skip link, the announcement bar, the notification bell when signed in, and
+the Saple Guide. See [`frontend/README.md`](frontend/README.md).
+
+---
 
 ## Tests
 
 From `backend/`:
 
 ```bash
-npm test
-npm run test:integration
+npm test                        # unit and HTTP tests, no database needed
+npm run test:integration        # live: original workflows against a prepared database
+npm run test:integration:jobs   # live: representatives, jobs, notifications, announcements
+npm run diagnose:smtp -- you@example.com   # sends one real test email
 ```
 
-The unit suite currently contains 119 tests, including PostgreSQL parameterization, token revocation, ownership/IDOR, exact company-role authorization, ADMIN independence, transaction rollback, schema/data structure, privacy, database health, hosting configuration, and frontend behavior.
+From `ml/`: `python -m unittest discover -s tests -v`.
 
-To test recovery locally, do not rerun any database setup file: configure SMTP and `FRONTEND_URL`, restart the backend, call a clearly unknown address and confirm the exact `404` response, then request a link for an active account. Confirm SMTP acceptance, a 64-character database hash, old-password failure, new-password success, one-time use, expiry handling, and rollback on SMTP failure. Never paste a reset link into logs or issue trackers. Detailed unknown-email responses are an academic requirement; production systems normally use a generic response to reduce account enumeration.
+The unit suite covers PostgreSQL parameterization, authorization and IDOR,
+cross-company denial, immediate revocation, transaction rollback, job and
+application rules, notification ownership, AI scope and privacy, password
+recovery, security headers and CSP, CORS on ports 5500/5501, JSON error
+handling, service-worker privacy, frontend DOM safety and accessibility hooks,
+migration safety and fresh-install parity, and ERD freshness.
 
-## Security Notes
+Both live workflows were run against an in-process PostgreSQL engine (PGlite)
+loaded with the final schema and demo data, and both passed. They still need a
+run against the real Supabase project.
 
-- Never commit `.env`, Supabase database credentials, JWT secrets, real proof material, or test passwords.
-- Public registration cannot create an administrator.
-- Password hashes and raw PostgreSQL errors are never returned to clients.
-- SQL is contained in repositories and uses PostgreSQL positional parameters.
-- Protected requests recheck current status, role, and `token_version` in PostgreSQL; ADMIN routes never rely on frontend hiding or stale token roles.
-- Sample identities, companies, content, evidence references, and credentials are fictional.
-- Detailed unknown-email and incorrect-password messages are included for this academic requirement, but they permit account enumeration. Production systems normally use one generic authentication/recovery response.
-- Logout, password change, and password reset increment `USERS.token_version`, so older JWTs fail immediately.
-- The reset limiter is in process memory; production deployment across multiple instances would require a shared rate-limit store.
+---
 
-## Deferred Scope
+## Security
 
-Real employment-verification OTP delivery, uploaded document storage, runtime/backend/admin integration of ML scores, recommendation systems, advanced analytics, shared rate limiting, live cloud-resource creation, and email-delivery monitoring remain outside core completion. Repository-level Render deployment configuration is implemented, but account-side deployment still requires the owner's Supabase and Render credentials. The standalone ML prototype is not integrated into the runtime.
+What was done, in short (full detail in
+[`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md)):
 
-## Presentation Demo
+- A remote company-logo fetcher, which let database content choose external
+  hosts for the browser to contact, was removed; marks are generated locally.
+- No third-party script, stylesheet, font, image, iframe or tracker is loaded.
+- Explicit headers on every response: a self-only CSP with no `unsafe-inline`
+  or `unsafe-eval`, `frame-ancestors 'none'`, `X-Frame-Options`,
+  `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS over
+  HTTPS only, and `no-store` on the API.
+- All dynamic content is rendered with `textContent`; there is no `innerHTML`,
+  `eval` or `new Function` anywhere.
+- Body size limits, per-endpoint rate limits, no open redirects, and an AI
+  guide that calls one fixed provider URL rather than acting as a relay.
+- Password recovery gives one answer for every address, stores only token
+  hashes, and revokes other sessions on reset.
+- Nodemailer upgraded to a patched release; `npm audit --omit=dev` is clean.
+- Tracked files and full git history were scanned for secrets; every match was
+  a documentation placeholder.
 
-Use [docs/60_percent_demo_checklist.md](docs/60_percent_demo_checklist.md) for the evaluation sequence and [docs/60_percent_compliance.md](docs/60_percent_compliance.md) for requirement-to-file evidence.
+---
+
+## What still needs your accounts
+
+None of these can be done or verified from the repository.
+
+1. **Migrations** — apply `001`–`004` to a backup project, run the validation
+   script (expect 21 tables, 5 views), then apply to the live project.
+2. **Live tests** — run both `npm run test:integration*` commands against the
+   migrated project.
+3. **Email** — configure SMTP, run `npm run diagnose:smtp -- <your address>`,
+   and confirm the message arrives (check spam).
+4. **AI guide** (optional) — set the `AI_*` variables and follow the checks in
+   [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md).
+5. **Accounts** — promote your own administrator account in the SQL editor;
+   create representative and demo accounts privately.
+6. **New Render service** — from the cleaned commit, never the deleted
+   service. Enter every secret privately.
+7. **Google Search Console** — verify the new domain, read the Security Issues
+   report, fix anything listed, and request a review only when clean.
+
+Steps 6 and 7 are written out in full, with smoke tests, in
+[`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md).
+No code change guarantees Google's approval.
+
+---
+
+## Presentation sequence
+
+1. Homepage: the identity badge, the trust model, live counts.
+2. Company profile with both salary ranges and their contribution counts.
+3. Register an employee; request verification for a company and role.
+4. As that company's representative, verify it; show the employee's
+   notification.
+5. Submit a salary; show it stays `PENDING` and changes no public range.
+6. As admin, approve it; show the moderation history and the updated range.
+7. As representative, publish a vacancy; as a job seeker, apply; shortlist it;
+   show the applicant's notification and history.
+8. As representative, try a URL for another company's application — refused.
+9. As admin, revoke the representative; the workspace closes on the next click.
+10. Publish an announcement; show the bar; hide it.
+11. Ask the Saple Guide a Saple question, then for its system prompt — refused.
+12. Show `ERD.pdf` and the response headers of any page.
+
+A longer script is in [`docs/project_notes.md`](docs/project_notes.md).
+
+---
+
+## Known limitations
+
+- No document, CV or file uploads anywhere, by design.
+- Employment verification records a company email or proof reference; no
+  one-time code is actually sent to a company mailbox.
+- The Saple Guide is guidance only and can be wrong; it cannot see accounts or
+  change data.
+- Rate limits live in process memory: fine for one instance, not for several.
+- Sign-in messages distinguish an unknown address from a wrong password (a
+  usability choice that reveals whether an address is registered). Password
+  recovery does not.
+- Free hosting tiers sleep after inactivity and free AI tiers rate-limit; the
+  first request after a pause can be slow.
+- The ML prototype in `ml/` is standalone and not wired into the application.
+
+---
+
+## Documentation map
+
+| Document | For |
+|----------|-----|
+| [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md) | Remediation, new Render service, Search Console, smoke tests |
+| [`docs/upgrade-audit-and-handover.md`](docs/upgrade-audit-and-handover.md) | Baseline audit findings and verification record |
+| [`docs/relational_schema.md`](docs/relational_schema.md) | Tables, constraints, cardinalities, transitions |
+| [`docs/ERD.md`](docs/ERD.md) | Generated ERD (Mermaid) |
+| [`docs/requirement_analysis.md`](docs/requirement_analysis.md) | Actors and functional requirements |
+| [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md) | SMTP setup and the delivery diagnostic |
+| [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md) | Saple Guide provider configuration |
+| [`docs/deployment.md`](docs/deployment.md) | Supabase connection and Render mechanics |
+| [`docs/supabase_setup.md`](docs/supabase_setup.md) | Fresh Supabase project setup |
+| [`docs/github-repository-settings.md`](docs/github-repository-settings.md) | Suggested repository description, topics and licence decision |
+| [`database/postgres/migrations/README.md`](database/postgres/migrations/README.md) | Migration order and safety |

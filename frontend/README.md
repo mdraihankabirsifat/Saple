@@ -10,7 +10,11 @@ Start the backend at `http://localhost:3000`, then run from the repository root:
 python -m http.server 5500 --directory frontend
 ```
 
-Open `http://localhost:5500/index.html`. A static server is required for reliable ES-module loading. `js/api.js` contains the default API base URL.
+Open `http://localhost:5500/index.html`. A static server is required for reliable ES-module loading.
+
+The simplest setup is to skip the static server and open `http://localhost:3000`, where Express serves the pages and the API from one origin. When a page is opened from any other local port (5500, 5501 or anything else), `js/api.js` sends API calls to `http://localhost:3000` automatically; on a deployed site it always uses the page's own origin. A local-only override can be set in `localStorage['saple.api-base-url']`.
+
+The pages load no third-party resource and run under a strict self-only Content-Security-Policy: no inline scripts, styles or event handlers, and all dynamic content is rendered with `textContent` through `js/ui.js`. Shared behaviour — navigation, the identity statement and disclaimer, skip links, the announcement bar, the notification bell and the Saple Guide — is injected by `js/nav.js` on every page.
 
 ## Connected Pages
 

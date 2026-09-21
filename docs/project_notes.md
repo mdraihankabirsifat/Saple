@@ -2,7 +2,7 @@
 
 ## Project Idea
 
-Saple is a trust-focused company review, salary insight, benefits, and interview-experience platform for graduates and job seekers. The name reflects starting small like a sapling and growing into a reliable career-guidance resource.
+Saple is an independent BUET CSE academic project: a trust-focused company review, salary insight, benefits, interview-experience and jobs platform for graduates and job seekers. The name reflects starting small like a sapling and growing into a reliable career-guidance resource.
 
 ## Implemented Trust Model
 
@@ -11,10 +11,12 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 - The Community range uses all approved salaries, verified or unverified.
 - Reviews and interviews are public only after ADMIN approval.
 - Anonymous contributions retain internal ownership but expose no public contributor identity.
-- Exact company-and-designation employee verification is reviewed by an ADMIN and expires after 12 months.
+- Exact company-and-designation employee verification is reviewed by an active company representative for that company, with administrators as oversight and fallback, and expires after 12 months.
 - Users can report submissions once; ADMIN users triage and resolve reports.
 - Content actions reuse the locked, immutable-audit submission moderation workflow.
-- Password recovery sends a temporary single-use link while Oracle retains only its SHA-256 token hash.
+- Password recovery sends a temporary single-use link while PostgreSQL retains only its SHA-256 token hash, and gives the same answer whether or not an address is registered.
+- Company representatives are approved by an administrator and bound to explicit companies; they manage vacancies and applications for those companies only.
+- Private notifications and public announcements are plain text, rendered with `textContent`.
 
 ## Status Rules
 
@@ -28,21 +30,20 @@ Saple is a trust-focused company review, salary insight, benefits, and interview
 
 ## Privacy Boundary
 
-Public responses must not expose user IDs, email addresses, verification evidence, reporter identity, moderation internals, or raw password-reset tokens. Company-email metadata and proof references are available only inside ADMIN verification endpoints. The project does not store raw OTPs, document uploads, national IDs, or production credentials.
+Public responses must not expose user IDs, email addresses, verification evidence, reporter identity, moderation internals, or raw password-reset tokens. Company-email metadata and proof references are available only to administrators and to active representatives of the same company. The project does not store raw OTPs, document uploads, national IDs, or production credentials.
 
 ## Current Scope Boundary
 
-Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, reviews, interviews, reporting, rating display, responsive Browse sidebars, ADMIN integration, rollback tests, and documentation are implemented. The current repository exposes one consolidated schema, one consolidated demonstration-data loader, and one read-only verification script. Real SMTP delivery still requires provider credentials. The standalone ML prototype is implemented while runtime integration remains deferred. Repository-level Render hosting is implemented; creating the cloud service still requires the owner's accounts and secrets.
+Authentication, SMTP password recovery code, exact-scope contributions, moderation, employee verification, company representatives, jobs and applications, notifications, announcements, the Saple Guide, reviews, interviews, reporting, rollback tests, and documentation are implemented. The current repository exposes one consolidated schema, one consolidated demonstration-data loader, and one read-only verification script. Real SMTP delivery still requires provider credentials. The standalone ML prototype is implemented while runtime integration remains deferred. The site is not currently deployed: the previous Render service was flagged and deleted. Creating a new service requires the owner's accounts and secrets; see `docs/security-and-safe-deployment.md`.
 
 ## Presentation-Day Demo Sequence
 
-Before presenting, register a dedicated local demo account through the UI, promote only that row with your Oracle client, then sign out and sign back in so the dashboard reflects the current role:
+Before presenting, register a dedicated local demo account through the UI, promote only that row in the Supabase SQL editor, then sign out and sign back in so the dashboard reflects the current role:
 
 ```sql
 UPDATE users
-SET account_role = 'ADMIN', updated_at = SYSTIMESTAMP
+SET account_role = 'ADMIN', token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP
 WHERE email = 'your-registered-demo-email@example.test';
-COMMIT;
 ```
 
 Do not commit the demo password, its generated hash, or local credentials.
@@ -57,6 +58,10 @@ Do not commit the demo password, its generated hash, or local credentials.
 8. Submit and approve an anonymous review, then show its public card and rating aggregate without contributor identity.
 9. Submit and approve an anonymous interview experience, then show its public card.
 10. Report one public card, mark the report reviewing, inspect and flag/reject the target through submission moderation, then resolve the report.
+11. With a second account, request a company representative scope from the profile page; approve it from the admin oversight panel; show the representative workspace for that company only.
+12. As the representative, create and publish a vacancy; as a job seeker, apply; as the representative, shortlist the application and show the applicant's notification.
+13. Revoke the representative scope as admin and show that the workspace closes on the next request without signing out.
+14. Open the Saple Guide, ask a Saple question, then ask for the system prompt and show the refusal.
 
 ## Recommended Report Screenshots
 
@@ -70,10 +75,11 @@ Do not commit the demo password, its generated hash, or local credentials.
 - Employee verification request and ADMIN verification card
 - Approved anonymous review and interview cards
 - Report dialog and ADMIN report-resolution controls
-- Oracle schema/ERD and representative `database/sql/03_schema_and_data_demo.sql` results
+- PostgreSQL ERD (`ERD.pdf`) and representative `database/postgres/03_schema_and_data_demo_postgres.sql` results
+- Representative workspace, job board, application tracking and notification panel
 
 ## Password-recovery live diagnostic
 
-Start the backend before testing the browser and call `POST /api/auth/forgot-password` directly. An unknown normalized email must return `404`, `success: false`, and `No account was found with that email address.` without a token row. A registered active account is proven only when configured SMTP accepts delivery; then verify a 64-character hash, one-time link use, old/new-password login, and rollback under SMTP failure. Never print environment values or reset URLs. This detailed unknown-email response is an academic requirement; a production system normally uses a generic response to reduce account enumeration.
+Start the backend before testing the browser and call `POST /api/auth/forgot-password` directly. An unknown normalized email must return `200` with the same generic message a registered address receives, and must create no token row. A registered active account is proven only when configured SMTP accepts delivery (run `npm run diagnose:smtp -- <address>` first); then verify a 64-character hash, one-time link use, old/new-password login, and rollback under SMTP failure. Never print environment values or reset URLs.
 
-The synthetic salaries/reviews in `database/sql/02_final_demo_data.sql` are classroom presentation content, not official employer data and not trustworthy ML training history. The optional model remains decision-support only, stays inactive below 50 final moderator-reviewed historical records for a role, and never replaces the human moderator.
+The synthetic salaries/reviews in `database/postgres/02_final_demo_data_postgres.sql` are classroom presentation content, not official employer data and not trustworthy ML training history. The optional model remains decision-support only, stays inactive below 50 final moderator-reviewed historical records for a role, and never replaces the human moderator.

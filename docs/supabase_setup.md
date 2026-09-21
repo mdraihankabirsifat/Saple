@@ -21,6 +21,11 @@ The third file is read-only validation. The first two target a fresh project; do
 
 The original Oracle files under `database/sql/` are preserved for the earlier course milestone. The active backend does not execute them.
 
+> **Already have a Saple project on Supabase?** Do not run the files above on it.
+> Apply the four additive migrations in `database/postgres/migrations/` instead,
+> following that folder's README, and rehearse on a backup first. The final
+> schema has 21 tables and 5 views.
+
 ## 3. Configure the backend
 
 From `backend/`, copy `.env.example` to `.env`. Preserve any existing local SMTP values and set:
@@ -32,7 +37,8 @@ DB_SSL=true
 DB_POOL_MAX=5
 DB_IDLE_TIMEOUT_MS=30000
 DB_CONNECTION_TIMEOUT_MS=10000
-CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
+# localhost and 127.0.0.1 on ports 5500 and 5501 are always allowed; list only extra origins.
+CORS_ORIGINS=
 JWT_SECRET=replace_with_a_long_random_secret
 JWT_EXPIRES_IN=1d
 ```
