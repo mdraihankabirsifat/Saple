@@ -17,8 +17,6 @@ const panels = {
   jobs: document.querySelector('#panel-jobs-oversight')
 };
 
-if (root && tabList) startOversight();
-
 // ---------------------------------------------------------------------------
 // Representative assignments
 // ---------------------------------------------------------------------------
@@ -543,3 +541,7 @@ function startOversight() {
 
   selectTab('representatives');
 }
+
+// Started last: startOversight() reads LOADERS and loaded, which do not exist
+// until the declarations above have run.
+if (root && tabList) startOversight();
