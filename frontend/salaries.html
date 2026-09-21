@@ -40,8 +40,8 @@
       </div>
     </nav>
   </header>
-  <main class="page-main">
-    <div class="container">
+  <main class="page-main browse-main">
+    <div class="container browse-shell">
       <div class="browse-header">
         <div class="page-header">
           <p class="eyebrow">Approved salary data</p>
@@ -50,45 +50,53 @@
         </div><a class="button button-primary" href="submit-salary.html" data-verified-contributor hidden>+ Submit
           salary</a>
       </div>
-      <div class="browse-layout">
-      <form id="salary-filters" class="filter-panel card" aria-label="Salary filters">
+      <button class="button button-secondary filter-drawer-toggle" type="button" data-filter-toggle
+        aria-controls="salary-filters" aria-expanded="false">Filters &amp; sort <span class="badge filter-count"
+          data-filter-count hidden>0</span></button>
+      <div class="browse-layout browse-grid">
+      <form id="salary-filters" class="filter-panel browse-sidebar card" aria-labelledby="salary-filters-heading"
+        data-filter-panel novalidate>
+        <div class="filter-heading">
+          <h2 id="salary-filters-heading">Filters &amp; sort</h2>
+          <button class="button button-secondary button-small filter-close" type="button" data-filter-close>Close</button>
+        </div>
         <div class="filter-grid">
-          <div class="form-group"><label for="salary-company-filter">Company</label><select id="salary-company-filter">
+          <div class="form-group"><label for="salary-company-filter">Company</label><select id="salary-company-filter" name="companyId">
               <option value="">All companies</option>
             </select></div>
-          <div class="form-group"><label for="salary-role-filter">Job role</label><select id="salary-role-filter">
+          <div class="form-group"><label for="salary-role-filter">Job role</label><select id="salary-role-filter" name="roleId">
               <option value="">All roles</option>
             </select></div>
-          <div class="form-group"><label for="salary-location-filter">Location</label><input id="salary-location-filter"
+          <div class="form-group"><label for="salary-location-filter">Location</label><input id="salary-location-filter" name="location"
               maxlength="100" placeholder="City or country"></div>
           <div class="form-group"><label for="salary-source-filter">Salary source</label><select
-              id="salary-source-filter">
+              id="salary-source-filter" name="salarySource">
               <option value="COMMUNITY">Community</option>
               <option value="VERIFIED">Verified</option>
             </select></div>
-          <div class="form-group"><label for="salary-min-filter">Minimum salary</label><input id="salary-min-filter"
+          <div class="form-group"><label for="salary-min-filter">Minimum salary</label><input id="salary-min-filter" name="minSalary"
               type="number" min="0" step="0.01"></div>
-          <div class="form-group"><label for="salary-max-filter">Maximum salary</label><input id="salary-max-filter"
+          <div class="form-group"><label for="salary-max-filter">Maximum salary</label><input id="salary-max-filter" name="maxSalary"
               type="number" min="0" step="0.01"></div>
+          <div class="form-group"><label for="salary-sort">Sort by</label><select id="salary-sort" name="sort">
+            <option value="company">Company A&ndash;Z</option><option value="salary-desc">Highest pay</option><option value="salary-asc">Lowest pay</option><option value="contributions">Most contributions</option>
+          </select></div>
         </div>
         <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button
             class="button button-secondary" type="reset">Clear</button></div>
       </form>
       <section class="browse-results-column" aria-label="Salary results">
-        <p id="salary-browse-status" class="state-message" role="status" aria-live="polite">Loading approved salary
+        <p id="salary-browse-status" class="state-message result-summary" role="status" aria-live="polite">Loading approved salary
           insights&hellip;</p>
         <div id="salary-results" class="browse-results" aria-live="polite"></div>
+        <div id="salary-pagination" class="pagination-host"></div>
       </section>
       </div>
     </div>
   </main>
   <footer class="site-footer">
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
-        <p>Approved Saple submissions only.</p>
-      </div>
-    </div>
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/salaries.js"></script>

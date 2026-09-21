@@ -76,7 +76,7 @@
              prefers-reduced-motion. -->
         <figure class="hero-visual" data-hero-visual>
           <svg class="saple-scene" viewBox="0 0 480 420" role="img"
-            aria-label="Illustration of a sapling growing into a connected network of career signals"
+            aria-label="Illustration of a sapling growing from a seed into a leafy young tree"
             focusable="false">
             <defs>
               <linearGradient id="saple-trunk-gradient" x1="0" y1="1" x2="0.65" y2="0">
@@ -136,36 +136,9 @@
                 <ellipse cx="243" cy="105" rx="35" ry="21" transform="rotate(-12 243 105)" />
               </g>
             </g>
-
-            <!-- The four signals Saple actually models, drawn as nodes linked
-                 back to the company at the centre of the canopy. -->
-            <g class="scene-layer scene-layer-front" data-depth="1">
-              <g class="signal-links" fill="none">
-                <path class="signal-link" d="M250 120 C190 120 130 118 96 108" />
-                <path class="signal-link" d="M250 120 C320 118 372 110 404 96" />
-                <path class="signal-link" d="M250 120 C196 168 140 214 92 252" />
-                <path class="signal-link" d="M250 120 C314 168 366 212 410 250" />
-              </g>
-              <g class="signal-node signal-node-1">
-                <circle cx="88" cy="104" r="21" />
-                <text x="88" y="109" text-anchor="middle">৳</text>
-              </g>
-              <g class="signal-node signal-node-2">
-                <circle cx="410" cy="92" r="21" />
-                <text x="410" y="98" text-anchor="middle">★</text>
-              </g>
-              <g class="signal-node signal-node-3">
-                <circle cx="86" cy="258" r="21" />
-                <text x="86" y="264" text-anchor="middle">?</text>
-              </g>
-              <g class="signal-node signal-node-4">
-                <circle cx="416" cy="256" r="21" />
-                <text x="416" y="262" text-anchor="middle">✓</text>
-              </g>
-            </g>
           </svg>
           <figcaption class="sr-only">
-            Salary, review, interview and verification signals connect back to a single company record.
+            A seed sprouts, grows a trunk and branches, and opens into a leafy young tree.
           </figcaption>
         </figure>
       </div>
@@ -374,43 +347,8 @@
   </main>
 
   <footer class="site-footer">
-    <div class="footer-main container">
-      <section class="footer-brand" aria-labelledby="footer-brand-heading">
-        <a class="footer-logo" href="index.html" aria-label="Saple home"><span class="footer-logo-mark"
-            aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a>
-        <p>Company insights, salary context, benefits, reviews, interview experiences and job postings for better
-          career decisions.</p>
-        <div class="project-tags" aria-label="Project technologies">
-          <span>PostgreSQL</span><span>Express</span><span>Vanilla JavaScript</span>
-        </div>
-      </section>
-      <nav class="footer-column" aria-labelledby="footer-explore-heading">
-        <h2 id="footer-explore-heading">Explore</h2>
-        <ul>
-          <li><a href="companies.html">Companies</a></li>
-          <li><a href="salaries.html">Salaries</a></li>
-          <li><a href="reviews.html">Reviews</a></li>
-          <li><a href="interviews.html">Interviews</a></li>
-          <li><a href="jobs.html">Jobs</a></li>
-        </ul>
-      </nav>
-      <nav class="footer-column" aria-labelledby="footer-contribute-heading">
-        <h2 id="footer-contribute-heading">Account &amp; contribute</h2>
-        <ul>
-          <li><a href="login.html">Sign in</a></li>
-          <li><a href="register.html">Create account</a></li>
-          <li><a href="my-applications.html">My applications</a></li>
-          <li><a href="submit-salary.html">Submit salary</a></li>
-          <li><a href="https://github.com/mdraihankabirsifat/Saple" rel="noopener noreferrer">GitHub repository</a></li>
-        </ul>
-      </nav>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
-        <p>Built for informed career decisions.</p>
-      </div>
-    </div>
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/home.js"></script>

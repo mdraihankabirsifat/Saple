@@ -172,38 +172,6 @@
 .leaves-4 { animation: reveal-leaves 0.52s cubic-bezier(0.2, 0.8, 0.3, 1) 2.5s both; }
 .leaves-5 { animation: reveal-leaves 0.58s cubic-bezier(0.2, 0.8, 0.3, 1) 2.72s both; }
 
-.signal-link {
-  stroke: var(--saple-green-500);
-  stroke-width: 2;
-  stroke-dasharray: 4 7;
-  stroke-linecap: round;
-  opacity: 0.75;
-  animation: fade-in 0.6s ease-out 2.6s both;
-}
-
-.signal-node circle {
-  fill: var(--surface);
-  stroke: var(--saple-green-600);
-  stroke-width: 2;
-}
-
-.signal-node text {
-  fill: var(--saple-green-800);
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.signal-node {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.signal-node-1 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 2.75s both; }
-.signal-node-2 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 2.88s both; }
-.signal-node-3 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 3.01s both; }
-.signal-node-4 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 3.14s both; }
-
 @keyframes seed-appear {
   from { opacity: 0; transform: scale(0.55); }
   to { opacity: 1; transform: scale(1); }
@@ -227,16 +195,6 @@
 @keyframes reveal-leaves {
   from { opacity: 0; transform: scale(0.45); }
   to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes node-pop {
-  from { opacity: 0; transform: scale(0.4); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 0.75; }
 }
 
 /* 2. Live snapshot -------------------------------------------------------- */
@@ -695,9 +653,7 @@
   .tree-shoot,
   .tree-trunk,
   .tree-branch,
-  .leaf-cluster,
-  .signal-link,
-  .signal-node {
+  .leaf-cluster {
     animation: none;
     opacity: 1;
   }

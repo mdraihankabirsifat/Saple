@@ -590,18 +590,29 @@ main {
   color: var(--text-secondary);
 }
 
+/* Site footer ---------------------------------------------------------------
+   One dark footer on every page, rendered by nav.js: four columns, an original
+   landscape strip, then a slim bottom row. It stays dark in both themes, so
+   its colours are fixed rather than taken from the light/dark tokens. */
 .site-footer {
-  color: #c5d2cc;
+  --footer-bg: #0d2a21;
+  --footer-bg-deep: #092119;
+  --footer-text: #c5d2cc;
+  --footer-muted: #a9bcb3;
+  --footer-heading: #ffffff;
+  --footer-link: #d4e1db;
+  --footer-accent: #7ed3ab;
+  color: var(--footer-text);
   border-top: 4px solid var(--saple-green-600);
-  background: #0d2a21;
+  background: var(--footer-bg);
   font-size: 0.92rem;
 }
 
 .footer-main {
-  padding-block: 3.5rem;
+  padding-block: clamp(2.75rem, 5vw, 4rem) 2rem;
   display: grid;
-  grid-template-columns: minmax(260px, 1.5fr) repeat(2, minmax(170px, 0.8fr));
-  gap: clamp(2rem, 6vw, 5rem);
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(2rem, 4vw, 4rem);
 }
 
 .footer-logo {
@@ -613,31 +624,42 @@ main {
 }
 
 .footer-brand p {
-  max-width: 390px;
-  margin: 1rem 0 1.25rem;
-  color: #aebfb7;
+  max-width: 42ch;
+  margin: 0.9rem 0 0;
+  color: var(--footer-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
 }
 
-.project-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+.footer-brand .site-identity {
+  color: var(--footer-text);
+  font-weight: 650;
 }
 
-.project-tags span {
-  padding: 0.3rem 0.65rem;
-  border: 1px solid rgba(197, 210, 204, 0.2);
+.footer-repository {
+  margin-top: 1.1rem;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--footer-link);
+  border: 1px solid rgba(197, 210, 204, 0.28);
   border-radius: 999px;
-  color: #dbe6e1;
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.footer-repository::after {
+  content: "\2197";
+  font-size: 0.8em;
 }
 
 .footer-column h2 {
-  margin-bottom: 1rem;
-  color: #ffffff;
-  font-size: 0.86rem;
+  margin: 0.35rem 0 1rem;
+  color: var(--footer-heading);
+  font-size: 0.84rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -646,70 +668,122 @@ main {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.68rem;
+  gap: 0.15rem;
   list-style: none;
-}
-
-.footer-column a,
-.footer-column span {
-  color: #aebfb7;
 }
 
 .footer-column a {
+  min-height: 36px;
+  padding-block: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  color: var(--footer-link);
   text-decoration: none;
-  text-underline-offset: 0.2rem;
+  text-underline-offset: 0.22rem;
 }
 
-.footer-column a:hover {
+.footer-column a:hover,
+.footer-column a:focus-visible,
+.footer-repository:hover,
+.footer-repository:focus-visible {
   color: #ffffff;
   text-decoration: underline;
 }
+
+.footer-repository:hover,
+.footer-repository:focus-visible {
+  border-color: var(--footer-accent);
+}
+
+.footer-column a[aria-current="page"] {
+  color: var(--footer-accent);
+  font-weight: 750;
+}
+
+.footer-column a:active,
+.footer-repository:active,
+.footer-back-to-top:active {
+  color: var(--footer-accent);
+}
+
+.site-footer :focus-visible {
+  outline-color: var(--footer-accent);
+}
+
+/* Landscape strip: decorative, scales by cropping rather than stretching. */
+.footer-landscape {
+  height: clamp(72px, 8vw, 110px);
+  overflow: hidden;
+  line-height: 0;
+}
+
+.footer-landscape-art {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.landscape-skyline { fill: #143a2e; }
+.landscape-hill-back { fill: #174536; }
+.landscape-hill-front { fill: var(--footer-bg-deep); }
+.sapling-stem { fill: none; stroke: #5fae88; stroke-width: 2.4; stroke-linecap: round; }
+.sapling-leaf { fill: #4fa37b; }
 
 .footer-bottom {
-  border-top: 1px solid rgba(197, 210, 204, 0.16);
-  background: #092119;
+  background: var(--footer-bg-deep);
 }
 
-.footer-information {
-  padding-block: 1rem;
-  border-top: 1px solid rgba(197, 210, 204, 0.16);
-}
-
-.footer-information-links {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
-  list-style: none;
-}
-
-.footer-information-links a {
-  color: #dbe6e1;
-  font-weight: 700;
-  text-decoration: none;
-  text-underline-offset: 0.2rem;
-}
-
-.footer-information-links a:hover,
-.footer-information-links a[aria-current="page"] {
-  color: #ffffff;
-  text-decoration: underline;
+/* Shown only until nav.js renders the full footer. */
+.footer-fallback {
+  margin-block: 0;
+  padding-block: 1.25rem;
+  color: var(--footer-muted);
+  font-size: 0.84rem;
 }
 
 .footer-bottom-content {
-  min-height: 64px;
-  padding-block: 1rem;
+  min-height: 60px;
+  padding-block: 0.75rem;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem 2rem;
+  gap: 0.5rem 1.5rem;
 }
 
 .footer-bottom p {
   margin: 0;
-  color: #91a69d;
+  color: var(--footer-muted);
   font-size: 0.84rem;
+}
+
+.footer-bottom p + p {
+  margin-right: auto;
+}
+
+.footer-back-to-top {
+  min-height: 44px;
+  padding: 0.5rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--footer-link);
+  background: transparent;
+  border: 1px solid rgba(197, 210, 204, 0.3);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.footer-back-to-top::before {
+  content: "\2191";
+}
+
+.footer-back-to-top:hover,
+.footer-back-to-top:focus-visible {
+  color: #ffffff;
+  border-color: var(--footer-accent);
 }
 
 .sr-only {
@@ -728,62 +802,54 @@ main {
   outline-offset: 3px;
 }
 
-@media (max-width: 1050px) {
-  .navbar {
-    min-height: 66px;
-    flex-wrap: wrap;
-  }
+/* Compact navigation. html.nav-compact is set by theme.js before first paint
+   (narrow screens) and by nav.js whenever the full desktop row cannot fit. */
+.nav-compact .navbar {
+  min-height: 66px;
+  flex-wrap: wrap;
+}
 
-  .nav-toggle {
-    display: grid;
-  }
+.nav-compact .nav-toggle {
+  display: grid;
+}
 
-  .nav-menu {
-    width: 100%;
-    padding: 0.6rem 0 1rem;
-    display: none;
-    align-items: stretch;
-    flex-basis: 100%;
-    flex-direction: column;
-  }
+.nav-compact .nav-menu {
+  width: 100%;
+  padding: 0.6rem 0 1rem;
+  display: none;
+  align-items: stretch;
+  flex-basis: 100%;
+  flex-direction: column;
+}
 
-  .nav-menu.is-open {
-    display: flex;
-  }
+.nav-compact .nav-menu.is-open {
+  display: flex;
+}
 
-  .nav-links,
-  .nav-actions {
-    width: 100%;
-    align-items: stretch;
-    flex-direction: column;
-  }
+.nav-compact .nav-links,
+.nav-compact .nav-actions {
+  width: 100%;
+  align-items: stretch;
+  flex-direction: column;
+}
 
-  .nav-links a,
-  .nav-text-link,
-  .nav-actions .button,
-  .contribute-menu summary {
-    width: 100%;
-    justify-content: flex-start;
-  }
+.nav-compact .nav-links a,
+.nav-compact .nav-text-link,
+.nav-compact .nav-actions .button,
+.nav-compact .contribute-menu summary {
+  width: 100%;
+  justify-content: flex-start;
+}
 
-  .nav-links a.active {
-    box-shadow: inset 3px 0 var(--saple-green-600);
-  }
+.nav-compact .nav-links a.active {
+  box-shadow: inset 3px 0 var(--saple-green-600);
+}
 
-  .contribute-options {
-    width: 100%;
-    margin-top: 0.45rem;
-    position: static;
-    box-shadow: none;
-  }
-
-  .footer-main {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .footer-brand {
-    grid-column: 1 / -1;
-  }
+.nav-compact .contribute-options {
+  width: 100%;
+  margin-top: 0.45rem;
+  position: static;
+  box-shadow: none;
 }
 
 @media (max-width: 600px) {
@@ -844,13 +910,13 @@ dialog { color: var(--text-primary); }
 .theme-toggle:hover { border-color: var(--border-hover); background: var(--saple-green-100); }
 .theme-icon::before { content: "\263E"; font-size: 1.5rem; }
 [data-theme="dark"] .theme-icon::before { content: "\2600"; }
-.navbar { gap: 1rem; }
+.navbar { gap: clamp(0.75rem, 1.6vw, 2rem); }
 .brand { flex-shrink: 0; }
-.nav-menu { gap: 0.5rem; }
-.nav-links a, .nav-text-link, .nav-account-name { padding-inline: 0.5rem; }
+.nav-menu { gap: clamp(0.5rem, 1.4vw, 1.5rem); }
+.nav-links a, .nav-text-link, .nav-account-name { padding-inline: clamp(0.4rem, 0.55vw, 0.7rem); }
 .nav-links a { display: flex; align-items: center; min-height: 44px; }
-.nav-actions { flex-wrap: wrap; justify-content: flex-end; }
-.nav-account-name { max-width: 10rem; overflow-wrap: anywhere; }
+.nav-actions { justify-content: flex-end; }
+.nav-account-name { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
 .nav-toggle { order: 3; margin-left: 0; }
 .company-logo { width: 3.25rem; height: 3.25rem; margin-bottom: 0.8rem; padding: 0.4rem; flex: 0 0 auto; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--surface-muted); }
 .company-logo-image, .company-logo-fallback { grid-area: 1 / 1; }
@@ -858,18 +924,20 @@ dialog { color: var(--text-primary); }
 .company-logo-fallback { color: var(--saple-green-800); font-weight: 850; }
 .table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
 .panel-heading, .experience-card-header, .auth-row, .dialog-actions { flex-wrap: wrap; }
-@media (max-width: 1200px) and (min-width: 1051px) {
-  .navbar { flex-wrap: wrap; padding-block: 0.65rem; }
-  .nav-menu { flex-basis: calc(100% - 150px); }
-  .theme-toggle { order: 0; }
-  .nav-actions { gap: 0; }
-}
+.nav-compact .brand { margin-right: auto; }
+.nav-compact .theme-toggle { order: 0; }
+.nav-compact .nav-toggle { order: 1; }
+.nav-compact .nav-menu { order: 3; max-height: calc(100dvh - 80px); overflow-y: auto; }
+.nav-compact .nav-actions { align-items: stretch; }
+.nav-compact .nav-account-name { max-width: none; }
+/* Footer: four columns wide, two on tablets, one on phones. */
 @media (max-width: 1050px) {
-  .brand { margin-right: auto; }
-  .theme-toggle { order: 0; }
-  .nav-toggle { order: 1; }
-  .nav-menu { order: 3; max-height: calc(100dvh - 80px); overflow-y: auto; }
-  .nav-actions { align-items: stretch; }
+  .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-brand { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .footer-main { grid-template-columns: minmax(0, 1fr); }
+  .footer-brand { grid-column: auto; }
 }
 @media (max-width: 600px) {
   .page-header:not(.directory-header .page-header) { padding: 1.1rem; }
@@ -930,38 +998,6 @@ dialog { color: var(--text-primary); }
 }
 
 /* Site identity ----------------------------------------------------------- */
-
-.brand-tagline {
-  display: none;
-  margin-left: 0.6rem;
-  padding-left: 0.6rem;
-  color: var(--text-secondary);
-  border-left: 1px solid var(--border);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-transform: none;
-}
-
-@media (min-width: 1500px) {
-  .brand-tagline {
-    display: inline;
-  }
-}
-
-.site-identity,
-.site-disclaimer {
-  margin: 0.5rem 0 0;
-  max-width: 68ch;
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.6;
-}
-
-.site-identity {
-  color: var(--text-primary);
-  font-weight: 650;
-}
 
 .info-identity {
   margin-top: 1rem;
@@ -1257,9 +1293,11 @@ a.notification-title:hover {
 
 /* Saple Guide ------------------------------------------------------------- */
 
+/* The panel is the first child, so it opens above the launcher, which stays
+   fixed in the bottom-right corner. */
 .guide-root {
-  right: clamp(0.75rem, 3vw, 1.5rem);
-  bottom: clamp(0.75rem, 3vw, 1.5rem);
+  right: 16px;
+  bottom: 16px;
   z-index: 70;
   position: fixed;
   display: flex;
@@ -1299,11 +1337,13 @@ a.notification-title:hover {
   font-weight: 900;
 }
 
+/* Header, composer and footer never scroll; only the transcript does. */
 .guide-panel {
-  width: min(24rem, calc(100vw - 1.5rem));
-  height: min(32rem, calc(100dvh - 7rem));
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(650px, calc(100dvh - 110px));
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: var(--surface-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1316,6 +1356,7 @@ a.notification-title:hover {
 }
 
 .guide-head {
+  flex: none;
   padding: 0.85rem 1rem;
   display: flex;
   gap: 0.5rem;
@@ -1359,10 +1400,12 @@ a.notification-title:hover {
   margin: 0;
   padding: 0.85rem 1rem;
   flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   gap: 0.7rem;
   align-content: start;
   overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
 }
 
@@ -1440,33 +1483,77 @@ a.notification-title:hover {
 }
 
 .guide-form {
+  flex: none;
   padding: 0.7rem 1rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.5rem;
+  align-items: stretch;
   border-top: 1px solid var(--border);
 }
 
 .guide-input {
+  min-width: 0;
+}
+
+.guide-send {
+  min-width: 4.75rem;
+  white-space: nowrap;
+  justify-content: center;
+}
+
+.guide-foot {
+  flex: none;
+  padding: 0.5rem 1rem 0.65rem;
+  display: grid;
+  gap: 0.3rem;
+  border-top: 1px solid var(--border);
+}
+
+.guide-disclosure {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+.guide-foot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.guide-privacy-details {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.guide-foot {
-  padding: 0.6rem 1rem 0.8rem;
-  display: grid;
-  gap: 0.4rem;
-  border-top: 1px solid var(--border);
+.guide-privacy-details summary {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--saple-green-700);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide-privacy-details[open] .guide-privacy {
+  max-height: 7.5rem;
+  overflow-y: auto;
 }
 
 .guide-privacy {
-  margin: 0;
+  margin: 0.25rem 0 0;
   color: var(--text-secondary);
   font-size: 0.71rem;
   line-height: 1.5;
 }
 
 .guide-clear {
-  justify-self: start;
+  min-height: 32px;
   padding: 0;
   color: var(--saple-green-700);
   background: none;
@@ -1475,6 +1562,39 @@ a.notification-title:hover {
   font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Small screens: the open guide becomes a bottom sheet within the viewport,
+   and it steps aside while the filter drawer is open. */
+@media (max-width: 600px) {
+  .guide-root.is-open {
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .guide-root.is-open .guide-launcher {
+    display: none;
+  }
+
+  .guide-root.is-open .guide-panel {
+    width: 100%;
+    max-height: min(85dvh, calc(100dvh - 56px));
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-bottom: 0;
+  }
+
+  .guide-launcher-label {
+    display: none;
+  }
+
+  .guide-launcher {
+    padding: 0.65rem;
+  }
+}
+
+.filters-open .guide-root {
+  display: none;
 }
 
 /* Loading, empty and error states ---------------------------------------- */
@@ -1863,31 +1983,204 @@ a.notification-title:hover {
 }
 
 /* Navigation fit.
-   A label never breaks inside a word. If the signed-in bar holds more than
-   one row allows, whole items wrap to a second row instead. */
+   A label never breaks inside a word, and the desktop bar never wraps to a
+   second row: when the full row does not fit, nav.js switches to the menu
+   button (html.nav-compact). The header uses a wider container than page
+   content so the row fits on common laptop widths. */
+.site-header .navbar {
+  width: min(1600px, calc(100% - 2rem));
+}
+
 .nav-links a,
-.nav-text-link {
+.nav-text-link,
+.nav-account-name,
+.nav-actions .button,
+.contribute-menu summary {
   white-space: nowrap;
 }
 
-@media (min-width: 1051px) {
-  .nav-links,
-  .nav-actions {
-    flex-wrap: wrap;
-    row-gap: 0.15rem;
-  }
+.nav-links,
+.nav-actions {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
-@media (min-width: 1051px) and (max-width: 1320px) {
+@media (max-width: 1320px) {
   .nav-links a,
-  .nav-text-link {
-    padding: 0.5rem 0.45rem;
-    font-size: 0.86rem;
+  .nav-text-link,
+  .nav-account-name {
+    font-size: 0.88rem;
   }
 }
 
-/* The floating Saple Guide never permanently covers page content: the page
-   gains enough bottom room for its last element to scroll above the launcher. */
-.has-saple-guide .site-footer {
-  padding-bottom: 5rem;
+/* The floating Saple Guide never permanently covers page content: the footer's
+   bottom row gains enough room for the back-to-top button and the last links
+   to scroll clear of the launcher. */
+.has-saple-guide .footer-bottom {
+  padding-bottom: 4.5rem;
+}
+
+/* Browse pages ---------------------------------------------------------------
+   Companies, Salaries, Reviews, Interviews and Jobs share one system: a wide
+   shell, a sticky filter sidebar that scrolls on its own and stops at the end
+   of the results (never over the footer), and a Filters drawer on tablets and
+   phones. Behaviour lives in js/browse-controls.js. */
+.browse-shell {
+  width: min(1640px, calc(100% - 2.5rem));
+}
+
+.browse-grid {
+  display: grid;
+  grid-template-columns: clamp(280px, 21vw, 340px) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.25rem, 2vw, 2rem);
+}
+
+.browse-grid > * {
+  min-width: 0;
+}
+
+.browse-sidebar {
+  position: sticky;
+  top: calc(var(--header-height) + 16px);
+  max-height: calc(100dvh - var(--header-height) - 32px);
+  padding: 1rem 1.1rem 0;
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.browse-sidebar .filter-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.filter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.filter-heading h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Apply and Clear stay reachable at the bottom of a long filter list. */
+.browse-sidebar .filter-actions {
+  margin: 0;
+  padding-block: 0.75rem 1rem;
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.browse-sidebar .filter-actions .button {
+  flex: 1 1 0;
+}
+
+.result-summary.state-message {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.92rem;
+}
+
+.result-summary.state-message.error {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--danger-border);
+  background: var(--danger-surface);
+}
+
+.filter-drawer-toggle,
+.filter-close {
+  display: none;
+}
+
+.filter-count {
+  min-width: 1.5rem;
+  justify-content: center;
+}
+
+.filter-drawer {
+  width: min(520px, calc(100% - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  padding: 0;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.filter-drawer::backdrop {
+  background: rgba(9, 25, 17, 0.65);
+}
+
+.filter-drawer .browse-sidebar {
+  position: static;
+  max-height: calc(100dvh - 1.5rem - 2px);
+  border: 0;
+  box-shadow: none;
+}
+
+.filters-open {
+  overflow: hidden;
+}
+
+@media (max-width: 1050px) {
+  .browse-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .browse-grid > .browse-sidebar {
+    display: none;
+  }
+
+  .filter-drawer-toggle {
+    margin-bottom: 1rem;
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  .filter-close {
+    display: inline-flex;
+  }
+
+  .browse-sidebar input,
+  .browse-sidebar select {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+}
+
+/* Phones: the drawer is a bottom sheet. */
+@media (max-width: 600px) {
+  .browse-shell {
+    width: min(100% - 1.5rem, 1640px);
+  }
+
+  .filter-drawer {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90dvh;
+    margin: auto 0 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+
+  .filter-drawer .browse-sidebar {
+    max-height: 90dvh;
+  }
+
+  .filter-drawer-toggle {
+    width: 100%;
+    justify-content: center;
+  }
 }

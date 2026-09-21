@@ -1,5 +1,7 @@
 import { fetchApi } from './api.js';
+import { clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination } from './ui.js';
 import { buildQuery, companyDetailsLink, createMeta, loadCompanyAndRoleOptions } from './browse-shared.js';
+import { createBrowseController, paginateList, describeRange } from './browse-controls.js';
 
 const form = document.querySelector('#review-filters');
 const company = document.querySelector('#review-company-filter');
@@ -8,6 +10,7 @@ const location = document.querySelector('#review-location-filter');
 const rating = document.querySelector('#review-rating-filter');
 const status = document.querySelector('#review-browse-status');
 const results = document.querySelector('#review-results');
+const paginationHost = document.querySelector('#review-pagination');
 
 function textBlock(title, value) {
   const block = document.createElement('section');
@@ -45,19 +48,63 @@ function reviewCard(item) {
   return card;
 }
 
-async function load() {
-  results.replaceChildren(); status.hidden = false; status.classList.remove('error');
-  status.textContent = 'Loading approved reviews…';
-  const query = buildQuery([
-    ['companyId', company.value], ['roleId', role.value], ['location', location.value], ['minRating', rating.value]
-  ]);
+const PAGE_SIZE = 10;
+const NOUN = {"singular":"review","plural":"reviews"};
+// Sorting happens in the browser over the approved set the API returned; the
+// server keeps its own stable order and receives only the filters it accepts.
+const SORTS = {
+  newest: () => 0,
+  'rating-desc': (a, b) => Number(b.overallRating) - Number(a.overallRating),
+  'rating-asc': (a, b) => Number(a.overallRating) - Number(b.overallRating),
+  company: (a, b) => a.companyName.localeCompare(b.companyName)
+};
+let cached = { query: null, items: [] };
+
+async function load(state, controller) {
+  const filters = state.filters;
+  const query = buildQuery([['companyId', filters.companyId], ['roleId', filters.roleId], ['location', filters.location], ['minRating', filters.minRating]]);
+  status.classList.remove('error');
+  status.textContent = "Loading approved reviews…";
+  clear(paginationHost);
+  if (cached.query !== query) renderSkeletons(results, 3, 'card');
+
   try {
-    const items = await fetchApi(`/api/reviews${query}`);
-    if (!items.length) { status.textContent = 'No approved reviews match these filters.'; return; }
-    status.hidden = true; items.forEach((item) => results.append(reviewCard(item)));
-  } catch (error) { status.textContent = error.message; status.classList.add('error'); }
+    if (cached.query !== query) cached = { query, items: await fetchApi(`/api/reviews${query}`) };
+    const sorted = [...cached.items].sort(SORTS[filters.sort] || SORTS['newest']);
+    const { items, pagination } = paginateList(sorted, state.page, PAGE_SIZE);
+    status.textContent = describeRange(pagination, NOUN);
+    results.removeAttribute('aria-busy');
+    if (!items.length) {
+      renderEmptyState(results, {
+        title: "No approved reviews match these filters",
+        message: "Try another company, a lower minimum rating, or clear the filters.",
+        actionLabel: 'Clear filters',
+        onAction: () => controller.clear()
+      });
+      return;
+    }
+    results.replaceChildren(...items.map(reviewCard));
+    renderPagination(paginationHost, pagination, (page) => {
+      controller.goTo(page);
+      results.closest('section')?.scrollIntoView({ block: 'start' });
+    });
+  } catch (error) {
+    cached = { query: null, items: [] };
+    status.textContent = 'Results could not be loaded.';
+    status.classList.add('error');
+    renderErrorState(results, error, () => controller.reload());
+  }
 }
 
-form.addEventListener('submit', (event) => { event.preventDefault(); load(); });
-form.addEventListener('reset', () => setTimeout(load));
-(async () => { try { await loadCompanyAndRoleOptions(company, role); } catch (error) { status.textContent = error.message; } await load(); })();
+const browse = createBrowseController({
+  form,
+  toggle: document.querySelector('[data-filter-toggle]'),
+  fields: ['companyId', 'roleId', 'location', 'minRating', 'sort'],
+  defaults: { sort: 'newest' },
+  load
+});
+
+(async () => {
+  try { await loadCompanyAndRoleOptions(company, role); } catch { /* Filters still work without the lookups. */ }
+  await browse.start();
+})();

@@ -42,8 +42,8 @@
     </nav>
   </header>
 
-  <main id="main-content" class="page-main">
-    <div class="container">
+  <main id="main-content" class="page-main browse-main">
+    <div class="container browse-shell">
       <div class="browse-header">
         <div class="page-header">
           <p class="eyebrow">Open roles</p>
@@ -51,11 +51,19 @@
           <p>Every vacancy here was published by a representative whose company assignment an administrator approved.
             Only published roles that are still inside their application deadline are listed.</p>
         </div>
-        <p id="job-count" class="job-count" aria-live="polite"></p>
+        <p id="job-count" class="job-count"></p>
       </div>
 
-      <div class="browse-layout">
-        <form id="job-filters" class="filter-panel card" aria-label="Job filters">
+      <button class="button button-secondary filter-drawer-toggle" type="button" data-filter-toggle
+        aria-controls="job-filters" aria-expanded="false">Filters &amp; sort <span class="badge filter-count"
+          data-filter-count hidden>0</span></button>
+      <div class="browse-layout browse-grid">
+        <form id="job-filters" class="filter-panel browse-sidebar card" aria-labelledby="job-filters-heading"
+          data-filter-panel novalidate>
+          <div class="filter-heading">
+            <h2 id="job-filters-heading">Filters &amp; sort</h2>
+            <button class="button button-secondary button-small filter-close" type="button" data-filter-close>Close</button>
+          </div>
           <div class="filter-grid">
             <div class="form-group">
               <label for="job-search">Search</label>
@@ -99,6 +107,14 @@
                 <option value="INTERN">Intern</option>
               </select>
             </div>
+            <div class="form-group">
+              <label for="job-sort">Sort by</label>
+              <select class="input" id="job-sort" name="sort">
+                <option value="NEWEST">Newest first</option>
+                <option value="DEADLINE">Closing soonest</option>
+                <option value="COMPANY">Company A&ndash;Z</option>
+              </select>
+            </div>
           </div>
           <div class="filter-actions">
             <button class="button button-primary" type="submit">Apply filters</button>
@@ -107,24 +123,17 @@
         </form>
 
         <section class="browse-results-column" aria-label="Job results">
-          <p id="job-status" class="state-message" role="status" aria-live="polite">Loading open jobs&hellip;</p>
+          <p id="job-status" class="state-message result-summary" role="status" aria-live="polite">Loading open jobs&hellip;</p>
           <div id="job-results" class="job-results"></div>
           <div id="job-pagination" class="pagination-host"></div>
-          <p class="job-disclaimer">Saple is an independent BUET CSE academic project. It is not an official careers
-            site for any company listed here, and applications made through Saple are handled inside this project only.
-          </p>
         </section>
       </div>
     </div>
   </main>
 
   <footer class="site-footer">
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
-        <p>Approved representatives post; applicants stay private.</p>
-      </div>
-    </div>
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/jobs.js"></script>

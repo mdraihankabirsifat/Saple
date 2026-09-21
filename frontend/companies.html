@@ -42,8 +42,8 @@
     </nav>
   </header>
 
-  <main class="page-main directory-main">
-    <section class="container" aria-labelledby="companies-heading">
+  <main class="page-main directory-main browse-main">
+    <section class="container browse-shell" aria-labelledby="companies-heading">
       <div class="directory-header">
         <div class="page-header">
           <p class="eyebrow">Company directory</p>
@@ -51,10 +51,10 @@
           <p>Search the live Saple directory by company name, industry, city, or country.</p>
         </div>
       </div>
-      <button id="directory-filter-toggle" class="button button-secondary" type="button" aria-controls="directory-filters" aria-expanded="false">Filters / Sort <span id="active-filter-count" class="badge">0</span></button>
-      <div class="directory-layout">
-      <aside id="directory-filters" class="directory-sidebar card" aria-labelledby="filters-heading">
-        <div class="filter-heading"><h2 id="filters-heading">Filters &amp; sort</h2><button id="close-directory-filters" class="button button-secondary button-small" type="button">Close</button></div>
+      <button id="directory-filter-toggle" class="button button-secondary filter-drawer-toggle" type="button" data-filter-toggle aria-controls="directory-filters" aria-expanded="false">Filters &amp; sort <span id="active-filter-count" class="badge filter-count" data-filter-count hidden>0</span></button>
+      <div class="directory-layout browse-grid">
+      <aside id="directory-filters" class="directory-sidebar browse-sidebar card" aria-labelledby="filters-heading" data-filter-panel>
+        <div class="filter-heading"><h2 id="filters-heading">Filters &amp; sort</h2><button id="close-directory-filters" class="button button-secondary button-small filter-close" type="button" data-filter-close>Close</button></div>
         <form id="company-search-form" class="search-form" role="search">
           <div class="directory-filter-grid">
             <div class="form-group"><label for="company-search">Company name</label><input id="company-search" name="search" type="search" maxlength="100" placeholder="Name or keyword" autocomplete="off"></div>
@@ -98,42 +98,9 @@
       </div>
     </section>
   </main>
-
-  <dialog id="directory-filter-dialog" aria-labelledby="filters-heading"></dialog>
   <footer class="site-footer">
-    <div class="footer-main container">
-      <section class="footer-brand" aria-labelledby="footer-brand-heading"><a class="footer-logo" href="index.html"
-          aria-label="Saple home"><span class="footer-logo-mark" aria-hidden="true">S</span><span
-            id="footer-brand-heading">Saple</span></a>
-        <p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.
-        </p>
-        <div class="project-tags" aria-label="Project technologies"><span>PostgreSQL</span><span>Express</span><span>Vanilla JavaScript</span></div>
-      </section>
-      <nav class="footer-column" aria-labelledby="footer-explore-heading">
-        <h2 id="footer-explore-heading">Explore</h2>
-        <ul>
-          <li><a href="companies.html">Companies</a></li>
-          <li><a href="index.html#trust-heading">Salary methodology</a></li>
-          <li><a href="reviews.html">Reviews</a></li>
-          <li><a href="interviews.html">Interviews</a></li>
-        </ul>
-      </nav>
-      <nav class="footer-column" aria-labelledby="footer-contribute-heading">
-        <h2 id="footer-contribute-heading">Account &amp; contribute</h2>
-        <ul>
-          <li><a href="login.html">Sign in</a></li>
-          <li><a href="register.html">Create account</a></li>
-          <li><a href="submit-salary.html">Submit salary</a></li>
-          <li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li>
-        </ul>
-      </nav>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
-        <p>Built for informed career decisions.</p>
-      </div>
-    </div>
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/companies.js"></script>

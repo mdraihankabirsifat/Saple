@@ -5,6 +5,9 @@ const { assertCompanyScope, isAdmin } = require('../utils/authorization');
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN'];
 const WORK_MODES = ['ONSITE', 'HYBRID', 'REMOTE'];
+// Public list orderings. Each name maps to a fixed ORDER BY in the repository;
+// the value from the query string is never placed into SQL.
+const PUBLIC_JOB_SORTS = ['NEWEST', 'DEADLINE', 'COMPANY'];
 const JOB_STATUSES = ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'];
 const SALARY_PERIODS = ['MONTHLY', 'YEARLY'];
 const CURRENCY_PATTERN = /^[A-Z]{3}$/;
@@ -47,9 +50,10 @@ function parseJobFilters(query = {}) {
 async function listPublicJobs(query = {}) {
   const filters = parseJobFilters(query);
   const page = validate.pagination(query);
+  const sort = validate.enumValue(query.sort, PUBLIC_JOB_SORTS, 'Sort', { required: false }) || 'NEWEST';
 
   const [items, total] = await Promise.all([
-    jobRepository.findPublicJobs(filters, page),
+    jobRepository.findPublicJobs(filters, { ...page, sort }),
     jobRepository.countPublicJobs(filters)
   ]);
   return validate.paged(items, total, page);

@@ -39,8 +39,8 @@
       </div>
     </nav>
   </header>
-  <main class="page-main">
-    <div class="container">
+  <main class="page-main browse-main">
+    <div class="container browse-shell">
       <div class="browse-header">
         <div class="page-header">
           <p class="eyebrow">Approved interview experiences</p>
@@ -49,50 +49,58 @@
         </div><a class="button button-primary" href="interview-experience.html" data-verified-contributor hidden>+ Share
           interview experience</a>
       </div>
-      <div class="browse-layout">
-      <form id="interview-filters" class="filter-panel card" aria-label="Interview filters">
+      <button class="button button-secondary filter-drawer-toggle" type="button" data-filter-toggle
+        aria-controls="interview-filters" aria-expanded="false">Filters &amp; sort <span class="badge filter-count"
+          data-filter-count hidden>0</span></button>
+      <div class="browse-layout browse-grid">
+      <form id="interview-filters" class="filter-panel browse-sidebar card" aria-labelledby="interview-filters-heading"
+        data-filter-panel novalidate>
+        <div class="filter-heading">
+          <h2 id="interview-filters-heading">Filters &amp; sort</h2>
+          <button class="button button-secondary button-small filter-close" type="button" data-filter-close>Close</button>
+        </div>
         <div class="filter-grid">
           <div class="form-group"><label for="interview-company-filter">Company</label><select
-              id="interview-company-filter">
+              id="interview-company-filter" name="companyId">
               <option value="">All companies</option>
             </select></div>
-          <div class="form-group"><label for="interview-role-filter">Job role</label><select id="interview-role-filter">
+          <div class="form-group"><label for="interview-role-filter">Job role</label><select id="interview-role-filter" name="roleId">
               <option value="">All roles</option>
             </select></div>
           <div class="form-group"><label for="interview-location-filter">Location</label><input
-              id="interview-location-filter" maxlength="100" placeholder="City or country"></div>
+              id="interview-location-filter" name="location" maxlength="100" placeholder="City or country"></div>
           <div class="form-group"><label for="interview-difficulty-filter">Difficulty</label><select
-              id="interview-difficulty-filter">
+              id="interview-difficulty-filter" name="difficultyLevel">
               <option value="">Any difficulty</option>
               <option value="EASY">Easy</option>
               <option value="MEDIUM">Medium</option>
               <option value="HARD">Hard</option>
             </select></div>
-          <div class="form-group"><label for="interview-mode-filter">Mode</label><select id="interview-mode-filter">
+          <div class="form-group"><label for="interview-mode-filter">Mode</label><select id="interview-mode-filter" name="interviewMode">
               <option value="">Any mode</option>
               <option value="ONLINE">Online</option>
               <option value="ONSITE">Onsite</option>
               <option value="HYBRID">Hybrid</option>
             </select></div>
+          <div class="form-group"><label for="interview-sort">Sort by</label><select id="interview-sort" name="sort">
+            <option value="newest">Newest first</option><option value="interview-date">Most recent interview</option><option value="company">Company A&ndash;Z</option>
+          </select></div>
         </div>
         <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button
             class="button button-secondary" type="reset">Clear</button></div>
       </form>
       <section class="browse-results-column" aria-label="Interview results">
-        <p id="interview-browse-status" class="state-message" role="status" aria-live="polite">Loading approved interview
+        <p id="interview-browse-status" class="state-message result-summary" role="status" aria-live="polite">Loading approved interview
           experiences&hellip;</p>
         <div id="interview-results" class="browse-results" aria-live="polite"></div>
+        <div id="interview-pagination" class="pagination-host"></div>
       </section>
       </div>
     </div>
   </main>
   <footer class="site-footer">
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple.</p>
-        <p>Approved experiences only.</p>
-      </div>
-    </div>
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/interviews.js"></script>

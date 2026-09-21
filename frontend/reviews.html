@@ -39,8 +39,8 @@
       </div>
     </nav>
   </header>
-  <main class="page-main">
-    <div class="container">
+  <main class="page-main browse-main">
+    <div class="container browse-shell">
       <div class="browse-header">
         <div class="page-header">
           <p class="eyebrow">Approved workplace reviews</p>
@@ -49,43 +49,51 @@
         </div><a class="button button-primary" href="submit-review.html" data-verified-contributor hidden>+ Write a
           review</a>
       </div>
-      <div class="browse-layout">
-      <form id="review-filters" class="filter-panel card" aria-label="Review filters">
+      <button class="button button-secondary filter-drawer-toggle" type="button" data-filter-toggle
+        aria-controls="review-filters" aria-expanded="false">Filters &amp; sort <span class="badge filter-count"
+          data-filter-count hidden>0</span></button>
+      <div class="browse-layout browse-grid">
+      <form id="review-filters" class="filter-panel browse-sidebar card" aria-labelledby="review-filters-heading"
+        data-filter-panel novalidate>
+        <div class="filter-heading">
+          <h2 id="review-filters-heading">Filters &amp; sort</h2>
+          <button class="button button-secondary button-small filter-close" type="button" data-filter-close>Close</button>
+        </div>
         <div class="filter-grid">
-          <div class="form-group"><label for="review-company-filter">Company</label><select id="review-company-filter">
+          <div class="form-group"><label for="review-company-filter">Company</label><select id="review-company-filter" name="companyId">
               <option value="">All companies</option>
             </select></div>
-          <div class="form-group"><label for="review-role-filter">Job role</label><select id="review-role-filter">
+          <div class="form-group"><label for="review-role-filter">Job role</label><select id="review-role-filter" name="roleId">
               <option value="">All roles</option>
             </select></div>
-          <div class="form-group"><label for="review-location-filter">Location</label><input id="review-location-filter"
+          <div class="form-group"><label for="review-location-filter">Location</label><input id="review-location-filter" name="location"
               maxlength="100" placeholder="City or country"></div>
           <div class="form-group"><label for="review-rating-filter">Minimum rating</label><select
-              id="review-rating-filter">
+              id="review-rating-filter" name="minRating">
               <option value="">Any rating</option>
               <option value="3">3+</option>
               <option value="4">4+</option>
               <option value="4.5">4.5+</option>
             </select></div>
+          <div class="form-group"><label for="review-sort">Sort by</label><select id="review-sort" name="sort">
+            <option value="newest">Newest first</option><option value="rating-desc">Highest rating</option><option value="rating-asc">Lowest rating</option><option value="company">Company A&ndash;Z</option>
+          </select></div>
         </div>
         <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button
             class="button button-secondary" type="reset">Clear</button></div>
       </form>
       <section class="browse-results-column" aria-label="Review results">
-        <p id="review-browse-status" class="state-message" role="status" aria-live="polite">Loading approved
+        <p id="review-browse-status" class="state-message result-summary" role="status" aria-live="polite">Loading approved
           reviews&hellip;</p>
         <div id="review-results" class="browse-results" aria-live="polite"></div>
+        <div id="review-pagination" class="pagination-host"></div>
       </section>
       </div>
     </div>
   </main>
   <footer class="site-footer">
-    <div class="footer-bottom">
-      <div class="footer-bottom-content container">
-        <p>&copy; 2026 Saple.</p>
-        <p>Anonymous display, accountable moderation.</p>
-      </div>
-    </div>
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/reviews.js"></script>

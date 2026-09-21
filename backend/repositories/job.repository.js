@@ -42,12 +42,20 @@ function publicFilterValues(filters) {
   ];
 }
 
-async function findPublicJobs(filters, { limit, offset }) {
+// Fixed orderings for the public job list, chosen by a validated name.
+const PUBLIC_JOB_ORDER = Object.freeze({
+  NEWEST: 'published_at DESC, job_id DESC',
+  DEADLINE: 'application_deadline ASC, job_id DESC',
+  COMPANY: 'company_name ASC, published_at DESC, job_id DESC'
+});
+
+async function findPublicJobs(filters, { limit, offset, sort = 'NEWEST' }) {
+  const orderBy = PUBLIC_JOB_ORDER[sort] || PUBLIC_JOB_ORDER.NEWEST;
   const result = await database.query(`
     SELECT ${PUBLIC_JOB_COLUMNS}
     FROM vw_public_open_jobs
     ${PUBLIC_JOB_FILTER}
-    ORDER BY published_at DESC, job_id DESC
+    ORDER BY ${orderBy}
     LIMIT $7 OFFSET $8
   `, [...publicFilterValues(filters), limit, offset]);
   return result.rows;

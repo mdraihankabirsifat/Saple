@@ -50,16 +50,15 @@ test('company cards and detail header place accessible rating text beside the na
   }
 });
 
-test('salary, review, and interview pages use a responsive sidebar browse layout', () => {
+test('salary, review, and interview pages use the shared sticky sidebar browse layout', () => {
   for (const filename of ['salaries.html', 'reviews.html', 'interviews.html']) {
     const html = read(`frontend/${filename}`);
-    assert.match(html, /class="browse-layout"/);
-    assert.match(html, /class="filter-panel card" aria-label=/);
+    assert.match(html, /class="browse-layout browse-grid"/);
+    assert.match(html, /class="filter-panel browse-sidebar card"[^>]*data-filter-panel/);
     assert.match(html, /class="browse-results-column"/);
   }
-  const css = read('frontend/css/browse.css');
-  assert.match(css, /grid-template-columns: minmax\(220px, 270px\) minmax\(0, 1fr\)/);
-  assert.match(css, /\.filter-panel \{[\s\S]*position: sticky/);
-  assert.match(css, /@media \(max-width: 900px\)[\s\S]*\.browse-layout \{ grid-template-columns: 1fr; \}/);
-  assert.match(css, /@media \(max-width: 600px\)[\s\S]*\.filter-grid[^\n]*grid-template-columns: 1fr/);
+  const css = read('frontend/css/common.css');
+  assert.match(css, /\.browse-grid \{[\s\S]*?grid-template-columns: clamp\(280px, 21vw, 340px\) minmax\(0, 1fr\)/);
+  assert.match(css, /\.browse-sidebar \{[\s\S]*?position: sticky/);
+  assert.match(css, /@media \(max-width: 1050px\) \{[\s\S]*?\.browse-grid \{\s*grid-template-columns: minmax\(0, 1fr\);/);
 });

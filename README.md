@@ -292,7 +292,7 @@ account the record belongs to); *Job seeker* (`USER` role); *Verified scope*
 | GET | `/api/companies`, `/api/companies/filter-options` | Public | Company search and filter options |
 | GET | `/api/companies/:id`, `…/benefits`, `…/salary-summary`, `…/reviews`, `…/interviews` | Public | Company profile and approved data |
 | GET | `/api/salaries`, `/api/reviews`, `/api/interviews`, `/api/job-roles` | Public | Approved data across companies |
-| GET | `/api/jobs`, `/api/jobs/filter-options`, `/api/jobs/:jobId` | Public | Published, in-deadline jobs only |
+| GET | `/api/jobs`, `/api/jobs/filter-options`, `/api/jobs/:jobId` | Public | Published, in-deadline jobs only; `sort` = `NEWEST` (default), `DEADLINE` or `COMPANY` |
 | GET | `/api/assistant/status` | Public | Whether the guide can use a provider (never which one) |
 | POST | `/api/assistant/messages` | Public, rate-limited | Ask the Saple Guide |
 | POST | `/api/auth/register`, `/api/auth/login` | Public, rate-limited | Create account (always `USER`), sign in |

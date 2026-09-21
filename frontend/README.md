@@ -22,9 +22,9 @@ The pages load no third-party resource and run under a strict self-only Content-
 | --- | --- |
 | `index.html` | Homepage, search handoff, trust explanation, and CSS-animated decorative sapling-to-tree illustration |
 | `companies.html` | Live company grid with approved rating/count beside each company name |
-| `salaries.html` | Public approved salary ranges with a desktop left filter sidebar |
-| `reviews.html` | Public approved reviews with a desktop left filter sidebar |
-| `interviews.html` | Public approved interviews with a desktop left filter sidebar |
+| `salaries.html` | Public approved salary ranges with the shared filter sidebar, sort and pages |
+| `reviews.html` | Public approved reviews with the shared filter sidebar, sort and pages |
+| `interviews.html` | Public approved interviews with the shared filter sidebar, sort and pages |
 | `faq.html` | Accessible accordion explaining public access, verification, moderation, privacy, and project limits |
 | `about.html` | Academic purpose, workflow, technology, privacy model, disclaimer, and realistic future scope |
 | `company-details.html` | Live profile, benefits, salary ranges, approved reviews/interviews, and report dialog |
@@ -45,7 +45,7 @@ The pages load no third-party resource and run under a strict self-only Content-
 
 The login-page recovery link opens `forgot-password.html`. The reset page reads the emailed token once, removes it from the visible address bar with `history.replaceState`, keeps it only in memory, and never logs or stores it. Both forms prevent duplicate submissions, announce outcomes through live status regions, and use the backend's controlled error messages.
 
-`js/nav.js` renders Home, Companies, Salaries, Reviews, Interviews, FAQ, and About consistently on every page, applies the active state and `aria-current`, and adds FAQ/About to every footer. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `Contribute` plus page CTAs only when `verifiedScopes` contains an active company-role verification. ADMIN status alone never reveals contribution access.
+`js/nav.js` renders Home, Companies, Salaries, Reviews, Interviews, Jobs, FAQ, and About consistently on every page and applies the active state and `aria-current`. The desktop bar is always a single row: `nav.js` measures whether the logo, links, account controls and theme toggle fit, and otherwise switches to the menu button by setting `html.nav-compact` (which `theme.js` also sets before first paint on screens up to 1050px). It also renders the one shared footer on every page: four columns (Saple, Explore, Account & contribute, Help), an original inline-SVG landscape strip and a bottom row with a Back to top button. Each HTML file carries only a one-line fallback inside `<footer class="site-footer">`, which the renderer replaces. It refreshes `/api/auth/me`, renders Profile/sign-out actions, exposes the verification link only to employee accounts, and shows `Contribute` plus page CTAs only when `verifiedScopes` contains an active company-role verification. ADMIN status alone never reveals contribution access.
 
 ## Contribution Forms
 
@@ -94,6 +94,7 @@ Pending submissions allow all three decisions. Approved reported submissions all
 | `js/faq.js` | Single-open FAQ state and accordion keyboard navigation |
 | `js/companies.js` | Directory loading and search |
 | `js/browse-shared.js` | Shared public browse options, queries, metadata, and links |
+| `js/browse-controls.js` | Shared browse behaviour: filter drawer below 1050px, address-bar filters, active-filter count, Apply/Clear, client-side paging |
 | `js/salaries.js`, `js/reviews.js`, `js/interviews.js` | Approved-data browse filters and safe card rendering |
 | `js/company-details.js` | Public company content and reporting |
 | `js/login.js`, `js/register.js` | Account flows |
@@ -129,7 +130,7 @@ With Supabase PostgreSQL configured and the backend running:
 11. Report an approved card; confirm duplicate reporting is rejected.
 12. As ADMIN, mark the report reviewing, inspect the target, flag/reject when appropriate, then resolve the report.
 13. Confirm flagged/rejected content disappears from public pages and review aggregates.
-14. Check keyboard use and desktop, tablet, and mobile widths; the three browse filters must be left sidebars on desktop and move above results without overflow below 900px.
+14. Check keyboard use at 1920, 1440, 1280, 1024, 768, 390 and 360px wide. The header is one row or the menu button, never two rows. On Companies, Salaries, Reviews, Interviews and Jobs the filters are a sticky left sidebar on desktop and a Filters drawer (with an active-filter count, Apply, Clear, Escape to close) below 1050px; Apply returns to page 1 and Clear removes every filter from the address bar. The Saple Guide opens above its launcher, keeps Send on one line, and becomes a bottom sheet on phones.
 15. Open FAQ and About from the header and footer on desktop/mobile; confirm their active states and use the FAQ with pointer, Enter/Space, Escape, Arrow keys, Home, and End.
 16. Configure SMTP, request a reset email, use the received link once, and confirm invalid, expired, reused, mismatched, and weak-password cases show controlled messages.
 17. View the homepage at desktop/tablet/mobile sizes, then enable reduced motion and disable JavaScript; confirm the mature decorative tree remains visible without overflow.

@@ -64,12 +64,15 @@ the site's identity unmissable on every page that asks for input.
 - Every page's footer carries "Saple - an independent BUET CSE academic
   project for company and career insights" and a statement that Saple is not
   affiliated with, endorsed by, or an official login or careers service for any
-  listed company. The header wordmark carries a short tagline to the same
-  effect.
+  listed company. The footer is rendered once, by `js/nav.js`, so it is the
+  same on every page. The header wordmark carries the same identity in its
+  `title` only, so the navigation keeps its space; the visible academic
+  disclosure is on the homepage badge, the account notices, About and the footer.
 - Sign-in, registration, forgot-password, reset-password, employee
   verification, job application and the representative workspace each show a
-  notice beside the form saying whose account this is, and that Saple never
-  asks for a company, Google or Microsoft password.
+  notice saying whose account this is, and that Saple never asks for a
+  company, Google, Microsoft or email-provider password. On the four account
+  pages the notice sits inside the form card, directly above the form.
 - There is no "Sign in with Google" or any other third-party sign-in control,
   and no third-party brand is imitated anywhere.
 - Privacy, Terms, Security and Contact pages describe what is actually

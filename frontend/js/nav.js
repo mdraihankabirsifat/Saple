@@ -11,7 +11,9 @@ const assistantModuleUrl = new URL('./assistant.js', moduleBase);
 // Saple identifies itself the same way on every page. These two sentences are
 // injected here rather than copied into 20 HTML files so they cannot drift.
 const SITE_IDENTITY = 'Saple - an independent BUET CSE academic project for company and career insights.';
-const SITE_DISCLAIMER = 'Saple is not affiliated with, endorsed by, or an official login or careers service for any company listed here. Company data shown is contributed and moderated within this academic project.';
+// The footer brand column also carries what the Jobs page used to say in its
+// own isolated paragraph: applications stay inside this project.
+const SITE_DISCLAIMER = 'Saple is not affiliated with, endorsed by, or an official login or careers service for any company listed here. Company data is contributed and moderated within this academic project, and job applications made through Saple are handled inside Saple only.';
 
 if ('serviceWorker' in navigator && window.isSecureContext) {
   navigator.serviceWorker.register(new URL('../sw.js', moduleBase).href).catch(() => {});
@@ -55,12 +57,12 @@ const publicNavigation = [
 ];
 
 const informationPages = [
-  { label: 'About', destination: 'about.html' },
   { label: 'FAQ', destination: 'faq.html' },
+  { label: 'About', destination: 'about.html' },
+  { label: 'Contact', destination: 'contact.html' },
   { label: 'Privacy', destination: 'privacy.html' },
   { label: 'Terms', destination: 'terms.html' },
-  { label: 'Security', destination: 'security.html' },
-  { label: 'Contact', destination: 'contact.html' }
+  { label: 'Security', destination: 'security.html' }
 ];
 
 function currentPageName() {
@@ -85,10 +87,10 @@ function ensureSkipLink() {
 // Account and verification forms carry their own statement of whose site this
 // is, next to the form, because that is where a look-alike page would lie.
 const ACCOUNT_SURFACES = {
-  'login.html': 'You are signing in to Saple with a Saple account. Saple is an independent BUET CSE academic project and never asks for a company, Google or Microsoft password.',
-  'register.html': 'You are creating a Saple account. Saple is an independent BUET CSE academic project, not a company careers or login service.',
-  'forgot-password.html': 'Saple emails a single-use reset link for your Saple account. It never asks for your password by email.',
-  'reset-password.html': 'You are choosing a new password for your Saple account only. Saple is an independent BUET CSE academic project.',
+  'login.html': 'Sign in with your Saple account only. Saple is an independent BUET CSE academic project and never asks for a company, Google, Microsoft or email-provider password.',
+  'register.html': 'You are creating a Saple account only. Saple is an independent BUET CSE academic project, not a company careers or login service, and never asks for a company, Google, Microsoft or email-provider password.',
+  'forgot-password.html': 'This resets a Saple account only. Saple emails a single-use link and never asks for your password, or for a company, Google, Microsoft or email-provider password.',
+  'reset-password.html': 'You are choosing a new password for your Saple account only. Never reuse a company, Google, Microsoft or email-provider password here.',
   'employee-verification.html': 'Verification is reviewed inside Saple, an independent academic project. Never enter your company email password or any login credentials here.',
   'job-details.html': 'Applications go to the approved representatives of this company inside Saple. Saple is not the company\u2019s official careers site.',
   'representative.html': 'This workspace is part of Saple, an independent BUET CSE academic project. It is not an official system of any company.'
@@ -103,6 +105,15 @@ function renderAccountSurfaceNotice() {
   notice.className = 'surface-notice';
   notice.dataset.surfaceNotice = '';
   notice.textContent = message;
+
+  // On the two-column account pages the notice sits inside the form card,
+  // directly above the form. Prepending it to .auth-layout would make it a
+  // third grid item and push the form below the fold.
+  const authForm = main.querySelector('.auth-card .auth-form');
+  if (authForm) {
+    authForm.before(notice);
+    return;
+  }
   const container = main.querySelector('.container') || main;
   container.prepend(notice);
 }
@@ -130,46 +141,133 @@ function renderPublicNavigation() {
   }));
 }
 
-// A short, permanent statement of what this site is, next to the wordmark.
+// The wordmark keeps an accessible identity in its title only. The visible
+// academic disclosure lives in the hero badge, the account notices, the About
+// page and the footer, so it never takes header space from the navigation.
 function renderBrandIdentity() {
   const brand = document.querySelector('.site-header .brand');
-  if (!brand || brand.querySelector('.brand-tagline')) return;
-
-  const tagline = document.createElement('span');
-  tagline.className = 'brand-tagline';
-  tagline.textContent = 'Independent BUET CSE academic project';
-  brand.append(tagline);
+  if (!brand) return;
+  brand.querySelector('.brand-tagline')?.remove();
   brand.setAttribute('title', SITE_IDENTITY);
 }
 
-function renderFooterInformationLinks() {
-  const footer = document.querySelector('.site-footer');
-  const footerBottom = footer?.querySelector('.footer-bottom');
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-  if (!footer || !footerBottom || footer.querySelector('[data-footer-information]')) return;
+function svgNode(name, attributes = {}) {
+  const node = document.createElementNS(SVG_NS, name);
+  for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+  return node;
+}
 
-  const wrapper = document.createElement('div');
-  const navigation = document.createElement('nav');
-  const list = document.createElement('ul');
+// An original, decorative landscape: two rolling hills, a low campus and city
+// skyline, and a row of saplings. Colours come from footer CSS classes, so the
+// strip follows both themes and needs no inline style.
+function buildFooterLandscape() {
+  const svg = svgNode('svg', {
+    class: 'footer-landscape-art',
+    viewBox: '0 0 1440 120',
+    preserveAspectRatio: 'xMidYMax slice',
+    focusable: 'false',
+    'aria-hidden': 'true'
+  });
+
+  const skyline = svgNode('g', { class: 'landscape-skyline' });
+  const buildings = [
+    [96, 58, 34], [138, 44, 26], [170, 66, 40], [520, 50, 30], [556, 36, 22], [584, 60, 46],
+    [636, 46, 28], [930, 54, 36], [972, 40, 24], [1002, 62, 34], [1244, 48, 30], [1282, 34, 22], [1310, 56, 38]
+  ];
+  for (const [x, y, width] of buildings) {
+    skyline.append(svgNode('rect', { x, y, width, height: 120 - y, rx: 2 }));
+  }
+  // A small arched gateway stands in for the campus, without copying any real building.
+  skyline.append(svgNode('path', { d: 'M700 92 V60 Q730 36 760 60 V92 H748 V66 Q730 52 712 66 V92 Z' }));
+
+  svg.append(
+    skyline,
+    svgNode('path', { class: 'landscape-hill landscape-hill-back', d: 'M0 88 C180 60 330 70 520 84 C720 98 900 58 1120 70 C1260 78 1360 86 1440 80 V120 H0 Z' }),
+    svgNode('path', { class: 'landscape-hill landscape-hill-front', d: 'M0 104 C220 88 420 96 640 104 C860 112 1080 90 1280 96 C1360 99 1410 102 1440 100 V120 H0 Z' })
+  );
+
+  const saplings = svgNode('g', { class: 'landscape-saplings' });
+  for (const [x, base, scale] of [[60, 104, 1], [250, 98, 0.8], [410, 100, 1.1], [820, 104, 0.9], [1090, 94, 1.05], [1390, 100, 0.85]]) {
+    const plant = svgNode('g', { transform: `translate(${x} ${base}) scale(${scale})` });
+    plant.append(
+      svgNode('path', { class: 'sapling-stem', d: 'M0 0 V-26' }),
+      svgNode('path', { class: 'sapling-leaf', d: 'M0 -18 C-12 -20 -16 -30 -14 -34 C-6 -32 0 -26 0 -18 Z' }),
+      svgNode('path', { class: 'sapling-leaf', d: 'M0 -24 C12 -26 16 -36 14 -40 C6 -38 0 -32 0 -24 Z' })
+    );
+    saplings.append(plant);
+  }
+  svg.append(saplings);
+  return svg;
+}
+
+function footerLinkColumn(id, heading, links, extraClass = '') {
   const pageName = currentPageName();
-
-  wrapper.className = 'footer-information container';
-  wrapper.dataset.footerInformation = '';
-  navigation.setAttribute('aria-label', 'Project information');
-  list.className = 'footer-information-links';
-
-  informationPages.forEach((item) => {
+  const list = document.createElement('ul');
+  for (const item of links) {
     const listItem = document.createElement('li');
     const link = document.createElement('a');
-
     link.href = item.destination;
     link.textContent = item.label;
     if (item.destination === pageName) link.setAttribute('aria-current', 'page');
+    if (item.data) link.dataset[item.data] = '';
+    if (item.hidden) listItem.hidden = true;
     listItem.append(link);
     list.append(listItem);
-  });
+  }
+  const title = document.createElement('h2');
+  title.id = id;
+  title.textContent = heading;
+  const column = document.createElement('nav');
+  column.className = `footer-column ${extraClass}`.trim();
+  column.dataset.footerColumn = '';
+  column.setAttribute('aria-labelledby', id);
+  column.append(title, list);
+  return column;
+}
 
-  navigation.append(list);
+const footerExplore = [
+  { label: 'Companies', destination: 'companies.html' },
+  { label: 'Salaries', destination: 'salaries.html' },
+  { label: 'Reviews', destination: 'reviews.html' },
+  { label: 'Interviews', destination: 'interviews.html' },
+  { label: 'Jobs', destination: 'jobs.html' }
+];
+
+const footerAccount = [
+  { label: 'Sign in', destination: 'login.html', data: 'footerSignedOut' },
+  { label: 'Create account', destination: 'register.html', data: 'footerSignedOut' },
+  { label: 'My applications', destination: 'my-applications.html' },
+  { label: 'Submit salary', destination: 'submit-salary.html' },
+  { label: 'Write a review', destination: 'submit-review.html' },
+  { label: 'Share interview experience', destination: 'interview-experience.html' },
+  { label: 'Representative workspace', destination: 'representative.html', data: 'footerRepresentative', hidden: true }
+];
+
+// One footer for every page. Each HTML file carries only a short fallback
+// line inside <footer class="site-footer">; it is replaced here, so the page
+// markup and this renderer can never both contribute visible content.
+function renderSiteFooter() {
+  const footer = document.querySelector('.site-footer');
+  if (!footer || footer.dataset.footerRendered === 'true') return;
+
+  const logo = document.createElement('a');
+  logo.className = 'footer-logo';
+  logo.href = 'index.html';
+  logo.setAttribute('aria-label', 'Saple home');
+  const mark = document.createElement('span');
+  mark.className = 'footer-logo-mark';
+  mark.setAttribute('aria-hidden', 'true');
+  mark.textContent = 'S';
+  const wordmark = document.createElement('span');
+  wordmark.id = 'footer-brand-heading';
+  wordmark.textContent = 'Saple';
+  logo.append(mark, wordmark);
+
+  const description = document.createElement('p');
+  description.className = 'footer-description';
+  description.textContent = 'Company profiles, salary ranges, workplace reviews, interview experiences and job postings, each shown with how far it can be trusted.';
 
   const identity = document.createElement('p');
   identity.className = 'site-identity';
@@ -179,15 +277,75 @@ function renderFooterInformationLinks() {
   disclaimer.className = 'site-disclaimer';
   disclaimer.textContent = SITE_DISCLAIMER;
 
-  wrapper.append(navigation, identity, disclaimer);
-  footer.insertBefore(wrapper, footerBottom);
+  const repository = document.createElement('a');
+  repository.className = 'footer-repository';
+  repository.href = 'https://github.com/mdraihankabirsifat/Saple';
+  repository.rel = 'noopener noreferrer';
+  repository.textContent = 'Source code on GitHub';
+
+  const brand = document.createElement('section');
+  brand.className = 'footer-brand';
+  brand.dataset.footerColumn = '';
+  brand.setAttribute('aria-labelledby', 'footer-brand-heading');
+  brand.append(logo, description, identity, disclaimer, repository);
+
+  const columns = document.createElement('div');
+  columns.className = 'footer-main container';
+  columns.append(
+    brand,
+    footerLinkColumn('footer-explore-heading', 'Explore', footerExplore),
+    footerLinkColumn('footer-account-heading', 'Account & contribute', footerAccount),
+    footerLinkColumn('footer-help-heading', 'Help', informationPages)
+  );
+
+  const landscape = document.createElement('div');
+  landscape.className = 'footer-landscape';
+  landscape.append(buildFooterLandscape());
+
+  const copyright = document.createElement('p');
+  copyright.textContent = '© 2026 Saple. BUET CSE Database Project.';
+  const projectLine = document.createElement('p');
+  projectLine.textContent = 'Built for informed career decisions.';
+  const backToTop = document.createElement('button');
+  backToTop.type = 'button';
+  backToTop.className = 'footer-back-to-top';
+  backToTop.dataset.backToTop = '';
+  backToTop.textContent = 'Back to top';
+  backToTop.addEventListener('click', () => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    // Move focus with the view so keyboard users land at the top as well.
+    const target = document.querySelector('.site-header .brand');
+    target?.focus({ preventScroll: true });
+  });
+
+  const bottomContent = document.createElement('div');
+  bottomContent.className = 'footer-bottom-content container';
+  bottomContent.append(copyright, projectLine, backToTop);
+  const bottom = document.createElement('div');
+  bottom.className = 'footer-bottom';
+  bottom.append(bottomContent);
+
+  footer.replaceChildren(columns, landscape, bottom);
+  footer.dataset.footerRendered = 'true';
+}
+
+// The account column follows the signed-in state the server reported.
+function updateFooterAccountLinks(user) {
+  const footer = document.querySelector('.site-footer');
+  if (!footer) return;
+  footer.querySelectorAll('[data-footer-signed-out]').forEach((link) => {
+    link.closest('li').hidden = Boolean(user);
+  });
+  const representative = footer.querySelector('[data-footer-representative]');
+  if (representative) representative.closest('li').hidden = user?.accountRole !== 'COMPANY_REPRESENTATIVE';
 }
 
 ensureSkipLink();
 renderAccountSurfaceNotice();
 renderPublicNavigation();
 renderBrandIdentity();
-renderFooterInformationLinks();
+renderSiteFooter();
 
 import(announcementsModuleUrl.href)
   .then((announcements) => announcements.renderAnnouncementBar())
@@ -202,12 +360,49 @@ function updateContributionVisibility(user) {
   document.querySelectorAll('[data-verified-contributor]').forEach((element) => {
     element.hidden = !verified;
   });
-  document.querySelectorAll(
-    '.site-footer a[href="submit-salary.html"], .site-footer a[href="submit-review.html"], .site-footer a[href="interview-experience.html"]'
-  ).forEach((link) => { link.hidden = !verified; });
 }
 
 updateContributionVisibility(null);
+
+// The desktop bar is one row or nothing. When the full row (logo, every
+// section link, the account controls and the theme toggle) does not fit the
+// header, the page switches to the menu button instead of wrapping. theme.js
+// sets the starting state in <head>, so phones never flash a desktop bar.
+const COMPACT_NAVIGATION_WIDTH = 1050;
+
+function isCompactNavigation() {
+  return document.documentElement.classList.contains('nav-compact');
+}
+
+function fitNavigation() {
+  const root = document.documentElement;
+  const navbar = document.querySelector('.navbar');
+  const links = navigationMenu?.querySelector('.nav-links');
+  const actions = navigationMenu?.querySelector('.nav-actions');
+  if (!navbar || !navigationMenu || !links || !actions) return;
+
+  if (window.innerWidth <= COMPACT_NAVIGATION_WIDTH) {
+    root.classList.add('nav-compact');
+    return;
+  }
+
+  // Measure the full row in its desktop form. Class changes inside one task
+  // are not painted, so this never flickers.
+  const wasCompact = root.classList.contains('nav-compact');
+  root.classList.remove('nav-compact');
+  const menuStyle = getComputedStyle(navigationMenu);
+  const gap = parseFloat(menuStyle.columnGap) || 0;
+  const needed = links.scrollWidth + actions.scrollWidth + gap;
+  const fits = needed <= navigationMenu.clientWidth + 1;
+  root.classList.toggle('nav-compact', !fits);
+  if (fits && wasCompact) closeNavigation();
+}
+
+let fitFrame = 0;
+function requestNavigationFit() {
+  cancelAnimationFrame(fitFrame);
+  fitFrame = requestAnimationFrame(fitNavigation);
+}
 
 function closeNavigation() {
   if (!navigationToggle || !navigationMenu) {
@@ -226,16 +421,17 @@ if (navigationToggle && navigationMenu) {
   });
 
   navigationMenu.addEventListener('click', (event) => {
-    if (event.target.closest('a') && window.matchMedia('(max-width: 1050px)').matches) {
+    if (event.target.closest('a') && isCompactNavigation()) {
       closeNavigation();
     }
   });
 
-  window.addEventListener('resize', () => {
-    if (!window.matchMedia('(max-width: 1050px)').matches) {
-      closeNavigation();
-    }
-  });
+  window.addEventListener('resize', requestNavigationFit);
+  // Signed-in controls and the notification bell arrive after first paint;
+  // re-measure whenever the action group changes.
+  new MutationObserver(requestNavigationFit).observe(navigationMenu, { childList: true, subtree: true, characterData: true });
+  document.fonts?.ready.then(requestNavigationFit).catch(() => {});
+  fitNavigation();
 }
 
 document.addEventListener('click', (event) => {
@@ -346,6 +542,7 @@ async function updateAuthenticationNavigation() {
 
     if (currentUser?.userType !== 'EMPLOYEE') verificationLink?.remove();
     updateContributionVisibility(verificationRefreshed ? currentUser : null);
+    updateFooterAccountLinks(currentUser);
 
     import(notificationsModuleUrl.href)
       .then((notifications) => notifications.mountNotificationBell(navigationActions, accountName))

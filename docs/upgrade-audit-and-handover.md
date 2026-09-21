@@ -175,3 +175,26 @@ The working tree is one large change. Suggested split:
 
 Do not rewrite existing history. Note that the ERD move shows as a delete plus
 new files until `git add` records it as a rename.
+
+---
+
+## 6. Layout pass (header, account pages, guide, footer, browse)
+
+Second implementation pass, on `final-project-upgrade`.
+
+| Area | Root cause | Change |
+| --- | --- | --- |
+| Header | `renderBrandIdentity()` added a visible tagline, and a later fix let the link and action groups wrap, so signed-in bars grew to two or three rows | Tagline removed (identity kept in the wordmark `title`). Groups never wrap; `nav.js` measures the full row and switches to the menu button (`html.nav-compact`) when it does not fit. Header container widened to 1600px |
+| Account pages | `renderAccountSurfaceNotice()` prepended the notice to `.auth-layout`, making it a third grid item that pushed the form below the fold | Notice now sits inside the form card above the form; tighter padding; form first on tablets and phones |
+| Saple Guide | Launcher was appended before the panel, so the panel opened below it; the composer was a flex row that let "Send" wrap | Panel precedes launcher; flex-column panel with one scrolling transcript; grid composer; Send `nowrap`; short disclosure plus a `Privacy` details section; bottom sheet on phones |
+| Footer | Each page had its own footer markup, from a full footer to a single line, plus injected fragments | One renderer in `nav.js`: four columns, original inline-SVG landscape, bottom row with Back to top. Pages keep a one-line fallback only. The Jobs disclaimer moved into the footer brand column |
+| Hero | Front "signal" layer (৳ ★ ? ✓ and dashed links) | Removed with its CSS and keyframes; caption describes the growing tree only |
+| Browse | Five pages had three different layouts; Salaries/Reviews/Interviews had no address-bar state, sort, count or paging | Shared `browse-shell`/`browse-grid`/`browse-sidebar` CSS and `js/browse-controls.js`. Salaries, Reviews and Interviews sort and page in the browser over the approved set the API returns; Jobs gained a whitelisted server-side `sort` (`NEWEST`, `DEADLINE`, `COMPANY`) because its paging is server-side |
+
+No new filters were invented. The service-worker cache is now `saple-shell-v3`
+and lists `js/browse-controls.js`. Regression tests live in
+`backend/tests/frontend.layout-pass.test.js`.
+
+Known limitations: the verified-employee bar (the one with the most controls)
+uses the menu button at 1280px wide rather than one crowded row; `/favicon.ico`
+still returns 404, as before this pass.

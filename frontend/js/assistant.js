@@ -18,6 +18,7 @@ let launcher = null;
 let transcript = null;
 let form = null;
 let input = null;
+let root = null;
 
 function appendMessage(role, text) {
   const message = el('li', {
@@ -112,12 +113,14 @@ function closePanel() {
   releaseFocus?.();
   releaseFocus = null;
   panel.hidden = true;
+  root.classList.remove('is-open');
   launcher.setAttribute('aria-expanded', 'false');
   launcher.focus();
 }
 
 function openPanel() {
   panel.hidden = false;
+  root.classList.add('is-open');
   launcher.setAttribute('aria-expanded', 'true');
   releaseFocus = trapFocus(panel, { onEscape: closePanel });
   input.focus();
@@ -140,7 +143,7 @@ function buildPanel() {
     }
   });
 
-  const send = el('button', { className: 'button button-primary button-small', text: 'Send', attrs: { type: 'submit' } });
+  const send = el('button', { className: 'button button-primary button-small guide-send', text: 'Send', attrs: { type: 'submit' } });
   form = el('form', { className: 'guide-form' }, [
     el('label', { className: 'sr-only', text: 'Ask the Saple Guide', attrs: { for: 'guide-question' } }),
     input,
@@ -190,8 +193,17 @@ function buildPanel() {
     transcript,
     form,
     el('div', { className: 'guide-foot' }, [
-      el('p', { className: 'guide-privacy', text: status?.privacyNotice || '' }),
-      clearButton
+      el('p', {
+        className: 'guide-disclosure',
+        text: 'AI-assisted. Do not enter passwords, reset links or personal details.'
+      }),
+      el('div', { className: 'guide-foot-actions' }, [
+        el('details', { className: 'guide-privacy-details' }, [
+          el('summary', { text: 'Privacy' }),
+          el('p', { className: 'guide-privacy', text: status?.privacyNotice || '' })
+        ]),
+        clearButton
+      ])
     ])
   ]);
 
@@ -226,6 +238,7 @@ export async function mountAssistant() {
   }
 
   const container = el('div', { className: 'guide-root', dataset: { sapleGuide: '' } });
+  root = container;
   launcher = el('button', {
     className: 'guide-launcher',
     attrs: {
@@ -240,7 +253,9 @@ export async function mountAssistant() {
   ]);
   launcher.addEventListener('click', () => (panel.hidden ? openPanel() : closePanel()));
 
-  container.append(launcher, buildPanel());
+  // The panel comes first so it opens above the launcher, which stays in the
+  // bottom-right corner.
+  container.append(buildPanel(), launcher);
   document.body.append(container);
   // Lets the stylesheet leave room so the last content on a page can always
   // scroll clear of the floating launcher.

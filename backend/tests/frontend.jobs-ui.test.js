@@ -200,11 +200,12 @@ test('the job board shows loading, empty and error states rather than a blank pa
 
   assert.match(script, /renderSkeletons\(results, 4, 'job'\)/);
   assert.match(script, /renderEmptyState\(results, \{/);
-  assert.match(script, /renderErrorState\(results, error, \(\) => loadJobs\(page\)\)/);
+  assert.match(script, /renderErrorState\(results, error, \(\) => controller\.reload\(\)\)/);
   assert.match(script, /renderPagination\(paginationHost/);
-  // Filters survive a reload and can be shared.
-  assert.match(script, /window\.history\.replaceState/);
-  assert.match(script, /applyAddressBarToForm/);
+  // Filters survive a reload and can be shared: the shared browse controller
+  // mirrors them in the address bar.
+  assert.match(script, /createBrowseController\(\{/);
+  assert.match(read('js/browse-controls.js'), /window\.history\[push \? 'pushState' : 'replaceState'\]/);
 });
 
 test('an error state always offers a retry and explains what to do', () => {
@@ -277,8 +278,8 @@ test('the guide button does not sit on top of the notification controls', () => 
   // The launcher is pinned bottom-right; the bell lives in the header.
   const guideRoot = css.match(/\.guide-root \{[^}]*\}/)[0];
   assert.match(guideRoot, /position: fixed/);
-  assert.match(guideRoot, /bottom: clamp/);
-  assert.match(guideRoot, /right: clamp/);
+  assert.match(guideRoot, /bottom: 16px/);
+  assert.match(guideRoot, /right: 16px/);
   assert.match(css, /\.notification-bell \{\s*\n\s*position: relative/);
-  assert.match(css, /\.guide-panel \{[\s\S]*?width: min\(24rem, calc\(100vw - 1\.5rem\)\)/);
+  assert.match(css, /\.guide-panel \{[\s\S]*?width: min\(420px, calc\(100vw - 32px\)\)/);
 });

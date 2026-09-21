@@ -7,6 +7,11 @@ page. It answers questions about *using Saple* — navigation, salary ranges,
 verification, jobs, applications, notifications, account settings, privacy and
 the project methodology — and nothing else.
 
+The panel opens above its launcher. Only the conversation scrolls; the header,
+the question box and a one-line disclosure stay put, and the full privacy text
+is in an expandable **Privacy** section. On phones the panel is a bottom sheet,
+and it steps aside while a filter drawer is open.
+
 It works with or without an AI provider:
 
 - **No provider configured (the default):** the guide answers from a built-in

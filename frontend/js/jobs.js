@@ -4,6 +4,7 @@ import {
   renderPagination, formatDate, formatSalaryRange, humanizeEnum
 } from './ui.js';
 import { createCompanyLogo } from './company-logo.js';
+import { createBrowseController } from './browse-controls.js';
 
 const results = document.querySelector('#job-results');
 const statusMessage = document.querySelector('#job-status');
@@ -11,39 +12,7 @@ const paginationHost = document.querySelector('#job-pagination');
 const filterForm = document.querySelector('#job-filters');
 const countLabel = document.querySelector('#job-count');
 
-const FILTER_FIELDS = ['search', 'companyId', 'roleId', 'location', 'workMode', 'employmentType'];
-let currentPage = 1;
-
-function readFilters() {
-  const data = new FormData(filterForm);
-  const filters = {};
-  for (const field of FILTER_FIELDS) {
-    const value = String(data.get(field) || '').trim();
-    if (value) filters[field] = value;
-  }
-  return filters;
-}
-
-// The address bar mirrors the current view, so a filtered job search can be
-// shared or reloaded. Only known filter names are ever written or read.
-function syncAddressBar(filters, page) {
-  const params = new URLSearchParams();
-  for (const [name, value] of Object.entries(filters)) params.set(name, value);
-  if (page > 1) params.set('page', String(page));
-  const query = params.toString();
-  window.history.replaceState(null, '', query ? `?${query}` : window.location.pathname);
-}
-
-function applyAddressBarToForm() {
-  const params = new URLSearchParams(window.location.search);
-  for (const field of FILTER_FIELDS) {
-    const value = params.get(field);
-    const control = filterForm?.elements.namedItem(field);
-    if (value && control) control.value = value;
-  }
-  const page = Number(params.get('page'));
-  currentPage = Number.isInteger(page) && page > 0 ? page : 1;
-}
+const FILTER_FIELDS = ['search', 'companyId', 'roleId', 'location', 'workMode', 'employmentType', 'sort'];
 
 function jobCard(job) {
   const deadline = el('span', {
@@ -110,20 +79,17 @@ async function loadFilterOptions() {
     }
   }
 
-  // Re-apply any values that came from the address bar now that options exist.
-  applyAddressBarToForm();
 }
 
-async function loadJobs(page = currentPage) {
-  const filters = readFilters();
-  currentPage = page;
-  syncAddressBar(filters, page);
-
+async function loadJobs(state, controller) {
+  statusMessage.classList.remove('error');
   statusMessage.textContent = 'Loading open jobs…';
   renderSkeletons(results, 4, 'job');
   clear(paginationHost);
 
-  const params = new URLSearchParams({ ...filters, page: String(page) });
+  // Only the validated filter names reach the query string; the server checks
+  // every value again, including the sort name.
+  const params = new URLSearchParams({ ...state.filters, page: String(state.page) });
 
   try {
     const data = await fetchApi(`/api/jobs?${params.toString()}`);
@@ -141,31 +107,34 @@ async function loadJobs(page = currentPage) {
         title: 'No open jobs match these filters',
         message: 'Only published vacancies that are still inside their application deadline appear here. Try clearing the filters.',
         actionLabel: 'Clear filters',
-        onAction: () => { filterForm.reset(); loadJobs(1); }
+        onAction: () => controller.clear()
       });
       return;
     }
 
-    statusMessage.textContent = `Showing ${data.items.length} of ${data.pagination.total} open jobs.`;
+    const first = (data.pagination.page - 1) * data.pagination.pageSize + 1;
+    const last = first + data.items.length - 1;
+    statusMessage.textContent = first === 1 && last === data.pagination.total
+      ? `Showing ${data.pagination.total} open job${data.pagination.total === 1 ? '' : 's'}.`
+      : `Showing ${first}–${last} of ${data.pagination.total} open jobs.`;
     results.replaceChildren(...data.items.map(jobCard));
     renderPagination(paginationHost, data.pagination, (nextPage) => {
-      loadJobs(nextPage);
-      results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      controller.goTo(nextPage);
+      results.closest('section')?.scrollIntoView({ block: 'start' });
     });
   } catch (error) {
     statusMessage.textContent = 'Open jobs could not be loaded.';
-    renderErrorState(results, error, () => loadJobs(page));
+    statusMessage.classList.add('error');
+    renderErrorState(results, error, () => controller.reload());
   }
 }
 
-filterForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  loadJobs(1);
+const browse = createBrowseController({
+  form: filterForm,
+  toggle: document.querySelector('[data-filter-toggle]'),
+  fields: FILTER_FIELDS,
+  defaults: { sort: 'NEWEST' },
+  load: loadJobs
 });
 
-filterForm?.addEventListener('reset', () => {
-  window.setTimeout(() => loadJobs(1), 0);
-});
-
-applyAddressBarToForm();
-loadFilterOptions().finally(() => loadJobs(currentPage));
+loadFilterOptions().catch(() => {}).finally(() => browse.start());

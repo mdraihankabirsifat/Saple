@@ -135,7 +135,7 @@ async function loadPopularRoles() {
 // ---------------------------------------------------------------------------
 // Hero visual
 //
-// A local SVG with three depth layers. The parallax is a small translation
+// A local SVG of a growing sapling in two depth layers. The parallax is a small translation
 // driven by pointer position and written as a CSS custom property, so no
 // inline style attribute is needed and the strict CSP is satisfied. It runs
 // only when the figure is on screen, the tab is visible, and the visitor has

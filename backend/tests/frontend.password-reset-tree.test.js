@@ -39,13 +39,13 @@ test('the homepage hero is a self-contained local visual with no embedded media'
 
   assert.match(home, /<figure class="hero-visual" data-hero-visual>/);
   assert.match(home, /<svg class="saple-scene"[^>]+role="img"/);
-  for (const part of ['tree-seed', 'tree-shoot', 'tree-trunk', 'tree-branch', 'leaf-cluster', 'signal-node']) {
+  for (const part of ['tree-seed', 'tree-shoot', 'tree-trunk', 'tree-branch', 'leaf-cluster']) {
     assert.match(home, new RegExp(part), part);
   }
 
   // The scene is described for assistive technology rather than hidden, and
   // nothing about it is fetched, framed or embedded.
-  assert.match(home, /aria-label="Illustration of a sapling growing into a connected network of career signals"/);
+  assert.match(home, /aria-label="Illustration of a sapling growing from a seed into a leafy young tree"/);
   assert.doesNotMatch(home, /<canvas|<video|<audio|<iframe|<embed|<object/i);
   assert.doesNotMatch(home, /https?:\/\/(?!github\.com)/);
   assert.doesNotMatch(css, /\.hero-panel|\.feature-list/);
@@ -85,7 +85,7 @@ test('hero motion is short, runs once, and stops when it is unwelcome or unseen'
   const css = readFrontend('css/home.css');
   const script = readFrontend('js/home.js');
 
-  for (const frames of ['seed-appear', 'draw-shoot', 'draw-trunk', 'draw-branch', 'reveal-leaves', 'node-pop']) {
+  for (const frames of ['seed-appear', 'draw-shoot', 'draw-trunk', 'draw-branch', 'reveal-leaves']) {
     assert.match(css, new RegExp(`@keyframes ${frames}`), frames);
   }
   assert.match(css, /\.leaves-5[^\n]+2\.72s/);

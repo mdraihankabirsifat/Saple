@@ -2,6 +2,7 @@ import { fetchApi } from './api.js';
 import { createCompanyLogo } from './company-logo.js';
 import { paginate, pageNumbers, sortCompanies, SORT_OPTIONS } from './company-directory.js';
 import { createSalaryRange } from './salary-range.js';
+import { mountFilterDrawer } from './browse-controls.js';
 
 const form = document.querySelector('#company-search-form');
 const fields = {
@@ -132,7 +133,7 @@ function renderResults(focus = false) {
 async function loadCompanies(focus = false) {
   const id = ++requestId;
   const query = new URLSearchParams(appliedQuery); query.delete('sort');
-  document.querySelector('#active-filter-count').textContent = String([...query.keys()].length);
+  drawer.setCount([...query.keys()].length);
   if (loadedKey === query.toString()) {
     companyList.setAttribute('aria-busy', 'false'); statusMessage.classList.remove('error');
     renderResults(focus); return;
@@ -173,23 +174,12 @@ function restoreQuery() {
   sortInput.value = SORT_OPTIONS.includes(query.get('sort')) ? query.get('sort') : 'name-asc';
   range.sync(); appliedQuery = queryFromForm(); page = Number(query.get('page')) || 1;
 }
-const sidebar = document.querySelector('#directory-filters');
-const layout = document.querySelector('.directory-layout');
-const dialog = document.querySelector('#directory-filter-dialog');
-const filterToggle = document.querySelector('#directory-filter-toggle');
-const mobile = matchMedia('(max-width: 1050px)');
-filterToggle.addEventListener('click', () => {
-  dialog.append(sidebar); dialog.showModal(); filterToggle.setAttribute('aria-expanded', 'true');
-  document.body.classList.add('filters-open'); document.querySelector('#close-directory-filters').focus();
+// The shared drawer moves this sidebar into a modal dialog below 1050px.
+const drawer = mountFilterDrawer({
+  panel: document.querySelector('#directory-filters'),
+  toggle: document.querySelector('#directory-filter-toggle')
 });
-function closeFilters() { if (dialog.open) dialog.close(); }
-dialog.addEventListener('close', () => {
-  layout.prepend(sidebar); filterToggle.setAttribute('aria-expanded', 'false');
-  document.body.classList.remove('filters-open');
-  if (mobile.matches) filterToggle.focus();
-});
-document.querySelector('#close-directory-filters').addEventListener('click', closeFilters);
-mobile.addEventListener('change', () => { if (!mobile.matches) closeFilters(); });
+function closeFilters() { drawer.close(); }
 function applyFilters() {
   range.sync(); appliedQuery = queryFromForm(); page = 1; writeUrl(true); closeFilters(); loadCompanies(true);
 }
@@ -198,7 +188,7 @@ form.addEventListener('reset', () => setTimeout(() => {
   Object.values(fields).forEach((input) => input.setCustomValidity(''));
   applyFilters();
 }));
-sortInput.addEventListener('change', () => { if (!mobile.matches && form.checkValidity()) applyFilters(); });
+sortInput.addEventListener('change', () => { if (!drawer.isDrawer() && form.checkValidity()) applyFilters(); });
 window.addEventListener('popstate', () => { closeFilters(); restoreQuery(); loadCompanies(true); });
 (async () => {
   try { await loadOptions(); }

@@ -124,6 +124,24 @@ test('public job filters are validated before they reach SQL', async () => {
   }
 });
 
+test('public job sort is a whitelisted name that never reaches SQL as text', async () => {
+  const seen = [];
+  jobRepository.findPublicJobs = async (filters, options) => { seen.push(options.sort); return []; };
+  jobRepository.countPublicJobs = async () => 0;
+
+  await jobService.listPublicJobs({});
+  await jobService.listPublicJobs({ sort: 'deadline' });
+  await jobService.listPublicJobs({ sort: 'Company' });
+  assert.deepEqual(seen, ['NEWEST', 'DEADLINE', 'COMPANY']);
+
+  for (const sort of ['salary', 'published_at; DROP TABLE job_postings', 'NEWEST DESC']) {
+    await assert.rejects(jobService.listPublicJobs({ sort }), (error) => error.statusCode === 400);
+  }
+
+  const source = require('node:fs').readFileSync(require.resolve('../repositories/job.repository'), 'utf8');
+  assert.match(source, /PUBLIC_JOB_ORDER[sort] || PUBLIC_JOB_ORDER.NEWEST/);
+});
+
 // ---------------------------------------------------------------------------
 // Creation and validation
 // ---------------------------------------------------------------------------

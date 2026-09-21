@@ -163,7 +163,9 @@ test('shared and information-page styles guard mobile navigation and overflow', 
   const informationCss = readFrontend('css/info-pages.css');
 
   assert.match(commonCss, /overflow-wrap:\s*anywhere/);
-  assert.match(commonCss, /@media \(max-width: 1050px\)[\s\S]*?\.nav-menu\.is-open/);
+  // Compact (menu button) navigation is keyed on html.nav-compact, which theme.js
+  // sets for narrow screens and nav.js sets whenever the desktop row cannot fit.
+  assert.match(commonCss, /\.nav-compact \.nav-menu\.is-open/);
   assert.match(informationCss, /@media \(max-width: 700px\)/);
   assert.match(informationCss, /grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(commonCss, /:focus-visible/, 'information pages must inherit the shared visible focus rule');
