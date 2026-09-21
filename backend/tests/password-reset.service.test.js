@@ -52,7 +52,8 @@ test('forgot password normalizes email, stores only a hash, and sends a temporar
   const result = await authService.forgotPassword({ email: ' PERSON@example.com ' });
   const rawToken = new URL(delivery.resetUrl).searchParams.get('token');
 
-  assert.deepEqual(result, { emailSent: true });
+  assert.equal(result.emailSent, true);
+  assert.match(result.message, /If that email address has a Saple account/);
   assert.match(stored.tokenHash, /^[a-f0-9]{64}$/);
   assert.ok(rawToken.length >= 40);
   assert.notEqual(stored.tokenHash, rawToken);
@@ -61,19 +62,44 @@ test('forgot password normalizes email, stores only a hash, and sends a temporar
   assert.equal(stored.expiresMinutes, 15);
 });
 
-test('forgot password rejects unknown and unavailable accounts with controlled messages', async () => {
+test('forgot password cannot be used to enumerate registered email addresses', async () => {
+  // A registered address, an unknown address and a deactivated account must
+  // all produce byte-identical answers, and only the real one may write a token.
+  let tokensCreated = 0;
+  let emailsSent = 0;
+  passwordResetRepository.createTokenWithDelivery = async (input) => {
+    tokensCreated += 1;
+    await input.deliver();
+  };
+  mailService.sendPasswordResetEmail = async () => { emailsSent += 1; };
+
+  userRepository.findUserForPasswordResetByEmail = async (email) => ({
+    userId: 8, fullName: 'Test Person', email, accountStatus: 'ACTIVE'
+  });
+  const known = await authService.forgotPassword({ email: 'person@example.com' });
+
   userRepository.findUserForPasswordResetByEmail = async () => null;
-  await assert.rejects(
-    authService.forgotPassword({ email: 'missing@example.com' }),
-    (error) => error.statusCode === 404
-      && error.message === 'No account was found with that email address.'
-  );
+  const unknown = await authService.forgotPassword({ email: 'missing@example.com' });
 
   userRepository.findUserForPasswordResetByEmail = async () => ({ accountStatus: 'DEACTIVATED' });
+  const deactivated = await authService.forgotPassword({ email: 'closed@example.com' });
+
+  assert.deepEqual(unknown, known);
+  assert.deepEqual(deactivated, known);
+  assert.match(known.message, /If that email address has a Saple account/);
+  assert.doesNotMatch(JSON.stringify(known), /No account was found|deactivated|suspended/i);
+  assert.equal(tokensCreated, 1);
+  assert.equal(emailsSent, 1);
+});
+
+test('an invalid email address is still rejected before any lookup', async () => {
+  let lookups = 0;
+  userRepository.findUserForPasswordResetByEmail = async () => { lookups += 1; return null; };
   await assert.rejects(
-    authService.forgotPassword({ email: 'person@example.com' }),
-    (error) => error.statusCode === 403 && /deactivated/i.test(error.message)
+    authService.forgotPassword({ email: 'not-an-email' }),
+    (error) => error.statusCode === 400
   );
+  assert.equal(lookups, 0);
 });
 
 test('SMTP failure becomes a controlled recovery-only error', async () => {

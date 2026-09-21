@@ -6,7 +6,10 @@ const pending = new Map();
 export function isCacheable(path, method = 'GET', auth = false, headers = {}) {
   if (method !== 'GET' || auth || Object.keys(headers).some((key) => key.toLowerCase() === 'authorization')) return false;
   const pathname = path.split('?')[0];
-  return /^\/api\/(?:companies(?:\/filter-options|\/\d+(?:\/(?:benefits|salary-summary|reviews|interviews))?)?|job-roles|salaries|reviews|interviews)$/.test(pathname);
+  // An explicit allow-list of public, read-only endpoints. Anything not named
+  // here, including every /api/me, /api/representative, /api/admin and
+  // /api/assistant path, is never written to browser storage.
+  return /^\/api\/(?:companies(?:\/filter-options|\/\d+(?:\/(?:benefits|salary-summary|reviews|interviews))?)?|job-roles|salaries|reviews|interviews|jobs(?:\/filter-options|\/\d+)?|announcements|stats\/overview)$/.test(pathname);
 }
 function entries() {
   try {

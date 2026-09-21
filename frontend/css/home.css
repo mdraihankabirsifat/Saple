@@ -1,5 +1,11 @@
+/* Saple homepage.
+   Layout, the local sapling scene and the discovery sections. All motion is
+   short, communicates state, and is switched off under reduced-motion. */
+
+/* 1. Hero ----------------------------------------------------------------- */
+
 .home-hero {
-  padding-block: clamp(4rem, 9vw, 7.5rem) clamp(3.5rem, 7vw, 6rem);
+  padding-block: clamp(3rem, 7vw, 6rem) clamp(2.5rem, 5vw, 4.5rem);
   position: relative;
   overflow: hidden;
 }
@@ -7,34 +13,49 @@
 .home-hero::after {
   width: 34rem;
   height: 34rem;
-  position: absolute;
-  z-index: -1;
   top: -18rem;
   right: -12rem;
-  border-radius: 50%;
+  z-index: -1;
+  position: absolute;
   background: var(--saple-green-100);
+  border-radius: 50%;
   content: "";
 }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr);
   align-items: center;
-  gap: clamp(1.5rem, 5vw, 4.5rem);
+  gap: clamp(1.5rem, 5vw, 4rem);
+}
+
+.hero-badge {
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.75rem;
+  display: inline-block;
+  background: var(--saple-green-100);
+  border-radius: 999px;
+  color: var(--saple-green-800);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .hero-content h1 {
-  max-width: 760px;
-  margin-bottom: 1.25rem;
-  font-size: clamp(2.75rem, 7vw, 5.3rem);
-  letter-spacing: -0.055em;
+  max-width: 18ch;
+  margin-bottom: 1.15rem;
+  font-size: clamp(2.5rem, 6vw, 4.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.05em;
 }
 
 .hero-text {
-  max-width: 680px;
-  margin-bottom: 2rem;
+  max-width: 56ch;
+  margin-bottom: 1.75rem;
   color: var(--text-secondary);
-  font-size: clamp(1.05rem, 2vw, 1.18rem);
+  font-size: clamp(1.02rem, 1.8vw, 1.15rem);
+  line-height: 1.65;
 }
 
 .hero-actions,
@@ -44,17 +65,53 @@
   gap: 0.8rem;
 }
 
-.hero-tree {
+.hero-secondary {
+  margin: 1rem 0 0;
+}
+
+.hero-disclaimer {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  max-width: 56ch;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  line-height: 1.6;
+}
+
+/* 1b. Hero visual --------------------------------------------------------- */
+
+.hero-visual {
   width: min(100%, 470px);
   margin: 0;
   justify-self: end;
+  touch-action: pan-y;
 }
 
-.saple-tree {
+.saple-scene {
   width: 100%;
   height: auto;
   display: block;
   overflow: visible;
+}
+
+/* Each depth layer is nudged by a custom property the script writes, so the
+   parallax needs no inline style attribute and no CSP exception. */
+.scene-layer {
+  --shift-x: 0px;
+  --shift-y: 0px;
+  transform: translate3d(var(--shift-x), var(--shift-y), 0);
+  transition: transform 40ms linear;
+}
+
+[data-motion="static"] .scene-layer {
+  transform: none;
+  transition: none;
+}
+
+.scene-halo {
+  fill: var(--saple-green-100);
+  opacity: 0.55;
 }
 
 .tree-ground {
@@ -93,11 +150,6 @@
   stroke-dasharray: 170;
 }
 
-.tree-twig {
-  stroke-width: 5;
-  stroke-dasharray: 85;
-}
-
 .branch-1 { animation: draw-branch 0.7s ease-out 1.35s both; }
 .branch-2 { animation: draw-branch 0.75s ease-out 1.58s both; }
 .branch-3 { animation: draw-branch 0.7s ease-out 1.78s both; }
@@ -119,6 +171,38 @@
 .leaves-3 { animation: reveal-leaves 0.52s cubic-bezier(0.2, 0.8, 0.3, 1) 2.28s both; }
 .leaves-4 { animation: reveal-leaves 0.52s cubic-bezier(0.2, 0.8, 0.3, 1) 2.5s both; }
 .leaves-5 { animation: reveal-leaves 0.58s cubic-bezier(0.2, 0.8, 0.3, 1) 2.72s both; }
+
+.signal-link {
+  stroke: var(--saple-green-500);
+  stroke-width: 2;
+  stroke-dasharray: 4 7;
+  stroke-linecap: round;
+  opacity: 0.75;
+  animation: fade-in 0.6s ease-out 2.6s both;
+}
+
+.signal-node circle {
+  fill: var(--surface);
+  stroke: var(--saple-green-600);
+  stroke-width: 2;
+}
+
+.signal-node text {
+  fill: var(--saple-green-800);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.signal-node {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.signal-node-1 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 2.75s both; }
+.signal-node-2 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 2.88s both; }
+.signal-node-3 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 3.01s both; }
+.signal-node-4 { animation: node-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) 3.14s both; }
 
 @keyframes seed-appear {
   from { opacity: 0; transform: scale(0.55); }
@@ -145,37 +229,74 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-.home-search-wrap {
-  margin-top: clamp(-2rem, -3vw, -1rem);
-  position: relative;
-  z-index: 2;
+@keyframes node-pop {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-.home-search {
-  padding: clamp(1.25rem, 4vw, 1.8rem);
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 0.75; }
+}
+
+/* 2. Live snapshot -------------------------------------------------------- */
+
+.section-snapshot {
+  padding-block: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.snapshot-grid {
+  margin: 0;
+  padding: clamp(1.15rem, 3vw, 1.75rem);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
   gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
-.home-search .form-group {
-  gap: 0.55rem;
+.snapshot-item {
+  text-align: center;
 }
 
-.trust-grid,
-.explore-grid {
+.snapshot-item dt {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.snapshot-item dd {
+  margin: 0.35rem 0 0;
+}
+
+.snapshot-value {
+  color: var(--saple-green-700);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.snapshot-note {
+  margin: 0.75rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* 3. Trust ---------------------------------------------------------------- */
+
+.trust-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.trust-card,
-.explore-card {
+.trust-card {
   padding: 1.5rem;
 }
 
@@ -192,171 +313,375 @@
   font-weight: 850;
 }
 
-.trust-card h3,
-.explore-card h3 {
+.trust-card h3 {
   margin-bottom: 0.5rem;
   font-size: 1.12rem;
 }
 
-.trust-card p,
-.explore-card p {
+.trust-card p {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.93rem;
+  line-height: 1.65;
 }
 
-.explore-card {
-  min-height: 180px;
+/* 4. Discovery ------------------------------------------------------------ */
+
+.discover-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.discover-head {
+  margin-bottom: 0.9rem;
   display: flex;
-  flex-direction: column;
+  gap: 0.75rem;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
-.explore-card .text-link {
-  margin-top: auto;
-  color: var(--saple-green-700);
-  font-weight: 750;
-  text-underline-offset: 0.2rem;
+.discover-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
 }
 
-.salary-explainer {
+.featured-companies,
+.featured-jobs {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  align-items: start;
-  gap: clamp(2rem, 7vw, 5rem);
+  gap: 0.6rem;
 }
 
-.salary-type-list {
-  display: grid;
-  gap: 1rem;
+.featured-company {
+  padding: 0.8rem;
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
 }
 
-.salary-type {
-  padding: clamp(1.4rem, 4vw, 1.8rem);
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 1rem;
+.featured-company:hover,
+.featured-job:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
 }
 
-.salary-type-mark {
+.featured-company .company-logo {
   width: 2.75rem;
   height: 2.75rem;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
-  border-radius: 0.8rem;
-  color: var(--saple-green-800);
-  background: var(--saple-green-100);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.featured-company .company-logo-fallback {
+  font-size: 0.9rem;
   font-weight: 850;
 }
 
-.salary-type.community .salary-type-mark {
-  color: var(--warning);
-  background: var(--warning-surface);
+.featured-company-body {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
 }
 
-.salary-type h3 {
-  margin-bottom: 0.4rem;
+.featured-company-name {
+  color: var(--text-primary);
+  font-size: 0.96rem;
 }
 
-.salary-type p {
-  margin-bottom: 0.7rem;
+.featured-company-meta,
+.featured-job-meta {
   color: var(--text-secondary);
+  font-size: 0.82rem;
 }
 
-.salary-rule {
+.featured-job {
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
+}
+
+.featured-job-title {
+  color: var(--text-primary);
+  font-size: 0.98rem;
+}
+
+.featured-job-company {
+  color: var(--saple-green-700);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.featured-job-salary {
+  margin-top: 0.2rem;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+.discover-empty {
+  margin: 0;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.popular-roles {
+  margin-top: 2rem;
+}
+
+.popular-roles h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.role-chips {
   margin: 0;
   padding: 0;
   display: flex;
+  gap: 0.5rem;
   flex-wrap: wrap;
+  list-style: none;
+}
+
+.role-chip {
+  padding: 0.45rem 0.9rem;
+  display: inline-block;
+  min-height: 44px;
+  line-height: 1.9;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: border-color var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
+}
+
+.role-chip:hover {
+  border-color: var(--saple-green-600);
+  background: var(--saple-green-50);
+}
+
+/* 5. Steps ---------------------------------------------------------------- */
+
+.steps-grid {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  counter-reset: step;
+}
+
+.step-card {
+  padding: 1.5rem;
+}
+
+.step-number {
+  width: 2.35rem;
+  height: 2.35rem;
+  margin-bottom: 1rem;
+  display: grid;
+  place-items: center;
+  background: var(--brand-solid);
+  border-radius: 0.7rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.step-card h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.step-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+/* 6. Pathways ------------------------------------------------------------- */
+
+.pathway-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pathway-card {
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pathway-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.pathway-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.pathway-card .text-link {
+  margin-top: auto;
+}
+
+.pathway-note {
+  margin-top: auto;
+  padding: 0.5rem 0.65rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+}
+
+/* 7. Safety --------------------------------------------------------------- */
+
+.safety-panel {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.safety-panel h2 {
+  margin-bottom: 0.65rem;
+}
+
+.safety-panel p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.safety-links {
+  margin: 0;
+  padding: 0;
+  display: grid;
   gap: 0.45rem;
   list-style: none;
 }
 
-.salary-rule li {
-  padding: 0.28rem 0.55rem;
-  border-radius: 0.35rem;
-  color: var(--saple-green-900);
-  background: var(--surface-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.75rem;
+/* 8. Final call to action ------------------------------------------------- */
+
+.section-cta {
+  padding-bottom: clamp(3rem, 7vw, 5rem);
 }
 
-.confidence-note {
-  margin-top: 1rem;
-  padding: 1rem 1.1rem;
-  border-left: 3px solid var(--saple-green-600);
-  color: var(--text-secondary);
-  background: var(--surface);
-  font-size: 0.92rem;
-}
-
-.contribution-cta {
+.final-cta {
   padding: clamp(2rem, 6vw, 3.5rem);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 2rem;
-  border-radius: var(--radius-lg);
-  color: #dce9e3;
   background: var(--brand-deep);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  color: #dce9e3;
 }
 
-.contribution-cta h2 {
-  margin-bottom: 0.65rem;
-  color: #ffffff;
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
+.final-cta h2 {
+  margin-bottom: 0.5rem;
+  color: #fff;
+  font-size: clamp(1.6rem, 3.5vw, 2.3rem);
 }
 
-.contribution-cta p {
-  max-width: 650px;
+.final-cta p {
   margin: 0;
   color: #bed0c8;
 }
 
-.contribution-cta .button-primary {
+.final-cta .button-primary {
   color: var(--saple-green-900);
   background: var(--surface);
 }
 
+.final-cta .button-secondary {
+  color: #fff;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Section reveal ---------------------------------------------------------- */
+
+[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(0.75rem);
+}
+
+[data-revealed="true"] {
+  opacity: 1;
+  transform: none;
+  transition: opacity var(--motion-slow) var(--ease-out), transform var(--motion-slow) var(--ease-out);
+}
+
+/* Responsive -------------------------------------------------------------- */
+
+@media (max-width: 1050px) {
+  .pathway-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
-  .salary-explainer {
-    grid-template-columns: 1fr;
+  .trust-grid,
+  .steps-grid,
+  .discover-grid,
+  .safety-panel {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .trust-grid,
-  .explore-grid {
+  .snapshot-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .contribution-cta {
-    grid-template-columns: 1fr;
+  .final-cta {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 760px) {
   .hero-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .hero-tree {
+  .hero-visual {
     width: min(88vw, 410px);
     justify-self: center;
+    order: -1;
   }
 }
 
 @media (max-width: 600px) {
-  .home-search {
-    grid-template-columns: 1fr;
-  }
-
-  .home-search .button {
-    width: 100%;
-  }
-
-  .trust-grid,
-  .explore-grid,
-  .salary-type {
-    grid-template-columns: 1fr;
+  .pathway-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-actions .button,
@@ -370,8 +695,15 @@
   .tree-shoot,
   .tree-trunk,
   .tree-branch,
-  .tree-twig,
-  .leaf-cluster {
+  .leaf-cluster,
+  .signal-link,
+  .signal-node {
     animation: none;
+    opacity: 1;
+  }
+
+  [data-reveal="pending"] {
+    opacity: 1;
+    transform: none;
   }
 }

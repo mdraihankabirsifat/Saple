@@ -1,6 +1,20 @@
-const HUNTER_LOGO_BASE_URL = 'https://logos.hunter.io/';
+// Saple draws company marks locally.
+//
+// Earlier versions fetched a logo image from a third-party service using a
+// domain taken from the database. That let database content decide which
+// external host the browser contacted, which is exactly the kind of untrusted
+// outbound request a safe site should not make, and it was one of the things
+// the Google Web Risk remediation had to remove. Nothing here contacts the
+// network: the mark is generated from the company name alone.
+
 const DOMAIN_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
+// Twelve fixed hues from the Saple palette. The company name picks one
+// deterministically, so a company keeps the same mark on every page.
+const MARK_HUES = Object.freeze([158, 172, 196, 210, 228, 262, 286, 320, 12, 28, 44, 96]);
+
+// Kept because company profile pages still display a website link. It
+// validates and normalises a domain for display; it never builds a request.
 export function normalizeCompanyDomain(website) {
   if (typeof website !== 'string') return null;
 
@@ -42,17 +56,6 @@ export function normalizeCompanyDomain(website) {
   }
 }
 
-export function getCompanyLogoUrl(website) {
-  const domain = normalizeCompanyDomain(website);
-  return domain ? `${HUNTER_LOGO_BASE_URL}${encodeURIComponent(domain)}` : null;
-}
-
-export function getCompanyLogoUrls(website) {
-  const domain = normalizeCompanyDomain(website);
-  // Send only the validated public domain, never paths, queries or account data.
-  return domain ? [getCompanyLogoUrl(domain), `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`] : [];
-}
-
 export function getCompanyInitials(companyName) {
   const words = typeof companyName === 'string'
     ? companyName.trim().match(/[\p{L}\p{N}]+/gu) || []
@@ -64,60 +67,35 @@ export function getCompanyInitials(companyName) {
   return `${Array.from(words[0])[0]}${Array.from(words.at(-1))[0]}`.toUpperCase();
 }
 
-export function createCompanyLogo(companyName, website, documentRef = globalThis.document) {
+// A small, stable string hash. It only has to spread names across twelve hues.
+export function getCompanyMarkHue(companyName) {
+  const text = typeof companyName === 'string' ? companyName.trim().toLowerCase() : '';
+  let hash = 0;
+  for (const character of text) {
+    hash = (hash * 31 + character.codePointAt(0)) % 100000007;
+  }
+  return MARK_HUES[hash % MARK_HUES.length];
+}
+
+// Returns a container holding generated initials. There is no <img>, no src,
+// no remote host and no fallback chain to get stuck in.
+export function createCompanyLogo(companyName, _website, documentRef = globalThis.document) {
   const accessibleName = typeof companyName === 'string' && companyName.trim()
     ? companyName.trim()
     : 'Company';
   const container = documentRef.createElement('div');
-  const fallback = documentRef.createElement('span');
-  const logoUrls = getCompanyLogoUrls(website);
+  const mark = documentRef.createElement('span');
 
   container.className = 'company-logo';
-  fallback.className = 'company-logo-fallback';
-  fallback.textContent = getCompanyInitials(accessibleName);
-  fallback.setAttribute('role', 'img');
-  fallback.setAttribute('aria-label', `${accessibleName} company initials`);
-  container.append(fallback);
+  mark.className = 'company-logo-fallback';
+  mark.textContent = getCompanyInitials(accessibleName);
+  mark.setAttribute('role', 'img');
+  mark.setAttribute('aria-label', `${accessibleName} company initials`);
+  // A data attribute, not an inline style, so the strict CSP needs no
+  // style-src exception. The stylesheet turns the hue into a colour.
+  container.dataset.markHue = String(getCompanyMarkHue(accessibleName));
+  mark.dataset.markHue = container.dataset.markHue;
+  container.append(mark);
 
-  if (!logoUrls.length) return container;
-
-  const image = documentRef.createElement('img');
-  let settled = false;
-  let attempt = 0;
-
-  image.className = 'company-logo-image';
-  image.alt = `${accessibleName} company logo`;
-  // Observe the visible container: a hidden native-lazy image may never load.
-  image.loading = 'eager';
-  image.width = image.height = 88;
-  image.decoding = 'async';
-  image.referrerPolicy = 'no-referrer';
-  image.hidden = true;
-
-  image.addEventListener('load', () => {
-    if (settled) return;
-    settled = true;
-    image.hidden = false;
-    fallback.hidden = true;
-  }, { once: true });
-
-  image.addEventListener('error', () => {
-    if (settled) return;
-    attempt += 1;
-    if (attempt < logoUrls.length) { image.src = logoUrls[attempt]; return; }
-    settled = true;
-    image.removeAttribute('src');
-    image.hidden = true;
-    fallback.hidden = false;
-  });
-
-  container.prepend(image);
-  if (typeof IntersectionObserver !== 'undefined') {
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries.some((entry) => entry.isIntersecting)) return;
-      observer.disconnect(); image.src = logoUrls[0];
-    }, { rootMargin: '200px' });
-    observer.observe(container);
-  } else image.src = logoUrls[0];
   return container;
 }

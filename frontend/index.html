@@ -5,14 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description"
-    content="Research companies, verified salary insights, benefits, reviews, and interview experiences with Saple.">
-  <title>Saple | Know the company before you join</title>
+    content="Saple is an independent BUET CSE academic project for company and career insights: moderated company reviews, verified and community salary ranges, interview experiences and job postings.">
+  <title>Saple | Company and career insights</title>
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/home.css">
 </head>
 
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header class="site-header">
     <nav class="navbar container" aria-label="Main navigation">
       <a class="brand" href="index.html" aria-label="Saple home">
@@ -26,15 +27,13 @@
       <div id="main-menu" class="nav-menu" data-nav-menu>
         <ul class="nav-links">
           <li><a href="companies.html">Companies</a></li>
-          <li><a href="salaries.html">Salaries</a></li>
-          <li><a href="reviews.html">Reviews</a></li>
-          <li><a href="interviews.html">Interviews</a></li>
+          <li><a href="jobs.html">Jobs</a></li>
         </ul>
         <div class="nav-actions">
           <a class="nav-text-link" href="login.html">Sign in</a>
           <a class="button button-secondary button-small" href="register.html">Create account</a>
           <details class="contribute-menu">
-                        <summary class="button button-primary button-small">Contribute</summary>
+            <summary class="button button-primary button-small">Contribute</summary>
             <ul class="contribute-options">
               <li><a href="submit-salary.html">Submit salary</a></li>
               <li><a href="submit-review.html">Write a review</a></li>
@@ -46,23 +45,39 @@
     </nav>
   </header>
 
-  <main>
+  <main id="main-content">
+
+    <!-- 1. Hero ------------------------------------------------------------>
     <section class="home-hero" aria-labelledby="hero-heading">
       <div class="hero-grid container">
         <div class="hero-content">
-          <p class="eyebrow">Clearer career decisions</p>
+          <p class="hero-badge">Independent BUET CSE academic project</p>
           <h1 id="hero-heading">Know the company before you join.</h1>
           <p class="hero-text">
-            Explore company information, workplace benefits, verified salary insights,
-            employee reviews, and interview experiences shaped by moderated contributions.
+            Saple collects company profiles, salary ranges, workplace reviews, interview experiences and job
+            postings — then shows you exactly how trustworthy each piece of information is, and why.
           </p>
           <div class="hero-actions">
             <a class="button button-primary" href="companies.html">Explore companies</a>
-            <a class="button button-secondary" href="salaries.html">Browse salary insights</a>
+            <a class="button button-secondary" href="jobs.html">Browse jobs</a>
           </div>
+          <p class="hero-secondary">
+            <a class="text-link" href="#how-it-works">Learn how verification works &rarr;</a>
+          </p>
+          <p class="hero-disclaimer">
+            Saple is not affiliated with, endorsed by, or an official login or careers service for any company listed
+            here.
+          </p>
         </div>
-        <figure class="hero-tree" aria-hidden="true">
-          <svg class="saple-tree" viewBox="0 0 480 420" role="presentation" focusable="false">
+
+        <!-- Lightweight, entirely local visual: a sapling growing into a
+             connected career ecosystem. It has a static first frame, pauses
+             when offscreen or hidden, and does not animate under
+             prefers-reduced-motion. -->
+        <figure class="hero-visual" data-hero-visual>
+          <svg class="saple-scene" viewBox="0 0 480 420" role="img"
+            aria-label="Illustration of a sapling growing into a connected network of career signals"
+            focusable="false">
             <defs>
               <linearGradient id="saple-trunk-gradient" x1="0" y1="1" x2="0.65" y2="0">
                 <stop offset="0" stop-color="#123c2d" />
@@ -75,181 +90,283 @@
               </linearGradient>
             </defs>
 
-            <ellipse class="tree-ground" cx="242" cy="371" rx="176" ry="15" fill="url(#saple-ground-gradient)" />
-            <ellipse class="tree-seed" cx="242" cy="360" rx="11" ry="7" transform="rotate(-14 242 360)" />
-
-            <path class="tree-shoot tree-stroke" d="M242 357 C239 340 238 323 243 306" />
-            <path class="tree-trunk tree-stroke" d="M242 357 C219 315 257 287 237 244 C217 201 259 173 246 111" />
-
-            <g class="tree-branches" fill="none">
-              <path class="tree-branch branch-1 tree-stroke" d="M239 293 C205 271 175 246 158 214" />
-              <path class="tree-branch branch-2 tree-stroke" d="M238 249 C278 231 309 207 327 174" />
-              <path class="tree-branch branch-3 tree-stroke" d="M239 213 C204 192 184 169 173 139" />
-              <path class="tree-branch branch-4 tree-stroke" d="M245 178 C278 159 296 135 305 108" />
-              <path class="tree-branch branch-5 tree-stroke" d="M246 145 C229 128 218 109 215 88" />
-              <path class="tree-twig branch-1 tree-stroke" d="M193 259 C181 239 178 222 180 204" />
-              <path class="tree-twig branch-2 tree-stroke" d="M290 221 C312 220 331 214 348 202" />
-              <path class="tree-twig branch-3 tree-stroke" d="M201 184 C183 181 167 174 153 162" />
-              <path class="tree-twig branch-4 tree-stroke" d="M279 156 C297 157 315 152 329 142" />
+            <g class="scene-layer scene-layer-back" data-depth="0.25">
+              <circle class="scene-halo" cx="246" cy="180" r="150" />
             </g>
 
-            <g class="leaf-cluster leaves-1">
-              <ellipse cx="145" cy="208" rx="32" ry="19" transform="rotate(22 145 208)" />
-              <ellipse cx="174" cy="195" rx="31" ry="20" transform="rotate(-18 174 195)" />
-              <ellipse cx="184" cy="226" rx="29" ry="18" transform="rotate(14 184 226)" />
+            <g class="scene-layer scene-layer-mid" data-depth="0.5">
+              <ellipse class="tree-ground" cx="242" cy="371" rx="176" ry="15"
+                fill="url(#saple-ground-gradient)" />
+              <ellipse class="tree-seed" cx="242" cy="360" rx="11" ry="7" />
+              <path class="tree-shoot tree-stroke" d="M242 357 C239 340 238 323 243 306" />
+              <path class="tree-trunk tree-stroke" d="M242 357 C219 315 257 287 237 244 C217 201 259 173 246 111" />
+
+              <g class="tree-branches" fill="none">
+                <path class="tree-branch branch-1 tree-stroke" d="M239 293 C205 271 175 246 158 214" />
+                <path class="tree-branch branch-2 tree-stroke" d="M238 249 C278 231 309 207 327 174" />
+                <path class="tree-branch branch-3 tree-stroke" d="M239 213 C204 192 184 169 173 139" />
+                <path class="tree-branch branch-4 tree-stroke" d="M245 178 C278 159 296 135 305 108" />
+                <path class="tree-branch branch-5 tree-stroke" d="M246 145 C229 128 218 109 215 88" />
+              </g>
+
+              <g class="leaf-cluster leaves-1">
+                <ellipse cx="145" cy="208" rx="32" ry="19" transform="rotate(22 145 208)" />
+                <ellipse cx="174" cy="195" rx="31" ry="20" transform="rotate(-18 174 195)" />
+                <ellipse cx="184" cy="226" rx="29" ry="18" transform="rotate(14 184 226)" />
+              </g>
+              <g class="leaf-cluster leaves-2">
+                <ellipse cx="326" cy="171" rx="34" ry="20" transform="rotate(-20 326 171)" />
+                <ellipse cx="352" cy="195" rx="30" ry="18" transform="rotate(18 352 195)" />
+                <ellipse cx="306" cy="205" rx="32" ry="19" transform="rotate(11 306 205)" />
+              </g>
+              <g class="leaf-cluster leaves-3">
+                <ellipse cx="157" cy="145" rx="32" ry="19" transform="rotate(15 157 145)" />
+                <ellipse cx="188" cy="128" rx="35" ry="21" transform="rotate(-16 188 128)" />
+                <ellipse cx="197" cy="162" rx="31" ry="19" transform="rotate(21 197 162)" />
+              </g>
+              <g class="leaf-cluster leaves-4">
+                <ellipse cx="306" cy="105" rx="34" ry="20" transform="rotate(-19 306 105)" />
+                <ellipse cx="337" cy="132" rx="31" ry="19" transform="rotate(17 337 132)" />
+                <ellipse cx="292" cy="142" rx="33" ry="20" transform="rotate(9 292 142)" />
+              </g>
+              <g class="leaf-cluster leaves-5">
+                <ellipse cx="216" cy="82" rx="31" ry="18" transform="rotate(22 216 82)" />
+                <ellipse cx="250" cy="66" rx="38" ry="22" transform="rotate(-7 250 66)" />
+                <ellipse cx="277" cy="88" rx="32" ry="19" transform="rotate(17 277 88)" />
+                <ellipse cx="243" cy="105" rx="35" ry="21" transform="rotate(-12 243 105)" />
+              </g>
             </g>
-            <g class="leaf-cluster leaves-2">
-              <ellipse cx="326" cy="171" rx="34" ry="20" transform="rotate(-20 326 171)" />
-              <ellipse cx="352" cy="195" rx="30" ry="18" transform="rotate(18 352 195)" />
-              <ellipse cx="306" cy="205" rx="32" ry="19" transform="rotate(11 306 205)" />
-            </g>
-            <g class="leaf-cluster leaves-3">
-              <ellipse cx="157" cy="145" rx="32" ry="19" transform="rotate(15 157 145)" />
-              <ellipse cx="188" cy="128" rx="35" ry="21" transform="rotate(-16 188 128)" />
-              <ellipse cx="197" cy="162" rx="31" ry="19" transform="rotate(21 197 162)" />
-            </g>
-            <g class="leaf-cluster leaves-4">
-              <ellipse cx="306" cy="105" rx="34" ry="20" transform="rotate(-19 306 105)" />
-              <ellipse cx="337" cy="132" rx="31" ry="19" transform="rotate(17 337 132)" />
-              <ellipse cx="292" cy="142" rx="33" ry="20" transform="rotate(9 292 142)" />
-            </g>
-            <g class="leaf-cluster leaves-5">
-              <ellipse cx="216" cy="82" rx="31" ry="18" transform="rotate(22 216 82)" />
-              <ellipse cx="250" cy="66" rx="38" ry="22" transform="rotate(-7 250 66)" />
-              <ellipse cx="277" cy="88" rx="32" ry="19" transform="rotate(17 277 88)" />
-              <ellipse cx="243" cy="105" rx="35" ry="21" transform="rotate(-12 243 105)" />
+
+            <!-- The four signals Saple actually models, drawn as nodes linked
+                 back to the company at the centre of the canopy. -->
+            <g class="scene-layer scene-layer-front" data-depth="1">
+              <g class="signal-links" fill="none">
+                <path class="signal-link" d="M250 120 C190 120 130 118 96 108" />
+                <path class="signal-link" d="M250 120 C320 118 372 110 404 96" />
+                <path class="signal-link" d="M250 120 C196 168 140 214 92 252" />
+                <path class="signal-link" d="M250 120 C314 168 366 212 410 250" />
+              </g>
+              <g class="signal-node signal-node-1">
+                <circle cx="88" cy="104" r="21" />
+                <text x="88" y="109" text-anchor="middle">৳</text>
+              </g>
+              <g class="signal-node signal-node-2">
+                <circle cx="410" cy="92" r="21" />
+                <text x="410" y="98" text-anchor="middle">★</text>
+              </g>
+              <g class="signal-node signal-node-3">
+                <circle cx="86" cy="258" r="21" />
+                <text x="86" y="264" text-anchor="middle">?</text>
+              </g>
+              <g class="signal-node signal-node-4">
+                <circle cx="416" cy="256" r="21" />
+                <text x="416" y="262" text-anchor="middle">✓</text>
+              </g>
             </g>
           </svg>
+          <figcaption class="sr-only">
+            Salary, review, interview and verification signals connect back to a single company record.
+          </figcaption>
         </figure>
       </div>
     </section>
 
-    <div class="home-search-wrap container">
-      <form class="home-search" action="companies.html" method="get" role="search">
-        <div class="form-group">
-          <label for="home-company-search">Search the company directory</label>
-          <input class="input" id="home-company-search" name="search" type="search" maxlength="100"
-            placeholder="Company, industry, city, or country" autocomplete="off">
-        </div>
-        <button class="button button-primary" type="submit">Search companies</button>
-      </form>
-    </div>
+    <!-- 2. Live snapshot --------------------------------------------------->
+    <section class="section section-snapshot" aria-labelledby="snapshot-heading">
+      <div class="container">
+        <h2 class="sr-only" id="snapshot-heading">What is in Saple right now</h2>
+        <dl class="snapshot-grid" id="snapshot" aria-live="polite">
+          <div class="snapshot-item">
+            <dt>Companies</dt>
+            <dd><span class="snapshot-value" data-count="companyCount">—</span></dd>
+          </div>
+          <div class="snapshot-item">
+            <dt>Approved insights</dt>
+            <dd><span class="snapshot-value" data-count="approvedInsightCount">—</span></dd>
+          </div>
+          <div class="snapshot-item">
+            <dt>Open jobs</dt>
+            <dd><span class="snapshot-value" data-count="openJobCount">—</span></dd>
+          </div>
+          <div class="snapshot-item">
+            <dt>Published reviews</dt>
+            <dd><span class="snapshot-value" data-count="approvedReviewCount">—</span></dd>
+          </div>
+        </dl>
+        <p class="snapshot-note" id="snapshot-note">Counting live records&hellip;</p>
+      </div>
+    </section>
 
+    <!-- 3. Trust explanation ----------------------------------------------->
     <section class="section" aria-labelledby="trust-heading">
       <div class="container">
         <div class="section-heading">
           <p class="eyebrow">Trust by design</p>
-          <h2 id="trust-heading">Context behind every contribution</h2>
-          <p>Saple separates verification, moderation, and public identity so readers can understand what each insight
-            represents.</p>
+          <h2 id="trust-heading">Every number on Saple says where it came from</h2>
+          <p>Three rules decide what you see. They are enforced in the database and the API, not just in the wording on
+            a page.</p>
         </div>
         <div class="trust-grid">
           <article class="trust-card card">
             <span class="trust-card-number" aria-hidden="true">01</span>
-            <h3>Verified contributors</h3>
-            <p>Company-specific employment verification can support stronger salary signals.</p>
+            <h3>Approved-only publication</h3>
+            <p>Every contribution starts as <strong>PENDING</strong> and is invisible to the public. It appears only
+              after an administrator sets it to <strong>APPROVED</strong>, and the decision is recorded with the actor,
+              the previous state, the new state and a timestamp.</p>
           </article>
           <article class="trust-card card">
             <span class="trust-card-number" aria-hidden="true">02</span>
-            <h3>Moderated submissions</h3>
-            <p>Contributions are reviewed before they become visible in public results.</p>
+            <h3>Verified vs Community ranges</h3>
+            <p>The <strong>Verified Salary Range</strong> uses only approved submissions from contributors who passed
+              employment verification for that exact company and role. The <strong>Community Salary Range</strong> uses
+              every approved submission. Both always show their contribution count.</p>
           </article>
           <article class="trust-card card">
             <span class="trust-card-number" aria-hidden="true">03</span>
-            <h3>Anonymous sharing</h3>
-            <p>Public identity can be hidden while Saple retains ownership internally for moderation.</p>
-          </article>
-          <article class="trust-card card">
-            <span class="trust-card-number" aria-hidden="true">04</span>
-            <h3>Community insights</h3>
-            <p>Broader approved contributions offer additional context alongside verified data.</p>
+            <h3>Anonymous publicly, accountable internally</h3>
+            <p>A contribution can be shown without its author. Saple still keeps the internal link between the record
+              and the account, so a report can be investigated and a moderation decision can be audited afterwards.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="section section-muted" aria-labelledby="explore-heading">
+    <!-- 4. Featured discovery ---------------------------------------------->
+    <section class="section section-muted" aria-labelledby="discover-heading">
       <div class="container">
         <div class="section-heading">
-          <p class="eyebrow">Explore Saple</p>
-          <h2 id="explore-heading">A practical view of working life</h2>
-          <p>Browse approved company, salary, review, and interview information through database-backed views.</p>
+          <p class="eyebrow">Start here</p>
+          <h2 id="discover-heading">Discover what is already in the directory</h2>
+          <p>Everything below is pulled live from approved public data. Nothing on this page is invented to fill space.
+          </p>
         </div>
-        <div class="explore-grid">
-          <article class="explore-card card">
-            <h3>Company profiles</h3>
-            <p>Browse real company records, industries, locations, sizes, and benefits.</p>
-            <a class="text-link" href="companies.html">Browse companies &rarr;</a>
-          </article>
-          <article class="explore-card card">
-            <h3>Salary insights</h3>
-            <p>Compare verified and wider community salary summaries with contribution counts.</p>
-            <a class="text-link" href="salaries.html">Browse salary insights &rarr;</a>
-          </article>
-          <article class="explore-card card">
-            <h3>Employee reviews</h3>
-            <p>Read approved workplace reviews with company, role, location, and rating filters.</p>
-            <a class="text-link" href="reviews.html">Browse reviews &rarr;</a>
-          </article>
-          <article class="explore-card card">
-            <h3>Interview experiences</h3>
-            <p>Read approved interview context with structured process and outcome details.</p>
-            <a class="text-link" href="interviews.html">Browse interviews &rarr;</a>
-          </article>
+
+        <div class="discover-grid">
+          <section class="discover-column" aria-labelledby="featured-companies-heading">
+            <div class="discover-head">
+              <h3 id="featured-companies-heading">Featured companies</h3>
+              <a class="text-link" href="companies.html">All companies &rarr;</a>
+            </div>
+            <div class="featured-companies" id="featured-companies"></div>
+          </section>
+
+          <section class="discover-column" aria-labelledby="latest-jobs-heading">
+            <div class="discover-head">
+              <h3 id="latest-jobs-heading">Latest open jobs</h3>
+              <a class="text-link" href="jobs.html">All jobs &rarr;</a>
+            </div>
+            <div class="featured-jobs" id="featured-jobs"></div>
+          </section>
         </div>
+
+        <section class="popular-roles" aria-labelledby="popular-roles-heading">
+          <h3 id="popular-roles-heading">Popular roles right now</h3>
+          <ul class="role-chips" id="popular-roles"></ul>
+        </section>
       </div>
     </section>
 
-    <section id="salary-insights" class="section" aria-labelledby="salary-heading">
-      <div class="salary-explainer container">
-        <div class="section-heading">
-          <p class="eyebrow">Salary insight methodology</p>
-          <h2 id="salary-heading">Two ranges, two levels of context</h2>
-          <p>Salary aggregation remains a backend and database responsibility. Saple presents the result with clear
-            labels so the source population is easy to understand.</p>
-          <p class="confidence-note"><strong>Contribution count matters.</strong> A larger number of approved
-            submissions generally provides more context for interpreting a range.</p>
-        </div>
-        <div class="salary-type-list">
-          <article class="salary-type card">
-            <span class="salary-type-mark" aria-hidden="true">V</span>
-            <div>
-              <h3>Verified Salary Range</h3>
-              <p>Uses only approved salary submissions whose contributor verification is confirmed.</p>
-              <ul class="salary-rule" aria-label="Verified salary range conditions">
-                <li>verification_status = VERIFIED</li>
-                <li>submission_status = APPROVED</li>
-              </ul>
-            </div>
-          </article>
-          <article class="salary-type community card">
-            <span class="salary-type-mark" aria-hidden="true">C</span>
-            <div>
-              <h3>Community Salary Range</h3>
-              <p>Uses all approved salary submissions, including both verified and unverified approved contributions.
-              </p>
-              <ul class="salary-rule" aria-label="Community salary range conditions">
-                <li>submission_status = APPROVED</li>
-              </ul>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" aria-labelledby="contribute-heading" data-verified-contributor hidden>
+    <!-- 5. How it works ---------------------------------------------------->
+    <section class="section" id="how-it-works" aria-labelledby="how-heading">
       <div class="container">
-        <div class="contribution-cta">
+        <div class="section-heading">
+          <p class="eyebrow">How it works</p>
+          <h2 id="how-heading">Three steps, whichever side you are on</h2>
+        </div>
+        <ol class="steps-grid">
+          <li class="step-card card">
+            <span class="step-number" aria-hidden="true">1</span>
+            <h3>Discover a company</h3>
+            <p>Search the directory by name, industry, city or country. Each profile carries benefits, reviews and both
+              salary ranges side by side.</p>
+          </li>
+          <li class="step-card card">
+            <span class="step-number" aria-hidden="true">2</span>
+            <h3>Read trusted insights</h3>
+            <p>Compare the verified range against the community range, read approved reviews and interview experiences,
+              and report anything that looks wrong.</p>
+          </li>
+          <li class="step-card card">
+            <span class="step-number" aria-hidden="true">3</span>
+            <h3>Verify, contribute or apply</h3>
+            <p>Verify your employment for one exact company and role to contribute, or apply to an open vacancy and
+              track the decision from your own dashboard.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 6. Audience pathways ----------------------------------------------->
+    <section class="section section-muted" aria-labelledby="pathways-heading">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">Who Saple is for</p>
+          <h2 id="pathways-heading">Four roles, four different views</h2>
+        </div>
+        <div class="pathway-grid">
+          <article class="pathway-card card">
+            <h3>Job seeker</h3>
+            <p>Browse companies, salary ranges, reviews and interviews. Apply to open vacancies and track every
+              application privately.</p>
+            <a class="text-link" href="register.html">Create a free account &rarr;</a>
+          </article>
+          <article class="pathway-card card">
+            <h3>Current or former employee</h3>
+            <p>Verify your employment for one exact company and role, then contribute salary, review and interview data
+              for that scope — anonymously if you choose.</p>
+            <a class="text-link" href="faq.html">How verification works &rarr;</a>
+          </article>
+          <article class="pathway-card card">
+            <h3>Company representative</h3>
+            <p>Granted by an administrator, never by signing up. Review verification requests, publish vacancies and
+              manage applications for your assigned companies only.</p>
+            <a class="text-link" href="contact.html">Request an assignment &rarr;</a>
+          </article>
+          <article class="pathway-card card">
+            <h3>Administrator</h3>
+            <p>Moderates contributions, triages reports, approves and revokes representative assignments, and publishes
+              announcements. There can be many administrators; none is hard-coded.</p>
+            <p class="pathway-note">Administrator access is assigned internally and is never available through public
+              registration.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Safety and transparency ----------------------------------------->
+    <section class="section" aria-labelledby="safety-heading">
+      <div class="container">
+        <div class="safety-panel card">
           <div>
-            <p class="eyebrow">Build better context together</p>
-            <h2 id="contribute-heading">Share what you know, responsibly.</h2>
-            <p>Your contribution will be reviewed before becoming publicly visible. Anonymous display never removes
-              Saple's internal moderation link to the submitter.</p>
+            <p class="eyebrow">Safety and transparency</p>
+            <h2 id="safety-heading">How this project handles your data and your reports</h2>
+            <p>Saple loads no third-party scripts, trackers or advertising, stores passwords and reset links only as
+              hashes, and publishes exactly what it collects. Every public contribution can be reported, and every
+              report is triaged with a recorded decision.</p>
+          </div>
+          <ul class="safety-links">
+            <li><a class="text-link" href="privacy.html">Privacy &rarr;</a></li>
+            <li><a class="text-link" href="terms.html">Terms and acceptable use &rarr;</a></li>
+            <li><a class="text-link" href="security.html">Security &rarr;</a></li>
+            <li><a class="text-link" href="about.html">Methodology and about &rarr;</a></li>
+            <li><a class="text-link" href="contact.html">Contact and reporting &rarr;</a></li>
+            <li><a class="text-link" href="faq.html">FAQ &rarr;</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Final call to action -------------------------------------------->
+    <section class="section section-cta" aria-labelledby="cta-heading">
+      <div class="container">
+        <div class="final-cta">
+          <div>
+            <h2 id="cta-heading">Start with a company, or start with a job.</h2>
+            <p>Both are free, both are public, and neither needs an account.</p>
           </div>
           <div class="cta-actions">
-            <a class="button button-primary" href="submit-salary.html">Submit salary</a>
-            <a class="button button-secondary" href="submit-review.html">Write a review</a>
-            <a class="button button-secondary" href="interview-experience.html">Share an interview</a>
+            <a class="button button-primary" href="companies.html">Explore companies</a>
+            <a class="button button-secondary" href="jobs.html">Browse jobs</a>
           </div>
         </div>
       </div>
@@ -261,18 +378,20 @@
       <section class="footer-brand" aria-labelledby="footer-brand-heading">
         <a class="footer-logo" href="index.html" aria-label="Saple home"><span class="footer-logo-mark"
             aria-hidden="true">S</span><span id="footer-brand-heading">Saple</span></a>
-        <p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.
-        </p>
-        <div class="project-tags" aria-label="Project technologies"><span>Supabase PostgreSQL
-            19c</span><span>Express</span><span>Vanilla JS</span></div>
+        <p>Company insights, salary context, benefits, reviews, interview experiences and job postings for better
+          career decisions.</p>
+        <div class="project-tags" aria-label="Project technologies">
+          <span>PostgreSQL</span><span>Express</span><span>Vanilla JavaScript</span>
+        </div>
       </section>
       <nav class="footer-column" aria-labelledby="footer-explore-heading">
         <h2 id="footer-explore-heading">Explore</h2>
         <ul>
           <li><a href="companies.html">Companies</a></li>
-          <li><a href="#salary-insights">Salary methodology</a></li>
+          <li><a href="salaries.html">Salaries</a></li>
           <li><a href="reviews.html">Reviews</a></li>
           <li><a href="interviews.html">Interviews</a></li>
+          <li><a href="jobs.html">Jobs</a></li>
         </ul>
       </nav>
       <nav class="footer-column" aria-labelledby="footer-contribute-heading">
@@ -280,8 +399,9 @@
         <ul>
           <li><a href="login.html">Sign in</a></li>
           <li><a href="register.html">Create account</a></li>
+          <li><a href="my-applications.html">My applications</a></li>
           <li><a href="submit-salary.html">Submit salary</a></li>
-          <li><a href="https://github.com/mdraihankabirsifat/Saple">GitHub repository</a></li>
+          <li><a href="https://github.com/mdraihankabirsifat/Saple" rel="noopener noreferrer">GitHub repository</a></li>
         </ul>
       </nav>
     </div>
@@ -293,6 +413,7 @@
     </div>
   </footer>
   <script src="js/nav.js" defer></script>
+  <script type="module" src="js/home.js"></script>
 </body>
 
 </html>

@@ -33,35 +33,75 @@ test('reset page keeps the token only in memory and validates matching passwords
   assert.doesNotMatch(script, /localStorage|sessionStorage|console\./);
 });
 
-test('homepage permanently replaces the context card with a decorative inline tree', () => {
+test('the homepage hero is a self-contained local visual with no embedded media', () => {
   const home = readFrontend('index.html');
   const css = readFrontend('css/home.css');
 
-  assert.doesNotMatch(home, /Research with context|Useful signals, clearly explained|class="hero-panel"/);
-  assert.match(home, /<figure class="hero-tree" aria-hidden="true">/);
-  assert.match(home, /<svg class="saple-tree"[^>]+role="presentation" focusable="false">/);
-  assert.match(home, /tree-seed/);
-  assert.match(home, /tree-shoot/);
-  assert.match(home, /tree-trunk/);
-  assert.match(home, /tree-branch/);
-  assert.match(home, /leaf-cluster/);
-  assert.doesNotMatch(home, /canvas|video|iframe|Skip/i);
+  assert.match(home, /<figure class="hero-visual" data-hero-visual>/);
+  assert.match(home, /<svg class="saple-scene"[^>]+role="img"/);
+  for (const part of ['tree-seed', 'tree-shoot', 'tree-trunk', 'tree-branch', 'leaf-cluster', 'signal-node']) {
+    assert.match(home, new RegExp(part), part);
+  }
+
+  // The scene is described for assistive technology rather than hidden, and
+  // nothing about it is fetched, framed or embedded.
+  assert.match(home, /aria-label="Illustration of a sapling growing into a connected network of career signals"/);
+  assert.doesNotMatch(home, /<canvas|<video|<audio|<iframe|<embed|<object/i);
+  assert.doesNotMatch(home, /https?:\/\/(?!github\.com)/);
   assert.doesNotMatch(css, /\.hero-panel|\.feature-list/);
 });
 
-test('tree growth runs once, finishes within four seconds, and has responsive reduced-motion fallbacks', () => {
-  const css = readFrontend('css/home.css');
+test('the homepage states what Saple is and what it is not, above the fold', () => {
+  const home = readFrontend('index.html');
 
-  assert.match(css, /@keyframes seed-appear/);
-  assert.match(css, /@keyframes draw-shoot/);
-  assert.match(css, /@keyframes draw-trunk/);
-  assert.match(css, /@keyframes draw-branch/);
-  assert.match(css, /@keyframes reveal-leaves/);
+  assert.match(home, /Independent BUET CSE academic project/);
+  assert.match(home, /not affiliated with, endorsed by, or an official login or careers service/);
+
+  // The primary and secondary calls to action the redesign requires.
+  assert.match(home, /href="companies\.html">Explore companies<\/a>/);
+  assert.match(home, /href="jobs\.html">Browse jobs<\/a>/);
+  assert.match(home, /Learn how verification works/);
+
+  // Trust model, audiences and the policy pages are all linked from here.
+  assert.match(home, /Verified Salary Range/);
+  assert.match(home, /Community Salary Range/);
+  assert.match(home, /Approved-only publication/);
+  for (const page of ['privacy.html', 'terms.html', 'security.html', 'contact.html', 'about.html', 'faq.html']) {
+    assert.match(home, new RegExp(`href="${page.replace('.', '\\.')}"`), page);
+  }
+
+  // Counters start empty and are filled from a real endpoint, never seeded
+  // with invented numbers in the markup.
+  assert.match(home, /data-count="companyCount"/);
+  assert.match(home, /data-count="openJobCount"/);
+  assert.doesNotMatch(home, /class="snapshot-value"[^>]*>\s*\d/);
+
+  // A skip link and one main landmark, on a page this long.
+  assert.match(home, /class="skip-link" href="#main-content"/);
+  assert.match(home, /<main id="main-content">/);
+});
+
+test('hero motion is short, runs once, and stops when it is unwelcome or unseen', () => {
+  const css = readFrontend('css/home.css');
+  const script = readFrontend('js/home.js');
+
+  for (const frames of ['seed-appear', 'draw-shoot', 'draw-trunk', 'draw-branch', 'reveal-leaves', 'node-pop']) {
+    assert.match(css, new RegExp(`@keyframes ${frames}`), frames);
+  }
   assert.match(css, /\.leaves-5[^\n]+2\.72s/);
   assert.doesNotMatch(css, /infinite/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]+\.hero-grid[\s\S]+grid-template-columns: 1fr/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]+animation: none/);
-  assert.match(css, /\.hero-tree[\s\S]+width: min\(100%, 470px\)/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]+\.hero-grid[\s\S]+grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(css, /\.hero-visual[\s\S]+width: min\(100%, 470px\)/);
+
+  // The parallax loop yields to reduced motion, to a hidden tab and to the
+  // figure leaving the viewport, and it writes a custom property rather than
+  // an inline style attribute, so the strict CSP needs no exception.
+  assert.match(script, /prefersReducedMotion\(\)/);
+  assert.match(script, /visibilitychange/);
+  assert.match(script, /IntersectionObserver/);
+  assert.match(script, /cancelAnimationFrame/);
+  assert.match(script, /setProperty\('--shift-x'/);
 });
 
 test('password recovery FAQ now describes temporary single-use email links', () => {

@@ -1,0 +1,230 @@
+/* Company representative workspace and administrator oversight panels. */
+
+.workspace-gate {
+  margin-block: clamp(2rem, 8vw, 5rem);
+}
+
+.scope-list {
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  list-style: none;
+}
+
+.scope-chip {
+  padding: 0.7rem 1rem;
+  display: grid;
+  gap: 0.1rem;
+  background: var(--saple-green-50);
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.scope-chip strong {
+  font-size: 0.95rem;
+}
+
+.scope-since {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
+/* Tabs -------------------------------------------------------------------- */
+
+.tab-list {
+  margin-bottom: 1.25rem;
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 0.7rem 1rem;
+  min-height: 44px;
+  position: relative;
+  color: var(--text-secondary);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--saple-green-700);
+  border-bottom-color: var(--saple-green-600);
+}
+
+.tab-panel[hidden] {
+  display: none;
+}
+
+.panel-toolbar {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+}
+
+.panel-toolbar .button {
+  margin-left: auto;
+}
+
+/* Queue cards ------------------------------------------------------------- */
+
+.queue-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.queue-card {
+  padding: 1.2rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.queue-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.queue-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.queue-subtitle {
+  margin: 0.15rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.queue-facts {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.queue-facts dt {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.queue-facts dd {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.queue-privacy,
+.queue-note {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  background: var(--surface-muted);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.queue-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.decision-row {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+/* Dialog ------------------------------------------------------------------ */
+
+.dialog-backdrop {
+  inset: 0;
+  z-index: 90;
+  padding: 1rem;
+  position: fixed;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(9, 25, 17, 0.62);
+  animation: saple-rise var(--motion-base) var(--ease-out);
+}
+
+.dialog {
+  width: min(38rem, 100%);
+  max-height: calc(100dvh - 2rem);
+  padding: clamp(1.15rem, 3vw, 1.75rem);
+  overflow-y: auto;
+}
+
+.dialog-heading {
+  margin: 0 0 0.3rem;
+  font-size: 1.2rem;
+}
+
+.dialog-intro {
+  margin: 0 0 1rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.dialog-form {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+}
+
+.dialog-form > .form-group:nth-child(2),
+.dialog-form > .form-group:nth-child(5),
+.dialog-form > .form-group:nth-child(6),
+.dialog-actions,
+.dialog-form > .form-feedback {
+  grid-column: 1 / -1;
+}
+
+.dialog-actions {
+  margin-top: 0.4rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .decision-row,
+  .dialog-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel-toolbar .button {
+    margin-left: 0;
+  }
+}

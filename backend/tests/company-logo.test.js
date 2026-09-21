@@ -13,126 +13,102 @@ class FakeElement {
     this.tagName = tagName.toUpperCase();
     this.children = [];
     this.attributes = new Map();
-    this.listeners = new Map();
+    this.dataset = {};
     this.hidden = false;
   }
 
   append(...children) { this.children.push(...children); }
   prepend(...children) { this.children.unshift(...children); }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
-
-  removeAttribute(name) {
-    this.attributes.delete(name);
-    if (name === 'src') delete this.src;
-  }
-
-  addEventListener(type, listener, options = {}) {
-    this.listeners.set(type, { listener, once: Boolean(options.once) });
-  }
-
-  emit(type) {
-    const entry = this.listeners.get(type);
-    if (!entry) return;
-    if (entry.once) this.listeners.delete(type);
-    entry.listener();
-  }
+  removeAttribute(name) { this.attributes.delete(name); }
 }
 
 const fakeDocument = {
   createElement: (tagName) => new FakeElement(tagName)
 };
 
-test('company logo helper normalizes full URLs and bare domains without trusting raw input', async () => {
-  const { getCompanyLogoUrl, normalizeCompanyDomain } = await helperModule;
+test('company marks are generated locally and never request a remote image', async () => {
+  const { createCompanyLogo } = await helperModule;
+
+  for (const website of [null, 'https://www.example.com', 'aci-bd.com', 'javascript:alert(1)']) {
+    const logo = createCompanyLogo('Aster Byte Limited', website, fakeDocument);
+    assert.equal(logo.children.length, 1, 'only the generated initials element is rendered');
+    assert.equal(logo.children[0].tagName, 'SPAN');
+    assert.equal(logo.children[0].textContent, 'AL');
+    assert.equal(logo.children.some((child) => child.tagName === 'IMG'), false);
+  }
+});
+
+test('no third-party logo host or image source survives in the helper', () => {
+  assert.doesNotMatch(helperSource, /logos\.hunter\.io|icons\.duckduckgo\.com|clearbit|favicon/i);
+  assert.doesNotMatch(helperSource, /createElement\(\s*['"]img['"]\s*\)/i);
+  assert.doesNotMatch(helperSource, /\.src\s*=/);
+  // A scheme followed by a host character would be a real outbound address.
+  // The only remaining occurrence is a URL-parser template, which is not one.
+  assert.doesNotMatch(helperSource, /https?:\/\/[a-z0-9]/i);
+});
+
+test('initials cover single words, multiple words, and unusable names', async () => {
+  const { getCompanyInitials } = await helperModule;
+
+  assert.equal(getCompanyInitials('Alpha Consulting International'), 'AI');
+  assert.equal(getCompanyInitials('ACI'), 'AC');
+  assert.equal(getCompanyInitials('  '), 'S');
+  assert.equal(getCompanyInitials(null), 'S');
+  assert.equal(getCompanyInitials('Example Limited'), 'EL');
+});
+
+test('a company keeps the same generated hue on every page', async () => {
+  const { getCompanyMarkHue, createCompanyLogo } = await helperModule;
+  const first = getCompanyMarkHue('Meghna Analytics');
+
+  assert.equal(getCompanyMarkHue('Meghna Analytics'), first);
+  assert.equal(getCompanyMarkHue('meghna analytics'), first);
+  assert.ok(Number.isInteger(first) && first >= 0 && first < 360);
+
+  const logo = createCompanyLogo('Meghna Analytics', null, fakeDocument);
+  assert.equal(logo.dataset.markHue, String(first));
+  // The hue travels as a data attribute so the strict CSP needs no inline style.
+  assert.doesNotMatch(helperSource, /\.style\./);
+});
+
+test('domain normalization still validates websites for display only', async () => {
+  const { normalizeCompanyDomain } = await helperModule;
 
   assert.equal(normalizeCompanyDomain('https://www.Example.com/about?from=saple'), 'example.com');
   assert.equal(normalizeCompanyDomain('example.com'), 'example.com');
-  assert.equal(normalizeCompanyDomain('WWW.Example.com/careers'), 'example.com');
   assert.equal(normalizeCompanyDomain('https://jobs.sub.example.co.uk/openings'), 'jobs.sub.example.co.uk');
-  assert.equal(
-    getCompanyLogoUrl('https://www.Example.com/path?next=attacker.invalid'),
-    'https://logos.hunter.io/example.com'
-  );
-});
-
-test('company logo helper rejects missing, invalid, credentialed, and unsupported websites', async () => {
-  const { normalizeCompanyDomain } = await helperModule;
 
   for (const website of [
-    null,
-    '',
-    'not a domain',
-    'javascript:alert(1)',
-    'ftp://example.com',
-    'http://localhost',
-    'http://127.0.0.1',
-    'https://user:secret@example.com',
-    'https://example'
+    null, '', 'not a domain', 'javascript:alert(1)', 'ftp://example.com',
+    'http://localhost', 'http://127.0.0.1', 'https://user:secret@example.com', 'https://example'
   ]) {
     assert.equal(normalizeCompanyDomain(website), null);
   }
 });
 
-test('missing and invalid websites render clean initials without an image element', async () => {
-  const { createCompanyLogo } = await helperModule;
-
-  const missing = createCompanyLogo('Alpha Consulting International', null, fakeDocument);
-  const invalid = createCompanyLogo('Example Limited', 'javascript:alert(1)', fakeDocument);
-
-  assert.equal(missing.children.length, 1);
-  assert.equal(missing.children[0].textContent, 'AI');
-  assert.equal(missing.children[0].attributes.get('aria-label'), 'Alpha Consulting International company initials');
-  assert.equal(invalid.children.length, 1);
-  assert.equal(invalid.children[0].textContent, 'EL');
-});
-
-test('an unavailable remote logo tries a second provider then remains on initials without an error loop', async () => {
-  const { createCompanyLogo } = await helperModule;
-  const logo = createCompanyLogo('Unavailable Company', 'no-logo.invalid', fakeDocument);
-  const [image, fallback] = logo.children;
-
-  assert.equal(image.src, 'https://logos.hunter.io/no-logo.invalid');
-  assert.equal(image.hidden, true);
-  assert.equal(fallback.hidden, false);
-  image.emit('error');
-  assert.equal(image.src, 'https://icons.duckduckgo.com/ip3/no-logo.invalid.ico');
-  assert.equal(image.hidden, true);
-  image.emit('error');
-  assert.equal(image.src, undefined);
-  assert.equal(image.hidden, true);
-  assert.equal(fallback.hidden, false);
-  image.emit('error');
-  assert.equal(fallback.hidden, false);
-});
-
-test('an available logo replaces the fallback with accessible responsive image metadata', async () => {
-  const { createCompanyLogo, getCompanyInitials } = await helperModule;
-  const logo = createCompanyLogo('ACI', 'https://www.aci-bd.com', fakeDocument);
-  const [image, fallback] = logo.children;
-
-  assert.equal(getCompanyInitials('ACI'), 'AC');
-  assert.equal(image.src, 'https://logos.hunter.io/aci-bd.com');
-  assert.equal(image.alt, 'ACI company logo');
-  assert.equal(image.loading, 'eager');
-  assert.equal(image.decoding, 'async');
-  image.emit('load');
-  assert.equal(image.hidden, false);
-  assert.equal(fallback.hidden, true);
-});
-
-test('directory cards share the logo helper and lazy loading observes the visible container', () => {
+test('directory and detail pages share the local mark helper', () => {
   assert.match(read('frontend/js/companies.js'), /createCompanyLogo\(company\.companyName, company\.website\)/);
-  assert.match(helperSource, /observer\.observe\(container\)/);
-  assert.match(helperSource, /image\.referrerPolicy = 'no-referrer'/);
+  assert.match(read('frontend/js/company-details.js'), /import \{ createCompanyLogo \} from '\.\/company-logo\.js'/);
+
+  const css = read('frontend/css/company-details.css');
+  assert.match(css, /\.company-logo \{[\s\S]*width: clamp\(4\.5rem, 8vw, 5\.5rem\)/);
 });
 
-test('company details integrates the reusable helper and responsive logo styling', () => {
-  const script = read('frontend/js/company-details.js');
-  const css = read('frontend/css/company-details.css');
+test('no frontend file fetches a company logo from a third-party service', () => {
+  const frontend = path.join(projectRoot, 'frontend');
+  const files = [];
+  const walk = (directory) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(js|html|css)$/.test(entry.name)) files.push(full);
+    }
+  };
+  walk(frontend);
 
-  assert.match(script, /import \{ createCompanyLogo \} from '\.\/company-logo\.js'/);
-  assert.match(script, /createCompanyLogo\(company\.companyName, company\.website\)/);
-  assert.match(css, /\.company-logo \{[\s\S]*width: clamp\(4\.5rem, 8vw, 5\.5rem\)/);
-  assert.match(css, /\.company-logo-image \{[\s\S]*object-fit: contain/);
-  assert.match(css, /\.company-logo-image\[hidden\][\s\S]*display: none/);
+  for (const file of files) {
+    const source = fs.readFileSync(file, 'utf8');
+    assert.doesNotMatch(source, /logos\.hunter\.io|icons\.duckduckgo\.com|logo\.clearbit\.com/i, file);
+  }
 });

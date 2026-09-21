@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="How Saple is protected, and how to report a security problem.">
+  <title>Security | Saple</title>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/info-pages.css">
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark"
+          aria-hidden="true">S</span><span>Saple</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle>
+        <span class="nav-toggle-lines" aria-hidden="true"></span>
+      </button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="nav-text-link" href="login.html">Sign in</a>
+          <a class="button button-secondary button-small" href="register.html">Create account</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section class="info-hero" aria-labelledby="page-heading">
+      <div class="info-hero-content container">
+        <p class="eyebrow">Security</p>
+        <h1 id="page-heading">How Saple is protected</h1>
+        <p>This page describes the controls that are actually implemented in this repository, and how to tell the project owner about a problem.</p>
+        <p class="info-identity">Saple is an independent BUET CSE academic project for company and career insights. It
+          is not affiliated with, endorsed by, or an official login or careers service for any company named on the
+          site.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-label="How Saple is protected">
+      <div class="info-grid container">
+        <article class="info-card info-card-wide card">
+          <h2>Authentication and sessions</h2>
+          <p>Passwords are hashed with BCrypt at cost 12 and are never stored or emailed in readable form.</p>
+          <p>Sessions use a signed JWT with a fixed issuer, audience and algorithm. Every protected request reloads the account’s status, role, token version and company assignments from PostgreSQL, so a suspended account, a revoked assignment or a password change takes effect immediately rather than when the token happens to expire.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Authorization</h2>
+          <p>Permissions are enforced in middleware, in the service layer and in SQL. Nothing depends on a hidden button.</p>
+          <p>A company representative is bound to explicit company assignments. A request for another company’s vacancy, application or verification fails on the server with the same message whichever company it was, so responses cannot be used to map who represents whom.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Browser hardening</h2>
+          <p>Every response, including static pages and errors, carries explicit headers:</p>
+          <ul class="info-list">
+            <li>A restrictive Content-Security-Policy limiting scripts, styles, images, fonts and connections to this origin, with no unsafe-inline and no unsafe-eval.</li>
+            <li>frame-ancestors none and X-Frame-Options DENY, so Saple cannot be framed.</li>
+            <li>X-Content-Type-Options, Referrer-Policy, Permissions-Policy and cross-origin isolation headers.</li>
+            <li>HTTP Strict Transport Security, sent only over real HTTPS.</li>
+          </ul>
+        </article>
+        <article class="info-card card">
+          <h2>No third-party code</h2>
+          <p>Saple loads no remote script, stylesheet, font, iframe or tracker. Earlier versions fetched company logos from an external service using a domain taken from the database; that was removed, and company marks are now generated locally from the company name.</p>
+          <p>There is no eval, no dynamically constructed code, no URL shortener and no redirect that accepts a destination from a request.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Input and abuse controls</h2>
+          <p>Every input is validated and length-limited, and every database query is parameterised.</p>
+          <p>Sign-in, registration, password recovery, reports, verification requests, job applications, representative requests and the Saple Guide each have their own conservative rate limit with a plain 429 answer.</p>
+          <p>Request bodies are capped, and a malformed or oversized body returns the normal JSON envelope rather than a stack trace.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Password recovery</h2>
+          <p>Reset tokens are cryptographically random, stored only as a SHA-256 hash, single-use and short-lived. Issuing a new one revokes the previous ones.</p>
+          <p>Completing a reset replaces the password, consumes the token and increments the account’s token version in one transaction, which signs out other sessions.</p>
+          <p>The reset page takes the token out of the visible address and out of browser history before doing anything else.</p>
+
+        </article>
+        <article class="info-card info-card-wide card">
+          <h2>Reporting a security problem</h2>
+          <p>If you find a vulnerability, please report it privately and give the project owner a chance to fix it before sharing details.</p>
+          <p>A machine-readable contact is published at /.well-known/security.txt. It is filled from the owner’s SECURITY_CONTACT setting; when that is not configured, no address is invented and the file says so. In that case, open an issue in the project repository linked from the About page without including exploit details.</p>
+          <p>Please do not run automated scanners, load tests or denial-of-service attempts against a deployment. This is a student project on a free hosting plan.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Known limitations</h2>
+          <p>Stated plainly, because an academic project should not overclaim:</p>
+          <ul class="info-list">
+            <li>Rate limits are per process. A multi-instance deployment would need a shared store.</li>
+            <li>Employment verification reviews a claim and a reference; it does not send or check a real one-time code to a company mailbox.</li>
+            <li>There is no automated malware or content scanning beyond the validation and moderation described above.</li>
+            <li>Sign-in error messages distinguish an unknown address from a wrong password, which is a deliberate usability choice for this project and does reveal whether an address is registered. Password recovery does not.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+        <p>Report responsibly; fixes are published in the repository.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/nav.js" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Company representative workspace on Saple.">
+  <title>Company workspace | Saple</title>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/jobs.css">
+  <link rel="stylesheet" href="css/workspace.css">
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Saple home">
+        <span class="brand-mark" aria-hidden="true">S</span><span>Saple</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links"></ul>
+        <div class="nav-actions">
+          <a class="nav-text-link" href="login.html">Sign in</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content" class="page-main">
+    <div class="container">
+      <div id="representative-gate" class="workspace-gate"></div>
+
+      <div id="representative-workspace" hidden>
+        <div class="page-header">
+          <p class="eyebrow">Company representative</p>
+          <h1>Company workspace.</h1>
+          <p>You can act only inside the companies an administrator has assigned to this account. Other companies'
+            employees, evidence, vacancies and applications are not reachable from here.</p>
+        </div>
+
+        <ul id="representative-scopes" class="scope-list" aria-label="Your active company assignments"></ul>
+
+        <div class="tabs">
+          <div id="representative-tabs" class="tab-list" role="tablist" aria-label="Company workspace sections">
+            <button class="tab" type="button" role="tab" data-tab="verifications" aria-selected="true"
+              aria-controls="panel-verifications" id="tab-verifications">Verification queue</button>
+            <button class="tab" type="button" role="tab" data-tab="jobs" aria-selected="false" tabindex="-1"
+              aria-controls="panel-jobs" id="tab-jobs">Vacancies</button>
+            <button class="tab" type="button" role="tab" data-tab="applications" aria-selected="false" tabindex="-1"
+              aria-controls="panel-applications" id="tab-applications">Applications</button>
+          </div>
+
+          <section id="panel-verifications" class="tab-panel" role="tabpanel" aria-labelledby="tab-verifications">
+            <div class="panel-toolbar">
+              <div class="form-group form-group-inline">
+                <label for="verification-company">Company</label>
+                <select class="input" id="verification-company" data-company-filter></select>
+              </div>
+              <div class="form-group form-group-inline">
+                <label for="verification-status">Status</label>
+                <select class="input" id="verification-status" data-status-filter>
+                  <option value="PENDING">Pending</option>
+                  <option value="">All statuses</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+            </div>
+            <p class="state-message" role="status" aria-live="polite" data-status></p>
+            <div class="queue-list" data-queue></div>
+            <div class="pagination-host" data-pagination></div>
+          </section>
+
+          <section id="panel-jobs" class="tab-panel" role="tabpanel" aria-labelledby="tab-jobs" hidden>
+            <div class="panel-toolbar">
+              <div class="form-group form-group-inline">
+                <label for="job-company-filter">Company</label>
+                <select class="input" id="job-company-filter" data-company-filter></select>
+              </div>
+              <div class="form-group form-group-inline">
+                <label for="job-status-filter">Status</label>
+                <select class="input" id="job-status-filter" data-status-filter>
+                  <option value="">All statuses</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="PUBLISHED">Published</option>
+                  <option value="CLOSED">Closed</option>
+                  <option value="ARCHIVED">Archived</option>
+                </select>
+              </div>
+              <button class="button button-primary" type="button" id="create-job">+ Create vacancy</button>
+            </div>
+            <p class="state-message" role="status" aria-live="polite" data-status></p>
+            <div class="queue-list" data-queue></div>
+            <div class="pagination-host" data-pagination></div>
+          </section>
+
+          <section id="panel-applications" class="tab-panel" role="tabpanel" aria-labelledby="tab-applications" hidden>
+            <div class="panel-toolbar">
+              <div class="form-group form-group-inline">
+                <label for="application-job-filter">Vacancy</label>
+                <select class="input" id="application-job-filter" data-job-filter>
+                  <option value="">All my vacancies</option>
+                </select>
+              </div>
+              <div class="form-group form-group-inline">
+                <label for="application-status-filter">Status</label>
+                <select class="input" id="application-status-filter" data-status-filter>
+                  <option value="">All statuses</option>
+                  <option value="SUBMITTED">Submitted</option>
+                  <option value="UNDER_REVIEW">Under review</option>
+                  <option value="SHORTLISTED">Shortlisted</option>
+                  <option value="ACCEPTED">Accepted</option>
+                  <option value="REJECTED">Rejected</option>
+                  <option value="WITHDRAWN">Withdrawn</option>
+                </select>
+              </div>
+            </div>
+            <p class="state-message" role="status" aria-live="polite" data-status></p>
+            <div class="queue-list" data-queue></div>
+            <div class="pagination-host" data-pagination></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+        <p>Company scope is enforced by the API, not by this page.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/nav.js" defer></script>
+  <script type="module" src="js/representative.js"></script>
+</body>
+
+</html>

@@ -22,4 +22,30 @@ async function updateStatus(request, response, next) {
   } catch (error) { return next(error); }
 }
 
-module.exports = { requestVerification, getPending, getOne, updateStatus };
+// Company-scoped equivalents used by the representative workspace. The scope
+// check lives in the service, so an out-of-scope company ID fails there.
+async function listScoped(request, response, next) {
+  try {
+    const result = await verificationService.getScopedVerifications(request.user, request.query);
+    return sendSuccess(response, 200, 'Verification requests retrieved successfully', result);
+  } catch (error) { return next(error); }
+}
+async function getScoped(request, response, next) {
+  try {
+    const result = await verificationService.getScopedVerification(request.user, request.params.verificationId);
+    return sendSuccess(response, 200, 'Verification request retrieved successfully', result);
+  } catch (error) { return next(error); }
+}
+async function decideScoped(request, response, next) {
+  try {
+    const result = await verificationService.decideScopedVerification(
+      request.user, request.params.verificationId, request.body
+    );
+    return sendSuccess(response, 200, 'Verification decision recorded successfully', result);
+  } catch (error) { return next(error); }
+}
+
+module.exports = {
+  requestVerification, getPending, getOne, updateStatus,
+  listScoped, getScoped, decideScoped
+};

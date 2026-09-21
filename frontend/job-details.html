@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Job details and application form on Saple, an independent BUET CSE academic project for company and career insights.">
+  <title>Job details | Saple</title>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="css/jobs.css">
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Saple home">
+        <span class="brand-mark" aria-hidden="true">S</span><span>Saple</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links">
+          <li><a class="active" href="jobs.html" aria-current="page">Jobs</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="nav-text-link" href="login.html">Sign in</a>
+          <a class="button button-secondary button-small" href="register.html">Create account</a>
+          <details class="contribute-menu">
+            <summary class="button button-primary button-small">Contribute</summary>
+            <ul class="contribute-options">
+              <li><a href="submit-salary.html">Submit salary</a></li>
+              <li><a href="submit-review.html">Write a review</a></li>
+              <li><a href="interview-experience.html">Share interview experience</a></li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content" class="page-main">
+    <div class="container">
+      <p class="breadcrumb"><a href="jobs.html">&larr; All jobs</a></p>
+      <p id="job-detail-status" class="state-message" role="status" aria-live="polite">Loading this job&hellip;</p>
+      <div class="job-detail-layout">
+        <article id="job-detail" class="job-detail card"></article>
+        <aside id="job-apply" class="job-apply" aria-label="Apply to this job"></aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+        <p>One application per vacancy, withdrawable while open.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/nav.js" defer></script>
+  <script type="module" src="js/job-details.js"></script>
+</body>
+
+</html>

@@ -8,15 +8,30 @@ function addAction(container, href, label) {
   container.append(document.createElement('br'), link);
 }
 
+
+// Built with createElement and textContent rather than innerHTML: nothing in
+// Saple renders markup from a string, so there is no place for injected HTML
+// to enter even when the text is fixed.
+function renderVerificationRequired(accessState) {
+  const heading = document.createElement('h2');
+  const explanation = document.createElement('p');
+
+  heading.textContent = 'Employee verification required';
+  explanation.textContent =
+    'Only verified current or former employees can contribute workplace data.';
+
+  accessState.hidden = false;
+  accessState.className = 'access-state card';
+  accessState.replaceChildren(heading, explanation);
+}
+
 async function requireContributionAccess(returnTo) {
   const accessState = document.querySelector('#contribution-access');
   const contributionLayout = document.querySelector('[data-contribution-layout]');
   contributionLayout.hidden = true;
 
   if (!isAuthenticated()) {
-    accessState.hidden = false;
-    accessState.className = 'access-state card';
-    accessState.innerHTML = '<h2>Employee verification required</h2><p>Only verified current or former employees can contribute workplace data.</p>';
+    renderVerificationRequired(accessState);
     addAction(accessState, `login.html?returnTo=${encodeURIComponent(returnTo)}`, 'Sign in');
     return null;
   }
@@ -25,9 +40,7 @@ async function requireContributionAccess(returnTo) {
     const user = await getCurrentUser();
     const verifiedScopes = Array.isArray(user.verifiedScopes) ? user.verifiedScopes : [];
     if (verifiedScopes.length === 0) {
-      accessState.hidden = false;
-      accessState.className = 'access-state card';
-      accessState.innerHTML = '<h2>Employee verification required</h2><p>Only verified current or former employees can contribute workplace data.</p>';
+      renderVerificationRequired(accessState);
       if (user.userType === 'EMPLOYEE') {
         addAction(accessState, 'employee-verification.html', 'Request verification');
       }

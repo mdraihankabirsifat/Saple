@@ -29,6 +29,7 @@ test('shared navigation defines every public link, route group, active state, an
     ['Salaries', 'salaries.html'],
     ['Reviews', 'reviews.html'],
     ['Interviews', 'interviews.html'],
+    ['Jobs', 'jobs.html'],
     ['FAQ', 'faq.html'],
     ['About', 'about.html']
   ].forEach(([label, destination]) => {
@@ -41,7 +42,23 @@ test('shared navigation defines every public link, route group, active state, an
   assert.match(script, /interview-experience\.html/);
   assert.match(script, /classList\.add\('active'\)/);
   assert.match(script, /setAttribute\('aria-current', 'page'\)/);
-  assert.match(script, /\['FAQ', 'About'\]/);
+  assert.match(script, /job-details\.html/);
+  assert.match(script, /my-applications\.html/);
+
+  // The footer now carries the full information set, including the policy
+  // pages the Web Risk remediation added.
+  for (const destination of [
+    'about.html', 'faq.html', 'privacy.html', 'terms.html', 'security.html', 'contact.html'
+  ]) {
+    assert.match(script, new RegExp(`destination: '${destination.replace('.', '\\.')}'`), destination);
+  }
+
+  // Site identity and the affiliation disclaimer are injected once, here, so
+  // they cannot drift between pages.
+  assert.match(script, /independent BUET CSE academic project for company and career insights/);
+  assert.match(script, /not affiliated with, endorsed by, or an official login or careers service/);
+  assert.match(script, /className = 'site-identity'/);
+  assert.match(script, /className = 'site-disclaimer'/);
 });
 
 test('auth-aware and verified-contributor navigation behavior remains connected', () => {
@@ -49,7 +66,12 @@ test('auth-aware and verified-contributor navigation behavior remains connected'
 
   assert.match(script, /import\(authModuleUrl\.href\)/);
   assert.match(script, /auth\.getCurrentUser\(\)/);
-  assert.match(script, /currentUser\?\.accountRole === 'ADMIN'/);
+  // Workspace links follow the role the server reported for this token.
+  assert.match(script, /const WORKSPACE_LINKS = \{/);
+  assert.match(script, /ADMIN: \{ href: 'admin\.html'/);
+  assert.match(script, /COMPANY_REPRESENTATIVE: \{ href: 'representative\.html'/);
+  assert.match(script, /WORKSPACE_LINKS\[currentUser\?\.accountRole\]/);
+  assert.match(script, /mountNotificationBell/);
   assert.match(script, /currentUser\?\.userType === 'EMPLOYEE'/);
   assert.match(script, /verifiedScopes/);
   assert.match(script, /updateContributionVisibility/);

@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { insertNotification } = require('./notification.repository');
 
 function createRepositoryError(code, message, detail) {
   const error = new Error(message);
@@ -91,7 +92,8 @@ async function updateSubmissionStatusWithAudit(input) {
   try {
     await client.query('BEGIN');
     const currentResult = await client.query(`
-      SELECT submission_status AS "submissionStatus"
+      SELECT submission_status AS "submissionStatus", user_id AS "ownerUserId",
+        submission_type AS "submissionType"
       FROM submissions WHERE submission_id = $1 FOR UPDATE
     `, [submissionId]);
     const current = currentResult.rows[0];
@@ -120,6 +122,25 @@ async function updateSubmissionStatusWithAudit(input) {
       submissionId, moderatorUserId, actionType,
       current.submissionStatus, newStatus, actionNote
     ]);
+
+    // The contributor learns the outcome in the same transaction as the
+    // decision. The internal moderation note stays internal.
+    if (current.ownerUserId) {
+      const outcomes = {
+        APPROVED: 'is now published',
+        REJECTED: 'was not published',
+        FLAGGED: 'is under review again'
+      };
+      await insertNotification(client, {
+        userId: current.ownerUserId,
+        notificationType: 'SUBMISSION_DECISION',
+        title: 'Contribution decision recorded',
+        message: `Your ${String(current.submissionType || 'contribution').toLowerCase()} contribution ${outcomes[newStatus] || `is now ${newStatus}`}.`,
+        relatedEntityType: 'SUBMISSION',
+        relatedEntityId: submissionId
+      });
+    }
+
     await client.query('COMMIT');
     return {
       submissionId,

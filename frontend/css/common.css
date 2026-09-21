@@ -877,3 +877,1017 @@ dialog { color: var(--text-primary); }
   .choice-card { min-width: 0; flex-basis: 100%; }
   input, select, textarea { font-size: 1rem; }
 }
+
+/* ==========================================================================
+   SHARED SHELL ADDITIONS
+   Site identity, announcements, notifications, the Saple Guide, loading and
+   error states, toasts and pagination. Everything here is first-party CSS on
+   the existing design tokens, so the strict Content-Security-Policy needs no
+   exception for inline styles.
+   ========================================================================== */
+
+:root {
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 420ms;
+  --ease-out: cubic-bezier(0.22, 0.85, 0.36, 1);
+}
+
+/* Motion communicates state only, and stops entirely when asked to. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 1ms;
+    --motion-base: 1ms;
+    --motion-slow: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.skip-link {
+  left: 0.75rem;
+  top: -4rem;
+  z-index: 100;
+  padding: 0.7rem 1.1rem;
+  position: fixed;
+  color: #fff;
+  background: var(--brand-solid);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-weight: 700;
+  transition: top var(--motion-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  top: 0.75rem;
+}
+
+/* Site identity ----------------------------------------------------------- */
+
+.brand-tagline {
+  display: none;
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  color: var(--text-secondary);
+  border-left: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+@media (min-width: 1500px) {
+  .brand-tagline {
+    display: inline;
+  }
+}
+
+.site-identity,
+.site-disclaimer {
+  margin: 0.5rem 0 0;
+  max-width: 68ch;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.site-identity {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+.info-identity {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  max-width: 70ch;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  border-left: 3px solid var(--saple-green-600);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+}
+
+.info-list {
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+
+/* Announcement bar -------------------------------------------------------- */
+
+.announcement-bar {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.announcement-inner {
+  padding-block: 0.6rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.announcement-tag {
+  flex: 0 0 auto;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--saple-green-100);
+  color: var(--saple-green-800);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.announcement-warning {
+  background: var(--warning-surface);
+}
+
+.announcement-warning .announcement-tag {
+  background: var(--warning-solid);
+  color: #fff;
+}
+
+.announcement-critical {
+  background: var(--danger-surface);
+}
+
+.announcement-critical .announcement-tag {
+  background: var(--danger-solid);
+  color: #fff;
+}
+
+.announcement-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.announcement-title {
+  margin-right: 0.4rem;
+}
+
+.announcement-message {
+  color: var(--text-secondary);
+}
+
+.announcement-dismiss {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.announcement-dismiss:hover {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+/* Notifications ----------------------------------------------------------- */
+
+.notification-bell {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-toggle {
+  width: 2.5rem;
+  height: 2.5rem;
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  background: var(--control);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+.notification-toggle:hover {
+  border-color: var(--border-hover);
+}
+
+.notification-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid currentColor;
+  border-bottom-width: 0;
+  border-radius: 50% 50% 0 0 / 60% 60% 0 0;
+  position: relative;
+}
+
+.notification-icon::after {
+  content: "";
+  left: -0.28rem;
+  right: -0.28rem;
+  bottom: -2px;
+  height: 2px;
+  position: absolute;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+.notification-badge {
+  top: -0.2rem;
+  right: -0.2rem;
+  min-width: 1.15rem;
+  padding: 0 0.28rem;
+  position: absolute;
+  color: #fff;
+  background: var(--danger-solid);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.15rem;
+  text-align: center;
+}
+
+.notification-panel {
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 60;
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: min(30rem, 70vh);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  animation: saple-rise var(--motion-base) var(--ease-out);
+}
+
+@keyframes saple-rise {
+  from { opacity: 0; transform: translateY(-0.4rem); }
+  to { opacity: 1; transform: none; }
+}
+
+.notification-head {
+  padding: 0.85rem 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.notification-heading {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.notification-close {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.notification-close:hover {
+  border-color: var(--border);
+}
+
+.notification-list {
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.notification-item {
+  padding: 0.8rem 1rem;
+  display: grid;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.notification-item.is-unread {
+  background: var(--saple-green-50);
+}
+
+.notification-title {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+
+a.notification-title:hover {
+  text-decoration: underline;
+}
+
+.notification-message {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.notification-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.notification-flag {
+  padding: 0.05rem 0.4rem;
+  background: var(--saple-green-100);
+  border-radius: 999px;
+  color: var(--saple-green-800);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.notification-read {
+  justify-self: start;
+  padding: 0;
+  color: var(--saple-green-700);
+  background: none;
+  border: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.notification-empty,
+.notification-loading {
+  padding: 1.25rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.notification-footer:not(:empty) {
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Saple Guide ------------------------------------------------------------- */
+
+.guide-root {
+  right: clamp(0.75rem, 3vw, 1.5rem);
+  bottom: clamp(0.75rem, 3vw, 1.5rem);
+  z-index: 70;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+}
+
+.guide-launcher {
+  padding: 0.6rem 1rem 0.6rem 0.7rem;
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: #fff;
+  background: var(--brand-solid);
+  border: 1px solid var(--brand-deep);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: transform var(--motion-fast) var(--ease-out), background var(--motion-fast) var(--ease-out);
+}
+
+.guide-launcher:hover {
+  transform: translateY(-1px);
+  background: var(--brand-hover);
+}
+
+.guide-launcher-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.guide-panel {
+  width: min(24rem, calc(100vw - 1.5rem));
+  height: min(32rem, calc(100dvh - 7rem));
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  animation: saple-rise var(--motion-base) var(--ease-out);
+}
+
+.guide-panel[hidden] {
+  display: none;
+}
+
+.guide-head {
+  padding: 0.85rem 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-heading {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.guide-scope {
+  margin: 0.2rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.guide-close {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.guide-close:hover {
+  border-color: var(--border);
+}
+
+.guide-transcript {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.guide-message {
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  gap: 0.2rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.guide-message-user {
+  justify-self: end;
+  max-width: 90%;
+  background: var(--saple-green-100);
+}
+
+.guide-message.is-error {
+  background: var(--danger-surface);
+}
+
+.guide-author {
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.guide-text {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.guide-note {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.guide-message.is-pending .guide-text {
+  color: var(--text-secondary);
+}
+
+.guide-suggestions-row {
+  padding: 0;
+  background: none;
+}
+
+.guide-suggestions {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+}
+
+.guide-suggestion {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  color: var(--saple-green-800);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+.guide-suggestion:hover {
+  border-color: var(--border-hover);
+}
+
+.guide-form {
+  padding: 0.7rem 1rem;
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.guide-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.guide-foot {
+  padding: 0.6rem 1rem 0.8rem;
+  display: grid;
+  gap: 0.4rem;
+  border-top: 1px solid var(--border);
+}
+
+.guide-privacy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+.guide-clear {
+  justify-self: start;
+  padding: 0;
+  color: var(--saple-green-700);
+  background: none;
+  border: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Loading, empty and error states ---------------------------------------- */
+
+.skeleton {
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.skeleton-line {
+  height: 0.7rem;
+  display: block;
+  background: linear-gradient(90deg, var(--surface-muted) 25%, var(--border) 37%, var(--surface-muted) 63%);
+  background-size: 400% 100%;
+  border-radius: 999px;
+  animation: saple-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line-lead {
+  width: 60%;
+  height: 1rem;
+}
+
+.skeleton-line-short {
+  width: 35%;
+}
+
+.skeleton-job {
+  min-height: 10rem;
+}
+
+@keyframes saple-shimmer {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
+}
+
+.state-panel {
+  padding: clamp(1.25rem, 4vw, 2rem);
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.state-error {
+  border-color: var(--danger-border);
+  background: var(--danger-surface);
+}
+
+.state-panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.state-panel-text {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.state-panel-hint {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.state-panel-actions {
+  margin-top: 0.4rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.state-panel-debug {
+  margin: 0.4rem 0 0;
+  padding: 0.3rem 0.5rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+}
+
+/* Toasts ------------------------------------------------------------------ */
+
+.toast-region {
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 80;
+  width: min(26rem, calc(100vw - 2rem));
+  position: fixed;
+  display: grid;
+  gap: 0.5rem;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  margin: 0;
+  padding: 0.7rem 0.95rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  font-size: 0.88rem;
+  animation: saple-rise var(--motion-base) var(--ease-out);
+}
+
+.toast-success {
+  border-left-color: var(--success);
+}
+
+.toast-error {
+  border-left-color: var(--danger);
+}
+
+/* Status badges ----------------------------------------------------------- */
+
+.status-badge {
+  padding: 0.18rem 0.6rem;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* A shape as well as a colour, so status never depends on colour alone. */
+.status-badge::before {
+  content: "●";
+  font-size: 0.6em;
+}
+
+.status-positive {
+  border-color: var(--success-border);
+  background: var(--success-surface);
+  color: var(--success);
+}
+
+.status-positive::before {
+  content: "✓";
+}
+
+.status-negative {
+  border-color: var(--danger-border);
+  background: var(--danger-surface);
+  color: var(--danger);
+}
+
+.status-negative::before {
+  content: "✕";
+}
+
+.status-progress {
+  border-color: var(--border);
+  background: var(--warning-surface);
+  color: var(--warning);
+}
+
+.status-progress::before {
+  content: "◐";
+}
+
+.status-neutral {
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+}
+
+/* Pagination -------------------------------------------------------------- */
+
+.pagination-host:empty {
+  display: none;
+}
+
+.pagination-page,
+.pagination-step {
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: 0.75rem;
+  color: var(--text-primary);
+  background: var(--control);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+.pagination-page:hover:not(:disabled),
+.pagination-step:hover:not(:disabled) {
+  border-color: var(--border-hover);
+}
+
+.pagination-page:disabled,
+.pagination-step:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-page.is-current {
+  background: var(--brand-solid);
+  border-color: var(--brand-solid);
+  color: #fff;
+}
+
+.pagination-gap {
+  padding-inline: 0.35rem;
+  color: var(--text-secondary);
+}
+
+/* Generated company marks -------------------------------------------------
+   The helper stores a hue in a data attribute instead of an inline style, so
+   no style-src exception is needed for the strict CSP. */
+
+.company-logo {
+  background: var(--surface-muted);
+}
+
+.company-logo[data-mark-hue="12"] { background: hsl(12 62% 94%); }
+.company-logo[data-mark-hue="28"] { background: hsl(28 62% 94%); }
+.company-logo[data-mark-hue="44"] { background: hsl(44 62% 93%); }
+.company-logo[data-mark-hue="96"] { background: hsl(96 45% 93%); }
+.company-logo[data-mark-hue="158"] { background: hsl(158 45% 92%); }
+.company-logo[data-mark-hue="172"] { background: hsl(172 45% 92%); }
+.company-logo[data-mark-hue="196"] { background: hsl(196 55% 93%); }
+.company-logo[data-mark-hue="210"] { background: hsl(210 60% 94%); }
+.company-logo[data-mark-hue="228"] { background: hsl(228 60% 95%); }
+.company-logo[data-mark-hue="262"] { background: hsl(262 55% 95%); }
+.company-logo[data-mark-hue="286"] { background: hsl(286 50% 95%); }
+.company-logo[data-mark-hue="320"] { background: hsl(320 50% 95%); }
+
+.company-logo-fallback[data-mark-hue="12"] { color: hsl(12 60% 30%); }
+.company-logo-fallback[data-mark-hue="28"] { color: hsl(28 65% 28%); }
+.company-logo-fallback[data-mark-hue="44"] { color: hsl(44 70% 25%); }
+.company-logo-fallback[data-mark-hue="96"] { color: hsl(96 45% 25%); }
+.company-logo-fallback[data-mark-hue="158"] { color: hsl(158 50% 24%); }
+.company-logo-fallback[data-mark-hue="172"] { color: hsl(172 50% 24%); }
+.company-logo-fallback[data-mark-hue="196"] { color: hsl(196 60% 26%); }
+.company-logo-fallback[data-mark-hue="210"] { color: hsl(210 60% 30%); }
+.company-logo-fallback[data-mark-hue="228"] { color: hsl(228 55% 34%); }
+.company-logo-fallback[data-mark-hue="262"] { color: hsl(262 45% 36%); }
+.company-logo-fallback[data-mark-hue="286"] { color: hsl(286 40% 34%); }
+.company-logo-fallback[data-mark-hue="320"] { color: hsl(320 45% 34%); }
+
+:root[data-theme="dark"] .company-logo[data-mark-hue] {
+  background: var(--surface-muted);
+}
+
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="12"] { color: hsl(12 70% 78%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="28"] { color: hsl(28 70% 76%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="44"] { color: hsl(44 75% 74%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="96"] { color: hsl(96 50% 76%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="158"] { color: hsl(158 55% 76%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="172"] { color: hsl(172 55% 76%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="196"] { color: hsl(196 65% 78%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="210"] { color: hsl(210 70% 80%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="228"] { color: hsl(228 70% 82%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="262"] { color: hsl(262 60% 82%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="286"] { color: hsl(286 55% 82%); }
+:root[data-theme="dark"] .company-logo-fallback[data-mark-hue="320"] { color: hsl(320 60% 82%); }
+
+/* Small shared layout helpers -------------------------------------------- */
+
+.form-group-inline {
+  margin: 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-group-inline label {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.form-group-inline .input {
+  width: auto;
+  min-width: 10rem;
+}
+
+.field-hint {
+  margin: 0.3rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.form-feedback {
+  margin: 0.5rem 0 0;
+  min-height: 1.2rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.form-feedback.is-error {
+  color: var(--danger);
+  font-weight: 650;
+}
+
+.breadcrumb {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+}
+
+.breadcrumb a {
+  color: var(--saple-green-700);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* Inline navigation link used across pages. */
+.text-link {
+  color: var(--saple-green-700);
+  font-weight: 750;
+  text-decoration: none;
+  text-underline-offset: 0.2rem;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* Identity notice beside account and verification forms. */
+.surface-notice {
+  margin: 0 0 1.25rem;
+  padding: 0.7rem 0.9rem;
+  max-width: 70ch;
+  background: var(--surface-muted);
+  border-left: 3px solid var(--saple-green-600);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+/* Representative request on the profile page. */
+.assignment-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+}
+
+.assignment-item {
+  padding: 0.7rem 0.85rem;
+  display: grid;
+  gap: 0.2rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+}
+
+.assignment-head {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.representative-request-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* Navigation fit.
+   A label never breaks inside a word. If the signed-in bar holds more than
+   one row allows, whole items wrap to a second row instead. */
+.nav-links a,
+.nav-text-link {
+  white-space: nowrap;
+}
+
+@media (min-width: 1051px) {
+  .nav-links,
+  .nav-actions {
+    flex-wrap: wrap;
+    row-gap: 0.15rem;
+  }
+}
+
+@media (min-width: 1051px) and (max-width: 1320px) {
+  .nav-links a,
+  .nav-text-link {
+    padding: 0.5rem 0.45rem;
+    font-size: 0.86rem;
+  }
+}
+
+/* The floating Saple Guide never permanently covers page content: the page
+   gains enough bottom room for its last element to scroll above the launcher. */
+.has-saple-guide .site-footer {
+  padding-bottom: 5rem;
+}

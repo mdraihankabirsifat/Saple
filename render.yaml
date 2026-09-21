@@ -1,7 +1,11 @@
 # yaml-language-server: $schema=https://json.schemastore.org/render.json
+#
+# A NEW service for the remediated code. The previous Render service was
+# flagged and deleted; do not rename this back to reuse its subdomain.
+# See docs/security-and-safe-deployment.md before applying this Blueprint.
 services:
   - type: web
-    name: saple
+    name: saple-academic
     runtime: node
     plan: free
     buildCommand: npm ci --omit=dev --prefix backend
@@ -9,10 +13,42 @@ services:
     healthCheckPath: /api/health
     autoDeployTrigger: commit
     envVars:
+      # Secrets and deployment-specific values: entered privately in Render.
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SECURITY_CONTACT
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: AI_ENABLED
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_API_BASE_URL
+        sync: false
+      - key: AI_MODEL
+        sync: false
+      - key: AI_TIMEOUT_MS
+        sync: false
+      - key: AI_MAX_OUTPUT_TOKENS
+        sync: false
+      # Non-secret defaults.
       - key: DB_SSL
         value: "true"
       - key: DB_POOL_MAX

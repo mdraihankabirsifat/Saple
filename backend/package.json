@@ -14,7 +14,9 @@
     "local:status": "node scripts/localApp.js ps",
     "local:logs": "node scripts/localApp.js logs",
     "local:accounts": "node scripts/localApp.js accounts",
-    "local:test": "node scripts/localApp.js test"
+    "local:test": "node scripts/localApp.js test",
+    "diagnose:smtp": "node scripts/smtpDiagnostic.js",
+    "test:integration:jobs": "node tests/integration.jobs-representatives.js"
   },
   "private": true,
   "dependencies": {
@@ -23,7 +25,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
-    "nodemailer": "^9.0.5",
+    "nodemailer": "^9.1.1",
     "pg": "^8.23.0"
   },
   "devDependencies": {

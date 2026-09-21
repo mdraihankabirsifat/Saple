@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { insertNotification } = require('./notification.repository');
 
 function repositoryError(code, message) {
   const error = new Error(message);
@@ -84,7 +85,7 @@ async function updateReportStatus(input) {
   try {
     await client.query('BEGIN');
     const currentResult = await client.query(`
-      SELECT report_status AS "reportStatus"
+      SELECT report_status AS "reportStatus", reporter_user_id AS "reporterUserId"
       FROM reports WHERE report_id = $1 FOR UPDATE
     `, [reportId]);
     const current = currentResult.rows[0];
@@ -100,6 +101,22 @@ async function updateReportStatus(input) {
         resolution_note = CASE WHEN $2 THEN $4 ELSE NULL END
       WHERE report_id = $5
     `, [status, terminal, resolverUserId, resolutionNote, reportId]);
+
+    // The reporter is told the outcome, but never the internal resolution note
+    // and never anything about the reported contributor.
+    if (terminal && current.reporterUserId) {
+      await insertNotification(client, {
+        userId: current.reporterUserId,
+        notificationType: 'REPORT_OUTCOME',
+        title: 'Report reviewed',
+        message: status === 'RESOLVED'
+          ? 'A report you submitted has been reviewed and acted on. Thank you for helping keep Saple accurate.'
+          : 'A report you submitted has been reviewed and closed without further action.',
+        relatedEntityType: 'REPORT',
+        relatedEntityId: reportId
+      });
+    }
+
     await client.query('COMMIT');
     return {
       reportId, previousStatus: current.reportStatus,

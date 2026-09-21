@@ -63,6 +63,30 @@ test('service worker asset manifest exists and excludes API requests', () => {
   const files = [...source.matchAll(/'((?:css\/|js\/)[^']+|[a-z-]+\.html)'/g)].map((match) => match[1]);
   for (const file of files) assert.ok(fs.existsSync(path.join(root, 'frontend', file)), file);
   assert.ok(files.includes('js/offline-cache.js'));
-  assert.match(source, /if \(!allowed.has\(url.href\)\) return/);
-  assert.match(source, /request.method !== 'GET'/);
+  assert.match(source, /if \(!allowed\.has\(url\.href\) \|\| PRIVATE_PATHS\.includes\(url\.href\)\) return/);
+  assert.match(source, /request\.method !== 'GET'/);
+  assert.match(source, /url\.pathname\.includes\('\/api\/'\)/);
+  assert.match(source, /request\.headers\.has\('Authorization'\)/);
+});
+
+test('the service worker never caches a private page, script or stylesheet', () => {
+  const source = fs.readFileSync(path.join(root, 'frontend/sw.js'), 'utf8');
+  const assets = source.slice(source.indexOf('const ASSETS'), source.indexOf('const allowed'));
+  const privatePaths = source.slice(source.indexOf('const PRIVATE_PATHS'), source.indexOf("self.addEventListener('install'"));
+
+  // Anything that only ever shows one account's data must be absent from the
+  // cached shell and named in the purge list, so an older worker's copy goes.
+  for (const file of [
+    'profile.html', 'admin.html', 'representative.html', 'my-applications.html',
+    'employee-verification.html', 'js/notifications.js', 'js/admin.js',
+    'js/representative.js', 'js/profile.js'
+  ]) {
+    assert.equal(assets.includes(`'${file}'`), false, `${file} must not be cached`);
+    assert.equal(privatePaths.includes(`'${file}'`), true, `${file} must be purged`);
+  }
+
+  // The cache name is versioned and older versions are deleted on activation.
+  assert.match(source, /const SHELL_CACHE = 'saple-shell-v2'/);
+  assert.match(source, /caches\.delete\(key\)/);
+  assert.match(source, /cache\.delete\(href\)/);
 });

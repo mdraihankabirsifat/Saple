@@ -1,7 +1,12 @@
-const LOCAL_DEVELOPMENT_ORIGINS = Object.freeze([
-  'http://localhost:5500',
-  'http://127.0.0.1:5500'
-]);
+// Exactly the static-server origins Saple documents for local development.
+// Nothing here is a wildcard, and no production origin is implied.
+const LOCAL_DEVELOPMENT_PORTS = Object.freeze([5500, 5501]);
+const LOCAL_DEVELOPMENT_ORIGINS = Object.freeze(
+  LOCAL_DEVELOPMENT_PORTS.flatMap((port) => [
+    `http://localhost:${port}`,
+    `http://127.0.0.1:${port}`
+  ])
+);
 
 function normalizeHttpOrigin(value, settingName = 'origin') {
   let url;
@@ -66,8 +71,23 @@ function createCorsOptionsDelegate(rawValue = process.env.CORS_ORIGINS) {
   };
 }
 
+// Redirect and return-path safety: Saple only ever navigates to its own
+// same-origin pages, so any candidate must be a plain relative app path.
+const SAFE_INTERNAL_PATH = /^\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]*$/;
+
+function isSafeInternalPath(value) {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 512) return false;
+  // Reject protocol-relative //evil.test, backslash tricks, traversal and
+  // anything carrying a scheme, query or fragment.
+  if (value.startsWith('//') || value.includes('\\') || value.includes('..')) return false;
+  if (value.includes('?') || value.includes('#') || value.includes(':')) return false;
+  return SAFE_INTERNAL_PATH.test(value);
+}
+
 module.exports = {
   LOCAL_DEVELOPMENT_ORIGINS,
+  LOCAL_DEVELOPMENT_PORTS,
+  isSafeInternalPath,
   createCorsOptionsDelegate,
   getAllowedCorsOrigins,
   isRenderEnvironment,

@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { insertNotification } = require('./notification.repository');
 
 function repositoryError(code, message) {
   const error = new Error(message);
@@ -134,13 +135,64 @@ async function findVerificationById(verificationId) {
   return result.rows[0] || null;
 }
 
+
+const SCOPED_VERIFICATION_FILTER = `
+  WHERE ($1::bigint[] IS NULL OR ev.company_id = ANY($1))
+    AND ($2::bigint IS NULL OR ev.company_id = $2)
+    AND ($3::varchar IS NULL OR ev.verification_status = $3)
+`;
+
+// Scope lookup only: the caller decides what the owning company means.
+async function findVerificationScope(verificationId) {
+  const result = await database.query(`
+    SELECT verification_id AS "verificationId", company_id AS "companyId",
+      verification_status AS "verificationStatus"
+    FROM employment_verifications WHERE verification_id = $1
+  `, [verificationId]);
+  return result.rows[0] || null;
+}
+
+async function findVerificationsForScope(
+  { companyIds = null, companyId = null, status = null },
+  { limit, offset }
+) {
+  const result = await database.query(`
+    ${ADMIN_VERIFICATION_SELECT}
+    ${SCOPED_VERIFICATION_FILTER}
+    ORDER BY
+      CASE ev.verification_status WHEN 'PENDING' THEN 0 ELSE 1 END,
+      ev.requested_at ASC, ev.verification_id ASC
+    LIMIT $4 OFFSET $5
+  `, [companyIds, companyId, status, limit, offset]);
+  return result.rows;
+}
+
+async function countVerificationsForScope({ companyIds = null, companyId = null, status = null }) {
+  const result = await database.query(`
+    SELECT COUNT(*)::int AS "total"
+    FROM employment_verifications ev
+    JOIN employees e ON e.employee_id = ev.employee_id
+    JOIN users u ON u.user_id = e.user_id
+    JOIN companies c ON c.company_id = ev.company_id
+    LEFT JOIN job_roles jr ON jr.role_id = ev.role_id
+    ${SCOPED_VERIFICATION_FILTER}
+  `, [companyIds, companyId, status]);
+  return result.rows[0].total;
+}
+
 async function decideVerification({ verificationId, reviewerUserId, status, rejectionReason }) {
   const client = await database.getClient();
   try {
     await client.query('BEGIN');
     const currentResult = await client.query(`
-      SELECT verification_status AS "verificationStatus", role_id AS "roleId"
-      FROM employment_verifications WHERE verification_id = $1 FOR UPDATE
+      SELECT ev.verification_status AS "verificationStatus", ev.role_id AS "roleId",
+        ev.company_id AS "companyId", e.user_id AS "employeeUserId",
+        c.company_name AS "companyName"
+      FROM employment_verifications ev
+      JOIN employees e ON e.employee_id = ev.employee_id
+      JOIN companies c ON c.company_id = ev.company_id
+      WHERE ev.verification_id = $1
+      FOR UPDATE OF ev
     `, [verificationId]);
     const current = currentResult.rows[0];
     if (!current) throw repositoryError('VERIFICATION_NOT_FOUND', 'Verification request not found');
@@ -159,6 +211,26 @@ async function decideVerification({ verificationId, reviewerUserId, status, reje
         rejection_reason = $3
       WHERE verification_id = $4
     `, [status, reviewerUserId, rejectionReason, verificationId]);
+
+    // The employee is notified inside the same transaction, so a decision and
+    // its notification are never out of step. The rejection reason is included
+    // because the employee wrote the request it answers.
+    if (current.employeeUserId) {
+      const companyName = String(current.companyName || 'the company').replace(/[<>]/g, '');
+      await insertNotification(client, {
+        userId: current.employeeUserId,
+        notificationType: 'VERIFICATION_DECISION',
+        title: status === 'VERIFIED'
+          ? 'Employment verification approved'
+          : 'Employment verification not approved',
+        message: status === 'VERIFIED'
+          ? `Your employment verification for ${companyName} is now VERIFIED. You can contribute for that exact company and role.`
+          : `Your employment verification for ${companyName} was rejected. Reason: ${String(rejectionReason || 'not provided').replace(/[<>]/g, '')}`.slice(0, 600),
+        relatedEntityType: 'VERIFICATION',
+        relatedEntityId: verificationId
+      });
+    }
+
     await client.query('COMMIT');
     return { verificationId, previousStatus: 'PENDING', verificationStatus: status };
   } catch (error) {
@@ -171,5 +243,6 @@ async function decideVerification({ verificationId, reviewerUserId, status, reje
 
 module.exports = {
   findActiveVerifiedEmployment, createVerificationRequest, findPendingVerifications,
-  findVerificationById, decideVerification
+  findVerificationById, findVerificationScope, findVerificationsForScope,
+  countVerificationsForScope, decideVerification
 };

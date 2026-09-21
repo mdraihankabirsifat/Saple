@@ -1,5 +1,33 @@
 const verificationRepository = require('../repositories/verification.repository');
 const createHttpError = require('../utils/httpError');
+const validate = require('../utils/validation');
+const { assertCompanyScope, isAdmin } = require('../utils/authorization');
+
+const VERIFICATION_STATUSES = ['PENDING', 'VERIFIED', 'REJECTED', 'EXPIRED'];
+
+// Private evidence a representative legitimately needs for their own company,
+// but which must never leave that scope.
+function toScopedVerification(row) {
+  return {
+    verificationId: row.verificationId,
+    companyId: row.companyId,
+    companyName: row.companyName,
+    roleId: row.roleId,
+    roleName: row.roleName,
+    employeeName: row.employeeName,
+    employeeEmail: row.employeeEmail,
+    employmentStatus: row.employmentStatus,
+    verificationMethod: row.verificationMethod,
+    companyEmail: row.companyEmail,
+    proofType: row.proofType,
+    proofReference: row.proofReference,
+    verificationStatus: row.verificationStatus,
+    requestedAt: row.requestedAt,
+    reviewedAt: row.reviewedAt,
+    expiresAt: row.expiresAt,
+    rejectionReason: row.rejectionReason
+  };
+}
 
 function positiveId(value, label) {
   if (!/^\d+$/.test(String(value)) || !Number.isSafeInteger(Number(value)) || Number(value) <= 0) {
@@ -81,4 +109,59 @@ async function decideVerification(reviewerUserId, value, input = {}) {
   }
 }
 
-module.exports = { requestVerification, getPendingVerifications, getVerification, decideVerification };
+
+// Company-scoped queue. A representative sees only their assigned companies;
+// an administrator sees everything and keeps the fallback and escalation role.
+async function getScopedVerifications(user, query = {}) {
+  const status = validate.enumValue(
+    query.status, VERIFICATION_STATUSES, 'Status', { required: false }
+  );
+  const requestedCompanyId = validate.optionalId(query.companyId, 'company ID');
+  const page = validate.pagination(query, { defaultSize: 20 });
+
+  if (!isAdmin(user) && requestedCompanyId !== null) {
+    assertCompanyScope(user, requestedCompanyId);
+  }
+
+  const filters = {
+    companyIds: isAdmin(user) ? null : user.representativeCompanyIds,
+    companyId: requestedCompanyId,
+    status
+  };
+
+  const [rows, total] = await Promise.all([
+    verificationRepository.findVerificationsForScope(filters, page),
+    verificationRepository.countVerificationsForScope(filters)
+  ]);
+  return validate.paged(rows.map(toScopedVerification), total, page);
+}
+
+async function getScopedVerification(user, value) {
+  const verificationId = positiveId(value, 'verification ID');
+  const scope = await verificationRepository.findVerificationScope(verificationId);
+  if (!scope) throw createHttpError(404, 'Verification request not found');
+  assertCompanyScope(user, scope.companyId);
+
+  const row = await verificationRepository.findVerificationById(verificationId);
+  if (!row) throw createHttpError(404, 'Verification request not found');
+  return toScopedVerification(row);
+}
+
+async function decideScopedVerification(user, value, input = {}) {
+  const verificationId = positiveId(value, 'verification ID');
+  const scope = await verificationRepository.findVerificationScope(verificationId);
+  if (!scope) throw createHttpError(404, 'Verification request not found');
+  assertCompanyScope(user, scope.companyId);
+  return decideVerification(user.userId, verificationId, input);
+}
+
+module.exports = {
+  VERIFICATION_STATUSES,
+  requestVerification,
+  getPendingVerifications,
+  getVerification,
+  decideVerification,
+  getScopedVerifications,
+  getScopedVerification,
+  decideScopedVerification
+};

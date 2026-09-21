@@ -59,7 +59,9 @@ test('authentication middleware verifies JWT and attaches current database ident
   await authenticate(request, response, () => { nextCalled = true; });
 
   assert.equal(nextCalled, true);
-  assert.deepEqual(request.user, { userId: 8, role: 'ADMIN' });
+  assert.deepEqual(request.user, {
+    userId: 8, role: 'ADMIN', representativeScopes: [], representativeCompanyIds: []
+  });
   assert.equal(response.statusCode, null);
 });
 

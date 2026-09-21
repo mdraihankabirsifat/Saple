@@ -121,37 +121,177 @@ test('Render enables exactly one trusted proxy hop', () => {
 
 test('frontend API resolution keeps hosted traffic same-origin and local ports separate', () => {
   const source = fs.readFileSync(frontendApiPath, 'utf8');
-  const functionStart = source.indexOf('function normalizeApiBaseUrl');
+  const functionStart = source.indexOf('const LOCAL_HOSTNAMES');
   const functionEnd = source.indexOf('const API_BASE_URL');
   assert.ok(functionStart >= 0 && functionEnd > functionStart);
 
-  const context = { URL };
+  const context = { URL, window: {} };
   vm.createContext(context);
   vm.runInContext(
     `${source.slice(functionStart, functionEnd)}\nthis.resolveApiBaseUrl = resolveApiBaseUrl;`,
     context
   );
 
-  const hostedLocation = {
+  const hosted = {
     hostname: 'saple.example.test', port: '', origin: 'https://saple.example.test'
   };
-  const localLocation = {
-    hostname: 'localhost', port: '5500', origin: 'http://localhost:5500'
-  };
-  const loopbackLocation = {
-    hostname: '127.0.0.1', port: '5500', origin: 'http://127.0.0.1:5500'
+  const sameOriginLocal = {
+    hostname: 'localhost', port: '3000', origin: 'http://localhost:3000'
   };
 
-  assert.equal(context.resolveApiBaseUrl(hostedLocation, null), hostedLocation.origin);
-  assert.equal(context.resolveApiBaseUrl(localLocation, null), 'http://localhost:3000');
-  assert.equal(context.resolveApiBaseUrl(loopbackLocation, null), 'http://127.0.0.1:3000');
+  // Express same-origin hosting, in production and locally.
+  assert.equal(context.resolveApiBaseUrl(hosted, null), hosted.origin);
+  assert.equal(context.resolveApiBaseUrl(sameOriginLocal, null), sameOriginLocal.origin);
+
+  // Any local static server, including Live Server on 5500 and 5501, is sent
+  // to the Express backend on port 3000 on the same loopback host.
+  for (const port of ['5500', '5501', '8080']) {
+    for (const hostname of ['localhost', '127.0.0.1']) {
+      assert.equal(
+        context.resolveApiBaseUrl({ hostname, port, origin: `http://${hostname}:${port}` }, null),
+        `http://${hostname}:3000`,
+        `${hostname}:${port}`
+      );
+    }
+  }
+
+  // A developer override is honoured on a local page.
   assert.equal(
-    context.resolveApiBaseUrl(hostedLocation, 'https://api.example.test/'),
-    'https://api.example.test'
+    context.resolveApiBaseUrl(
+      { hostname: 'localhost', port: '5501', origin: 'http://localhost:5501' },
+      'http://localhost:4000/'
+    ),
+    'http://localhost:4000'
   );
-  assert.equal(
-    context.resolveApiBaseUrl(hostedLocation, 'https://user:pass@api.example.test'),
-    hostedLocation.origin
-  );
+
+  // On a real deployment an override may only ever name the page's own origin,
+  // so a tampered value cannot redirect a visitor's API traffic elsewhere.
+  assert.equal(context.resolveApiBaseUrl(hosted, 'https://attacker.example.test'), hosted.origin);
+  assert.equal(context.resolveApiBaseUrl(hosted, hosted.origin), hosted.origin);
+
+  // Malformed, credential-bearing and non-HTTP overrides are all rejected.
+  for (const override of [
+    'https://user:pass@api.example.test',
+    'javascript:alert(1)',
+    'ftp://api.example.test',
+    'not a url',
+    'https://api.example.test/path',
+    'https://api.example.test/?k=v'
+  ]) {
+    assert.equal(
+      context.resolveApiBaseUrl({ hostname: 'localhost', port: '5501', origin: 'http://localhost:5501' }, override),
+      'http://localhost:3000',
+      override
+    );
+  }
+
   assert.doesNotMatch(source, /onrender\.com|supabase\.co/i);
+});
+
+test('the API distinguishes failure kinds instead of showing one vague message', () => {
+  const source = fs.readFileSync(frontendApiPath, 'utf8');
+
+  for (const kind of [
+    'NETWORK', 'TIMEOUT', 'CORS', 'INVALID_RESPONSE', 'SERVER',
+    'DATABASE', 'AUTH', 'FORBIDDEN', 'NOT_FOUND', 'CONFLICT', 'RATE_LIMITED'
+  ]) {
+    assert.match(source, new RegExp(`\\b${kind}\\b`), kind);
+  }
+
+  // Content type is checked before any parsing, so an HTML page returned where
+  // JSON was expected is reported as an invalid response, not a parse crash.
+  assert.match(source, /content-type/i);
+  assert.match(source, /contentType\.includes\('application\/json'\)/);
+  assert.match(source, /new AbortController\(\)/);
+});
+
+test('every response carries the explicit security headers and a strict CSP', async () => {
+  for (const target of ['/', '/api/health', '/this-page-does-not-exist']) {
+    const response = await fetch(`${baseUrl}${target}`);
+    const csp = response.headers.get('content-security-policy');
+
+    assert.ok(csp, `${target} sends a CSP`);
+    assert.match(csp, /default-src 'self'/);
+    assert.match(csp, /script-src 'self'/);
+    assert.match(csp, /frame-ancestors 'none'/);
+    assert.match(csp, /object-src 'none'/);
+    assert.match(csp, /base-uri 'self'/);
+    assert.match(csp, /form-action 'self'/);
+    assert.doesNotMatch(csp, /unsafe-eval|unsafe-inline/);
+
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('x-frame-options'), 'DENY');
+    assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    assert.match(response.headers.get('permissions-policy'), /geolocation=\(\)/);
+    assert.equal(response.headers.get('x-powered-by'), null);
+    // HSTS belongs to HTTPS only; over plain local HTTP it must not appear.
+    assert.equal(response.headers.get('strict-transport-security'), null);
+  }
+
+  const apiResponse = await fetch(`${baseUrl}/api/health`);
+  assert.equal(apiResponse.headers.get('cache-control'), 'no-store');
+});
+
+test('oversized and malformed JSON bodies return the JSON envelope, not a stack trace', async () => {
+  const tooLarge = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'a@b.test', password: 'x'.repeat(200000) })
+  });
+  const tooLargeBody = await tooLarge.json();
+  assert.equal(tooLarge.status, 413);
+  assert.equal(tooLargeBody.success, false);
+  assert.match(tooLargeBody.message, /too large/i);
+
+  const malformed = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{"email": '
+  });
+  const malformedBody = await malformed.json();
+  assert.equal(malformed.status, 400);
+  assert.equal(malformedBody.success, false);
+  assert.match(malformedBody.message, /not valid JSON/i);
+  assert.equal(JSON.stringify(malformedBody).includes('at JSON.parse'), false);
+});
+
+test('robots, sitemap and security.txt describe only public pages', async () => {
+  const robots = await fetch(`${baseUrl}/robots.txt`);
+  const robotsBody = await robots.text();
+  assert.equal(robots.status, 200);
+  assert.match(robots.headers.get('content-type'), /^text\/plain/);
+  assert.match(robotsBody, /Disallow: \/api\//);
+  assert.match(robotsBody, /Disallow: \/admin\.html/);
+  assert.match(robotsBody, /Disallow: \/representative\.html/);
+  assert.match(robotsBody, /Disallow: \/reset-password\.html/);
+  assert.match(robotsBody, new RegExp(`Sitemap: ${baseUrl}/sitemap.xml`));
+
+  const sitemap = await fetch(`${baseUrl}/sitemap.xml`);
+  const sitemapBody = await sitemap.text();
+  assert.equal(sitemap.status, 200);
+  assert.match(sitemap.headers.get('content-type'), /xml/);
+  assert.match(sitemapBody, new RegExp(`<loc>${baseUrl}/jobs.html</loc>`));
+  for (const privatePage of ['admin.html', 'profile.html', 'my-applications.html', 'reset-password.html']) {
+    assert.equal(sitemapBody.includes(privatePage), false, privatePage);
+  }
+
+  const security = await fetch(`${baseUrl}/.well-known/security.txt`);
+  const securityBody = await security.text();
+  assert.equal(security.status, 200);
+  assert.match(securityBody, /independent BUET CSE academic project/i);
+  assert.match(securityBody, /Expires: \d{4}-\d{2}-\d{2}T/);
+  // With no SECURITY_CONTACT configured, no address is invented.
+  assert.match(securityBody, /SECURITY_CONTACT/);
+});
+
+test('no API route can be turned into an open redirect', async () => {
+  for (const target of [
+    '/api/health?next=https://attacker.example.test',
+    '/api?redirect=//attacker.example.test',
+    '/this-page-does-not-exist?returnTo=https://attacker.example.test'
+  ]) {
+    const response = await fetch(`${baseUrl}${target}`, { redirect: 'manual' });
+    assert.ok(response.status < 300 || response.status >= 400, target);
+    assert.equal(response.headers.get('location'), null, target);
+  }
 });

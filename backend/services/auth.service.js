@@ -152,14 +152,18 @@ async function login(input = {}) {
   };
 }
 
+// One answer for every caller, whether or not the address belongs to an
+// account. A public caller cannot use this endpoint to discover who has
+// registered with Saple.
+const GENERIC_RECOVERY_RESULT = Object.freeze({
+  emailSent: true,
+  message: 'If that email address has a Saple account, a password-reset link is on its way.'
+});
+
 async function forgotPassword(input = {}) {
   const email = normalizeEmail(input.email);
 
   if (!validateEmail(email)) throw createHttpError(400, 'A valid email address is required');
-
-  const user = await userRepository.findUserForPasswordResetByEmail(email);
-  if (!user) throw createHttpError(404, 'No account was found with that email address.');
-  if (user.accountStatus !== 'ACTIVE') throw unavailableAccountError(user.accountStatus);
 
   let expiresMinutes;
   let frontendUrl;
@@ -169,6 +173,11 @@ async function forgotPassword(input = {}) {
   } catch (error) {
     throw createHttpError(503, 'Password recovery is not configured. Please try again later.');
   }
+
+  const user = await userRepository.findUserForPasswordResetByEmail(email);
+  // An unknown or unavailable account stops here with the same answer a real
+  // one gets. Nothing is written and no email is sent.
+  if (!user || user.accountStatus !== 'ACTIVE') return GENERIC_RECOVERY_RESULT;
 
   const rawToken = crypto.randomBytes(32).toString('base64url');
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -194,17 +203,16 @@ async function forgotPassword(input = {}) {
       }
     });
   } catch (error) {
+    // A genuine delivery failure is reported, because the caller needs to know
+    // the email is not coming. Account-state failures stay generic.
     if (error.statusCode) throw error;
-    if (error.sapleCode === 'ACCOUNT_NOT_FOUND') {
-      throw createHttpError(404, 'No account was found with that email address.');
-    }
-    if (error.sapleCode === 'ACCOUNT_UNAVAILABLE') {
-      throw createHttpError(403, 'This account cannot reset its password. Contact an administrator for assistance.');
+    if (['ACCOUNT_NOT_FOUND', 'ACCOUNT_UNAVAILABLE'].includes(error.sapleCode)) {
+      return GENERIC_RECOVERY_RESULT;
     }
     throw error;
   }
 
-  return { emailSent: true };
+  return GENERIC_RECOVERY_RESULT;
 }
 
 async function resetPassword(input = {}) {

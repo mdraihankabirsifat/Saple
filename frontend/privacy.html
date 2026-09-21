@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="What data Saple stores, why it stores it, and what is never shown publicly.">
+  <title>Privacy | Saple</title>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/info-pages.css">
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Saple home"><span class="brand-mark"
+          aria-hidden="true">S</span><span>Saple</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle>
+        <span class="nav-toggle-lines" aria-hidden="true"></span>
+      </button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="nav-text-link" href="login.html">Sign in</a>
+          <a class="button button-secondary button-small" href="register.html">Create account</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section class="info-hero" aria-labelledby="page-heading">
+      <div class="info-hero-content container">
+        <p class="eyebrow">Privacy</p>
+        <h1 id="page-heading">What Saple stores, and what it never shows</h1>
+        <p>This page describes the data this academic project actually holds. It is written against the implemented schema, not against a template.</p>
+        <p class="info-identity">Saple is an independent BUET CSE academic project for company and career insights. It
+          is not affiliated with, endorsed by, or an official login or careers service for any company named on the
+          site.</p>
+      </div>
+    </section>
+
+    <section class="section" aria-label="What Saple stores, and what it never shows">
+      <div class="info-grid container">
+        <article class="info-card card">
+          <h2>What is collected</h2>
+          <p>Saple stores only what the implemented features need:</p>
+          <ul class="info-list">
+            <li>Account: your name, email address and a BCrypt hash of your password. The password itself is never stored.</li>
+            <li>Employee profile: whether you are a current or former employee, and the company and job role of each verification request you make.</li>
+            <li>Contributions: the salary, review and interview records you submit, with their moderation status and history.</li>
+            <li>Jobs: the applications you send, their status history and the statement you wrote.</li>
+            <li>Notifications: the decisions about your own account, contributions, verifications and applications.</li>
+            <li>Representative assignments: which companies an administrator has approved you to represent, and the decisions behind that.</li>
+          </ul>
+        </article>
+        <article class="info-card card">
+          <h2>What is never collected</h2>
+          <p>Saple deliberately does not collect these, and there is no code path that could:</p>
+          <ul class="info-list">
+            <li>Uploaded files of any kind. There is no document or CV upload anywhere in the project.</li>
+            <li>Payment details. Saple has no payment feature.</li>
+            <li>Third-party sign-in identities. Saple has its own account system and no social login.</li>
+            <li>Advertising or cross-site tracking identifiers. The site loads no third-party script and no analytics.</li>
+            <li>Your location, camera, microphone or other device sensors. The browser is told to deny all of these.</li>
+          </ul>
+        </article>
+        <article class="info-card card">
+          <h2>Anonymous display, accountable moderation</h2>
+          <p>A contribution can be displayed anonymously. That hides your identity from every public page and from other users, including company representatives.</p>
+          <p>Saple still keeps the internal link between a contribution and the account that submitted it, so that a report can be investigated and a decision can be audited. Anonymity here means "not shown publicly", not "untraceable by the moderators of this project".</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Who can see what</h2>
+          <p>Access is enforced in the API and in the database, not by hiding buttons:</p>
+          <ul class="info-list">
+            <li>The public sees approved contributions and published, in-deadline vacancies only.</li>
+            <li>You see your own profile, your own contributions, your own applications and your own notifications.</li>
+            <li>A company representative sees verification requests, vacancies and applications for the companies assigned to them, and nothing from any other company.</li>
+            <li>Administrators see the moderation, verification, report and assignment queues needed to run the project, and every privileged decision they make is recorded with actor, previous state, new state, reason and timestamp.</li>
+          </ul>
+        </article>
+        <article class="info-card card">
+          <h2>Email and password recovery</h2>
+          <p>A password-reset link is stored only as a SHA-256 hash, expires after a short configurable period (15 minutes by default) and can be used once.</p>
+          <p>Using it replaces your password and invalidates your other sessions.</p>
+          <p>The forgot-password endpoint answers the same way whether or not an address has an account, so it cannot be used to discover who has registered.</p>
+
+        </article>
+        <article class="info-card info-card-wide card">
+          <h2>The Saple Guide and your messages</h2>
+          <p>If the site owner has configured an AI provider, the text you type into the Saple Guide is sent to that provider through Saple’s own backend. Nothing else is sent: not your account, not your token, not your submissions, not your applications.</p>
+          <p>Identifiers that look like email addresses, phone numbers or tokens are stripped from your message before it leaves the server. Even so, do not type passwords, reset links, verification codes or personal details into it.</p>
+          <p>Conversations are held in your browser’s memory for the length of the visit. Saple stores no chat history in its database.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Browser storage</h2>
+          <p>Saple uses your browser’s own storage for a few conveniences: your light or dark theme choice, your sign-in session, dismissed announcements, and a small cache of public pages so browsing still works offline.</p>
+          <p>The offline cache only ever holds public GET responses. Account, notification, application, verification, administrator and Saple Guide data are excluded from it by an explicit allow-list.</p>
+
+        </article>
+        <article class="info-card card">
+          <h2>Your choices</h2>
+          <p>You can change your display name and password from your profile page, withdraw a job application while a decision is still open, and clear the offline cache from the offline notice.</p>
+          <p>Because this is an academic project rather than a service, account deletion is handled by the project administrators rather than by a self-service button. Use the contact route on the Contact page.</p>
+
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-bottom">
+      <div class="footer-bottom-content container">
+        <p>&copy; 2026 Saple. BUET CSE Database Project.</p>
+        <p>Anonymous display, accountable moderation.</p>
+      </div>
+    </div>
+  </footer>
+  <script src="js/nav.js" defer></script>
+</body>
+
+</html>

@@ -9,6 +9,7 @@
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/workspace.css">
 </head>
 
 <body>
@@ -140,6 +141,90 @@
             <div id="report-list" class="admin-item-list" aria-live="polite"></div>
           </section>
         </div>
+
+        <section id="admin-oversight" class="admin-oversight" aria-labelledby="oversight-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Platform oversight</p>
+              <h2 id="oversight-heading">Representatives, announcements and jobs</h2>
+            </div>
+          </div>
+          <p class="field-help">Any administrator can act here. Nothing in this panel is tied to a particular
+            administrator account, and every decision is recorded with its actor, previous state, new state, reason and
+            timestamp.</p>
+
+          <div class="tabs">
+            <div id="oversight-tabs" class="tab-list" role="tablist" aria-label="Platform oversight sections">
+              <button class="tab" type="button" role="tab" data-tab="representatives" aria-selected="true"
+                aria-controls="panel-representatives" id="tab-representatives">Representative assignments</button>
+              <button class="tab" type="button" role="tab" data-tab="announcements" aria-selected="false" tabindex="-1"
+                aria-controls="panel-announcements" id="tab-announcements">Announcements</button>
+              <button class="tab" type="button" role="tab" data-tab="jobs" aria-selected="false" tabindex="-1"
+                aria-controls="panel-jobs-oversight" id="tab-jobs-oversight">Job postings</button>
+            </div>
+
+            <section id="panel-representatives" class="tab-panel" role="tabpanel"
+              aria-labelledby="tab-representatives">
+              <div class="panel-toolbar">
+                <div class="form-group form-group-inline">
+                  <label for="assignment-status-filter">Status</label>
+                  <select class="input" id="assignment-status-filter" data-status-filter>
+                    <option value="PENDING">Pending</option>
+                    <option value="">All statuses</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="REVOKED">Revoked</option>
+                  </select>
+                </div>
+                <div class="form-group form-group-inline">
+                  <label for="assignment-search">Search</label>
+                  <input class="input" id="assignment-search" type="search" maxlength="100"
+                    placeholder="Name, email or company" data-search autocomplete="off">
+                </div>
+              </div>
+              <p class="state-message" role="status" aria-live="polite" data-status></p>
+              <div class="queue-list" data-queue></div>
+              <div class="pagination-host" data-pagination></div>
+            </section>
+
+            <section id="panel-announcements" class="tab-panel" role="tabpanel" aria-labelledby="tab-announcements"
+              hidden>
+              <div class="panel-toolbar">
+                <p class="field-help">Announcements are plain text and appear under the navigation for every visitor
+                  while they are inside their schedule.</p>
+                <button class="button button-primary" type="button" id="create-announcement">+ New
+                  announcement</button>
+              </div>
+              <p class="state-message" role="status" aria-live="polite" data-status></p>
+              <div class="queue-list" data-queue></div>
+              <div class="pagination-host" data-pagination></div>
+            </section>
+
+            <section id="panel-jobs-oversight" class="tab-panel" role="tabpanel" aria-labelledby="tab-jobs-oversight"
+              hidden>
+              <div class="panel-toolbar">
+                <div class="form-group form-group-inline">
+                  <label for="oversight-job-status">Status</label>
+                  <select class="input" id="oversight-job-status" data-status-filter>
+                    <option value="">All statuses</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                    <option value="CLOSED">Closed</option>
+                    <option value="ARCHIVED">Archived</option>
+                  </select>
+                </div>
+                <div class="form-group form-group-inline">
+                  <label for="oversight-job-search">Search</label>
+                  <input class="input" id="oversight-job-search" type="search" maxlength="100"
+                    placeholder="Job title or company" data-search autocomplete="off">
+                </div>
+              </div>
+              <p class="state-message" role="status" aria-live="polite" data-status></p>
+              <div class="queue-list" data-queue></div>
+              <div class="pagination-host" data-pagination></div>
+            </section>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -161,14 +246,13 @@
             id="footer-brand-heading">Saple</span></a>
         <p>Company insights, salary context, benefits, reviews, and interview experiences for better career decisions.
         </p>
-        <div class="project-tags" aria-label="Project technologies"><span>Supabase PostgreSQL
-            19c</span><span>Express</span><span>Vanilla JS</span></div>
+        <div class="project-tags" aria-label="Project technologies"><span>PostgreSQL</span><span>Express</span><span>Vanilla JavaScript</span></div>
       </section>
       <nav class="footer-column" aria-labelledby="footer-explore-heading">
         <h2 id="footer-explore-heading">Explore</h2>
         <ul>
           <li><a href="companies.html">Companies</a></li>
-          <li><a href="index.html#salary-insights">Salary methodology</a></li>
+          <li><a href="index.html#trust-heading">Salary methodology</a></li>
           <li><a href="reviews.html">Reviews</a></li>
           <li><a href="interviews.html">Interviews</a></li>
         </ul>
@@ -191,6 +275,7 @@
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/admin.js"></script>
+  <script type="module" src="js/admin-oversight.js"></script>
 </body>
 
 </html>
