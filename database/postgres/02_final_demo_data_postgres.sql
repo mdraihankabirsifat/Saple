@@ -638,6 +638,165 @@ BEGIN
 END
 $saple_seed$;
 
+-- ================================================================
+-- SECTION 4: REPRESENTATIVES, JOBS, APPLICATIONS, ANNOUNCEMENTS
+-- Entirely synthetic academic demonstration data. The companies, people,
+-- vacancies and applications below are invented and must never be treated
+-- as production claims about any real organisation or person.
+-- Every statement is guarded, so re-running this section adds nothing twice.
+--
+-- The accounts added here are found by email, never by a numeric user_id:
+-- section 3 generates synthetic users whose identities would collide with
+-- any fixed ID chosen here.
+-- ================================================================
+
+-- Two representatives, a second administrator and a pending applicant for a
+-- representative scope. Multiple administrators and multiple representatives
+-- per company are normal, not special cases.
+INSERT INTO users (full_name, email, password_hash, user_type, account_role, account_status, created_at, updated_at)
+VALUES
+  ('Demo Representative One', 'rep.one@example.test', '$2b$10$DEMO_HASH_NOT_FOR_PRODUCTION', 'NORMAL', 'COMPANY_REPRESENTATIVE', 'ACTIVE', TIMESTAMP '2026-02-01 09:00:00', TIMESTAMP '2026-02-01 09:00:00'),
+  ('Demo Representative Two', 'rep.two@example.test', '$2b$10$DEMO_HASH_NOT_FOR_PRODUCTION', 'NORMAL', 'COMPANY_REPRESENTATIVE', 'ACTIVE', TIMESTAMP '2026-02-02 09:00:00', TIMESTAMP '2026-02-02 09:00:00'),
+  ('Second Demo Administrator', 'admin.two@example.test', '$2b$10$DEMO_HASH_NOT_FOR_PRODUCTION', 'NORMAL', 'ADMIN', 'ACTIVE', TIMESTAMP '2026-02-03 09:00:00', TIMESTAMP '2026-02-03 09:00:00'),
+  ('Demo Pending Representative', 'rep.pending@example.test', '$2b$10$DEMO_HASH_NOT_FOR_PRODUCTION', 'NORMAL', 'USER', 'ACTIVE', TIMESTAMP '2026-02-04 09:00:00', TIMESTAMP '2026-02-04 09:00:00')
+ON CONFLICT (email) DO NOTHING;
+
+-- Assignment 1 and 2 are ACTIVE for different companies, so cross-company
+-- denial can be demonstrated. Assignment 3 is still waiting for an admin.
+INSERT INTO company_representatives (
+  assignment_id, user_id, company_id, job_title, assignment_status,
+  request_note, decision_note, approved_by, approved_at, created_at, updated_at
+) VALUES
+  (1, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 1, 'People Operations Lead', 'ACTIVE',
+   'Synthetic academic demonstration request.', 'Synthetic academic demonstration approval.',
+   (SELECT user_id FROM users WHERE email = 'admin@example.test'), TIMESTAMP '2026-02-05 10:00:00',
+   TIMESTAMP '2026-02-01 10:00:00', TIMESTAMP '2026-02-05 10:00:00'),
+  (2, (SELECT user_id FROM users WHERE email = 'rep.two@example.test'), 2, 'Talent Acquisition Manager', 'ACTIVE',
+   'Synthetic academic demonstration request.', 'Synthetic academic demonstration approval.',
+   (SELECT user_id FROM users WHERE email = 'admin.two@example.test'), TIMESTAMP '2026-02-06 10:00:00',
+   TIMESTAMP '2026-02-02 10:00:00', TIMESTAMP '2026-02-06 10:00:00'),
+  (3, (SELECT user_id FROM users WHERE email = 'rep.pending@example.test'), 3, 'HR Generalist', 'PENDING',
+   'Synthetic academic demonstration request awaiting review.', NULL,
+   NULL, NULL, TIMESTAMP '2026-02-07 10:00:00', TIMESTAMP '2026-02-07 10:00:00')
+ON CONFLICT (assignment_id) DO NOTHING;
+
+INSERT INTO representative_assignment_actions (
+  action_id, assignment_id, actor_user_id, action_type, previous_status, new_status, action_note, action_at
+) VALUES
+  (1, 1, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 'REQUEST', NULL, 'PENDING', 'Synthetic academic demonstration request.', TIMESTAMP '2026-02-01 10:00:00'),
+  (2, 1, (SELECT user_id FROM users WHERE email = 'admin@example.test'), 'APPROVE', 'PENDING', 'ACTIVE', 'Synthetic academic demonstration approval.', TIMESTAMP '2026-02-05 10:00:00'),
+  (3, 2, (SELECT user_id FROM users WHERE email = 'rep.two@example.test'), 'REQUEST', NULL, 'PENDING', 'Synthetic academic demonstration request.', TIMESTAMP '2026-02-02 10:00:00'),
+  (4, 2, (SELECT user_id FROM users WHERE email = 'admin.two@example.test'), 'APPROVE', 'PENDING', 'ACTIVE', 'Synthetic academic demonstration approval.', TIMESTAMP '2026-02-06 10:00:00'),
+  (5, 3, (SELECT user_id FROM users WHERE email = 'rep.pending@example.test'), 'REQUEST', NULL, 'PENDING', 'Synthetic academic demonstration request awaiting review.', TIMESTAMP '2026-02-07 10:00:00')
+ON CONFLICT (action_id) DO NOTHING;
+
+-- Deadlines are relative so published demonstration vacancies stay open
+-- whenever this file is loaded, and the closed one stays closed.
+INSERT INTO job_postings (
+  job_id, company_id, created_by_user_id, created_by_assignment_id, role_id,
+  title, description, requirements, location, employment_type, work_mode,
+  salary_min, salary_max, salary_currency, salary_period,
+  application_deadline, job_status, published_at, closed_at, created_at, updated_at
+) VALUES
+  (1, 1, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 1, 1,
+   'Software Engineer (Synthetic Demo Vacancy)',
+   'Synthetic academic demonstration vacancy: build and maintain backend services for a fictional product team.',
+   'Synthetic academic demonstration: PostgreSQL, JavaScript, and an interest in data modelling.',
+   'Dhaka', 'FULL_TIME', 'HYBRID', 60000, 95000, 'BDT', 'MONTHLY',
+   CURRENT_DATE + 45, 'PUBLISHED', TIMESTAMP '2026-02-10 09:00:00', NULL,
+   TIMESTAMP '2026-02-09 09:00:00', TIMESTAMP '2026-02-10 09:00:00'),
+  (2, 1, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 1, 4,
+   'Quality Assurance Engineer (Synthetic Demo Vacancy)',
+   'Synthetic academic demonstration vacancy: design and run test plans for a fictional release pipeline.',
+   'Synthetic academic demonstration: test automation basics and clear written reporting.',
+   'Dhaka', 'FULL_TIME', 'ONSITE', 45000, 70000, 'BDT', 'MONTHLY',
+   CURRENT_DATE + 30, 'PUBLISHED', TIMESTAMP '2026-02-11 09:00:00', NULL,
+   TIMESTAMP '2026-02-10 09:00:00', TIMESTAMP '2026-02-11 09:00:00'),
+  (3, 2, (SELECT user_id FROM users WHERE email = 'rep.two@example.test'), 2, 2,
+   'Data Analyst (Synthetic Demo Vacancy)',
+   'Synthetic academic demonstration vacancy: prepare reporting datasets for a fictional analytics practice.',
+   'Synthetic academic demonstration: SQL, spreadsheets, and comfort explaining findings.',
+   'Dhaka', 'FULL_TIME', 'REMOTE', 50000, 80000, 'BDT', 'MONTHLY',
+   CURRENT_DATE + 20, 'PUBLISHED', TIMESTAMP '2026-02-12 09:00:00', NULL,
+   TIMESTAMP '2026-02-11 09:00:00', TIMESTAMP '2026-02-12 09:00:00'),
+  (4, 2, (SELECT user_id FROM users WHERE email = 'rep.two@example.test'), 2, 3,
+   'Product Designer (Synthetic Demo Draft)',
+   'Synthetic academic demonstration draft: an unpublished vacancy used to show DRAFT visibility rules.',
+   NULL, 'Dhaka', 'CONTRACT', 'HYBRID', NULL, NULL, NULL, NULL,
+   CURRENT_DATE + 60, 'DRAFT', NULL, NULL,
+   TIMESTAMP '2026-02-13 09:00:00', TIMESTAMP '2026-02-13 09:00:00'),
+  (5, 1, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 1, 5,
+   'Graduate Trainee (Synthetic Demo Closed Vacancy)',
+   'Synthetic academic demonstration vacancy: a closed rotation used to show that closing preserves applications.',
+   NULL, 'Dhaka', 'INTERN', 'ONSITE', NULL, NULL, NULL, NULL,
+   CURRENT_DATE + 5, 'CLOSED', TIMESTAMP '2026-02-14 09:00:00', TIMESTAMP '2026-03-14 09:00:00',
+   TIMESTAMP '2026-02-13 09:00:00', TIMESTAMP '2026-03-14 09:00:00')
+ON CONFLICT (job_id) DO NOTHING;
+
+-- Applicants are the section 1 job seekers, whose IDs are fixed there.
+INSERT INTO job_applications (
+  application_id, job_id, applicant_user_id, cover_letter, application_status,
+  submitted_at, updated_at, reviewed_by, reviewed_at
+) VALUES
+  (1, 1, 5, 'Synthetic academic demonstration application text describing relevant coursework and projects.',
+   'UNDER_REVIEW', TIMESTAMP '2026-02-15 09:00:00', TIMESTAMP '2026-02-16 09:00:00',
+   (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), TIMESTAMP '2026-02-16 09:00:00'),
+  (2, 1, 7, 'Synthetic academic demonstration application text describing backend internship experience.',
+   'SUBMITTED', TIMESTAMP '2026-02-15 11:00:00', TIMESTAMP '2026-02-15 11:00:00', NULL, NULL),
+  (3, 3, 5, 'Synthetic academic demonstration application text describing reporting and SQL practice.',
+   'SHORTLISTED', TIMESTAMP '2026-02-17 09:00:00', TIMESTAMP '2026-02-18 09:00:00',
+   (SELECT user_id FROM users WHERE email = 'rep.two@example.test'), TIMESTAMP '2026-02-18 09:00:00'),
+  (4, 5, 7, 'Synthetic academic demonstration application kept after the vacancy was closed.',
+   'REJECTED', TIMESTAMP '2026-02-20 09:00:00', TIMESTAMP '2026-03-01 09:00:00',
+   (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), TIMESTAMP '2026-03-01 09:00:00')
+ON CONFLICT (application_id) DO NOTHING;
+
+INSERT INTO job_application_status_history (
+  history_id, application_id, actor_user_id, previous_status, new_status, action_note, action_at
+) VALUES
+  (1, 1, 5, NULL, 'SUBMITTED', 'Synthetic academic demonstration submission.', TIMESTAMP '2026-02-15 09:00:00'),
+  (2, 1, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 'SUBMITTED', 'UNDER_REVIEW', 'Synthetic academic demonstration screening note.', TIMESTAMP '2026-02-16 09:00:00'),
+  (3, 2, 7, NULL, 'SUBMITTED', 'Synthetic academic demonstration submission.', TIMESTAMP '2026-02-15 11:00:00'),
+  (4, 3, 5, NULL, 'SUBMITTED', 'Synthetic academic demonstration submission.', TIMESTAMP '2026-02-17 09:00:00'),
+  (5, 3, (SELECT user_id FROM users WHERE email = 'rep.two@example.test'), 'SUBMITTED', 'SHORTLISTED', 'Synthetic academic demonstration shortlist note.', TIMESTAMP '2026-02-18 09:00:00'),
+  (6, 4, 7, NULL, 'SUBMITTED', 'Synthetic academic demonstration submission.', TIMESTAMP '2026-02-20 09:00:00'),
+  (7, 4, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 'SUBMITTED', 'REJECTED', 'Synthetic academic demonstration outcome note.', TIMESTAMP '2026-03-01 09:00:00')
+ON CONFLICT (history_id) DO NOTHING;
+
+-- One active and one expired announcement, so the public schedule filter is
+-- visible in a demonstration without editing any dates by hand.
+INSERT INTO announcements (
+  announcement_id, title, message, severity, is_dismissible, is_active,
+  starts_at, ends_at, created_by, created_at, updated_at
+) VALUES
+  (1, 'Saple is an academic project',
+   'Saple is an independent BUET CSE academic project. Company data here is synthetic demonstration data and is not an official company channel.',
+   'INFO', TRUE, TRUE, TIMESTAMPTZ '2026-02-01 00:00:00+06', NULL, 6,
+   TIMESTAMP '2026-02-01 09:00:00', TIMESTAMP '2026-02-01 09:00:00'),
+  (2, 'Scheduled demonstration maintenance',
+   'A synthetic academic demonstration notice whose window has already ended, so it must not appear in the public announcement endpoint.',
+   'WARNING', TRUE, TRUE, TIMESTAMPTZ '2026-02-01 00:00:00+06', TIMESTAMPTZ '2026-02-02 00:00:00+06', 6,
+   TIMESTAMP '2026-02-01 09:10:00', TIMESTAMP '2026-02-01 09:10:00')
+ON CONFLICT (announcement_id) DO NOTHING;
+
+INSERT INTO notifications (
+  notification_id, user_id, notification_type, title, message,
+  related_entity_type, related_entity_id, read_at, created_at
+) VALUES
+  (1, 5, 'APPLICATION_STATUS', 'Your application is under review',
+   'Synthetic academic demonstration: a representative moved your application to UNDER_REVIEW.',
+   'APPLICATION', 1, NULL, TIMESTAMP '2026-02-16 09:00:00'),
+  (2, 5, 'APPLICATION_STATUS', 'You have been shortlisted',
+   'Synthetic academic demonstration: a representative moved your application to SHORTLISTED.',
+   'APPLICATION', 3, NULL, TIMESTAMP '2026-02-18 09:00:00'),
+  (3, (SELECT user_id FROM users WHERE email = 'rep.one@example.test'), 'APPLICATION_RECEIVED', 'New application received',
+   'Synthetic academic demonstration: a new application arrived for one of your company vacancies.',
+   'JOB', 1, TIMESTAMP '2026-02-16 08:00:00', TIMESTAMP '2026-02-15 11:00:00'),
+  (4, (SELECT user_id FROM users WHERE email = 'rep.pending@example.test'), 'REPRESENTATIVE_DECISION', 'Representative request received',
+   'Synthetic academic demonstration: your company representative request is waiting for administrator review.',
+   'ASSIGNMENT', 3, NULL, TIMESTAMP '2026-02-07 10:00:00')
+ON CONFLICT (notification_id) DO NOTHING;
+
 -- Explicit and generated IDs are both safe for subsequent runtime inserts.
 SELECT setval(pg_get_serial_sequence('users', 'user_id'),
   COALESCE((SELECT MAX(user_id) FROM users), 1),
@@ -678,6 +837,34 @@ SELECT setval(pg_get_serial_sequence('moderation_actions', 'action_id'),
 SELECT setval(pg_get_serial_sequence('password_reset_tokens', 'reset_token_id'),
   COALESCE((SELECT MAX(reset_token_id) FROM password_reset_tokens), 1),
   EXISTS (SELECT 1 FROM password_reset_tokens));
+
+SELECT setval(pg_get_serial_sequence('company_representatives', 'assignment_id'),
+  COALESCE((SELECT MAX(assignment_id) FROM company_representatives), 1),
+  EXISTS (SELECT 1 FROM company_representatives));
+
+SELECT setval(pg_get_serial_sequence('representative_assignment_actions', 'action_id'),
+  COALESCE((SELECT MAX(action_id) FROM representative_assignment_actions), 1),
+  EXISTS (SELECT 1 FROM representative_assignment_actions));
+
+SELECT setval(pg_get_serial_sequence('job_postings', 'job_id'),
+  COALESCE((SELECT MAX(job_id) FROM job_postings), 1),
+  EXISTS (SELECT 1 FROM job_postings));
+
+SELECT setval(pg_get_serial_sequence('job_applications', 'application_id'),
+  COALESCE((SELECT MAX(application_id) FROM job_applications), 1),
+  EXISTS (SELECT 1 FROM job_applications));
+
+SELECT setval(pg_get_serial_sequence('job_application_status_history', 'history_id'),
+  COALESCE((SELECT MAX(history_id) FROM job_application_status_history), 1),
+  EXISTS (SELECT 1 FROM job_application_status_history));
+
+SELECT setval(pg_get_serial_sequence('announcements', 'announcement_id'),
+  COALESCE((SELECT MAX(announcement_id) FROM announcements), 1),
+  EXISTS (SELECT 1 FROM announcements));
+
+SELECT setval(pg_get_serial_sequence('notifications', 'notification_id'),
+  COALESCE((SELECT MAX(notification_id) FROM notifications), 1),
+  EXISTS (SELECT 1 FROM notifications));
 
 COMMIT;
 

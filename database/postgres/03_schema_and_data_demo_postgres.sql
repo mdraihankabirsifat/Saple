@@ -1,7 +1,7 @@
 -- SAPLE SUPABASE POSTGRESQL READ-ONLY DEMONSTRATION QUERIES
 -- Run after the PostgreSQL schema and demonstration data scripts.
 
--- 1. Expected project shape: 14 base tables and 4 views.
+-- 1. Expected project shape: 21 base tables and 5 views.
 SELECT
   COUNT(*) FILTER (WHERE table_type = 'BASE TABLE') AS base_table_count,
   COUNT(*) FILTER (WHERE table_type = 'VIEW') AS view_count
@@ -11,9 +11,12 @@ WHERE table_schema = 'public'
     'users', 'employees', 'password_reset_tokens', 'companies', 'job_roles',
     'benefits', 'company_benefits', 'employment_verifications', 'submissions',
     'salary_submissions', 'company_reviews', 'interview_experiences',
-    'reports', 'moderation_actions', 'vw_public_companies',
-    'vw_public_approved_reviews', 'vw_verified_salary_summary',
-    'vw_community_salary_summary'
+    'reports', 'moderation_actions', 'company_representatives',
+    'representative_assignment_actions', 'job_postings', 'job_applications',
+    'job_application_status_history', 'announcements', 'notifications',
+    'vw_public_companies', 'vw_public_approved_reviews',
+    'vw_verified_salary_summary', 'vw_community_salary_summary',
+    'vw_public_open_jobs'
   );
 
 -- 2. Saple base tables.
@@ -24,7 +27,9 @@ WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
     'users', 'employees', 'password_reset_tokens', 'companies', 'job_roles',
     'benefits', 'company_benefits', 'employment_verifications', 'submissions',
     'salary_submissions', 'company_reviews', 'interview_experiences',
-    'reports', 'moderation_actions'
+    'reports', 'moderation_actions', 'company_representatives',
+    'representative_assignment_actions', 'job_postings', 'job_applications',
+    'job_application_status_history', 'announcements', 'notifications'
   )
 ORDER BY table_name;
 
@@ -37,7 +42,9 @@ WHERE table_schema = 'public'
     'users', 'employees', 'password_reset_tokens', 'companies', 'job_roles',
     'benefits', 'company_benefits', 'employment_verifications', 'submissions',
     'salary_submissions', 'company_reviews', 'interview_experiences',
-    'reports', 'moderation_actions'
+    'reports', 'moderation_actions', 'company_representatives',
+    'representative_assignment_actions', 'job_postings', 'job_applications',
+    'job_application_status_history', 'announcements', 'notifications'
   )
 ORDER BY table_name, ordinal_position;
 
@@ -177,3 +184,94 @@ SELECT
     AS community_salary_group_count,
   (SELECT COUNT(*) FROM vw_public_approved_reviews)
     AS approved_public_review_count;
+
+-- ================================================================
+-- 17. FINAL SCHEMA ADDITIONS: REPRESENTATIVES, JOBS, NOTIFICATIONS
+-- ================================================================
+
+-- 17. CHECK constraints that protect the new workflow states.
+SELECT rel.relname AS table_name, con.conname AS constraint_name,
+  pg_get_constraintdef(con.oid) AS definition
+FROM pg_constraint con
+JOIN pg_class rel ON rel.oid = con.conrelid
+JOIN pg_namespace ns ON ns.oid = rel.relnamespace
+WHERE ns.nspname = 'public'
+  AND con.contype = 'c'
+  AND rel.relname IN (
+    'company_representatives', 'representative_assignment_actions',
+    'job_postings', 'job_applications', 'job_application_status_history',
+    'announcements', 'notifications'
+  )
+ORDER BY rel.relname, con.conname;
+
+-- 18. Indexes supporting the new scoped queues, including partial indexes.
+SELECT tablename, indexname, indexdef
+FROM pg_indexes
+WHERE schemaname = 'public'
+  AND tablename IN (
+    'company_representatives', 'representative_assignment_actions',
+    'job_postings', 'job_applications', 'job_application_status_history',
+    'announcements', 'notifications'
+  )
+ORDER BY tablename, indexname;
+
+-- 19. Representative scopes. One open scope per account and company.
+SELECT cr.assignment_id, cr.assignment_status, c.company_name,
+  u.full_name AS representative_name, cr.approved_at, cr.revoked_at
+FROM company_representatives cr
+JOIN companies c ON c.company_id = cr.company_id
+JOIN users u ON u.user_id = cr.user_id
+ORDER BY cr.assignment_status, cr.assignment_id;
+
+-- 20. Public job visibility. Only PUBLISHED, non-expired rows may appear.
+SELECT
+  (SELECT COUNT(*) FROM job_postings) AS total_job_count,
+  (SELECT COUNT(*) FROM job_postings WHERE job_status = 'DRAFT') AS draft_job_count,
+  (SELECT COUNT(*) FROM job_postings WHERE job_status = 'PUBLISHED') AS published_job_count,
+  (SELECT COUNT(*) FROM job_postings WHERE job_status IN ('CLOSED', 'ARCHIVED')) AS closed_job_count,
+  (SELECT COUNT(*) FROM vw_public_open_jobs) AS public_open_job_count;
+
+-- 21. Applications survive closure, stay unique per applicant, and keep history.
+SELECT ja.application_id, ja.application_status, jp.title, jp.job_status,
+  (SELECT COUNT(*) FROM job_application_status_history h
+     WHERE h.application_id = ja.application_id) AS history_row_count
+FROM job_applications ja
+JOIN job_postings jp ON jp.job_id = ja.job_id
+ORDER BY ja.application_id;
+
+-- 22. Duplicate applications are impossible: this must always return no rows.
+SELECT job_id, applicant_user_id, COUNT(*) AS duplicate_count
+FROM job_applications
+GROUP BY job_id, applicant_user_id
+HAVING COUNT(*) > 1;
+
+-- 23. Announcement scheduling. Only the currently active window is public.
+SELECT announcement_id, severity, is_active, starts_at, ends_at,
+  (is_active
+    AND starts_at <= CURRENT_TIMESTAMP
+    AND (ends_at IS NULL OR ends_at > CURRENT_TIMESTAMP)) AS is_public_now
+FROM announcements
+ORDER BY announcement_id;
+
+-- 24. Notification ownership and unread counts, without message content.
+SELECT n.user_id, u.full_name AS owner_name,
+  COUNT(*) AS notification_count,
+  COUNT(*) FILTER (WHERE n.read_at IS NULL) AS unread_count
+FROM notifications n
+JOIN users u ON u.user_id = n.user_id
+GROUP BY n.user_id, u.full_name
+ORDER BY n.user_id;
+
+-- 25. Multiple administrators and representatives are both supported.
+SELECT account_role, COUNT(*) AS account_count
+FROM users
+GROUP BY account_role
+ORDER BY account_role;
+
+-- 26. Every ACTIVE representative scope belongs to an active account holding
+--     the representative role. This must always return no rows.
+SELECT cr.assignment_id, cr.user_id, u.account_role, u.account_status
+FROM company_representatives cr
+JOIN users u ON u.user_id = cr.user_id
+WHERE cr.assignment_status = 'ACTIVE'
+  AND (u.account_role <> 'COMPANY_REPRESENTATIVE' OR u.account_status <> 'ACTIVE');
