@@ -1,8 +1,32 @@
 node_modules/
-.env
 *.log
+
+# Private configuration. Never commit real values: keep them in backend/.env
+# locally, or in the host's private environment settings. Only the committed
+# backend/.env.example, which holds placeholders, is allowed through.
+.env
+.env.*
+!.env.example
 backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Generated local secrets (npm run local:up writes .env.local at the root).
 .env.local
+*.secrets
+secrets.json
+
+# Keys, certificates and provider credential files.
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+.npmrc
+gha-creds-*.json
+service-account*.json
+credentials.json
+
 ml/.venv/
 ml/**/__pycache__/
 ml/.pytest_cache/

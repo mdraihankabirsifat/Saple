@@ -51,16 +51,17 @@ which requires 2-Step Verification on the Google account.
 2. Turn on 2-Step Verification if it is not already on.
 3. Open **Google Account → Security → App passwords**, create one named
    `Saple`, and copy the 16-character value. It is shown once.
-4. Set:
+4. Enter these values privately, in `backend/.env` locally or in the Render
+   dashboard for a deployment — never in a file you commit:
 
-```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=the-sending-address@gmail.com
-SMTP_PASS=the-16-character-app-password
-SMTP_FROM=Saple <the-sending-address@gmail.com>
-```
+| Variable | What to enter for Gmail |
+|----------|-------------------------|
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `587` |
+| `SMTP_SECURE` | `false` |
+| `SMTP_USER` | the Gmail address that will send the mail |
+| `SMTP_PASS` | the 16-character App Password from step 3 |
+| `SMTP_FROM` | `Saple` followed by that same address in angle brackets |
 
 Gmail rewrites the sender to the authenticated account, so `SMTP_FROM` should
 use that same address. Personal Gmail accounts have daily sending limits; that
@@ -69,17 +70,18 @@ is ample for a course demonstration and unsuitable for anything larger.
 ## 3. Example: any other SMTP provider
 
 Every transactional provider (Brevo, Mailgun, SendGrid, Amazon SES, a
-university relay, and so on) publishes the same four facts. Look them up in the
-provider's dashboard:
+university relay, and so on) publishes the same facts in its dashboard. Enter
+them privately, in `backend/.env` locally or in the Render dashboard for a
+deployment:
 
-```
-SMTP_HOST=smtp.your-provider.example
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=the-login-your-provider-gives-you
-SMTP_PASS=the-smtp-key-your-provider-gives-you
-SMTP_FROM=Saple <no-reply@a-domain-you-have-verified-with-that-provider>
-```
+| Variable | What to enter |
+|----------|---------------|
+| `SMTP_HOST` | the server name the provider documents |
+| `SMTP_PORT` | `587` for STARTTLS, or `465` for implicit TLS |
+| `SMTP_SECURE` | `false` with port `587`, `true` with port `465` |
+| `SMTP_USER` | the login the provider issues |
+| `SMTP_PASS` | the SMTP key the provider issues |
+| `SMTP_FROM` | `Saple` followed by a sender address on a domain you verified |
 
 Most providers require you to verify the sending domain or address before they
 accept mail from it. Do that first, or every attempt fails with a sender

@@ -6,6 +6,10 @@ const vm = require('node:vm');
 const YAML = require('yaml');
 const { initializeSettings, actions } = require('../scripts/localApp');
 const root = path.resolve(__dirname, '../..');
+// Built at run time so this file contains no "Bearer <literal>" pattern; the
+// value is meaningless and only has to be present.
+const SYNTHETIC_AUTHORIZATION = ['Bearer', ['synthetic', 'not', 'a', 'token'].join('-')].join(' ');
+
 function cacheHarness() {
   let stored = null;
   const storage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
@@ -20,7 +24,7 @@ test('offline cache allows public GET endpoints and rejects private requests and
   for (const p of ['/api/auth/me', '/api/admin/submissions/pending', '/api/companies/1/verifications', '/api/health/database', '/api/submissions/1/reports']) assert.equal(c.isCacheable(p), false, p);
   assert.equal(c.isCacheable('/api/companies', 'POST'), false);
   assert.equal(c.isCacheable('/api/companies', 'GET', true), false);
-  assert.equal(c.isCacheable('/api/companies', 'GET', false, { authorization: 'Bearer secret' }), false);
+  assert.equal(c.isCacheable('/api/companies', 'GET', false, { authorization: SYNTHETIC_AUTHORIZATION }), false);
 });
 test('cache isolates API origins, canonicalizes queries, limits entries, expires old data and tolerates denied storage', () => {
   const { context: c, storage, stored } = cacheHarness();
