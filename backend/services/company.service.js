@@ -111,7 +111,10 @@ async function getCompany(companyId) {
     throw createHttpError(404, 'Company not found');
   }
 
-  return company;
+  // Additive field: every existing key is unchanged, and `insights` carries the
+  // approved-only figures computed by saple_company_insight_summary().
+  const insights = await companyRepository.findCompanyInsightSummary(validCompanyId);
+  return { ...company, insights };
 }
 
 async function getCompanyBenefits(companyId) {

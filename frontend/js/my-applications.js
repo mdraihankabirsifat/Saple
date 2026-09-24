@@ -1,5 +1,5 @@
 import { apiRequest } from './api.js';
-import { isAuthenticated } from './auth.js';
+import { requireSession } from './require-session.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState,
   renderPagination, formatDate, formatDateTime, humanizeEnum, showToast
@@ -129,21 +129,24 @@ function applicationCard(application) {
   return card;
 }
 
-function requireSignIn() {
-  statusMessage.textContent = 'Sign in to see your applications.';
+function showLoadProblem(message) {
+  statusMessage.textContent = message;
   renderEmptyState(results, {
-    title: 'Sign in to track your applications',
-    message: 'Your applications are private to your account. Sign in to see their status and history.',
-    actionLabel: 'Go to sign in',
-    onAction: () => window.location.assign('login.html?returnTo=my-applications.html')
+    title: 'Your applications could not be loaded',
+    message,
+    actionLabel: 'Try again',
+    onAction: () => load(1)
   });
 }
 
 async function load(page = 1) {
-  if (!isAuthenticated()) {
-    requireSignIn();
-    return;
-  }
+  // Private data, so the session is confirmed with the server first rather
+  // than trusted from this browser's stored token.
+  const account = await requireSession({
+    returnTo: 'my-applications.html',
+    onError: (error) => showLoadProblem(error.message)
+  });
+  if (!account) return;
 
   currentPage = page;
   statusMessage.textContent = 'Loading your applications…';

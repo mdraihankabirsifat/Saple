@@ -2,6 +2,29 @@
 
 The Saple backend connects Express 5 to Supabase-hosted PostgreSQL through the `pg` driver and raw SQL. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, exact company-and-designation verified contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
 
+## Database objects and transactions
+
+Every runtime `INSERT`, `UPDATE` and `DELETE` runs inside an explicit
+transaction. Multi-step workflows open their own with `getClient()`, `BEGIN`,
+`COMMIT` and `ROLLBACK`; single-statement writes use
+`database.withTransaction(work)`, which does the same and releases the client.
+Passing an existing client makes the work join the caller's transaction instead
+of opening a second one.
+
+PostgreSQL also carries three objects of its own, installed by
+`database/postgres/migrations/005_cse216_final_database_features.sql` and by the
+fresh schema:
+
+| Object | Kind | Used by |
+|---|---|---|
+| `saple_set_updated_at()` + `trg_*_set_updated_at` | trigger function and 7 triggers | every `UPDATE` on a table with `updated_at` |
+| `saple_company_insight_summary(company_id)` | `STABLE` function | `company.repository.js` → `GET /api/companies/:id` (`insights`) |
+| `saple_apply_application_decision(...)` | procedure | `application.repository.js` → `changeApplicationStatus()` |
+
+The procedure never commits: the repository owns the transaction so the
+applicant's notification commits with the decision. Full mapping in
+[`../docs/cse216-final-compliance.md`](../docs/cse216-final-compliance.md).
+
 ## Prerequisites and Setup
 
 See [../docs/supabase_setup.md](../docs/supabase_setup.md) for the full Supabase walkthrough.

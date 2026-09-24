@@ -102,7 +102,7 @@ Three rules hold throughout:
 |-------|------------|
 | Frontend | HTML, CSS and vanilla JavaScript modules; no build step, no third-party scripts |
 | Backend | Node.js and Express 5 with raw parameterized SQL through `pg` |
-| Database | PostgreSQL hosted on Supabase (21 tables, 5 views) |
+| Database | PostgreSQL hosted on Supabase: 21 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
 | Auth and email | BCrypt password hashing, JSON Web Tokens, Nodemailer for password recovery |
 | Optional AI | Any OpenAI-compatible chat endpoint for the Saple Guide |
 | Research prototype | A standalone Python ML experiment in [`ml/`](ml/), not wired into the app |
@@ -120,6 +120,14 @@ Supabase PostgreSQL
 ```
 
 Supabase is used only as hosted PostgreSQL. The browser never connects to it directly and never receives database credentials, and authentication is handled by the Express backend, not Supabase Auth.
+
+Work the database does itself: `saple_set_updated_at()` with one `BEFORE UPDATE`
+trigger per table that has `updated_at`; `saple_company_insight_summary()`, which
+computes a company's approved-only statistics; and
+`saple_apply_application_decision()`, which applies one job-application decision
+to `job_applications` and `job_application_status_history` together. Every runtime
+write runs inside an explicit transaction. See
+[`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md).
 
 Security highlights:
 
@@ -172,6 +180,7 @@ The two integration commands run against the database in `DATABASE_URL`, so poin
 ## Documentation
 
 - [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md): entity-relationship diagram, generated from the schema
+- [`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md): the CSE216 checklist mapped to code, database objects, tests and a demonstration
 - [`docs/relational_schema.md`](docs/relational_schema.md): tables, constraints and status transitions
 - [`docs/supabase_setup.md`](docs/supabase_setup.md): database setup and migrations
 - [`docs/deployment.md`](docs/deployment.md): Supabase connection and Render hosting

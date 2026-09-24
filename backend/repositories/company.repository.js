@@ -173,6 +173,22 @@ async function findCompanyById(companyId) {
   return rows[0] || null;
 }
 
+// The public figures for one company come from the database function, so the
+// same aggregate rules apply wherever they are read from.
+//   SELECT * FROM saple_company_insight_summary($1);
+async function findCompanyInsightSummary(companyId) {
+  const rows = await executeQuery(`
+    SELECT company_id AS "companyId", review_count AS "reviewCount",
+      average_rating AS "averageRating",
+      approved_salary_count AS "approvedSalaryCount",
+      minimum_salary AS "minimumSalary", maximum_salary AS "maximumSalary",
+      average_salary AS "averageSalary", interview_count AS "interviewCount",
+      open_job_count AS "openJobCount"
+    FROM saple_company_insight_summary($1)
+  `, [companyId]);
+  return rows[0] || null;
+}
+
 async function findBenefitsByCompanyId(companyId) {
   return executeQuery(`
     SELECT b.benefit_id AS "benefitId", b.benefit_name AS "benefitName",
@@ -213,6 +229,7 @@ const findCommunitySalarySummary = (companyId) =>
   findSalarySummary('COMMUNITY', companyId);
 
 module.exports = {
-  findAllCompanies, findCompanyFilterOptions, findCompanyById, findBenefitsByCompanyId,
+  findAllCompanies, findCompanyFilterOptions, findCompanyById, findCompanyInsightSummary,
+  findBenefitsByCompanyId,
   findVerifiedSalarySummary, findCommunitySalarySummary
 };

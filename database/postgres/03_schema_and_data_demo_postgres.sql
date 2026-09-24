@@ -275,3 +275,22 @@ FROM company_representatives cr
 JOIN users u ON u.user_id = cr.user_id
 WHERE cr.assignment_status = 'ACTIVE'
   AND (u.account_role <> 'COMPANY_REPRESENTATIVE' OR u.account_status <> 'ACTIVE');
+
+-- 27. CSE216 database objects: one trigger function, seven row-level
+--     timestamp triggers, one statistical function and one workflow procedure.
+SELECT p.proname AS object_name,
+  CASE p.prokind WHEN 'f' THEN 'function' WHEN 'p' THEN 'procedure' ELSE p.prokind::TEXT END AS object_kind
+FROM pg_proc p
+JOIN pg_namespace n ON n.oid = p.pronamespace
+WHERE n.nspname = 'public' AND p.proname LIKE 'saple@_%' ESCAPE '@'
+ORDER BY p.proname;
+
+SELECT c.relname AS table_name, t.tgname AS trigger_name
+FROM pg_trigger t
+JOIN pg_class c ON c.oid = t.tgrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE NOT t.tgisinternal AND n.nspname = 'public'
+ORDER BY c.relname, t.tgname;
+
+-- 28. The statistical function on the lowest company id present.
+SELECT * FROM saple_company_insight_summary((SELECT MIN(company_id) FROM companies));

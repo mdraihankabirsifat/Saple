@@ -1,5 +1,5 @@
 import { apiRequest } from './api.js';
-import { isAuthenticated } from './auth.js';
+import { requireSession } from './require-session.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination,
   formatDate, formatDateTime, formatSalaryRange, humanizeEnum, showToast, trapFocus
@@ -575,14 +575,15 @@ function wireTabs() {
 }
 
 async function start() {
-  if (!isAuthenticated()) {
-    showGate(
-      'Sign in required',
-      'The company workspace is only available to approved company representatives.',
-      el('a', { className: 'button button-primary', text: 'Sign in', attrs: { href: 'login.html?returnTo=representative.html' } })
-    );
-    return;
-  }
+  // The server confirms the session before any workspace request is made.
+  // An unauthenticated visitor is redirected; anyone else continues, and the
+  // representative scope itself is decided by the backend below.
+  const account = await requireSession({
+    returnTo: 'representative.html',
+    onError: (error) => showGate('The workspace could not be loaded', error.message,
+      el('a', { className: 'button button-secondary', text: 'Back to Saple', attrs: { href: 'index.html' } }))
+  });
+  if (!account) return;
 
   try {
     const data = await apiRequest('/api/representative/workspace', { auth: true });

@@ -41,7 +41,8 @@ test('migrations are numbered, ordered and each runs in one transaction', () => 
     '001_account_roles_and_company_representatives.sql',
     '002_jobs_and_applications.sql',
     '003_announcements_and_notifications.sql',
-    '004_public_job_views_and_grants.sql'
+    '004_public_job_views_and_grants.sql',
+    '005_cse216_final_database_features.sql'
   ]);
 
   for (const file of files) {
@@ -77,6 +78,52 @@ test('re-running a migration is harmless', () => {
   for (const statement of creates) {
     const guarded = /IF NOT EXISTS/.test(statement) || /CREATE OR REPLACE VIEW/.test(statement);
     assert.ok(guarded, statement.slice(0, 80));
+  }
+
+  // A routine or trigger is made repeatable by CREATE OR REPLACE, or by a
+  // DROP ... IF EXISTS immediately before it.
+  for (const statement of source.match(/CREATE (?:OR REPLACE )?(?:TRIGGER|FUNCTION|PROCEDURE) [\w.]+/g) || []) {
+    const name = statement.split(/\s+/).pop();
+    const guarded = /CREATE OR REPLACE/.test(statement)
+      || new RegExp(`DROP (?:TRIGGER|FUNCTION|PROCEDURE) IF EXISTS ${name}`).test(source);
+    assert.ok(guarded, statement);
+  }
+});
+
+test('migration 005 adds only database objects, never a table or a row', () => {
+  const source = read('database/postgres/migrations/005_cse216_final_database_features.sql');
+
+  assert.doesNotMatch(source, /CREATE TABLE|ALTER TABLE|DROP TABLE|TRUNCATE/i);
+
+  // The only DML in the file is inside the procedure body, where it belongs.
+  const beforeProcedure = source.slice(0, source.indexOf('CREATE PROCEDURE'));
+  const procedure = source.slice(source.indexOf('CREATE PROCEDURE'));
+  assert.doesNotMatch(beforeProcedure, /^\s*(INSERT INTO|DELETE FROM|UPDATE )/im);
+  assert.match(procedure, /UPDATE job_applications/);
+  assert.match(procedure, /INSERT INTO job_application_status_history/);
+  assert.doesNotMatch(procedure, /^\s*DELETE FROM/im);
+});
+
+test('the fresh schema and migration 005 declare the same trigger, function and procedure', () => {
+  const migration = read('database/postgres/migrations/005_cse216_final_database_features.sql');
+  const objects = [
+    /CREATE OR REPLACE FUNCTION saple_set_updated_at\(\)/,
+    /CREATE FUNCTION saple_company_insight_summary\(p_company_id BIGINT\)/,
+    /CREATE PROCEDURE saple_apply_application_decision\(/
+  ];
+  const triggeredTables = [
+    'users', 'companies', 'submissions', 'company_representatives',
+    'job_postings', 'job_applications', 'announcements'
+  ];
+
+  for (const source of [migration, schema]) {
+    for (const object of objects) assert.match(source, object, String(object));
+    for (const table of triggeredTables) {
+      assert.match(source, new RegExp(`CREATE TRIGGER trg_${table}_set_updated_at\\s*\\n\\s*BEFORE UPDATE ON ${table}`), table);
+    }
+    // The statistics function must stay STABLE and approved-only.
+    assert.match(source, /RETURNS TABLE \([\s\S]*?\)\s*LANGUAGE sql\s*STABLE/);
+    assert.equal((source.match(/submission_status = 'APPROVED'/g) || []).length >= 5, true);
   }
 });
 

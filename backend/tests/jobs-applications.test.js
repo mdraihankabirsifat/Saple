@@ -421,14 +421,16 @@ test('applicant A cannot read applicant B application', async () => {
   }
 });
 
-test('every application status change writes history and one applicant notification', async () => {
+test('every application status change calls the decision procedure and notifies the applicant once', async () => {
   const statements = [];
-  const client = mockClient(async (sql) => {
+  const parameters = [];
+  const client = mockClient(async (sql, values) => {
     statements.push(sql);
-    if (/FROM job_applications/.test(sql)) {
-      return { rows: [{ applicationId: 101, applicantUserId: 5, applicationStatus: 'SUBMITTED', title: 'Engineer', companyId: 1 }] };
+    parameters.push(values);
+    // The procedure returns the values the caller needs through INOUT parameters.
+    if (/CALL saple_apply_application_decision/.test(sql)) {
+      return { rows: [{ io_previous_status: 'SUBMITTED', io_history_id: 9, io_applicant_user_id: 5, io_job_title: 'Engineer' }] };
     }
-    if (/INSERT INTO job_application_status_history/.test(sql)) return { rows: [{ historyId: 9 }] };
     return { rows: [{ notificationId: 4 }] };
   });
   database.getClient = async () => client;
@@ -439,26 +441,51 @@ test('every application status change writes history and one applicant notificat
   });
 
   assert.equal(result.historyId, 9);
-  assert.equal(statements.filter((sql) => /INSERT INTO job_application_status_history/.test(sql)).length, 1);
+  assert.equal(result.previousStatus, 'SUBMITTED');
+  const calls = statements.filter((sql) => /CALL saple_apply_application_decision/.test(sql));
+  assert.equal(calls.length, 1);
+  // The allowed transitions are a bound parameter, never inlined SQL.
+  assert.deepEqual(parameters[statements.indexOf(calls[0])], [101, 30, 'SHORTLISTED', 'Strong coursework', ['SUBMITTED'], true]);
   assert.equal(statements.filter((sql) => /INSERT INTO notifications/.test(sql)).length, 1);
+  // The CALL carries no COMMIT of its own: the backend owns the transaction,
+  // which mockClient counts on the next line.
+  assert.doesNotMatch(calls[0], /COMMIT/);
   assert.deepEqual(client.state, { commits: 1, rollbacks: 0, releases: 1 });
 });
 
-test('a failed history write rolls back the application status change', async () => {
-  let execution = 0;
-  const client = mockClient(async () => {
-    execution += 1;
-    if (execution === 1) {
-      return { rows: [{ applicationId: 101, applicantUserId: 5, applicationStatus: 'SUBMITTED', title: 'Engineer', companyId: 1 }] };
+test('the procedure\'s own errors become the existing API errors, not SQL detail', async () => {
+  for (const [code, expected] of [['SA001', /Application not found/], ['SA002', /cannot make that transition/]]) {
+    const client = mockClient(async (sql) => {
+      if (/CALL saple_apply_application_decision/.test(sql)) {
+        const error = new Error('relation detail that must not leak');
+        error.code = code;
+        throw error;
+      }
+      return { rows: [] };
+    });
+    database.getClient = async () => client;
+
+    await assert.rejects(applicationRepository.changeApplicationStatus({
+      applicationId: 101, actorUserId: 30, newStatus: 'SHORTLISTED', note: null,
+      allowedPreviousStatuses: ['SUBMITTED'], isReviewerDecision: true
+    }), (error) => expected.test(error.message) && !/relation detail/.test(error.message), code);
+    assert.deepEqual(client.state, { commits: 0, rollbacks: 1, releases: 1 });
+  }
+});
+
+test('a failed notification write rolls back the whole decision', async () => {
+  const client = mockClient(async (sql) => {
+    if (/CALL saple_apply_application_decision/.test(sql)) {
+      return { rows: [{ io_previous_status: 'SUBMITTED', io_history_id: 9, io_applicant_user_id: 5, io_job_title: 'Engineer' }] };
     }
-    if (execution === 2) return { rowCount: 1, rows: [] };
-    throw new Error('history insert failed');
+    // The procedure's two writes are already done; this failure must undo them.
+    throw new Error('notification insert failed');
   });
   database.getClient = async () => client;
 
   await assert.rejects(applicationRepository.changeApplicationStatus({
     applicationId: 101, actorUserId: 30, newStatus: 'SHORTLISTED', note: null,
     allowedPreviousStatuses: ['SUBMITTED'], isReviewerDecision: true
-  }), /history insert failed/);
+  }), /notification insert failed/);
   assert.deepEqual(client.state, { commits: 0, rollbacks: 1, releases: 1 });
 });

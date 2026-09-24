@@ -59,10 +59,10 @@ async function updateWorkflowUser(userId, field, value) {
   };
   const column = columns[field];
   if (!column) throw new Error('Unsupported workflow user field');
-  await database.query(`
+  await database.withTransaction((client) => client.query(`
     UPDATE users SET ${column} = $1, updated_at = CURRENT_TIMESTAMP
     WHERE user_id = $2
-  `, [value, userId]);
+  `, [value, userId]));
 }
 
 const promoteUserToAdmin = (userId) => updateWorkflowUser(userId, 'role', 'ADMIN');

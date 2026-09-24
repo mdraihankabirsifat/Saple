@@ -67,10 +67,10 @@ async function findActiveVerifiedScopesByUserId(userId) {
 }
 
 async function updateFullName(userId, fullName) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE users SET full_name = $1, updated_at = CURRENT_TIMESTAMP
     WHERE user_id = $2 AND account_status = 'ACTIVE'
-  `, [fullName, userId]);
+  `, [fullName, userId]));
   return result.rowCount === 1;
 }
 
@@ -81,23 +81,26 @@ async function findPasswordHashById(userId) {
   `, [userId]);
 }
 
+// The new hash and the token-version bump that signs every other session out
+// are one statement inside one transaction: a session can never survive a
+// committed password change.
 async function updatePasswordHash(userId, passwordHash) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE users
     SET password_hash = $1, token_version = token_version + 1,
       updated_at = CURRENT_TIMESTAMP
     WHERE user_id = $2 AND account_status = 'ACTIVE'
-  `, [passwordHash, userId]);
+  `, [passwordHash, userId]));
   return result.rowCount === 1;
 }
 
 async function incrementTokenVersion(userId) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE users
     SET token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP
     WHERE user_id = $1 AND account_status = 'ACTIVE'
     RETURNING token_version AS "tokenVersion"
-  `, [userId]);
+  `, [userId]));
   return result.rows[0] || null;
 }
 

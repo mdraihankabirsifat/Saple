@@ -51,7 +51,7 @@ async function findAnnouncementById(announcementId) {
 }
 
 async function createAnnouncement(input) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     INSERT INTO announcements (
       title, message, severity, is_dismissible, is_active, starts_at, ends_at, created_by
     ) VALUES ($1, $2, $3, $4, $5, COALESCE($6, CURRENT_TIMESTAMP), $7, $8)
@@ -59,12 +59,12 @@ async function createAnnouncement(input) {
   `, [
     input.title, input.message, input.severity, input.isDismissible,
     input.isActive, input.startsAt, input.endsAt, input.createdBy
-  ]);
+  ]));
   return { announcementId: result.rows[0].announcementId };
 }
 
 async function updateAnnouncement(announcementId, input) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE announcements SET
       title = $1, message = $2, severity = $3, is_dismissible = $4,
       is_active = $5, starts_at = COALESCE($6, starts_at), ends_at = $7,
@@ -74,16 +74,16 @@ async function updateAnnouncement(announcementId, input) {
   `, [
     input.title, input.message, input.severity, input.isDismissible,
     input.isActive, input.startsAt, input.endsAt, announcementId
-  ]);
+  ]));
   return result.rows[0] || null;
 }
 
 async function setAnnouncementActive(announcementId, isActive) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE announcements SET is_active = $1, updated_at = CURRENT_TIMESTAMP
     WHERE announcement_id = $2
     RETURNING announcement_id AS "announcementId", is_active AS "isActive"
-  `, [isActive, announcementId]);
+  `, [isActive, announcementId]));
   return result.rows[0] || null;
 }
 

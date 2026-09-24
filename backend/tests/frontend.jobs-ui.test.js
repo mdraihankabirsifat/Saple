@@ -288,8 +288,9 @@ test('admin oversight starts only after its tab state is declared', () => {
   const source = read('js/admin-oversight.js');
   // Calling startOversight() before these const declarations threw a
   // ReferenceError, so the oversight tabs never loaded.
-  const start = source.lastIndexOf('if (root && tabList) startOversight();');
+  const start = source.lastIndexOf('if (root && tabList) startOversight()');
   assert.ok(start > source.indexOf('const LOADERS = {'), 'start runs after LOADERS');
   assert.ok(start > source.indexOf('const loaded = new Set();'), 'start runs after loaded');
-  assert.equal(source.split('startOversight();').length - 1, 1, 'started exactly once');
+  const invocations = source.match(/^if \(root && tabList\) startOversight\(\)/gm) || [];
+  assert.equal(invocations.length, 1, 'started exactly once');
 });

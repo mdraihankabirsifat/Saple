@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v3';
+const SHELL_CACHE = 'saple-shell-v4';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -36,6 +36,7 @@ const PRIVATE_PATHS = [
   'js/profile.js', 'js/admin.js', 'js/representative.js', 'js/my-applications.js',
   'js/notifications.js', 'js/verification.js', 'js/submit-salary.js', 'js/review.js',
   'js/interview.js', 'js/representative-request.js', 'js/admin-oversight.js',
+  'js/require-session.js',
   'css/admin.css', 'css/workspace.css'
 ].map((file) => new URL(file, self.registration.scope).href);
 

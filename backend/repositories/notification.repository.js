@@ -76,11 +76,11 @@ async function countUnread(userId) {
 }
 
 async function markOneRead(userId, notificationId) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE notifications SET read_at = CURRENT_TIMESTAMP
     WHERE notification_id = $1 AND user_id = $2 AND read_at IS NULL
     RETURNING notification_id AS "notificationId"
-  `, [notificationId, userId]);
+  `, [notificationId, userId]));
 
   if (result.rowCount === 1) return { updated: true };
 
@@ -94,10 +94,10 @@ async function markOneRead(userId, notificationId) {
 }
 
 async function markAllRead(userId) {
-  const result = await database.query(`
+  const result = await database.withTransaction((client) => client.query(`
     UPDATE notifications SET read_at = CURRENT_TIMESTAMP
     WHERE user_id = $1 AND read_at IS NULL
-  `, [userId]);
+  `, [userId]));
   return { updatedCount: result.rowCount };
 }
 

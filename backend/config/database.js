@@ -68,6 +68,38 @@ async function getClient() {
   return requirePool().connect();
 }
 
+// Every runtime INSERT, UPDATE and DELETE runs inside an explicit transaction,
+// including the single-statement ones: BEGIN, the caller's work, then COMMIT,
+// or ROLLBACK if anything throws. The client is always released.
+//
+// Pass an existing client (from a caller that already opened a transaction)
+// and the work simply joins it: no nested BEGIN, one COMMIT at the outer
+// level, so related writes and their notifications still commit together.
+async function withTransaction(work, existingClient = null) {
+  if (existingClient) return work(existingClient);
+
+  // Through module.exports so a test can substitute getClient, the same seam
+  // the repository tests already use.
+  const client = await module.exports.getClient();
+  try {
+    await client.query('BEGIN');
+    const result = await work(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    // A failed ROLLBACK (a dropped connection, say) must not hide the original
+    // error, which is the one the caller needs to see.
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      console.error('Rollback failed after a transaction error:', rollbackError.message);
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function closePool() {
   if (!pool) return;
   await pool.end();
@@ -75,4 +107,4 @@ async function closePool() {
   console.log('Database pool closed.');
 }
 
-module.exports = { initializePool, query, getClient, closePool };
+module.exports = { initializePool, query, getClient, withTransaction, closePool };

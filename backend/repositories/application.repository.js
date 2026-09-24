@@ -216,6 +216,16 @@ async function createApplication({ jobId, applicantUserId, coverLetter }) {
 }
 
 // One transaction: application row, immutable history and applicant notice.
+const PROCEDURE_ERRORS = Object.freeze({
+  SA001: ['APPLICATION_NOT_FOUND', 'Application not found'],
+  SA002: ['INVALID_TRANSITION', 'This application cannot make that transition']
+});
+
+function translateDecisionError(error) {
+  const known = PROCEDURE_ERRORS[error?.code];
+  return known ? repositoryError(known[0], known[1]) : error;
+}
+
 async function changeApplicationStatus({
   applicationId, actorUserId, newStatus, note, allowedPreviousStatuses, isReviewerDecision
 }) {
@@ -223,43 +233,28 @@ async function changeApplicationStatus({
 
   try {
     await client.query('BEGIN');
-    const currentResult = await client.query(`
-      SELECT ja.application_id AS "applicationId",
-        ja.applicant_user_id AS "applicantUserId",
-        ja.application_status AS "applicationStatus",
-        jp.title, jp.company_id AS "companyId"
-      FROM job_applications ja
-      JOIN job_postings jp ON jp.job_id = ja.job_id
-      WHERE ja.application_id = $1
-      FOR UPDATE OF ja
-    `, [applicationId]);
-    const current = currentResult.rows[0];
-    if (!current) throw repositoryError('APPLICATION_NOT_FOUND', 'Application not found');
-    if (!allowedPreviousStatuses.includes(current.applicationStatus)) {
-      throw repositoryError('INVALID_TRANSITION', 'This application cannot make that transition');
-    }
 
-    await client.query(`
-      UPDATE job_applications SET
-        application_status = $1::varchar,
-        reviewed_by = CASE WHEN $2::boolean THEN $3::bigint ELSE NULL END,
-        reviewed_at = CASE WHEN $2::boolean THEN CURRENT_TIMESTAMP ELSE NULL END,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE application_id = $4
-    `, [newStatus, Boolean(isReviewerDecision), actorUserId, applicationId]);
-
-    const historyResult = await client.query(`
-      INSERT INTO job_application_status_history (
-        application_id, actor_user_id, previous_status, new_status, action_note
-      ) VALUES ($1, $2, $3, $4, $5)
-      RETURNING history_id AS "historyId"
-    `, [applicationId, actorUserId, current.applicationStatus, newStatus, note]);
+    // One CALL does the two-table part of the decision: it locks the
+    // application row, rejects a transition the caller's role may not make,
+    // updates job_applications and writes job_application_status_history.
+    // The procedure never commits, so the notification below still belongs to
+    // this transaction.
+    const decision = await client.query(`
+      CALL saple_apply_application_decision(
+        $1::bigint, $2::bigint, $3::varchar, $4::text, $5::varchar[], $6::boolean,
+        NULL, NULL, NULL, NULL
+      )
+    `, [
+      applicationId, actorUserId, newStatus, note ?? null,
+      allowedPreviousStatuses, Boolean(isReviewerDecision)
+    ]);
+    const current = decision.rows[0];
 
     // The applicant is always told, including when they withdrew themselves,
     // so their own history stays complete. Internal notes are never included.
-    const safeTitle = String(current.title).replace(/[<>]/g, '');
+    const safeTitle = String(current.io_job_title).replace(/[<>]/g, '');
     await insertNotification(client, {
-      userId: current.applicantUserId,
+      userId: current.io_applicant_user_id,
       notificationType: 'APPLICATION_STATUS',
       title: 'Application status updated',
       message: `Your application for ${safeTitle} is now ${newStatus}.`,
@@ -270,13 +265,13 @@ async function changeApplicationStatus({
     await client.query('COMMIT');
     return {
       applicationId,
-      previousStatus: current.applicationStatus,
+      previousStatus: current.io_previous_status,
       applicationStatus: newStatus,
-      historyId: historyResult.rows[0].historyId
+      historyId: current.io_history_id
     };
   } catch (error) {
     await client.query('ROLLBACK');
-    throw error;
+    throw translateDecisionError(error);
   } finally {
     client.release();
   }

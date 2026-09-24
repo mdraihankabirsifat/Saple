@@ -1,5 +1,5 @@
 import { apiRequest } from './api.js';
-import { isAuthenticated } from './auth.js';
+import { requireSession } from './require-session.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination,
   formatDate, formatDateTime, humanizeEnum, showToast, trapFocus
@@ -507,8 +507,9 @@ function selectTab(name) {
   }
 }
 
-function startOversight() {
-  if (!isAuthenticated()) return;
+async function startOversight() {
+  const account = await requireSession({ returnTo: 'admin.html', roles: ['ADMIN'] });
+  if (!account) return;
 
   tabList.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-tab]');
@@ -544,4 +545,4 @@ function startOversight() {
 
 // Started last: startOversight() reads LOADERS and loaded, which do not exist
 // until the declarations above have run.
-if (root && tabList) startOversight();
+if (root && tabList) startOversight().catch(() => { /* The page already shows its own access state. */ });
