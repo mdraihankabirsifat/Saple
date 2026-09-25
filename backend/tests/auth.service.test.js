@@ -12,8 +12,6 @@ const originalMethods = {
   findActiveVerifiedScopesByUserId: userRepository.findActiveVerifiedScopesByUserId,
   createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee,
   updateFullName: userRepository.updateFullName,
-  findPasswordHashById: userRepository.findPasswordHashById,
-  updatePasswordHash: userRepository.updatePasswordHash,
   incrementTokenVersion: userRepository.incrementTokenVersion,
   findSubmissionsByOwner: userRepository.findSubmissionsByOwner,
   findPrivateSubmissionById: userRepository.findPrivateSubmissionById
@@ -200,30 +198,27 @@ test('profile update permits only a normalized full name', async () => {
   );
 });
 
-test('password change requires the current password and stores only a new hash', async () => {
-  const currentHash = await bcrypt.hash('current1', 4);
-  let storedHash;
-  userRepository.findPasswordHashById = async () => ({
-    passwordHash: currentHash,
-    accountStatus: 'ACTIVE'
-  });
-  userRepository.updatePasswordHash = async (userId, passwordHash) => {
-    assert.equal(userId, 8);
-    storedHash = passwordHash;
-    return true;
-  };
+test('there is no signed-in password change anywhere in the backend', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const backend = path.resolve(__dirname, '..');
 
-  await assert.rejects(
-    authService.changePassword(8, { currentPassword: 'wrong1', newPassword: 'changed1' }),
-    (error) => error.statusCode === 400 && /incorrect/.test(error.message)
-  );
-  const result = await authService.changePassword(8, {
-    currentPassword: 'current1',
-    newPassword: 'changed1'
-  });
-  assert.equal(result.passwordChanged, true);
-  assert.notEqual(storedHash, 'changed1');
-  assert.equal(await bcrypt.compare('changed1', storedHash), true);
+  // A signed-in page asking for the current password is exactly the pattern a
+  // phishing classifier looks for, so the whole surface was removed: only the
+  // emailed single-use reset can set a new password.
+  assert.equal(typeof authService.changePassword, 'undefined');
+  assert.equal(typeof userRepository.updatePasswordHash, 'undefined');
+  assert.equal(typeof userRepository.findPasswordHashById, 'undefined');
+
+  for (const file of ['routes/auth.routes.js', 'controllers/auth.controller.js', 'services/auth.service.js']) {
+    const source = fs.readFileSync(path.join(backend, file), 'utf8');
+    assert.doesNotMatch(source, /me\/password/, file);
+    assert.doesNotMatch(source, /currentPassword/, file);
+  }
+
+  // The reset path still writes a hash, in its own transaction.
+  const resetRepository = fs.readFileSync(path.join(backend, 'repositories/password-reset.repository.js'), 'utf8');
+  assert.match(resetRepository, /SET password_hash = \$1, token_version = token_version \+ 1/);
 });
 
 test('logout increments the database token version', async () => {

@@ -1597,6 +1597,78 @@ a.notification-title:hover {
   display: none;
 }
 
+
+/* Saple Guide status and answer provenance -----------------------------------
+   The panel always says where an answer came from: the online provider, a
+   Saple safety rule, or the built-in help that answers when the provider is
+   off, unconfigured or failing. */
+.guide-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.guide-status {
+  padding: 0.1rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.guide-status::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.guide-status[data-state="online"] {
+  color: var(--success);
+  border-color: var(--success-border);
+  background: var(--success-surface);
+}
+
+.guide-status[data-state="offline"] {
+  color: var(--warning);
+  border-color: var(--warning);
+  background: var(--warning-surface);
+}
+
+.guide-status[data-state="working"] {
+  color: var(--saple-green-700);
+  border-color: var(--border-hover);
+  background: var(--saple-green-50);
+}
+
+.guide-source {
+  justify-self: start;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.3rem;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.guide-source-online { color: var(--success); background: var(--success-surface); }
+.guide-source-offline { color: var(--warning); background: var(--warning-surface); }
+.guide-source-policy { color: var(--text-secondary); background: var(--surface-muted); }
+
+.guide-retry {
+  justify-self: start;
+  margin-top: 0.35rem;
+}
+
 /* Loading, empty and error states ---------------------------------------- */
 
 .skeleton {

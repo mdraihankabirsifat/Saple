@@ -109,7 +109,6 @@ test('withTransaction joins an existing transaction instead of nesting a new one
 
 const SINGLE_STATEMENT_WRITES = [
   ['users.updateFullName', () => userRepository.updateFullName(7, 'Synthetic Name'), /UPDATE users/],
-  ['users.updatePasswordHash', () => userRepository.updatePasswordHash(7, 'synthetic-hash'), /UPDATE users[\s\S]*token_version \+ 1/],
   ['users.incrementTokenVersion', () => userRepository.incrementTokenVersion(7), /token_version \+ 1/],
   ['announcements.createAnnouncement', () => announcementRepository.createAnnouncement({
     title: 'Synthetic', message: 'Synthetic', severity: 'INFO', isDismissible: true,

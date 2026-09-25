@@ -1,39 +1,7 @@
 const securityConfig = require('../config/security');
-
-// Pages that are safe for a search engine to crawl and index. Everything that
-// requires a session, or that shows another person's data, is excluded.
-const PUBLIC_PAGES = Object.freeze([
-  { path: '/', changefreq: 'weekly', priority: '1.0' },
-  { path: '/companies.html', changefreq: 'daily', priority: '0.9' },
-  { path: '/jobs.html', changefreq: 'daily', priority: '0.9' },
-  { path: '/salaries.html', changefreq: 'daily', priority: '0.8' },
-  { path: '/reviews.html', changefreq: 'daily', priority: '0.8' },
-  { path: '/interviews.html', changefreq: 'daily', priority: '0.8' },
-  { path: '/about.html', changefreq: 'monthly', priority: '0.6' },
-  { path: '/faq.html', changefreq: 'monthly', priority: '0.6' },
-  { path: '/privacy.html', changefreq: 'yearly', priority: '0.4' },
-  { path: '/terms.html', changefreq: 'yearly', priority: '0.4' },
-  { path: '/security.html', changefreq: 'yearly', priority: '0.4' },
-  { path: '/contact.html', changefreq: 'yearly', priority: '0.4' }
-]);
-
-// Paths a crawler should never follow: account flows, private workspaces and
-// the whole API surface.
-const DISALLOWED_PATHS = Object.freeze([
-  '/api/',
-  '/admin.html',
-  '/representative.html',
-  '/profile.html',
-  '/my-applications.html',
-  '/login.html',
-  '/register.html',
-  '/forgot-password.html',
-  '/reset-password.html',
-  '/employee-verification.html',
-  '/submit-salary.html',
-  '/submit-review.html',
-  '/interview-experience.html'
-]);
+// robots.txt, sitemap.xml, the X-Robots-Tag header and the page tests all read
+// the same classification, so they cannot disagree about what is public.
+const { PUBLIC_PAGES, DISALLOWED_PATHS } = require('../config/pages');
 
 // The site's own origin, taken from the request that asked for the file, so
 // robots.txt and sitemap.xml are correct on localhost and on any new domain

@@ -74,25 +74,9 @@ async function updateFullName(userId, fullName) {
   return result.rowCount === 1;
 }
 
-async function findPasswordHashById(userId) {
-  return executeSingleRow(`
-    SELECT password_hash AS "passwordHash", account_status AS "accountStatus"
-    FROM users WHERE user_id = $1
-  `, [userId]);
-}
-
-// The new hash and the token-version bump that signs every other session out
-// are one statement inside one transaction: a session can never survive a
-// committed password change.
-async function updatePasswordHash(userId, passwordHash) {
-  const result = await database.withTransaction((client) => client.query(`
-    UPDATE users
-    SET password_hash = $1, token_version = token_version + 1,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE user_id = $2 AND account_status = 'ACTIVE'
-  `, [passwordHash, userId]));
-  return result.rowCount === 1;
-}
+// A password hash is written in exactly one place: the reset flow in
+// password-reset.repository.js, which consumes the emailed single-use token and
+// raises token_version in the same transaction.
 
 async function incrementTokenVersion(userId) {
   const result = await database.withTransaction((client) => client.query(`
@@ -174,7 +158,7 @@ async function findPrivateSubmissionById(submissionId) {
 
 module.exports = {
   findUserByEmail, findUserForPasswordResetByEmail, findSafeUserById, findAuthorizationById,
-  findActiveVerifiedScopesByUserId, updateFullName, findPasswordHashById, updatePasswordHash,
+  findActiveVerifiedScopesByUserId, updateFullName,
   incrementTokenVersion, createUserWithOptionalEmployee, findSubmissionsByOwner,
   findPrivateSubmissionById
 };

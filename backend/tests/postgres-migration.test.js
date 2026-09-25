@@ -40,10 +40,14 @@ test('active repositories use pg parameters and contain no Oracle runtime import
   assert.equal(packageJson.dependencies.oracledb, undefined);
 });
 
-test('password changes and resets increment token_version in the same SQL update', () => {
+test('the only password write is the reset, and it increments token_version in the same update', () => {
   const users = read('backend/repositories/user.repository.js');
   const reset = read('backend/repositories/password-reset.repository.js');
-  assert.match(users, /SET password_hash = \$1, token_version = token_version \+ 1/);
+
+  // The signed-in password change was removed: a page that asks a logged-in
+  // visitor for their current password is the pattern Safe Browsing objects
+  // to. Only the emailed single-use reset writes a hash now.
+  assert.doesNotMatch(users, /password_hash = /);
   assert.match(reset, /SET password_hash = \$1, token_version = token_version \+ 1/);
 });
 

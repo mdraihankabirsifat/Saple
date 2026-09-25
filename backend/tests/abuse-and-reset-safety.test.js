@@ -74,9 +74,19 @@ test('the reset link base must be a credential-free HTTP(S) URL', () => {
   assert.throws(() => mailConfig.getFrontendUrl(), /FRONTEND_URL is required/);
 });
 
+// Synthetic mailer settings, assembled at run time. Recovery checks that
+// delivery is configured before it looks an account up.
+const syntheticSmtp = {
+  SMTP_HOST: 'smtp.example.test',
+  SMTP_USER: ['synthetic', 'smtp', 'login'].join('-'),
+  SMTP_PASS: ['synthetic', 'smtp', 'value'].join('-'),
+  SMTP_FROM: 'Saple <no-reply@example.test>'
+};
+
 test('the emailed link points at reset-password.html on the configured origin only', async () => {
   delete process.env.RENDER;
   process.env.FRONTEND_URL = 'https://saple.example.test/';
+  Object.assign(process.env, syntheticSmtp);
   let delivered;
   userRepository.findUserForPasswordResetByEmail = async (email) => ({
     userId: 8, fullName: 'Test Person', email, accountStatus: 'ACTIVE'

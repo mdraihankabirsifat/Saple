@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="Sign in to Saple.">
   <title>Sign in | Saple</title>
   <script src="js/theme.js"></script>
@@ -44,19 +45,42 @@
 
   <main class="auth-main">
     <div class="auth-layout container">
-      <section class="auth-intro" aria-labelledby="auth-intro-heading">
+      <section class="auth-intro auth-intro-botanical" aria-labelledby="auth-intro-heading">
         <p class="eyebrow">Welcome back</p>
         <h1 id="auth-intro-heading">Continue building clearer career context.</h1>
         <p>Sign in to contribute through Saple's moderated workflows.</p>
         <ul class="auth-points">
           <li>Your public identity can remain anonymous</li>
           <li>Submission ownership stays available to moderators</li>
-          <li>Your password is sent only to the authentication API</li>
+          <li>Your password is sent only to Saple's own authentication API</li>
         </ul>
+        <figure class="auth-scene">
+          <svg class="auth-scene-art" viewBox="0 0 320 220" role="img"
+            aria-label="Illustration of a potted plant and a notebook on a desk">
+            <ellipse class="scene-shadow" cx="160" cy="196" rx="120" ry="12" />
+            <rect class="scene-desk" x="16" y="188" width="288" height="8" rx="4" />
+            <g class="scene-notebook">
+              <rect x="150" y="150" width="128" height="40" rx="6" transform="rotate(-3 214 170)" />
+              <path class="scene-rule" d="M166 164 H256 M166 174 H238" transform="rotate(-3 214 170)" />
+            </g>
+            <g class="scene-mug">
+              <rect x="44" y="156" width="40" height="34" rx="8" />
+              <path class="scene-mug-handle" d="M84 166 q14 8 0 16" />
+            </g>
+            <g class="scene-plant">
+              <path class="scene-pot" d="M112 190 l6 -34 h52 l6 34 z" />
+              <path class="scene-stem" d="M144 156 C144 120 146 104 150 86" />
+              <path class="scene-leaf" d="M150 92 C128 84 116 66 120 50 C142 52 156 70 150 92 Z" />
+              <path class="scene-leaf" d="M150 104 C172 98 190 80 188 62 C166 66 148 84 150 104 Z" />
+              <path class="scene-leaf scene-leaf-small" d="M146 128 C130 126 118 114 118 102 C134 104 146 116 146 128 Z" />
+            </g>
+          </svg>
+          <figcaption class="sr-only">A small potted plant beside a notebook, drawn for Saple.</figcaption>
+        </figure>
       </section>
       <section class="auth-card card" aria-labelledby="login-heading">
-        <h2 id="login-heading">Sign in to Saple</h2>
-        <p>Enter your account details to continue.</p>
+        <h2 id="login-heading">Sign in to your Saple account</h2>
+        <p>Use the email address and password you created here on Saple.</p>
         <form id="login-form" class="auth-form" novalidate>
           <div class="form-group"><label for="login-email">Email <span class="required-mark"
                 aria-hidden="true">*</span></label><input id="login-email" name="email" type="email"

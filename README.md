@@ -1,5 +1,4 @@
 # 🌱 Saple
-
 [![CI](https://github.com/mdraihankabirsifat/Saple/actions/workflows/ci.yml/badge.svg)](https://github.com/mdraihankabirsifat/Saple/actions/workflows/ci.yml)
 
 **Saple is a company and career insights platform that shows salaries, reviews, interview experiences and jobs together with how far each piece of information can be trusted.**
@@ -79,7 +78,7 @@ More captures, including interview experiences, are in [`assets/screenshots/`](a
 - **Employee verification** for a specific company and role, decided by that company's representative, with administrators as fallback.
 - **Reports and moderation**: any signed-in user can report a contribution; administrators triage reports and record every decision.
 - **Notifications and announcements** for decisions, application updates and site-wide notices.
-- **Saple Guide** (optional AI): answers questions about using Saple through the backend, and falls back to a built-in knowledge base when no provider is configured.
+- **Saple Guide** (AI): questions about using Saple go through Saple's own backend to an OpenAI-compatible provider. When no provider is configured, or it times out or rate-limits, the panel answers from a built-in knowledge base and labels that answer "Built-in Saple help (not AI)" rather than passing it off as the model.
 
 ## Roles and Trust Model
 
@@ -103,8 +102,8 @@ Three rules hold throughout:
 | Frontend | HTML, CSS and vanilla JavaScript modules; no build step, no third-party scripts |
 | Backend | Node.js and Express 5 with raw parameterized SQL through `pg` |
 | Database | PostgreSQL hosted on Supabase: 21 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
-| Auth and email | BCrypt password hashing, JSON Web Tokens, Nodemailer for password recovery |
-| Optional AI | Any OpenAI-compatible chat endpoint for the Saple Guide |
+| Auth and email | BCrypt password hashing, JSON Web Tokens, Nodemailer for the emailed password reset |
+| AI (optional) | Any OpenAI-compatible chat endpoint for the Saple Guide; Groq's free tier is the documented default |
 | Research prototype | A standalone Python ML experiment in [`ml/`](ml/), not wired into the app |
 
 ## Architecture
@@ -134,8 +133,10 @@ Security highlights:
 - Every protected request reloads the account's status, role and company scopes from the database.
 - Pages load no third-party code and run under a self-only Content-Security-Policy; dynamic text is rendered with `textContent`, never as HTML.
 - Sign-in, recovery, reports, applications and the Saple Guide are rate-limited; reset links are single-use and stored only as hashes.
+- A password is entered on three pages only: sign in, register, and the reset page reached through an emailed single-use link. No signed-in page asks for a password, and `PATCH /api/auth/me/password` no longer exists.
+- Account, contribution and workspace pages are `noindex, nofollow` in both the HTML and the `X-Robots-Tag` header; the public directory stays indexable.
 
-Details are in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md).
+Details are in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md), and the current remediation status is in [`SECURITY_REMEDIATION_CHECKLIST.md`](SECURITY_REMEDIATION_CHECKLIST.md).
 
 ## Quick Start
 
@@ -175,11 +176,16 @@ npm run test:integration        # end-to-end workflows against a prepared databa
 npm run test:integration:jobs   # representatives, jobs, notifications, announcements
 ```
 
-The two integration commands run against the database in `DATABASE_URL`, so point them at a test or local database, not production. The ML prototype has its own tests: `python -m unittest discover -s tests` from `ml/`. CI runs the unit suite on every push.
+```bash
+npm run verify:database        # read-only: checks tables, views, triggers, function, procedure
+```
+
+The two integration commands run against the database in `DATABASE_URL`, so point them at a test or local database, not production. `verify:database` only reads, and is safe against any database. The ML prototype has its own tests: `python -m unittest discover -s tests` from `ml/`. CI runs the unit suite on every push.
 
 ## Documentation
 
 - [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md): entity-relationship diagram, generated from the schema
+- [`SECURITY_REMEDIATION_CHECKLIST.md`](SECURITY_REMEDIATION_CHECKLIST.md): what the code now enforces, and the manual steps only the owner can take
 - [`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md): the CSE216 checklist mapped to code, database objects, tests and a demonstration
 - [`docs/relational_schema.md`](docs/relational_schema.md): tables, constraints and status transitions
 - [`docs/supabase_setup.md`](docs/supabase_setup.md): database setup and migrations

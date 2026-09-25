@@ -18,7 +18,34 @@ let launcher = null;
 let transcript = null;
 let form = null;
 let input = null;
+let sendButton = null;
 let root = null;
+let statusPill = null;
+
+// What each answer actually came from. The guide never presents built-in help
+// as if a model had written it, and never hides that the provider failed.
+const SOURCE_LABELS = Object.freeze({
+  AI: { text: 'AI-assisted', tone: 'online' },
+  POLICY: { text: 'Saple safety rule', tone: 'policy' },
+  FALLBACK: { text: 'Built-in Saple help (not AI)', tone: 'offline' }
+});
+
+// Reasons the online guide did not answer. The first two are configuration
+// (there is nothing to retry); the rest are transient, so the reader is offered
+// another attempt.
+const OUTAGE_REASONS = Object.freeze({
+  DISABLED: { message: 'The online guide is switched off for this deployment.', retry: false },
+  NOT_CONFIGURED: { message: 'The online guide is not configured for this deployment.', retry: false },
+  TIMEOUT: { message: 'The online guide timed out.', retry: true },
+  AI_RATE_LIMITED: { message: 'The online guide has hit its rate limit.', retry: true },
+  AI_PROVIDER_ERROR: { message: 'The online guide is temporarily unavailable.', retry: true }
+});
+
+function setStatus(state, text) {
+  if (!statusPill) return;
+  statusPill.dataset.state = state;
+  statusPill.textContent = text;
+}
 
 function appendMessage(role, text) {
   const message = el('li', {
@@ -65,6 +92,8 @@ async function submitQuestion(event) {
 
   input.value = '';
   input.disabled = true;
+  sendButton.disabled = true;
+  setStatus('working', 'Asking…');
   const pending = appendMessage('assistant', 'Thinking…');
   pending.classList.add('is-pending');
 
@@ -76,11 +105,17 @@ async function submitQuestion(event) {
     pending.classList.remove('is-pending');
     pending.querySelector('.guide-text').textContent = result.answer;
 
-    if (result.source === 'FALLBACK') {
-      pending.append(el('span', {
-        className: 'guide-note',
-        text: 'Offline help mode: answered from Saple’s built-in guide rather than the AI provider.'
-      }));
+    const label = SOURCE_LABELS[result.source] || SOURCE_LABELS.FALLBACK;
+    pending.dataset.source = result.source;
+    pending.append(el('span', { className: `guide-source guide-source-${label.tone}`, text: label.text }));
+
+    if (result.source === 'AI') {
+      setStatus('online', 'Online');
+    } else if (result.source === 'FALLBACK') {
+      const outage = OUTAGE_REASONS[result.reason] || OUTAGE_REASONS.AI_PROVIDER_ERROR;
+      setStatus('offline', outage.retry ? 'Online guide unavailable' : 'Built-in help');
+      pending.append(el('span', { className: 'guide-note', text: `${outage.message} This answer comes from Saple's built-in help.` }));
+      if (outage.retry) pending.append(retryButton(question, pending));
     }
     conversation.push({ role: 'assistant', content: result.answer });
   } catch (error) {
@@ -89,23 +124,32 @@ async function submitQuestion(event) {
     pending.querySelector('.guide-text').textContent = error.kind === 'RATE_LIMITED'
       ? 'The guide is busy right now. Please wait a moment and ask again.'
       : 'The guide could not answer just now. Please try again.';
-    const retry = el('button', {
-      className: 'button button-secondary button-small',
-      text: 'Try again',
-      attrs: { type: 'button' }
-    });
-    retry.addEventListener('click', () => {
-      input.value = question;
-      pending.remove();
-      conversation.pop();
-      form.requestSubmit();
-    });
-    pending.append(retry);
+    setStatus('offline', 'Online guide unavailable');
+    pending.append(retryButton(question, pending));
     conversation.pop();
   } finally {
     input.disabled = false;
+    sendButton.disabled = false;
     input.focus();
   }
+}
+
+// Re-asks the same question. The failed exchange is removed first so the
+// conversation the provider sees stays consistent.
+function retryButton(question, message) {
+  const retry = el('button', {
+    className: 'button button-secondary button-small guide-retry',
+    text: 'Try the online guide again',
+    attrs: { type: 'button' }
+  });
+  retry.addEventListener('click', () => {
+    input.value = question;
+    message.remove();
+    if (conversation[conversation.length - 1]?.role === 'assistant') conversation.pop();
+    if (conversation[conversation.length - 1]?.role === 'user') conversation.pop();
+    form.requestSubmit();
+  });
+  return retry;
 }
 
 function closePanel() {
@@ -127,6 +171,15 @@ function openPanel() {
 }
 
 function buildPanel() {
+  // A live region: a screen reader hears "Asking…", then whether the answer
+  // came from the online guide or from built-in help.
+  statusPill = el('span', {
+    className: 'guide-status',
+    attrs: { 'aria-live': 'polite', 'aria-atomic': 'true' },
+    dataset: { state: status?.aiEnabled ? 'online' : 'offline' }
+  });
+  statusPill.textContent = status?.aiEnabled ? 'Online' : 'Built-in help';
+
   transcript = el('ul', {
     className: 'guide-transcript',
     attrs: { 'aria-live': 'polite', 'aria-label': 'Conversation with the Saple Guide' }
@@ -143,7 +196,8 @@ function buildPanel() {
     }
   });
 
-  const send = el('button', { className: 'button button-primary button-small guide-send', text: 'Send', attrs: { type: 'submit' } });
+  sendButton = el('button', { className: 'button button-primary button-small guide-send', text: 'Send', attrs: { type: 'submit' } });
+  const send = sendButton;
   form = el('form', { className: 'guide-form' }, [
     el('label', { className: 'sr-only', text: 'Ask the Saple Guide', attrs: { for: 'guide-question' } }),
     input,
@@ -182,7 +236,10 @@ function buildPanel() {
   }, [
     el('div', { className: 'guide-head' }, [
       el('div', {}, [
-        el('h2', { className: 'guide-heading', text: status?.label || 'Saple Guide (AI-assisted)' }),
+        el('div', { className: 'guide-heading-row' }, [
+          el('h2', { className: 'guide-heading', text: status?.label || 'Saple Guide (AI-assisted)' }),
+          statusPill
+        ]),
         el('p', {
           className: 'guide-scope',
           text: 'Helps with using Saple only. It cannot see your account or make changes.'

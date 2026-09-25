@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="View and update your Saple account.">
   <title>Profile | Saple</title>
   <script src="js/theme.js"></script>
@@ -83,16 +84,12 @@
           </dl>
         </section>
         <section class="profile-card card">
-          <h2>Change password</h2>
-          <p>Your current password is required. The new password uses the existing BCrypt policy.</p>
-          <form id="password-form">
-            <div class="form-group"><label for="current-password">Current password</label><input id="current-password"
-                type="password" autocomplete="current-password" required></div>
-            <div class="form-group"><label for="new-password">New password</label><input id="new-password"
-                type="password" autocomplete="new-password" minlength="8" maxlength="72" required></div>
-            <div class="form-actions"><button class="button button-primary" type="submit">Change password</button></div>
-          </form>
-          <p id="password-status" class="state-message form-status" role="status" hidden></p>
+          <h2>Password and sign-in</h2>
+          <p>Saple never asks for a password anywhere except the sign-in page. To change yours, request a reset
+            and Saple emails a temporary, single-use link to your account address.</p>
+          <p class="form-actions"><a class="button button-secondary" href="forgot-password.html">Email me a reset
+              link</a></p>
+          <p class="profile-note">Resetting your password signs every other device out of your Saple account.</p>
         </section>
         <section class="profile-card card">
           <h2>Verified employment scopes</h2>

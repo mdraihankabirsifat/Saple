@@ -87,3 +87,80 @@
   .register-main .auth-card { padding: 1.25rem; }
   .register-main .choice-card { font-size: 0.95rem; }
 }
+
+/* Sign-in: a calm botanical desk scene ---------------------------------------
+   Original inline SVG and CSS only: no photograph, no remote asset, nothing
+   traced from another product. Colours come from the shared tokens, so the
+   scene works in both themes. */
+.auth-intro-botanical {
+  display: grid;
+  gap: 1.1rem;
+  align-content: center;
+}
+
+.auth-scene {
+  margin: 0.5rem 0 0;
+  max-width: 420px;
+}
+
+.auth-scene-art {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.scene-shadow { fill: var(--saple-green-100); opacity: 0.55; }
+.scene-desk { fill: var(--saple-green-200, var(--saple-green-100)); }
+.scene-notebook rect { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+.scene-rule { stroke: var(--border-hover); stroke-width: 2; stroke-linecap: round; fill: none; }
+.scene-mug rect { fill: var(--surface); stroke: var(--saple-green-600); stroke-width: 2; }
+.scene-mug-handle { fill: none; stroke: var(--saple-green-600); stroke-width: 2; stroke-linecap: round; }
+.scene-pot { fill: var(--saple-green-600); }
+.scene-stem { fill: none; stroke: var(--saple-green-700); stroke-width: 3; stroke-linecap: round; }
+.scene-leaf { fill: var(--saple-green-500); }
+.scene-leaf-small { fill: var(--saple-green-600); }
+
+/* One slow, small sway. It starts from the resting position, so the scene is
+   complete before it moves, and it stops entirely for reduced motion. */
+.scene-plant {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: auth-sway 9s ease-in-out infinite;
+}
+
+@keyframes auth-sway {
+  0%, 100% { transform: rotate(-0.6deg); }
+  50% { transform: rotate(0.6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-plant { animation: none; }
+}
+
+/* Softly bordered fields with a clear focus ring. */
+.auth-card .form-group input,
+.auth-card .form-group select {
+  border-radius: 0.55rem;
+  background: var(--control);
+  transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.auth-card .form-group input:focus-visible {
+  border-color: var(--saple-green-600);
+  box-shadow: 0 0 0 3px var(--saple-green-100);
+}
+
+.auth-card .auth-submit {
+  margin-top: 0.6rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  /* The form comes first on a phone; the scene follows the supporting text. */
+  .auth-scene { max-width: 320px; margin-inline: auto; }
+}
+
+@media (max-width: 600px) {
+  .auth-scene { display: none; }
+}

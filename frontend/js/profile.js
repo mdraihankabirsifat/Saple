@@ -4,9 +4,7 @@ import { getCurrentUser, isAuthenticated, setStoredUser } from './auth.js';
 const loadStatus = document.querySelector('#profile-load-status');
 const content = document.querySelector('#profile-content');
 const profileForm = document.querySelector('#profile-form');
-const passwordForm = document.querySelector('#password-form');
 const profileStatus = document.querySelector('#profile-status');
-const passwordStatus = document.querySelector('#password-status');
 const contributionsStatus = document.querySelector('#contributions-status');
 const contributionsList = document.querySelector('#contributions-list');
 
@@ -70,27 +68,6 @@ profileForm.addEventListener('submit', async (event) => {
     });
     setStoredUser(data.user); render(data.user); show(profileStatus, 'Profile updated successfully.', 'success');
   } catch (error) { show(profileStatus, error.message, 'error'); }
-  finally { button.disabled = false; }
-});
-
-passwordForm.addEventListener('submit', async (event) => {
-  event.preventDefault(); passwordStatus.hidden = true;
-  if (!passwordForm.checkValidity()) { passwordForm.reportValidity(); return; }
-  const button = passwordForm.querySelector('button'); button.disabled = true;
-  try {
-    await apiRequest('/api/auth/me/password', {
-      method: 'PATCH', auth: true,
-      body: {
-        currentPassword: document.querySelector('#current-password').value,
-        newPassword: document.querySelector('#new-password').value
-      }
-    });
-    passwordForm.reset();
-    show(passwordStatus, 'Password changed. Please sign in again.', 'success');
-    const { clearSession } = await import('./auth.js');
-    clearSession();
-    window.setTimeout(() => window.location.replace('login.html'), 800);
-  } catch (error) { show(passwordStatus, error.message, 'error'); }
   finally { button.disabled = false; }
 });
 

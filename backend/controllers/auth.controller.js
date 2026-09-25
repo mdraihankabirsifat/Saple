@@ -60,15 +60,6 @@ async function updateProfile(request, response, next) {
   }
 }
 
-async function changePassword(request, response, next) {
-  try {
-    const result = await authService.changePassword(request.user.userId, request.body);
-    return sendSuccess(response, 200, 'Password changed successfully', result);
-  } catch (error) {
-    return next(error);
-  }
-}
-
 async function logout(request, response, next) {
   try {
     const result = await authService.logout(request.user.userId);
@@ -106,7 +97,6 @@ module.exports = {
   resetPassword,
   getCurrentUser,
   updateProfile,
-  changePassword,
   logout,
   getOwnSubmissions,
   getOwnSubmission

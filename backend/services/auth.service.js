@@ -165,11 +165,16 @@ async function forgotPassword(input = {}) {
 
   if (!validateEmail(email)) throw createHttpError(400, 'A valid email address is required');
 
+  // Recovery readiness is decided before the account is looked up, and SMTP
+  // is part of readiness. Checking it later would answer an unknown address
+  // with the generic success while a real one hit a delivery error, which is
+  // exactly the difference an attacker needs to enumerate accounts.
   let expiresMinutes;
   let frontendUrl;
   try {
     expiresMinutes = mailConfig.getPasswordResetTokenTtlMinutes();
     frontendUrl = mailConfig.getFrontendUrl();
+    mailConfig.getSmtpConfig();
   } catch (error) {
     throw createHttpError(503, 'Password recovery is not configured. Please try again later.');
   }
@@ -198,7 +203,10 @@ async function forgotPassword(input = {}) {
             expiresMinutes
           });
         } catch (error) {
-          throw createHttpError(503, 'We could not send the password-reset email. Please try again later.');
+          // The same wording an unconfigured mailer produces, so a delivery
+          // failure still tells a caller nothing about whether the address
+          // belongs to an account.
+          throw createHttpError(503, 'Password recovery is not configured. Please try again later.');
         }
       }
     });
@@ -288,31 +296,9 @@ async function updateProfile(userId, input = {}) {
   return getCurrentUser(userId);
 }
 
-async function changePassword(userId, input = {}) {
-  const currentPassword = input.currentPassword;
-  const newPassword = input.newPassword;
-  if (typeof currentPassword !== 'string' || currentPassword.length === 0) {
-    throw createHttpError(400, 'Current password is required');
-  }
-  if (!validatePassword(newPassword)) {
-    throw createHttpError(400, 'New password must contain 8 to 72 bytes, including a letter and a number');
-  }
-  const credentials = await userRepository.findPasswordHashById(userId);
-  if (!credentials || credentials.accountStatus !== 'ACTIVE') {
-    throw createHttpError(401, 'Authenticated account is unavailable');
-  }
-  if (!await bcrypt.compare(currentPassword, credentials.passwordHash)) {
-    throw createHttpError(400, 'Current password is incorrect');
-  }
-  if (await bcrypt.compare(newPassword, credentials.passwordHash)) {
-    throw createHttpError(400, 'New password must be different from the current password');
-  }
-  const passwordHash = await bcrypt.hash(newPassword, PASSWORD_SALT_ROUNDS);
-  if (!await userRepository.updatePasswordHash(userId, passwordHash)) {
-    throw createHttpError(401, 'Authenticated account is unavailable');
-  }
-  return { passwordChanged: true };
-}
+// Saple has no signed-in password change. A password is only ever entered on
+// the sign-in page, or on a reset page reached through a single-use emailed
+// link, so no page asks a signed-in visitor to type their current password.
 
 async function logout(userId) {
   if (!await userRepository.incrementTokenVersion(userId)) {
@@ -356,7 +342,6 @@ module.exports = {
   resetPassword,
   getCurrentUser,
   updateProfile,
-  changePassword,
   logout,
   getOwnSubmissions,
   getOwnSubmission

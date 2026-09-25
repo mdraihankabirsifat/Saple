@@ -36,7 +36,6 @@ router.get('/me', authenticate, authController.getCurrentUser);
 router.get('/me/submissions', authenticate, authController.getOwnSubmissions);
 router.get('/me/submissions/:submissionId', authenticate, authController.getOwnSubmission);
 router.patch('/me', authenticate, authController.updateProfile);
-router.patch('/me/password', authenticate, authController.changePassword);
 
 module.exports = router;
 module.exports.registerRateLimit = registerRateLimit;

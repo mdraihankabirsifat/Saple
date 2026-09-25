@@ -99,7 +99,8 @@ const TOPICS = Object.freeze([
     question: 'How do I manage my account?',
     answer: [
       'Create an account from Create account, and sign in from Sign in.',
-      'Your profile page lets you change your display name and your password.',
+      'Your profile page lets you change your display name. Saple never asks for a password',
+      'anywhere except the sign-in page, so there is no password field on the profile.',
       'If you forget your password, use the Forgot password link: Saple emails a single-use link',
       'that expires after a short time and signs out your other sessions once used.'
     ].join(' ')

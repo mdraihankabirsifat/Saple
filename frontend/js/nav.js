@@ -90,7 +90,7 @@ const ACCOUNT_SURFACES = {
   'login.html': 'Sign in with your Saple account only. Saple is an independent BUET CSE academic project and never asks for a company, Google, Microsoft or email-provider password.',
   'register.html': 'You are creating a Saple account only. Saple is an independent BUET CSE academic project, not a company careers or login service, and never asks for a company, Google, Microsoft or email-provider password.',
   'forgot-password.html': 'This resets a Saple account only. Saple emails a single-use link and never asks for your password, or for a company, Google, Microsoft or email-provider password.',
-  'reset-password.html': 'You are choosing a new password for your Saple account only. Never reuse a company, Google, Microsoft or email-provider password here.',
+  'reset-password.html': 'You are setting a new password for your Saple account only. Saple is an independent BUET CSE academic project, and never asks for a company, Google, Microsoft or email-provider password.',
   'employee-verification.html': 'Verification is reviewed inside Saple, an independent academic project. Never enter your company email password or any login credentials here.',
   'job-details.html': 'Applications go to the approved representatives of this company inside Saple. Saple is not the company\u2019s official careers site.',
   'representative.html': 'This workspace is part of Saple, an independent BUET CSE academic project. It is not an official system of any company.'

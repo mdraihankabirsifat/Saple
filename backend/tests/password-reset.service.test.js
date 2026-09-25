@@ -17,9 +17,26 @@ const originals = {
   jwtSecret: process.env.JWT_SECRET
 };
 
+const SMTP_VARIABLES = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
+const savedSmtp = Object.fromEntries(SMTP_VARIABLES.map((name) => [name, process.env[name]]));
+const syntheticSmtp = {
+  SMTP_HOST: 'smtp.example.test',
+  SMTP_USER: ['synthetic', 'smtp', 'login'].join('-'),
+  SMTP_PASS: ['synthetic', 'smtp', 'value'].join('-'),
+  SMTP_FROM: 'Saple <no-reply@example.test>'
+};
+
+function restoreSmtp() {
+  for (const name of SMTP_VARIABLES) {
+    if (savedSmtp[name] === undefined) delete process.env[name];
+    else process.env[name] = savedSmtp[name];
+  }
+}
+
 test.beforeEach(() => {
   process.env.FRONTEND_URL = 'http://localhost:5500/';
   process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES = '15';
+  Object.assign(process.env, syntheticSmtp);
 });
 
 test.afterEach(() => {
@@ -34,6 +51,7 @@ test.afterEach(() => {
   else process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES = originals.ttl;
   if (originals.jwtSecret === undefined) delete process.env.JWT_SECRET;
   else process.env.JWT_SECRET = originals.jwtSecret;
+  restoreSmtp();
 });
 
 test('forgot password normalizes email, stores only a hash, and sends a temporary raw-token link', async () => {
@@ -102,7 +120,7 @@ test('an invalid email address is still rejected before any lookup', async () =>
   assert.equal(lookups, 0);
 });
 
-test('SMTP failure becomes a controlled recovery-only error', async () => {
+test('SMTP failure becomes a controlled recovery-only error that leaks nothing', async () => {
   userRepository.findUserForPasswordResetByEmail = async (email) => ({
     userId: 8, fullName: 'Test Person', email, accountStatus: 'ACTIVE'
   });
@@ -112,8 +130,34 @@ test('SMTP failure becomes a controlled recovery-only error', async () => {
   await assert.rejects(
     authService.forgotPassword({ email: 'person@example.com' }),
     (error) => error.statusCode === 503
-      && error.message === 'We could not send the password-reset email. Please try again later.'
+      && error.message === 'Password recovery is not configured. Please try again later.'
+      && !/SMTP detail|smtp\.|@/.test(error.message)
   );
+});
+
+test('an unconfigured mailer answers every address the same way, known or not', async () => {
+  // Without this, an unknown address would get the generic success while a
+  // real one got a delivery error: an account-enumeration oracle.
+  delete process.env.SMTP_PASS;
+  let lookups = 0;
+  userRepository.findUserForPasswordResetByEmail = async (email) => {
+    lookups += 1;
+    return email === 'person@example.com'
+      ? { userId: 8, fullName: 'Test Person', email, accountStatus: 'ACTIVE' }
+      : null;
+  };
+
+  const answers = [];
+  for (const email of ['person@example.com', 'nobody@example.com']) {
+    await assert.rejects(authService.forgotPassword({ email }), (error) => {
+      answers.push(`${error.statusCode}:${error.message}`);
+      return true;
+    });
+  }
+
+  assert.equal(answers[0], answers[1], 'the two answers must be identical');
+  assert.match(answers[0], /^503:Password recovery is not configured/);
+  assert.equal(lookups, 0, 'no account lookup happens before recovery is known to be usable');
 });
 
 test('valid reset hashes the raw token and sends only a BCrypt password hash to the repository', async () => {

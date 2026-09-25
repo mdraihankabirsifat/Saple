@@ -112,7 +112,6 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/api/auth/me/submissions` | Bearer token | Current user's private contribution list |
 | GET | `/api/auth/me/submissions/:submissionId` | Owner token | Owner-only private contribution detail |
 | PATCH | `/api/auth/me` | Bearer token | Change full name only |
-| PATCH | `/api/auth/me/password` | Bearer token | Change password with current password |
 | POST | `/api/companies/:companyId/salaries` | Verified exact company-role scope | Create a pending salary contribution |
 | POST | `/api/companies/:companyId/reviews` | Verified exact company-role scope | Create a pending review |
 | POST | `/api/submissions/:submissionId/reports` | Bearer token | Create one report per user/submission |

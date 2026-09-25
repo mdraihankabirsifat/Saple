@@ -9,6 +9,7 @@
     "test": "node --test",
     "test:integration": "node tests/integration.workflow.js",
     "provision:demo-users": "node scripts/provisionDemoUsers.js",
+    "verify:database": "node scripts/verifyDatabase.js",
     "local:up": "node scripts/localApp.js up",
     "local:down": "node scripts/localApp.js down",
     "local:status": "node scripts/localApp.js ps",
