@@ -225,7 +225,7 @@ test('the application form states the upload policy and confirms before withdraw
   const details = read('js/job-details.js');
   const applications = read('js/my-applications.js');
 
-  assert.match(details, /Saple does not accept file uploads/);
+  assert.match(details, /Job applications do not accept CV attachments/);
   assert.match(details, /do not include identity documents/i);
   assert.match(details, /minlength: '30', maxlength: '4000'/);
 

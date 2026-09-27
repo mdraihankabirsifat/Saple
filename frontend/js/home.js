@@ -84,7 +84,7 @@ async function loadFeaturedCompanies() {
       const reviews = Number(company.reviewCount) || 0;
       return railCard({
         href: `company-details.html?id=${encodeURIComponent(company.companyId)}`,
-        logo: createCompanyLogo(company.companyName, null),
+        logo: createCompanyLogo(company.companyName, null, document, company.logoUrl),
         kicker: company.industry,
         title: company.companyName,
         meta: [company.headquartersCity, company.country].filter(Boolean).join(', '),

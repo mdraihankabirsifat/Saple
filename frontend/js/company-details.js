@@ -1,6 +1,7 @@
 import { apiRequest, fetchApi } from './api.js';
 import { getToken } from './auth.js';
 import { createCompanyLogo } from './company-logo.js';
+import { mountRepresentativeContacts } from './representative-contacts.js';
 
 const statusMessage = document.querySelector('#details-status');
 const companyContent = document.querySelector('#company-content');
@@ -31,7 +32,7 @@ function renderCompany(company) {
   companyProfile.replaceChildren();
 
   const titleRow = document.createElement('div');
-  const logo = createCompanyLogo(company.companyName, company.website);
+  const logo = createCompanyLogo(company.companyName, company.website, document, company.logoUrl);
   const titleCopy = document.createElement('div');
   titleRow.className = 'company-title-row';
   heading.textContent = company.companyName || 'Company';
@@ -49,6 +50,7 @@ function renderCompany(company) {
   if (company.industry) appendTextElement(titleCopy, 'p', company.industry, 'industry');
   titleRow.append(logo, titleCopy);
   companyProfile.append(titleRow);
+  mountRepresentativeContacts(companyProfile, company.companyId);
 
   const metadata = document.createElement('div');
   const location = [company.headquartersCity, company.country].filter(Boolean).join(', ');

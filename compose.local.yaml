@@ -2,6 +2,7 @@ name: saple-local
 services:
   database:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_DB: saple_local
       POSTGRES_USER: saple_local
@@ -29,6 +30,7 @@ services:
       PORT: "3000"
       DATABASE_URL: postgresql://saple_local:${SAPLE_LOCAL_DB_PASSWORD}@database:5432/saple_local
       DB_SSL: "false"
+      DB_PRIMARY_SOURCE: local
       DB_POOL_MAX: "5"
       JWT_SECRET: ${SAPLE_LOCAL_JWT_SECRET:?Run npm run local:up --prefix backend}
       FRONTEND_URL: http://localhost:3000/

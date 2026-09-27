@@ -1,4 +1,6 @@
 const jobRepository = require('../repositories/job.repository');
+const storage = require('../config/supabase-storage');
+function withLogo(job) { return { ...job, logoUrl: storage.publicUrl('logo', job.logoPath, job.logoUpdatedAt) }; }
 const createHttpError = require('../utils/httpError');
 const validate = require('../utils/validation');
 const { assertCompanyScope, isAdmin } = require('../utils/authorization');
@@ -56,7 +58,7 @@ async function listPublicJobs(query = {}) {
     jobRepository.findPublicJobs(filters, { ...page, sort }),
     jobRepository.countPublicJobs(filters)
   ]);
-  return validate.paged(items, total, page);
+  return validate.paged(items.map(withLogo), total, page);
 }
 
 async function getPublicJob(jobIdValue) {
@@ -65,7 +67,7 @@ async function getPublicJob(jobIdValue) {
   // A draft, closed, archived or expired vacancy is indistinguishable from a
   // vacancy that never existed, which is exactly what a public caller should see.
   if (!job) throw createHttpError(404, 'Job posting not found');
-  return job;
+  return withLogo(job);
 }
 
 async function getPublicJobFilterOptions() {

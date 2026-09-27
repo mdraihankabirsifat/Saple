@@ -1,5 +1,6 @@
 const representativeService = require('../services/representative.service');
 const { sendSuccess } = require('../utils/apiResponse');
+const storage = require('../config/supabase-storage');
 
 async function requestAssignment(request, response, next) {
   try {
@@ -18,7 +19,8 @@ async function getOwnAssignments(request, response, next) {
 async function getWorkspace(request, response, next) {
   try {
     return sendSuccess(response, 200, 'Representative workspace retrieved successfully', {
-      scopes: request.user.representativeScopes
+      scopes: request.user.representativeScopes.map((scope) => ({ ...scope,
+        logoUrl: storage.publicUrl('logo', scope.logoPath, scope.logoUpdatedAt) }))
     });
   } catch (error) { return next(error); }
 }

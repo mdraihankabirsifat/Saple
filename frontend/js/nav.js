@@ -7,6 +7,7 @@ const offlineModuleUrl = new URL('./offline-cache.js', moduleBase);
 const notificationsModuleUrl = new URL('./notifications.js', moduleBase);
 const announcementsModuleUrl = new URL('./announcements.js', moduleBase);
 const assistantModuleUrl = new URL('./assistant.js', moduleBase);
+const messagesModuleUrl = new URL('./messages.js', moduleBase);
 
 // Saple identifies itself the same way on every page. These two sentences are
 // injected here rather than copied into 20 HTML files so they cannot drift.
@@ -657,6 +658,7 @@ async function updateAuthenticationNavigation() {
     import(notificationsModuleUrl.href)
       .then((notifications) => notifications.mountNotificationBell(navigationActions, accountName))
       .catch(() => {});
+    import(messagesModuleUrl.href).then((messages) => messages.mountMessages()).catch(() => {});
   };
 
   if (user) {

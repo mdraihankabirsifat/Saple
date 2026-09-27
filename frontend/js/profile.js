@@ -7,6 +7,22 @@ const profileForm = document.querySelector('#profile-form');
 const profileStatus = document.querySelector('#profile-status');
 const contributionsStatus = document.querySelector('#contributions-status');
 const contributionsList = document.querySelector('#contributions-list');
+const avatar = document.querySelector('#profile-avatar');
+const avatarFile = document.querySelector('#profile-avatar-file');
+const avatarStatus = document.querySelector('#profile-avatar-status');
+let currentUser;
+
+function renderAvatar(user) {
+  avatar.replaceChildren();
+  if (user.avatarUrl) {
+    const image = document.createElement('img');
+    image.src = user.avatarUrl;
+    image.alt = '';
+    image.addEventListener('error', () => { image.remove(); avatar.textContent = user.fullName?.trim()?.[0]?.toUpperCase() || 'S'; });
+    avatar.append(image);
+  } else avatar.textContent = user.fullName?.trim()?.[0]?.toUpperCase() || 'S';
+  document.querySelector('#profile-avatar-remove').hidden = !user.avatarPath;
+}
 
 function show(element, message, type = '') {
   element.textContent = message;
@@ -16,6 +32,8 @@ function show(element, message, type = '') {
 }
 
 function render(user) {
+  currentUser = user;
+  renderAvatar(user);
   document.querySelector('#profile-name').value = user.fullName || '';
   document.querySelector('#profile-email').value = user.email || '';
   document.querySelector('#profile-user-type').textContent = user.userType || 'Unknown';
@@ -38,6 +56,35 @@ function render(user) {
   loadStatus.hidden = true;
   content.hidden = false;
 }
+
+document.querySelector('#profile-avatar-change').addEventListener('click', () => avatarFile.click());
+avatarFile.addEventListener('change', async () => {
+  const file = avatarFile.files?.[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) {
+    show(avatarStatus, 'Choose a JPEG, PNG or WebP image up to 2 MB.', 'error'); return;
+  }
+  const button = document.querySelector('#profile-avatar-change');
+  button.disabled = true;
+  try {
+    const body = new FormData(); body.append('avatar', file);
+    const result = await apiRequest('/api/me/avatar', { method: 'PUT', auth: true, body });
+    const user = { ...currentUser, ...result };
+    setStoredUser(user); render(user);
+    show(avatarStatus, 'Profile picture updated.', 'success');
+  } catch (error) { show(avatarStatus, error.message, 'error'); }
+  finally { button.disabled = false; avatarFile.value = ''; }
+});
+document.querySelector('#profile-avatar-remove').addEventListener('click', async (event) => {
+  event.currentTarget.disabled = true;
+  try {
+    await apiRequest('/api/me/avatar', { method: 'DELETE', auth: true });
+    const user = { ...currentUser, avatarPath: null, avatarUrl: null };
+    setStoredUser(user); render(user);
+    show(avatarStatus, 'Profile picture removed.', 'success');
+  } catch (error) { show(avatarStatus, error.message, 'error'); }
+  finally { event.currentTarget.disabled = false; }
+});
 
 function renderContributions(submissions) {
   contributionsList.replaceChildren();

@@ -676,6 +676,12 @@ async function main() {
 
     process.env.FRONTEND_URL = 'http://localhost:5500/';
     process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES = '15';
+    // Delivery is mocked below; configure only non-delivering test values so
+    // the recovery flow reaches that mock even in the local Docker stack.
+    process.env.SMTP_HOST = 'smtp.example.invalid';
+    process.env.SMTP_USER = 'integration@example.invalid';
+    process.env.SMTP_PASS = 'integration-only';
+    process.env.SMTP_FROM = 'Saple <integration@example.invalid>';
     let deliveredResetUrl;
     mailService.sendPasswordResetEmail = async ({ resetUrl }) => {
       deliveredResetUrl = resetUrl;
@@ -688,7 +694,7 @@ async function main() {
     assert.equal(failedRecovery.status, 503);
     assert.equal(
       failedRecovery.body.message,
-      'We could not send the password-reset email. Please try again later.'
+      'Password recovery is not configured. Please try again later.'
     );
     const failedRawToken = new URL(deliveredResetUrl).searchParams.get('token');
     const failedHash = crypto.createHash('sha256').update(failedRawToken).digest('hex');

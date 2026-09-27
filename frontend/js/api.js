@@ -119,7 +119,7 @@ async function apiRequest(path, options = {}) {
     ...customHeaders
   };
 
-  if (body !== undefined) {
+  if (body !== undefined && !(body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -152,7 +152,7 @@ async function apiRequest(path, options = {}) {
       method,
       headers,
       signal: controller.signal,
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {})
+      ...(body !== undefined ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {})
     });
   } catch (error) {
     const saved = offlineResult();

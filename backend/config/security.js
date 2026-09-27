@@ -5,8 +5,7 @@
 const MAX_JSON_BODY_BYTES = 64 * 1024;
 const HSTS_MAX_AGE_SECONDS = 15552000; // 180 days.
 
-// Saple loads no third-party scripts, styles, fonts, frames or images.
-// 'self' everywhere is not a placeholder: it is the whole runtime surface.
+// Storage is the only optional external image origin; scripts remain first-party.
 const CONTENT_SECURITY_POLICY = Object.freeze({
   'default-src': ["'self'"],
   'script-src': ["'self'"],
@@ -45,7 +44,15 @@ const PERMISSIONS_POLICY = Object.freeze([
 
 function buildContentSecurityPolicy({ upgradeInsecureRequests = false } = {}) {
   const directives = Object.entries(CONTENT_SECURITY_POLICY)
-    .map(([name, values]) => `${name} ${values.join(' ')}`);
+    .map(([name, values]) => {
+      if (name !== 'img-src') return `${name} ${values.join(' ')}`;
+      let origin;
+      try {
+        const url = new URL(process.env.SUPABASE_URL || '');
+        if (url.protocol === 'https:' && !url.username && !url.password && url.pathname === '/') origin = url.origin;
+      } catch { /* Storage is optional locally. */ }
+      return `${name} ${[...values, ...(origin ? [origin] : [])].join(' ')}`;
+    });
 
   if (upgradeInsecureRequests) directives.push('upgrade-insecure-requests');
   return directives.join('; ');

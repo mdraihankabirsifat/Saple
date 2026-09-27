@@ -10,7 +10,8 @@ async function findUserByEmail(email) {
     SELECT u.user_id AS "userId", u.full_name AS "fullName", u.email,
       u.password_hash AS "passwordHash", u.user_type AS "userType",
       u.account_role AS "accountRole", u.account_status AS "accountStatus",
-      u.token_version AS "tokenVersion", e.employment_status AS "employmentStatus"
+      u.token_version AS "tokenVersion", e.employment_status AS "employmentStatus",
+      u.avatar_path AS "avatarPath", u.updated_at AS "updatedAt"
     FROM users u
     LEFT JOIN employees e ON e.user_id = u.user_id
     WHERE LOWER(u.email) = $1
@@ -31,7 +32,7 @@ async function findSafeUserById(userId) {
     SELECT u.user_id AS "userId", u.full_name AS "fullName", u.email,
       u.user_type AS "userType", u.account_role AS "accountRole",
       u.account_status AS "accountStatus", e.employment_status AS "employmentStatus",
-      u.created_at AS "createdAt"
+      u.created_at AS "createdAt", u.avatar_path AS "avatarPath", u.updated_at AS "updatedAt"
     FROM users u
     LEFT JOIN employees e ON e.user_id = u.user_id
     WHERE u.user_id = $1

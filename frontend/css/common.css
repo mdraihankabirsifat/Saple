@@ -892,8 +892,6 @@ main {
 }
 
 /* Shared hierarchy and responsive safeguards for all public and account pages. */
-.offline-notice { width: min(1160px, calc(100% - 1.5rem)); margin: 0 auto 1.25rem; padding: 0.85rem 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; border: 1px solid var(--warning); border-radius: var(--radius-sm); background: var(--warning-surface); color: var(--warning); }
-.offline-notice p { flex: 1 1 320px; margin: 0; }
 [hidden] { display: none !important; }
 body { overflow-wrap: anywhere; }
 main, section, article, form, .nav-menu > *, .auth-layout > * { min-width: 0; }
@@ -2239,3 +2237,40 @@ a.notification-title:hover {
     justify-content: center;
   }
 }
+.company-logo-controls { margin: 1.25rem 0; padding: 1rem; }
+.company-logo-control { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: .75rem 0; }
+.company-logo-control input[type=file] { max-width: 100%; }
+.company-logo-image[hidden], .company-logo-fallback[hidden] { display: none; }
+
+.messages-root { right: 150px; }
+.messages-panel { width: min(380px, calc(100vw - 32px)); background: var(--surface); }
+.messages-panel .guide-head { align-items: center; }
+.messages-panel .guide-heading { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.messages-header-avatar .messages-avatar { width: 1.8rem; height: 1.8rem; }
+.messages-body { flex: 1; min-height: 220px; overflow-y: auto; padding: .75rem; display: flex; flex-direction: column; gap: .65rem; }
+.messages-contact { width: 100%; display: flex; align-items: center; gap: .6rem; padding: .55rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: inherit; text-align: left; cursor: pointer; }
+.messages-contact:hover { border-color: var(--brand-solid); }
+.messages-avatar { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; overflow: hidden; font-weight: 700; }
+.messages-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.messages-contact-copy { min-width: 0; flex: 1; display: grid; }
+.messages-contact-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; color: var(--text-muted); }
+.messages-contact-meta { display: grid; justify-items: end; gap: .2rem; font-size: .75rem; }
+.messages-unread, .messages-launcher-badge { display: inline-grid; min-width: 1.25rem; height: 1.25rem; padding: 0 .2rem; place-items: center; border-radius: 999px; background: #fff; color: var(--brand-deep); font-size: .72rem; }
+.messages-unread { background: var(--brand-solid); color: #fff; }
+.messages-bubble { max-width: 86%; align-self: flex-start; padding: .55rem .7rem; background: var(--surface-muted); border-radius: var(--radius-md); overflow-wrap: anywhere; }
+.messages-bubble.is-own { align-self: flex-end; background: var(--saple-green-100); color: var(--saple-green-900); }
+.messages-bubble p { margin: 0; white-space: pre-wrap; }
+.messages-bubble small { display: block; margin-top: .25rem; opacity: .75; }
+.messages-actions { display: flex; gap: .5rem; }
+.messages-actions button { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
+.messages-form { padding: .65rem; border-top: 1px solid var(--border); }
+.messages-form textarea { width: 100%; resize: vertical; }
+.messages-form-actions { display: flex; justify-content: flex-end; gap: .35rem; margin-top: .35rem; }
+.messages-emoji-picker { display: flex; gap: .2rem; }
+.messages-emoji-picker[hidden], .messages-launcher-badge[hidden] { display: none; }
+.messages-emoji-picker button { border: 0; background: transparent; font-size: 1.2rem; cursor: pointer; }
+.messages-empty { color: var(--text-muted); }
+@media (max-width: 600px) { .messages-root { right: 140px; } .messages-root.is-open { right: 12px; } }
+.representative-contacts { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.representative-contacts select { max-width: 20rem; margin-right: .5rem; }
+.messages-panel-open [data-saple-guide], .guide-panel-open [data-saple-messages] { visibility: hidden; }

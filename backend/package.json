@@ -12,6 +12,8 @@
     "verify:database": "node scripts/verifyDatabase.js",
     "local:up": "node scripts/localApp.js up",
     "local:down": "node scripts/localApp.js down",
+    "local:db-up": "node scripts/localApp.js db-up",
+    "local:db-down": "node scripts/localApp.js db-down",
     "local:status": "node scripts/localApp.js ps",
     "local:logs": "node scripts/localApp.js logs",
     "local:accounts": "node scripts/localApp.js accounts",
@@ -21,11 +23,13 @@
   },
   "private": true,
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
     "nodemailer": "^9.1.1",
     "pg": "^8.23.0"
   },

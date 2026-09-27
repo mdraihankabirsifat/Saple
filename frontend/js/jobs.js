@@ -28,7 +28,7 @@ function jobCard(job) {
 
   return el('article', { className: 'job-card card', dataset: { jobId: job.jobId } }, [
     el('div', { className: 'job-card-head' }, [
-      createCompanyLogo(job.companyName, null),
+      createCompanyLogo(job.companyName, null, document, job.logoUrl),
       el('div', { className: 'job-card-identity' }, [
         el('h2', { className: 'job-card-title' }, [
           el('a', { className: 'job-card-link', text: job.title, attrs: { href: `job-details.html?id=${encodeURIComponent(job.jobId)}` } })

@@ -1,85 +1,147 @@
 const { Pool, types } = require('pg');
 
-// Saple IDs and constrained NUMERIC values remain inside JavaScript's safe range.
-// Parsing them here preserves the existing numeric API response shapes.
 types.setTypeParser(20, (value) => Number(value));
 types.setTypeParser(1700, (value) => Number(value));
 
-let pool;
+let primaryPool;
+let fallbackPool;
+let activePool;
+let activeSource = 'supabase';
+let switching;
 
 function readPositiveInteger(name, defaultValue) {
-  const rawValue = process.env[name];
-
-  if (rawValue === undefined || rawValue.trim() === '') return defaultValue;
-
-  const value = Number(rawValue);
-  if (!Number.isInteger(value) || value < 1) {
-    throw new Error(`${name} must be a positive integer`);
-  }
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return defaultValue;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1) throw new Error(`${name} must be a positive integer`);
   return value;
 }
 
 function readBoolean(name, defaultValue) {
-  const rawValue = process.env[name];
-  if (rawValue === undefined || rawValue.trim() === '') return defaultValue;
-  if (rawValue === 'true') return true;
-  if (rawValue === 'false') return false;
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') return defaultValue;
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
   throw new Error(`${name} must be true or false`);
 }
 
-async function initializePool() {
-  const connectionString = process.env.DATABASE_URL?.trim();
-  if (!connectionString) {
-    throw new Error('Missing required database configuration: DATABASE_URL');
-  }
+function isConnectivityError(error) {
+  const codes = new Set(['ECONNREFUSED', 'ECONNRESET', 'ENOTFOUND', 'EAI_AGAIN', 'ETIMEDOUT', 'EPIPE', 'ENETUNREACH', 'EHOSTUNREACH', '57P01', '57P02', '57P03', '08000', '08001', '08003', '08004', '08006']);
+  if (codes.has(error?.code)) return true;
+  return /connection terminated unexpectedly|connection timeout|timeout exceeded when trying to connect|socket hang up|server closed the connection unexpectedly/i.test(error?.message || '');
+}
 
-  pool = new Pool({
+function makePool(connectionString, ssl) {
+  const created = new Pool({
     connectionString,
     max: readPositiveInteger('DB_POOL_MAX', 10),
     idleTimeoutMillis: readPositiveInteger('DB_IDLE_TIMEOUT_MS', 30000),
     connectionTimeoutMillis: readPositiveInteger('DB_CONNECTION_TIMEOUT_MS', 10000),
-    ssl: readBoolean('DB_SSL', true) ? { rejectUnauthorized: false } : false
+    ssl: ssl ? { rejectUnauthorized: false } : false
   });
+  created.on('error', (error) => console.error('Unexpected idle PostgreSQL client error:', error.message));
+  return created;
+}
 
-  pool.on('error', (error) => {
-    console.error('Unexpected idle PostgreSQL client error:', error.message);
-  });
+function fallbackEnabled() { return readBoolean('DB_FALLBACK_ENABLED', false); }
 
+async function connectFallback() {
+  if (!fallbackEnabled()) throw new Error('Local database fallback is disabled');
+  const connectionString = process.env.LOCAL_DATABASE_URL?.trim();
+  if (!connectionString) throw new Error('LOCAL_DATABASE_URL is required when DB_FALLBACK_ENABLED=true');
+  if (!fallbackPool) fallbackPool = makePool(connectionString, readBoolean('LOCAL_DB_SSL', false));
+  await fallbackPool.query('SELECT 1 AS ok');
+  activePool = fallbackPool;
+  activeSource = 'local';
+  console.warn('Supabase unavailable. Switching Saple to local PostgreSQL.');
+  console.log('Saple database: Local PostgreSQL connected.');
+}
+
+async function switchToFallback() {
+  if (activeSource === 'local') return;
+  if (!switching) switching = connectFallback().finally(() => { switching = undefined; });
+  await switching;
+}
+
+async function initializePool() {
+  const connectionString = process.env.DATABASE_URL?.trim();
+  if (!connectionString) throw new Error('Missing required database configuration: DATABASE_URL');
+  if (fallbackEnabled() && !process.env.LOCAL_DATABASE_URL?.trim()) {
+    throw new Error('LOCAL_DATABASE_URL is required when DB_FALLBACK_ENABLED=true');
+  }
+  primaryPool = makePool(connectionString, readBoolean('DB_SSL', true));
+  activePool = primaryPool;
+  activeSource = process.env.DB_PRIMARY_SOURCE === 'local' ? 'local' : 'supabase';
   try {
-    await pool.query('SELECT 1 AS ok');
-    console.log('Saple PostgreSQL pool initialized.');
+    await primaryPool.query('SELECT 1 AS ok');
+    console.log(`Saple database: ${activeSource === 'local' ? 'Local' : 'Supabase'} PostgreSQL connected.`);
   } catch (error) {
-    await pool.end();
-    pool = undefined;
-    throw error;
+    if (activeSource !== 'supabase' || !fallbackEnabled() || !isConnectivityError(error)) {
+      await closePool();
+      throw error;
+    }
+    try {
+      await switchToFallback();
+    } catch (fallbackError) {
+      await closePool();
+      throw new Error('Neither primary nor local PostgreSQL is reachable', { cause: fallbackError });
+    }
   }
 }
 
 function requirePool() {
-  if (!pool) throw new Error('Database pool has not been initialized');
-  return pool;
+  if (!activePool) throw new Error('Database pool has not been initialized');
+  return activePool;
 }
 
 async function query(text, values = []) {
-  return requirePool().query(text, values);
+  const selected = requirePool();
+  try { return await selected.query(text, values); }
+  catch (error) {
+    if (selected !== primaryPool || !fallbackEnabled() || !isConnectivityError(error)) throw error;
+    if (activeSource === 'supabase') await switchToFallback();
+    if (activeSource !== 'local') throw error;
+    return activePool.query(text, values);
+  }
 }
 
 async function getClient() {
-  return requirePool().connect();
+  const selected = requirePool();
+  try { return await selected.connect(); }
+  catch (error) {
+    if (selected !== primaryPool || !fallbackEnabled() || !isConnectivityError(error)) throw error;
+    if (activeSource === 'supabase') await switchToFallback();
+    if (activeSource !== 'local') throw error;
+    return activePool.connect();
+  }
 }
 
-// Every runtime INSERT, UPDATE and DELETE runs inside an explicit transaction,
-// including the single-statement ones: BEGIN, the caller's work, then COMMIT,
-// or ROLLBACK if anything throws. The client is always released.
-//
-// Pass an existing client (from a caller that already opened a transaction)
-// and the work simply joins it: no nested BEGIN, one COMMIT at the outer
-// level, so related writes and their notifications still commit together.
+// Messaging must never be sent to the independent local demo database.
+function requireCloud() {
+  if (activeSource !== 'supabase' || !primaryPool) {
+    const error = new Error('Messaging is temporarily unavailable while using the local database');
+    error.statusCode = 503;
+    throw error;
+  }
+  return primaryPool;
+}
+async function cloudQuery(text, values = []) { return requireCloud().query(text, values); }
+async function cloudClient() { return requireCloud().connect(); }
+async function withCloudTransaction(work) {
+  const client = await cloudClient();
+  try {
+    await client.query('BEGIN');
+    const result = await work(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally { client.release(); }
+}
+
 async function withTransaction(work, existingClient = null) {
   if (existingClient) return work(existingClient);
-
-  // Through module.exports so a test can substitute getClient, the same seam
-  // the repository tests already use.
   const client = await module.exports.getClient();
   try {
     await client.query('BEGIN');
@@ -87,24 +149,18 @@ async function withTransaction(work, existingClient = null) {
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    // A failed ROLLBACK (a dropped connection, say) must not hide the original
-    // error, which is the one the caller needs to see.
-    try {
-      await client.query('ROLLBACK');
-    } catch (rollbackError) {
-      console.error('Rollback failed after a transaction error:', rollbackError.message);
-    }
+    try { await client.query('ROLLBACK'); }
+    catch (rollbackError) { console.error('Rollback failed after a transaction error:', rollbackError.message); }
     throw error;
-  } finally {
-    client.release();
-  }
+  } finally { client.release(); }
 }
 
 async function closePool() {
-  if (!pool) return;
-  await pool.end();
-  pool = undefined;
-  console.log('Database pool closed.');
+  const pools = [...new Set([primaryPool, fallbackPool].filter(Boolean))];
+  primaryPool = fallbackPool = activePool = undefined;
+  activeSource = 'supabase';
+  await Promise.all(pools.map((item) => item.end()));
 }
 
-module.exports = { initializePool, query, getClient, withTransaction, closePool };
+function getSource() { return activeSource; }
+module.exports = { initializePool, query, getClient, withTransaction, withCloudTransaction, closePool, getSource, cloudQuery, cloudClient, isConnectivityError };

@@ -4,6 +4,7 @@ import {
   el, clear, renderErrorState, formatDate, formatSalaryRange, humanizeEnum, showToast
 } from './ui.js';
 import { createCompanyLogo } from './company-logo.js';
+import { mountRepresentativeContacts } from './representative-contacts.js';
 
 const container = document.querySelector('#job-detail');
 const applyHost = document.querySelector('#job-apply');
@@ -28,7 +29,7 @@ function renderJob(job) {
 
   container.append(
     el('div', { className: 'job-detail-head' }, [
-      createCompanyLogo(job.companyName, null),
+      createCompanyLogo(job.companyName, null, document, job.logoUrl),
       el('div', {}, [
         el('p', { className: 'eyebrow', text: job.companyName }),
         el('h1', { className: 'job-detail-title', text: job.title }),
@@ -67,6 +68,7 @@ function renderJob(job) {
       text: 'This vacancy was posted by an approved representative of this company inside Saple, an independent BUET CSE academic project. Saple is not the company’s official careers site and does not handle hiring on its behalf.'
     })
   );
+  mountRepresentativeContacts(container, job.companyId);
 }
 
 function renderSignedOutApply(job) {
@@ -125,7 +127,7 @@ function renderApplyForm(job) {
     ]),
     el('p', {
       className: 'field-hint',
-      text: 'Saple does not accept file uploads, so there is no CV attachment. Do not include identity documents, national ID numbers or passwords.'
+      text: 'Job applications do not accept CV attachments. Do not include identity documents, national ID numbers or passwords.'
     }),
     submit,
     feedback

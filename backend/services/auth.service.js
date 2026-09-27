@@ -7,6 +7,7 @@ const userRepository = require('../repositories/user.repository');
 const passwordResetRepository = require('../repositories/password-reset.repository');
 const mailService = require('./mail.service');
 const createHttpError = require('../utils/httpError');
+const storage = require('../config/supabase-storage');
 
 const PASSWORD_SALT_ROUNDS = 12;
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync('saple-timing-placeholder', PASSWORD_SALT_ROUNDS);
@@ -41,6 +42,8 @@ function toSafeUser(user, verifiedScopes = []) {
     accountRole: user.accountRole,
     accountStatus: user.accountStatus,
     employmentStatus: user.employmentStatus || null,
+    avatarPath: user.avatarPath || null,
+    avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt),
     verifiedScopes,
     ...(user.createdAt ? { createdAt: user.createdAt } : {})
   };

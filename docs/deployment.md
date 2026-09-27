@@ -20,14 +20,14 @@ Render web service (Express API + frontend files)
 Supabase PostgreSQL
 ```
 
-The browser does not use Supabase Auth, the Supabase JavaScript client, an anon key, a service-role key, or a database connection string.
+The browser does not use Supabase Auth, an anon key, a secret key, or a database connection string. The backend uses `pg` for PostgreSQL and the Supabase Storage SDK only for optional image uploads and public image URLs.
 
 ## 1. Prepare Supabase
 
-**Existing project (the usual case).** Apply the four additive migrations in
+**Existing project (the usual case).** Apply the seven additive migrations in
 `database/postgres/migrations/`, in order, following that folder's README.
-Rehearse on a backup or scratch project first. They add seven tables and one
-view and change no existing row.
+Rehearse on a backup or scratch project first. They add eight tables, one
+view and two nullable image path columns without changing any existing row.
 
 **Brand-new project.** Do not run schema or seed files against an existing
 populated project. For a confirmed fresh project, open the Supabase SQL editor

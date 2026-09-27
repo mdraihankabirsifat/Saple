@@ -79,7 +79,7 @@ export function getCompanyMarkHue(companyName) {
 
 // Returns a container holding generated initials. There is no <img>, no src,
 // no remote host and no fallback chain to get stuck in.
-export function createCompanyLogo(companyName, _website, documentRef = globalThis.document) {
+export function createCompanyLogo(companyName, _website, documentRef = globalThis.document, logoUrl = null) {
   const accessibleName = typeof companyName === 'string' && companyName.trim()
     ? companyName.trim()
     : 'Company';
@@ -96,6 +96,17 @@ export function createCompanyLogo(companyName, _website, documentRef = globalThi
   container.dataset.markHue = String(getCompanyMarkHue(accessibleName));
   mark.dataset.markHue = container.dataset.markHue;
   container.append(mark);
+
+  if (typeof logoUrl === 'string' && /^https:\/\//i.test(logoUrl)) {
+    const image = documentRef.createElement('img');
+    image.className = 'company-logo-image';
+    image.alt = `${accessibleName} logo`;
+    image.src = logoUrl;
+    image.loading = 'lazy';
+    image.addEventListener?.('error', () => { image.remove(); mark.hidden = false; });
+    mark.hidden = true;
+    container.append(image);
+  }
 
   return container;
 }

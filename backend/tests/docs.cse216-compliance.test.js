@@ -55,7 +55,8 @@ test('the guide claims no third-party authentication, and the code agrees', () =
   assert.match(guide, /no Firebase, Auth0, Supabase Auth, Google or Microsoft sign-in/);
 
   const searched = ['backend', 'frontend'];
-  const pattern = /firebase|auth0|supabase-js|signInWith|@supabase|gapi\.auth/i;
+  // The Storage SDK is used for images; account authentication remains Saple's own JWT flow.
+  const pattern = /firebase|auth0|signInWith|\.auth\.(?:signIn|signUp|signOut)|gapi\.auth/i;
   const offenders = [];
 
   const walk = (directory) => {

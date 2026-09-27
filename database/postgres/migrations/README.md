@@ -1,7 +1,7 @@
 # Saple PostgreSQL migrations
 
 These migrations upgrade an **existing** Supabase PostgreSQL project from the
-14-table Saple schema to the final 21-table schema without touching a single
+14-table Saple schema to the current 22-table schema without touching a single
 existing row.
 
 A brand-new installation does **not** need them: `01_final_schema_postgres.sql`
@@ -19,11 +19,12 @@ Run exactly once, in this order, in the Supabase SQL editor or `psql`:
 | 3 | `003_announcements_and_notifications.sql` | `announcements`, `notifications` |
 | 4 | `004_public_job_views_and_grants.sql` | `vw_public_open_jobs`, refreshed Supabase role revocation |
 | 5 | `005_cse216_final_database_features.sql` | `saple_set_updated_at()` and seven `trg_*_set_updated_at` triggers, `saple_company_insight_summary()`, `saple_apply_application_decision()` |
+| 6 | `006_profile_and_company_images.sql` | nullable Storage object paths for account pictures and company logos |
+| 7 | `007_direct_messages.sql` | private direct messages, unread state and supporting indexes |
 
-Migration 005 is the only one a **fresh** installation also needs to care
-about, and it does not have to run it: `01_final_schema_postgres.sql` already
-contains the same three objects. Run 005 when you are upgrading a database that
-was created before them.
+The fresh schema already includes all seven migrations' tables, columns,
+views and routines. Run only the migrations that an existing database has not
+yet received.
 
 Each file is a single transaction. If one fails, nothing in it is applied.
 
@@ -35,9 +36,8 @@ Each file is a single transaction. If one fails, nothing in it is applied.
   `DROP TRIGGER IF EXISTS` / `DROP FUNCTION IF EXISTS` / `DROP PROCEDURE IF EXISTS`
   lines in it remove only those objects before recreating them, which is what
   makes the file re-runnable.
-  The only `ALTER` on an existing table widens `users.account_role` from
-  `VARCHAR(10)` to `VARCHAR(25)` and replaces its `CHECK` with a wider one, so
-  every existing `USER` and `ADMIN` row stays valid.
+  Migration 001 widens `users.account_role` and its check. Migration 006 adds
+  nullable image paths to `users` and `companies`. Existing rows stay valid.
 - **Re-runnable.** Every new object uses `IF NOT EXISTS` or
   `CREATE OR REPLACE`, so a partial re-run is harmless.
 - **Audit-preserving.** History tables and applications use
@@ -49,11 +49,12 @@ Each file is a single transaction. If one fails, nothing in it is applied.
 ## Before running on the live project
 
 1. Take a Supabase backup, or restore a copy into a scratch project first.
-2. Apply all five files to the scratch project, in order.
+2. Apply all seven files to the scratch project, in order.
 3. Run `03_schema_and_data_demo_postgres.sql` there and confirm section 1
-   reports **21 base tables and 5 views**, and that its last two sections list
+   reports **22 base tables and 5 views**, and that its last two sections list
    the three `saple_*` routines and the seven `trg_*_set_updated_at` triggers.
-4. Only then apply the same five files to the live project.
+4. Only then apply the same seven files to the live project. If migrations 001–005
+   have already been applied, run only 006 and 007 in that order.
 
 ### Verifying migration 005
 

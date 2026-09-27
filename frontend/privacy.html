@@ -59,6 +59,8 @@
             <li>Contributions: the salary, review and interview records you submit, with their moderation status and history.</li>
             <li>Jobs: the applications you send, their status history and the statement you wrote.</li>
             <li>Notifications: the decisions about your own account, contributions, verifications and applications.</li>
+            <li>Images: optional profile pictures and company logos in Supabase Storage; the database keeps object paths.</li>
+            <li>Direct messages: text, sender, recipient, timestamps and read state. Only the two participants can read a conversation.</li>
             <li>Representative assignments: which companies an administrator has approved you to represent, and the decisions behind that.</li>
           </ul>
         </article>
@@ -66,7 +68,7 @@
           <h2>What is never collected</h2>
           <p>Saple deliberately does not collect these, and there is no code path that could:</p>
           <ul class="info-list">
-            <li>Uploaded files of any kind. There is no document or CV upload anywhere in the project.</li>
+            <li>CVs, identity documents and message attachments. Only profile pictures and company logos can be uploaded.</li>
             <li>Payment details. Saple has no payment feature.</li>
             <li>Third-party sign-in identities. Saple has its own account system and no social login.</li>
             <li>Advertising or cross-site tracking identifiers. The site loads no third-party script and no analytics.</li>
@@ -100,7 +102,7 @@
           <h2>The Saple Guide and your messages</h2>
           <p>If the site owner has configured an AI provider, the text you type into the Saple Guide is sent to that provider through Saple’s own backend. Nothing else is sent: not your account, not your token, not your submissions, not your applications.</p>
           <p>Identifiers that look like email addresses, phone numbers or tokens are stripped from your message before it leaves the server. Even so, do not type passwords, reset links, verification codes or personal details into it.</p>
-          <p>Conversations are held in your browser’s memory for the length of the visit. Saple stores no chat history in its database.</p>
+          <p>Saple Guide conversations are held in browser memory for the visit. Direct messages between signed-in members are stored in cloud PostgreSQL. Deleting one clears its body but keeps its timestamp in the conversation.</p>
 
         </article>
         <article class="info-card card">
@@ -111,7 +113,7 @@
         </article>
         <article class="info-card card">
           <h2>Your choices</h2>
-          <p>You can change your display name and password from your profile page, withdraw a job application while a decision is still open, and clear the offline cache from the offline notice.</p>
+          <p>You can change your display name and profile picture, use password recovery, withdraw an open job application, and edit or delete messages you sent.</p>
           <p>Because this is an academic project rather than a service, account deletion is handled by the project administrators rather than by a self-service button. Use the contact route on the Contact page.</p>
 
         </article>

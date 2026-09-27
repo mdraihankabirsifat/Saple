@@ -1,4 +1,5 @@
 const healthRepository = require('../repositories/health.repository');
+const database = require('../config/database');
 const { sendSuccess } = require('../utils/apiResponse');
 
 function getApiHealth(request, response) {
@@ -12,8 +13,8 @@ async function getDatabaseHealth(request, response, next) {
     return sendSuccess(
       response,
       200,
-      'Supabase PostgreSQL database connection is healthy',
-      connectionTest
+      'Saple PostgreSQL database connection is healthy',
+      { ok: connectionTest.connectionTest, source: database.getSource() }
     );
   } catch (error) {
     return next(error);

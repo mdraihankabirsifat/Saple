@@ -28,7 +28,8 @@ const ASSIGNMENT_SELECT = `
 async function findActiveScopesByUserId(userId) {
   const result = await database.query(`
     SELECT cr.assignment_id AS "assignmentId", cr.company_id AS "companyId",
-      c.company_name AS "companyName", cr.job_title AS "jobTitle",
+      c.company_name AS "companyName", c.logo_path AS "logoPath",
+      c.updated_at AS "logoUpdatedAt", cr.job_title AS "jobTitle",
       cr.approved_at AS "approvedAt"
     FROM company_representatives cr
     JOIN companies c ON c.company_id = cr.company_id

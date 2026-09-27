@@ -78,6 +78,9 @@ More captures, including interview experiences, are in [`assets/screenshots/`](a
 - **Employee verification** for a specific company and role, decided by that company's representative, with administrators as fallback.
 - **Reports and moderation**: any signed-in user can report a contribution; administrators triage reports and record every decision.
 - **Notifications and announcements** for decisions, application updates and site-wide notices.
+- **Profile pictures and company logos** in Supabase Storage, with initials when no image is available.
+- **Private direct messages** between signed-in members, including recruiter and applicant contact actions.
+- **Optional local PostgreSQL failover** for demos when Supabase is unreachable; see [backend setup](backend/README.md#demo-day-offline-database-fallback).
 - **Saple Guide** (AI): questions about using Saple go through Saple's own backend to an OpenAI-compatible provider. When no provider is configured, or it times out or rate-limits, the panel answers from a built-in knowledge base and labels that answer "Built-in Saple help (not AI)" rather than passing it off as the model.
 
 ## Roles and Trust Model
@@ -101,7 +104,7 @@ Three rules hold throughout:
 |-------|------------|
 | Frontend | HTML, CSS and vanilla JavaScript modules; no build step, no third-party scripts |
 | Backend | Node.js and Express 5 with raw parameterized SQL through `pg` |
-| Database | PostgreSQL hosted on Supabase: 21 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
+| Database | PostgreSQL hosted on Supabase: 22 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
 | Auth and email | BCrypt password hashing, JSON Web Tokens, Nodemailer for the emailed password reset |
 | AI (optional) | Any OpenAI-compatible chat endpoint for the Saple Guide; Groq's free tier is the documented default |
 | Research prototype | A standalone Python ML experiment in [`ml/`](ml/), not wired into the app |

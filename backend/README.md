@@ -80,6 +80,51 @@ npm run dev
 
 The PostgreSQL pool initializes before HTTP listening. The default local address is `http://localhost:3000`. Express also serves the existing `frontend/` directory for one-origin hosting; see [../docs/deployment.md](../docs/deployment.md).
 
+## Demo-day offline database fallback
+
+Keep `DB_FALLBACK_ENABLED=false` on Render. For a local demo, stop the full
+Docker app if it occupies port 3000, then start only its persistent PostgreSQL:
+
+```bash
+cd backend
+npm run local:down
+npm run local:db-up
+```
+
+`local:db-up` creates `../.env.local` with a random database password if it
+does not exist. In `backend/.env`, keep `DATABASE_URL` pointing to Supabase,
+then set `DB_FALLBACK_ENABLED=true`, `LOCAL_DB_SSL=false`, and set
+`LOCAL_DATABASE_URL` to
+`postgresql://saple_local:<SAPLE_LOCAL_DB_PASSWORD from ../.env.local>@127.0.0.1:5433/saple_local`.
+The generated password is hex, so it needs no URL escaping. Start with
+`npm start`. The backend tests Supabase first. On a network connection failure,
+it switches once to the independent local database and stays there until the
+process restarts. There is no synchronization of local writes back to Supabase.
+Restart the backend while online to prefer Supabase again. Check
+`http://localhost:3000/api/health/database` for `data.source` (`supabase` or
+`local`). `npm run local:db-down` stops the local database without deleting its
+volume. If both databases are unreachable, startup fails clearly. A crashed
+Node process still needs restarting.
+
+For an existing local database created before these features, run migrations
+001–007 in order against it. The local database created by a fresh
+`local:db-up` installation already includes the current schema. Do not delete
+the local Docker volume just to update its schema.
+
+## Profile images and direct messages
+
+Existing Supabase projects need
+`database/postgres/migrations/006_profile_and_company_images.sql` and
+`007_direct_messages.sql`, in that order, in the Supabase SQL Editor. Both are
+additive. Configure backend-only `SUPABASE_URL`, `SUPABASE_SECRET_KEY`,
+`SUPABASE_AVATAR_BUCKET=avatar`, and
+`SUPABASE_COMPANY_LOGO_BUCKET=Company_logos`. The two Storage buckets must be
+public. Saple accepts JPEG, PNG or WebP only (2 MB avatars, 1 MB logos) and
+stores only the object path in PostgreSQL. Browsing works without Storage
+configuration; uploads return 503. Direct messages use cloud PostgreSQL only:
+when the backend has switched to the local database, messaging returns 503
+and no local messages are written. The browser never caches message API data.
+
 ## Endpoint Reference
 
 Successful responses use `{ "success": true, "message": "...", "data": ... }`. Errors expose a safe application message, not raw PostgreSQL details.
@@ -89,7 +134,14 @@ Successful responses use `{ "success": true, "message": "...", "data": ... }`. E
 | GET | `/` | Public | Static Saple homepage |
 | GET | `/api` | Public | API welcome |
 | GET | `/api/health` | Public | Express health |
-| GET | `/api/health/database` | Public | Supabase PostgreSQL health |
+| GET | `/api/health/database` | Public | PostgreSQL health and active source (`supabase` or `local`) |
+| PUT / DELETE | `/api/me/avatar` | Signed-in user | Change or remove own profile picture |
+| PUT / DELETE | `/api/representative/companies/:companyId/logo` | Active representative for that company | Change or remove company logo |
+| GET | `/api/users/:userId/profile` | Signed-in user | Minimal safe member profile |
+| GET / POST | `/api/messages/with/:userId` | Signed-in user, cloud database | Read or send direct messages |
+| PATCH / DELETE | `/api/messages/:messageId` | Original sender, cloud database | Edit or soft-delete a message |
+| GET | `/api/messages/conversations`, `/api/messages/unread-count` | Signed-in user, cloud database | Recent conversations and unread count |
+| GET | `/api/messages/company/:companyId/contacts` | Signed-in user, cloud database | Active representative contacts without email |
 | GET | `/api/companies` | Public | Filter companies and approved-data aggregates |
 | GET | `/api/companies/filter-options` | Public | Distinct industry, location, and size choices |
 | GET | `/api/companies/:companyId` | Public | Company detail |

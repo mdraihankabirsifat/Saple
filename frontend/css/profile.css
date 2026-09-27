@@ -61,3 +61,6 @@
     gap: 0.35rem;
   }
 }
+.profile-avatar { width: 5rem; height: 5rem; margin: 1rem 0; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--surface-muted); border: 1px solid var(--border); font-size: 2rem; font-weight: 800; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.user-profile-card { max-width: 32rem; padding: 1.5rem; }

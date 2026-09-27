@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v9';
+const SHELL_CACHE = 'saple-shell-v10';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -21,7 +21,7 @@ const ASSETS = [
   'assets/hero/Interviews.png', 'assets/hero/job.png', 'assets/hero/FAQ.png',
   'js/nav.js', 'js/theme.js', 'js/api.js', 'js/auth.js', 'js/ui.js', 'js/offline-cache.js',
   'js/announcements.js', 'js/assistant.js', 'js/companies.js', 'js/company-directory.js',
-  'js/company-logo.js', 'js/salary-range.js', 'js/company-details.js', 'js/browse-shared.js', 'js/browse-controls.js',
+  'js/company-logo.js', 'js/salary-range.js', 'js/company-details.js', 'js/representative-contacts.js', 'js/browse-shared.js', 'js/browse-controls.js',
   'js/contribution-access.js', 'js/salaries.js', 'js/reviews.js', 'js/interviews.js',
   'js/home.js', 'js/jobs.js', 'js/job-details.js',
   'js/login.js', 'js/register.js', 'js/forgot-password.js', 'js/reset-password.js'
@@ -33,10 +33,10 @@ const offlinePages = new Set();
 // deliberately absent from ASSETS above; this list makes that a rule rather
 // than an omission, and a purge removes anything an older worker stored.
 const PRIVATE_PATHS = [
-  'profile.html', 'admin.html', 'representative.html', 'my-applications.html',
+  'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
   'employee-verification.html', 'submit-salary.html', 'submit-review.html',
   'interview-experience.html',
-  'js/profile.js', 'js/admin.js', 'js/representative.js', 'js/my-applications.js',
+  'js/profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js', 'js/representative.js', 'js/my-applications.js',
   'js/notifications.js', 'js/verification.js', 'js/submit-salary.js', 'js/review.js',
   'js/interview.js', 'js/representative-request.js', 'js/admin-oversight.js',
   'js/require-session.js',

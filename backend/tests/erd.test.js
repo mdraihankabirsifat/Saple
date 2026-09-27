@@ -10,7 +10,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 test('the ERD generator reads the full active schema', () => {
   const { tables, views } = erd.parseSchema(read('database/postgres/01_final_schema_postgres.sql').replace(/\r\n/g, '\n'));
 
-  assert.equal(tables.size, 21);
+  assert.equal(tables.size, 22);
   assert.equal(views.length, 5);
   assert.deepEqual(tables.get('job_applications').uniqueKeys, [['job_id', 'applicant_user_id']]);
   assert.deepEqual(tables.get('company_representatives').partialUnique.columns, ['user_id', 'company_id']);
@@ -21,6 +21,8 @@ test('the ERD generator reads the full active schema', () => {
   assert.equal(subtype.optional, false);
   const application = rels.find((item) => item.child === 'job_applications' && item.column === 'job_id');
   assert.equal(application.onDelete, 'RESTRICT');
+  assert.deepEqual(rels.filter((item) => item.child === 'direct_messages').map((item) => item.column).sort(),
+    ['recipient_user_id', 'sender_user_id']);
 });
 
 test('the committed ERD is exactly what the current schema generates', () => {
@@ -41,12 +43,12 @@ test('the ERD describes PostgreSQL and every table, not the Oracle milestone', (
 
   assert.match(html, /<title>Saple PostgreSQL ERD<\/title>/);
   assert.doesNotMatch(html, /Oracle 19c Entity|Fourteen Oracle relations/);
-  assert.match(md, /21 tables and 5 views/);
+  assert.match(md, /22 tables and 5 views/);
 
   for (const table of [
     'users', 'employees', 'companies', 'submissions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
-    'job_application_status_history', 'announcements', 'notifications'
+    'job_application_status_history', 'announcements', 'notifications', 'direct_messages'
   ]) {
     assert.match(html, new RegExp(`id="entity-${table}"`), table);
     assert.match(md, new RegExp(`\\b${table.toUpperCase()} \\{`), table);

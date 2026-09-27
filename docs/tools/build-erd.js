@@ -143,7 +143,7 @@ function keyFlags(table, columnName) {
 // ---------------------------------------------------------------------------
 
 const DOMAINS = [
-  { title: 'Accounts', tone: 'account', tables: ['users', 'employees', 'password_reset_tokens', 'notifications'] },
+  { title: 'Accounts', tone: 'account', tables: ['users', 'employees', 'password_reset_tokens', 'notifications', 'direct_messages'] },
   { title: 'Verification and representatives', tone: 'trust', tables: ['employment_verifications', 'company_representatives', 'representative_assignment_actions'] },
   { title: 'Company reference', tone: 'reference', tables: ['companies', 'job_roles', 'benefits', 'company_benefits'] },
   { title: 'Contributions', tone: 'content', tables: ['submissions', 'salary_submissions', 'company_reviews', 'interview_experiences'] },

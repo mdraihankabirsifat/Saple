@@ -16,7 +16,9 @@ const PUBLIC_JOB_COLUMNS = `
   employment_type AS "employmentType", work_mode AS "workMode",
   salary_min AS "salaryMin", salary_max AS "salaryMax",
   salary_currency AS "salaryCurrency", salary_period AS "salaryPeriod",
-  application_deadline AS "applicationDeadline", published_at AS "publishedAt"
+  application_deadline AS "applicationDeadline", published_at AS "publishedAt",
+  (SELECT logo_path FROM companies c WHERE c.company_id = v.company_id) AS "logoPath",
+  (SELECT updated_at FROM companies c WHERE c.company_id = v.company_id) AS "logoUpdatedAt"
 `;
 
 const PUBLIC_JOB_FILTER = `
@@ -53,7 +55,7 @@ async function findPublicJobs(filters, { limit, offset, sort = 'NEWEST' }) {
   const orderBy = PUBLIC_JOB_ORDER[sort] || PUBLIC_JOB_ORDER.NEWEST;
   const result = await database.query(`
     SELECT ${PUBLIC_JOB_COLUMNS}
-    FROM vw_public_open_jobs
+    FROM vw_public_open_jobs v
     ${PUBLIC_JOB_FILTER}
     ORDER BY ${orderBy}
     LIMIT $7 OFFSET $8
@@ -64,7 +66,7 @@ async function findPublicJobs(filters, { limit, offset, sort = 'NEWEST' }) {
 async function countPublicJobs(filters) {
   const result = await database.query(`
     SELECT COUNT(*)::int AS "total"
-    FROM vw_public_open_jobs
+    FROM vw_public_open_jobs v
     ${PUBLIC_JOB_FILTER}
   `, publicFilterValues(filters));
   return result.rows[0].total;
@@ -73,7 +75,7 @@ async function countPublicJobs(filters) {
 async function findPublicJobById(jobId) {
   const result = await database.query(`
     SELECT ${PUBLIC_JOB_COLUMNS}, description, requirements
-    FROM vw_public_open_jobs
+    FROM vw_public_open_jobs v
     WHERE job_id = $1
   `, [jobId]);
   return result.rows[0] || null;

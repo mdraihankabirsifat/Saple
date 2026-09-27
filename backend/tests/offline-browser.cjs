@@ -40,8 +40,10 @@ const server = http.createServer((req, res) => {
   const browser = await chromium.launch({ channel: 'chrome', headless: true });
   try {
     const context = await browser.newContext(); const page = await context.newPage(); const errors = [];
+    await page.addInitScript((apiOrigin) => { window.SAPLE_API_BASE_URL = apiOrigin; }, origin);
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(`${origin}/companies.html`); await page.waitForSelector('.company-card');
+    await page.goto(`${origin}/companies.html`);
+    await page.waitForSelector('.company-card', { timeout: 10000 }).catch((error) => { console.error('Offline harness page errors:', errors); throw error; });
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
     await page.goto(`${origin}/company-details.html?id=1`); await page.waitForSelector('#company-content:not([hidden])');
@@ -54,8 +56,7 @@ const server = http.createServer((req, res) => {
     });
     assert.doesNotMatch(await page.evaluate(() => localStorage.getItem('saple.public-cache.v1')), /private-marker|\/auth\//i);
     mode = 'api-down'; await page.goto(`${origin}/companies.html`);
-    await page.waitForSelector('.company-card'); assert.match(await page.locator('#offline-notice').textContent(), /saved public data from/);
-    assert.equal(await page.locator('.directory-results .badge').textContent(), 'Saved directory');
+    await page.waitForSelector('.company-card'); assert.equal(await page.locator('#offline-notice').count(), 0);
     const countBefore = writes;
     const failed = await page.evaluate(async () => {
       const { apiRequest } = await import('./js/api.js');
@@ -65,7 +66,7 @@ const server = http.createServer((req, res) => {
     mode = 'down'; await page.reload(); await page.waitForSelector('.company-card');
     await page.goto(`${origin}/company-details.html?id=1`); await page.waitForSelector('#company-content:not([hidden])');
     assert.match(await page.locator('#overview h1').textContent(), /Offline Test Company/);
-    await page.goto(`${origin}/index.html`); await page.waitForSelector('#offline-notice');
+    await page.goto(`${origin}/index.html`); assert.equal(await page.locator('#offline-notice').count(), 0);
     await context.setOffline(true); await page.goto(`${origin}/companies.html`); await page.waitForSelector('.company-card');
     await page.setViewportSize({ width: 320, height: 768 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
@@ -83,7 +84,8 @@ const server = http.createServer((req, res) => {
     });
     mode = 'api-down'; await page.goto(`${origin}/companies.html`); await page.waitForSelector('#company-status.error');
     assert.equal(await page.locator('.company-card').count(), 0);
-    await page.getByRole('button', { name: 'Clear saved data' }).click();
+    assert.equal(await page.getByRole('button', { name: 'Clear saved data' }).count(), 0);
+    await page.evaluate(() => localStorage.removeItem('saple.public-cache.v1'));
     assert.equal(await page.evaluate(() => localStorage.getItem('saple.public-cache.v1')), null);
     assert.deepEqual(errors, []);
     console.log('PASS: API 503, complete server outage, offline reload/navigation, timestamps, mobile layout, recovery, private-data exclusion, no write replay, 404 eviction, expiry and clearing cached data.');

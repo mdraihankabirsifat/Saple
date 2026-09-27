@@ -52,6 +52,16 @@
       <p id="profile-load-status" class="state-message" role="status">Loading profile&hellip;</p>
       <div id="profile-content" class="profile-grid" hidden>
         <section class="profile-card card">
+          <h2>Profile picture</h2>
+          <div id="profile-avatar" class="profile-avatar" role="img" aria-label="Your profile picture"></div>
+          <input id="profile-avatar-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp">
+          <div class="form-actions">
+            <button id="profile-avatar-change" class="button button-secondary button-small" type="button">Change photo</button>
+            <button id="profile-avatar-remove" class="button button-secondary button-small" type="button" hidden>Remove photo</button>
+          </div>
+          <p id="profile-avatar-status" class="state-message form-status" role="status" hidden></p>
+        </section>
+        <section class="profile-card card">
           <h2>Personal details</h2>
           <p>Email changes require a future verification flow, so email remains read-only.</p>
           <form id="profile-form">

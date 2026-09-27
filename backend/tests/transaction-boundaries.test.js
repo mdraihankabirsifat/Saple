@@ -173,7 +173,7 @@ test('no repository issues INSERT, UPDATE or DELETE outside a transaction client
       // constant a caller runs.
       let issuer = 'unknown';
       for (let cursor = index; cursor >= 0 && cursor > index - 15; cursor -= 1) {
-        const call = lines[cursor].match(/(database|client|transactionClient|executor)\.(query|withTransaction)/);
+        const call = lines[cursor].match(/(database|client|transactionClient|executor)\.(query|withTransaction|withCloudTransaction)/);
         if (call) { issuer = call[0]; break; }
         const constant = lines[cursor].match(/^const (\w+) = `/);
         if (constant) {

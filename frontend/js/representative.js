@@ -1,4 +1,5 @@
 import { apiRequest } from './api.js';
+import { createCompanyLogo } from './company-logo.js';
 import { requireSession } from './require-session.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination,
@@ -16,6 +17,55 @@ const panels = {
 };
 
 let scopes = [];
+document.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-message-user]');
+  if (!button) return;
+  const { mountMessages, openConversation } = await import('./messages.js');
+  mountMessages(); openConversation(button.dataset.messageUser);
+});
+
+function renderLogoControls() {
+  const host = document.querySelector('#company-logo-uploads');
+  if (!host) return;
+  host.replaceChildren(...scopes.map((scope) => {
+    const preview = createCompanyLogo(scope.companyName, null, document, scope.logoUrl);
+    const previewHost = el('div', { attrs: { 'data-logo-preview': scope.companyId } }, [preview]);
+    const file = el('input', { attrs: { type: 'file', accept: 'image/jpeg,image/png,image/webp', 'aria-label': `Logo for ${scope.companyName}` } });
+    const upload = el('button', { className: 'button button-secondary button-small', text: 'Upload logo', attrs: { type: 'button' } });
+    const remove = el('button', { className: 'button button-secondary button-small', text: 'Remove logo', attrs: { type: 'button' } });
+    remove.hidden = !scope.logoPath;
+    const message = el('p', { className: 'form-feedback', attrs: { role: 'status' } });
+    upload.addEventListener('click', async () => {
+      const selected = file.files?.[0];
+      if (!selected || !['image/jpeg', 'image/png', 'image/webp'].includes(selected.type) || selected.size > 1024 * 1024) {
+        message.textContent = 'Choose a JPEG, PNG or WebP image up to 1 MB.'; return;
+      }
+      upload.disabled = true;
+      try {
+        const body = new FormData(); body.append('logo', selected);
+        const result = await apiRequest(`/api/representative/companies/${scope.companyId}/logo`, { method: 'PUT', auth: true, body });
+        scope.logoPath = result.logoPath; scope.logoUrl = result.logoUrl;
+        previewHost.replaceChildren(createCompanyLogo(scope.companyName, null, document, scope.logoUrl));
+        remove.hidden = false; message.textContent = 'Logo updated.'; file.value = '';
+      } catch (error) { message.textContent = error.message; }
+      finally { upload.disabled = false; }
+    });
+    remove.addEventListener('click', async () => {
+      remove.disabled = true;
+      try {
+        await apiRequest(`/api/representative/companies/${scope.companyId}/logo`, { method: 'DELETE', auth: true });
+        scope.logoPath = null; scope.logoUrl = null;
+        previewHost.replaceChildren(createCompanyLogo(scope.companyName));
+        remove.hidden = true; message.textContent = 'Logo removed.';
+      } catch (error) { message.textContent = error.message; }
+      finally { remove.disabled = false; }
+    });
+    return el('div', { className: 'company-logo-control' }, [
+      previewHost,
+      el('strong', { text: scope.companyName }), file, upload, remove, message
+    ]);
+  }));
+}
 
 // One company workspace can cover several assigned companies, so every write
 // names the company explicitly rather than assuming a single scope.
@@ -470,7 +520,9 @@ function applicationCard(application, reload) {
   return el('article', { className: 'queue-card card' }, [
     el('div', { className: 'queue-head' }, [
       el('div', {}, [
-        el('h3', { className: 'queue-title', text: application.applicantName }),
+        el('h3', { className: 'queue-title' }, [
+          el('a', { text: application.applicantName, attrs: { href: `user-profile.html?id=${application.applicantUserId}` } })
+        ]),
         el('p', { className: 'queue-subtitle', text: `${application.jobTitle} · ${application.companyName}` })
       ]),
       el('span', {
@@ -486,6 +538,7 @@ function applicationCard(application, reload) {
       el('summary', { text: 'Application statement' }),
       el('p', { className: 'application-cover-letter', text: application.coverLetter })
     ]),
+    el('button', { className: 'button button-secondary button-small', text: 'Message applicant', attrs: { type: 'button', 'data-message-user': application.applicantUserId } }),
     isOpen ? el('div', { className: 'decision-row' }, [decision, note, save]) : null,
     isOpen ? feedback : null
   ]);
@@ -622,6 +675,7 @@ async function start() {
     el('span', { text: scope.jobTitle || 'Company representative' }),
     el('span', { className: 'scope-since', text: `Active since ${formatDate(scope.approvedAt)}` })
   ])));
+  renderLogoControls();
 
   for (const panel of Object.values(panels)) {
     const companyFilter = panel.querySelector('[data-company-filter]');

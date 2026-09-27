@@ -8,6 +8,8 @@ const settingsPath = path.join(root, '.env.local');
 const actions = {
   up: ['up', '--build', '--detach', '--wait', '--wait-timeout', '180'],
   down: ['down'], // Keep the database volume and all local contributions.
+  'db-up': ['up', '--detach', '--wait', '--wait-timeout', '180', 'database'],
+  'db-down': ['stop', 'database'],
   ps: ['ps'],
   logs: ['logs', '--tail', '80'],
   accounts: ['exec', '-T', 'app', 'node', 'scripts/provisionDemoUsers.js'],
@@ -21,8 +23,8 @@ function initializeSettings(file = settingsPath) {
   return true;
 }
 function main(action = process.argv[2]) {
-  if (!actions[action]) throw new Error('Use local:up, local:down, local:status, local:logs, local:accounts, or local:test.');
-  if (action === 'up') initializeSettings();
+  if (!actions[action]) throw new Error('Use local:up, local:down, local:db-up, local:db-down, local:status, local:logs, local:accounts, or local:test.');
+  if (action === 'up' || action === 'db-up') initializeSettings();
   if (!fs.existsSync(settingsPath)) throw new Error('Run npm run local:up first to create local settings.');
   const check = spawnSync('docker', ['info', '--format', '{{.ServerVersion}}'], { encoding: 'utf8', timeout: 15000, windowsHide: true });
   if (check.error || check.status !== 0) throw new Error('Start Docker Desktop (Linux containers), then run this command again.');

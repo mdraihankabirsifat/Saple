@@ -3,6 +3,8 @@ const applicationController = require('../controllers/application.controller');
 const notificationController = require('../controllers/notification.controller');
 const representativeController = require('../controllers/representative.controller');
 const authenticate = require('../middleware/authenticate');
+const imageController = require('../controllers/image.controller');
+const { imageUpload } = require('../middleware/imageUpload');
 const { createRateLimit, accountOrAddressKey } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -18,6 +20,9 @@ const representativeRequestRateLimit = createRateLimit({
 
 // Everything under /api/me belongs to the authenticated account only.
 router.use(authenticate);
+
+router.put('/avatar', imageUpload('avatar', 2 * 1024 * 1024), imageController.putAvatar);
+router.delete('/avatar', imageController.deleteAvatar);
 
 router.get('/applications', applicationController.listOwn);
 router.get('/applications/:applicationId', applicationController.getOwn);

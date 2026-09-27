@@ -26,6 +26,13 @@ test('offline cache allows public GET endpoints and rejects private requests and
   assert.equal(c.isCacheable('/api/companies', 'GET', true), false);
   assert.equal(c.isCacheable('/api/companies', 'GET', false, { authorization: SYNTHETIC_AUTHORIZATION }), false);
 });
+test('last-resort cached browsing no longer inserts a visible offline banner', () => {
+  const { context } = cacheHarness();
+  assert.doesNotThrow(() => context.showOfflineNotice('directory', Date.now()));
+  assert.doesNotThrow(() => context.markLive('directory'));
+  const source = fs.readFileSync(path.join(root, 'frontend/js/offline-cache.js'), 'utf8');
+  assert.doesNotMatch(source, /createElement\('aside'\)|Try reconnecting|Clear saved data/);
+});
 test('cache isolates API origins, canonicalizes queries, limits entries, expires old data and tolerates denied storage', () => {
   const { context: c, storage, stored } = cacheHarness();
   assert.equal(c.cacheKey('https://saple.test', '/api/companies?b=2&a=1'), 'https://saple.test/api/companies?a=1&b=2');
@@ -81,16 +88,16 @@ test('the service worker never caches a private page, script or stylesheet', () 
   // Anything that only ever shows one account's data must be absent from the
   // cached shell and named in the purge list, so an older worker's copy goes.
   for (const file of [
-    'profile.html', 'admin.html', 'representative.html', 'my-applications.html',
+    'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
     'employee-verification.html', 'js/notifications.js', 'js/admin.js',
-    'js/representative.js', 'js/profile.js'
+    'js/representative.js', 'js/profile.js', 'js/messages.js', 'js/user-profile.js'
   ]) {
     assert.equal(assets.includes(`'${file}'`), false, `${file} must not be cached`);
     assert.equal(privatePaths.includes(`'${file}'`), true, `${file} must be purged`);
   }
 
   // The cache name is versioned and older versions are deleted on activation.
-  assert.match(source, /const SHELL_CACHE = 'saple-shell-v9'/);
+  assert.match(source, /const SHELL_CACHE = 'saple-shell-v10'/);
   assert.match(source, /caches\.delete\(key\)/);
   assert.match(source, /cache\.delete\(href\)/);
 });

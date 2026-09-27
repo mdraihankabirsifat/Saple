@@ -118,6 +118,7 @@ async function findAllCompanies(filters) {
     SELECT c.company_id AS "companyId", c.company_name AS "companyName",
       c.industry, c.headquarters_city AS "headquartersCity", c.country,
       c.website, c.company_size AS "companySize", c.description,
+      c.logo_path AS "logoPath", c.updated_at AS "updatedAt",
       c.created_at AS "createdAt",
       COALESCE(review_stats.review_count, 0) AS "reviewCount",
       review_stats.average_rating AS "averageRating",
@@ -157,6 +158,7 @@ async function findCompanyById(companyId) {
     SELECT c.company_id AS "companyId", c.company_name AS "companyName",
       c.industry, c.headquarters_city AS "headquartersCity", c.country,
       c.website, c.company_size AS "companySize", c.description,
+      c.logo_path AS "logoPath", c.updated_at AS "updatedAt",
       c.created_at AS "createdAt", COALESCE(review_stats.review_count, 0) AS "reviewCount",
       review_stats.average_rating AS "averageRating"
     FROM companies c

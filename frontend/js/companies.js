@@ -46,7 +46,7 @@ function ratingText(company) {
 
 function createCompanyCard(company) {
   const article = document.createElement('article');
-  const logo = createCompanyLogo(company.companyName, company.website);
+  const logo = createCompanyLogo(company.companyName, company.website, document, company.logoUrl);
   const heading = document.createElement('h3');
   const headingLine = document.createElement('div');
   const rating = document.createElement('span');

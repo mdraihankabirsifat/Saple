@@ -22,9 +22,9 @@ The third file is read-only validation. The first two target a fresh project; do
 The original Oracle files under `database/sql/` are preserved for the earlier course milestone. The active backend does not execute them.
 
 > **Already have a Saple project on Supabase?** Do not run the files above on it.
-> Apply the four additive migrations in `database/postgres/migrations/` instead,
+> Apply the seven additive migrations in `database/postgres/migrations/` instead,
 > following that folder's README, and rehearse on a backup first. The final
-> schema has 21 tables and 5 views.
+> schema has 22 tables and 5 views.
 
 ## 3. Configure the backend
 

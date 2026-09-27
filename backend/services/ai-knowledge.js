@@ -68,7 +68,7 @@ const TOPICS = Object.freeze([
       'The Jobs page lists only published vacancies that are still inside their application deadline.',
       'A signed-in job-seeker account can apply once per vacancy with a short application statement.',
       'Your applications live on the My applications page, where you can also withdraw while a decision is still open.',
-      'Saple does not accept file uploads, so there is no CV attachment step.'
+      'Job applications do not accept CV uploads or attachments.'
     ].join(' ')
   },
   {

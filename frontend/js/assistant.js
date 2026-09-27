@@ -157,13 +157,16 @@ function closePanel() {
   releaseFocus = null;
   panel.hidden = true;
   root.classList.remove('is-open');
+  document.body.classList.remove('guide-panel-open');
   launcher.setAttribute('aria-expanded', 'false');
   launcher.focus();
 }
 
 function openPanel() {
+  window.dispatchEvent(new CustomEvent('saple:floating-panel-open', { detail: { panel: 'guide' } }));
   panel.hidden = false;
   root.classList.add('is-open');
+  document.body.classList.add('guide-panel-open');
   launcher.setAttribute('aria-expanded', 'true');
   releaseFocus = trapFocus(panel, { onEscape: closePanel });
   input.focus();
@@ -299,4 +302,7 @@ export async function mountAssistant() {
   // Lets the stylesheet leave room so the last content on a page can always
   // scroll clear of the floating launcher.
   document.body.classList.add('has-saple-guide');
+  window.addEventListener('saple:floating-panel-open', (event) => {
+    if (event.detail?.panel !== 'guide' && panel && !panel.hidden) closePanel();
+  });
 }

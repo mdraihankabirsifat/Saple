@@ -37,8 +37,8 @@ test('database health route returns a safe PostgreSQL result', async () => {
     const body = await response.json();
 
     assert.equal(response.status, 200);
-    assert.equal(body.message, 'Supabase PostgreSQL database connection is healthy');
-    assert.deepEqual(body.data, { connectionTest: 1 });
+    assert.equal(body.message, 'Saple PostgreSQL database connection is healthy');
+    assert.deepEqual(body.data, { ok: 1, source: 'supabase' });
     assert.equal(JSON.stringify(body).includes('DATABASE_URL'), false);
   } finally {
     await new Promise((resolve) => server.close(resolve));

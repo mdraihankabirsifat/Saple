@@ -39,13 +39,13 @@ test('company marks are generated locally and never request a remote image', asy
   }
 });
 
-test('no third-party logo host or image source survives in the helper', () => {
+test('company logos use only the backend-provided URL, never a website-derived logo host', async () => {
   assert.doesNotMatch(helperSource, /logos\.hunter\.io|icons\.duckduckgo\.com|clearbit|favicon/i);
-  assert.doesNotMatch(helperSource, /createElement\(\s*['"]img['"]\s*\)/i);
-  assert.doesNotMatch(helperSource, /\.src\s*=/);
-  // A scheme followed by a host character would be a real outbound address.
-  // The only remaining occurrence is a URL-parser template, which is not one.
-  assert.doesNotMatch(helperSource, /https?:\/\/[a-z0-9]/i);
+  const { createCompanyLogo } = await helperModule;
+  const logo = createCompanyLogo('Aster Byte Limited', 'https://untrusted.example', fakeDocument, 'https://storage.example/logo');
+  assert.equal(logo.children[1].src, 'https://storage.example/logo');
+  assert.equal(logo.children[0].hidden, true);
+  assert.equal(createCompanyLogo('Aster Byte Limited', null, fakeDocument, 'http://unsafe.example/logo').children.length, 1);
 });
 
 test('initials cover single words, multiple words, and unusable names', async () => {
@@ -88,7 +88,7 @@ test('domain normalization still validates websites for display only', async () 
 });
 
 test('directory and detail pages share the local mark helper', () => {
-  assert.match(read('frontend/js/companies.js'), /createCompanyLogo\(company\.companyName, company\.website\)/);
+  assert.match(read('frontend/js/companies.js'), /createCompanyLogo\(company\.companyName, company\.website, document, company\.logoUrl\)/);
   assert.match(read('frontend/js/company-details.js'), /import \{ createCompanyLogo \} from '\.\/company-logo\.js'/);
 
   const css = read('frontend/css/company-details.css');

@@ -1,4 +1,7 @@
 const companyRepository = require('../repositories/company.repository');
+const storage = require('../config/supabase-storage');
+
+function withLogo(company) { return { ...company, logoUrl: storage.publicUrl('logo', company.logoPath, company.updatedAt) }; }
 
 function createHttpError(statusCode, message) {
   const error = new Error(message);
@@ -96,7 +99,7 @@ function validateCompanyFilters(query = {}) {
 }
 
 async function getCompanies(query) {
-  return companyRepository.findAllCompanies(validateCompanyFilters(query));
+  return (await companyRepository.findAllCompanies(validateCompanyFilters(query))).map(withLogo);
 }
 
 async function getCompanyFilterOptions() {
@@ -114,7 +117,7 @@ async function getCompany(companyId) {
   // Additive field: every existing key is unchanged, and `insights` carries the
   // approved-only figures computed by saple_company_insight_summary().
   const insights = await companyRepository.findCompanyInsightSummary(validCompanyId);
-  return { ...company, insights };
+  return { ...withLogo(company), insights };
 }
 
 async function getCompanyBenefits(companyId) {

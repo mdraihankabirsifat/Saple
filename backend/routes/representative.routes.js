@@ -5,6 +5,8 @@ const verificationController = require('../controllers/verification.controller')
 const representativeController = require('../controllers/representative.controller');
 const authenticate = require('../middleware/authenticate');
 const requireCompanyRepresentative = require('../middleware/requireCompanyRepresentative');
+const imageController = require('../controllers/image.controller');
+const { imageUpload } = require('../middleware/imageUpload');
 
 const router = express.Router();
 
@@ -15,6 +17,8 @@ const router = express.Router();
 router.use(authenticate, requireCompanyRepresentative);
 
 router.get('/workspace', representativeController.getWorkspace);
+router.put('/companies/:companyId/logo', (request, response, next) => { try { imageController.companyIdFrom(request); next(); } catch (error) { next(error); } }, imageUpload('logo', 1024 * 1024), imageController.putLogo);
+router.delete('/companies/:companyId/logo', imageController.deleteLogo);
 
 router.get('/verifications', verificationController.listScoped);
 router.get('/verifications/:verificationId', verificationController.getScoped);
