@@ -404,20 +404,108 @@ function requestNavigationFit() {
   fitFrame = requestAnimationFrame(fitNavigation);
 }
 
-function closeNavigation() {
+// --- Mobile drawer ----------------------------------------------------------
+// In compact mode the menu is a side drawer (styled in premium.css). The
+// drawer gets its own close button and a backdrop, locks page scroll while
+// open, keeps keyboard focus inside, and closes on Escape, the close button,
+// a backdrop click or following a link. The desktop row is unaffected: the
+// extra elements are hidden there.
+const DRAWER_FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
+let drawerBackdrop = null;
+
+function buildDrawerChrome() {
+  if (!navigationMenu || navigationMenu.querySelector('.nav-drawer-head')) return;
+
+  const head = document.createElement('div');
+  head.className = 'nav-drawer-head';
+  const title = document.createElement('p');
+  title.className = 'nav-drawer-title';
+  title.textContent = 'Menu';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'nav-drawer-close';
+  close.setAttribute('aria-label', 'Close menu');
+  const glyph = document.createElement('span');
+  glyph.setAttribute('aria-hidden', 'true');
+  glyph.textContent = '\u00d7';
+  close.append(glyph);
+  close.addEventListener('click', () => closeNavigation({ restoreFocus: true }));
+  head.append(title, close);
+  navigationMenu.prepend(head);
+
+  drawerBackdrop = document.createElement('div');
+  drawerBackdrop.className = 'nav-backdrop';
+  drawerBackdrop.setAttribute('aria-hidden', 'true');
+  drawerBackdrop.addEventListener('click', () => closeNavigation({ restoreFocus: true }));
+  siteHeader?.append(drawerBackdrop);
+}
+
+// Each link gets its position, which the stylesheet turns into a short
+// staggered entrance. Set through the CSSOM, so no inline style attribute.
+function indexDrawerItems() {
+  navigationMenu?.querySelectorAll('.nav-links li').forEach((item, index) => {
+    item.style.setProperty('--i', String(index));
+  });
+}
+
+function isDrawerOpen() {
+  return navigationToggle?.getAttribute('aria-expanded') === 'true';
+}
+
+function openNavigation() {
+  if (!navigationToggle || !navigationMenu) return;
+  navigationToggle.setAttribute('aria-expanded', 'true');
+  navigationMenu.classList.add('is-open');
+  if (isCompactNavigation()) {
+    document.documentElement.classList.add('nav-drawer-open');
+    // Focus moves into the drawer once it has started to slide in.
+    requestAnimationFrame(() => {
+      const first = navigationMenu.querySelector('.nav-links a') || navigationMenu.querySelector(DRAWER_FOCUSABLE);
+      first?.focus({ preventScroll: true });
+    });
+  }
+}
+
+function closeNavigation({ restoreFocus = false } = {}) {
   if (!navigationToggle || !navigationMenu) {
     return;
   }
 
+  const wasOpen = isDrawerOpen();
   navigationToggle.setAttribute('aria-expanded', 'false');
   navigationMenu.classList.remove('is-open');
+  document.documentElement.classList.remove('nav-drawer-open');
+  if (wasOpen && restoreFocus) navigationToggle?.focus();
+}
+
+// Tab and Shift+Tab stay inside the open drawer.
+function trapDrawerFocus(event) {
+  if (event.key !== 'Tab' || !isDrawerOpen() || !isCompactNavigation()) return;
+  const focusable = [...navigationMenu.querySelectorAll(DRAWER_FOCUSABLE)]
+    .filter((node) => node.offsetParent !== null);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (!navigationMenu.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus();
+  } else if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 if (navigationToggle && navigationMenu) {
+  buildDrawerChrome();
+  indexDrawerItems();
+  document.addEventListener('keydown', trapDrawerFocus);
+
   navigationToggle.addEventListener('click', () => {
-    const shouldOpen = navigationToggle.getAttribute('aria-expanded') !== 'true';
-    navigationToggle.setAttribute('aria-expanded', String(shouldOpen));
-    navigationMenu.classList.toggle('is-open', shouldOpen);
+    if (isDrawerOpen()) closeNavigation();
+    else openNavigation();
   });
 
   navigationMenu.addEventListener('click', (event) => {
@@ -440,13 +528,37 @@ document.addEventListener('click', (event) => {
   }
 });
 
+// --- Disclosures ---------------------------------------------------------------
+// [data-disclosure] wraps a toggle button and a panel. The panel animates open
+// with grid-template-rows (premium.css), and aria-expanded is the only state:
+// no class or inline style has to agree with it. A disclosure that holds
+// filters opens by itself when the address already carries one of them, so an
+// applied filter is never hidden from the person who applied it.
+function setDisclosure(disclosure, open) {
+  const toggle = disclosure.querySelector('[data-disclosure-toggle]');
+  toggle?.setAttribute('aria-expanded', String(open));
+  disclosure.classList.toggle('is-open', open);
+}
+
+document.querySelectorAll('[data-disclosure]').forEach((disclosure) => {
+  const params = (disclosure.dataset.disclosureParams || '').split(/\s+/).filter(Boolean);
+  const query = new URLSearchParams(window.location.search);
+  setDisclosure(disclosure, params.some((name) => query.has(name)));
+});
+
+document.addEventListener('click', (event) => {
+  const toggle = event.target.closest('[data-disclosure-toggle]');
+  if (!toggle) return;
+  const disclosure = toggle.closest('[data-disclosure]');
+  if (disclosure) setDisclosure(disclosure, toggle.getAttribute('aria-expanded') !== 'true');
+});
+
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') {
     return;
   }
 
-  if (navigationMenu?.classList.contains('is-open')) navigationToggle?.focus();
-  closeNavigation();
+  closeNavigation({ restoreFocus: navigationMenu?.classList.contains('is-open') });
 
   if (contributionMenu?.open) {
     contributionMenu.open = false;

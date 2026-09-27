@@ -8,9 +8,11 @@
   <meta name="description"
     content="Saple is an independent BUET CSE academic project for company and career insights: moderated company reviews, verified and community salary ranges, interview experiences and job postings.">
   <title>Saple | Company and career insights</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/premium.css">
 </head>
 
 <body>
@@ -53,10 +55,26 @@
       <div class="hero-grid container">
         <div class="hero-content">
           <p class="hero-badge">Independent BUET CSE academic project</p>
-          <h1 id="hero-heading">Know the company before you join.</h1>
+          <h1 id="hero-heading">Know the company <span class="hero-highlight">before you join.</span></h1>
           <p class="hero-text">
             Saple collects company profiles, salary ranges, workplace reviews, interview experiences and job
             postings — then shows you exactly how trustworthy each piece of information is, and why.
+          </p>
+          <!-- An ordinary GET form: companies.html reads ?search= itself, so this
+               works with or without JavaScript. -->
+          <form class="hero-search" action="companies.html" method="get" role="search"
+            aria-label="Search companies">
+            <label class="sr-only" for="hero-search-input">Search companies by name, industry or city</label>
+            <input id="hero-search-input" name="search" type="search" maxlength="100" autocomplete="off"
+              placeholder="Search a company, industry or city">
+            <button class="button button-primary" type="submit">Search</button>
+          </form>
+          <p class="hero-quick-links">
+            <span>Or jump to</span>
+            <a href="salaries.html">Salary ranges</a>
+            <a href="reviews.html">Reviews</a>
+            <a href="interviews.html">Interviews</a>
+            <a href="jobs.html">Open jobs</a>
           </p>
           <div class="hero-actions">
             <a class="button button-primary" href="companies.html">Explore companies</a>
@@ -75,6 +93,16 @@
              connected career ecosystem. It has a static first frame, pauses
              when offscreen or hidden, and does not animate under
              prefers-reduced-motion. -->
+        <!-- Image-ready visual: add <img class="hero-visual-image" src="assets/hero/hero.webp" alt=""
+             width="1200" height="900" decoding="async"> as the slot's first child to replace the
+             sapling. Recommended 4:3, 1200 x 900. See docs/UI_IMAGE_GUIDE.md. -->
+        <div class="hero-visual-slot">
+          <p class="hero-float hero-float-top" aria-hidden="true">
+            <strong>Verified range</strong><span>exact company and role</span>
+          </p>
+          <p class="hero-float hero-float-bottom" aria-hidden="true">
+            <strong>Approved only</strong><span>moderated before it is public</span>
+          </p>
         <figure class="hero-visual" data-hero-visual>
           <svg class="saple-scene" viewBox="0 0 480 420" role="img"
             aria-label="Illustration of a sapling growing from a seed into a leafy young tree"
@@ -142,6 +170,7 @@
             A seed sprouts, grows a trunk and branches, and opens into a leafy young tree.
           </figcaption>
         </figure>
+        </div>
       </div>
     </section>
 
@@ -215,23 +244,75 @@
           </p>
         </div>
 
-        <div class="discover-grid">
-          <section class="discover-column" aria-labelledby="featured-companies-heading">
-            <div class="discover-head">
+        <!-- Each rail scrolls by hand (touch, trackpad, keyboard or the arrow
+             buttons) and snaps to a card. Nothing moves on its own. -->
+        <section class="rail-section" aria-labelledby="featured-companies-heading">
+          <div class="rail-head">
+            <div>
               <h3 id="featured-companies-heading">Featured companies</h3>
+              <p>Profiles with approved ratings and salary context.</p>
+            </div>
+            <div class="rail-controls">
               <a class="text-link" href="companies.html">All companies &rarr;</a>
+              <button class="rail-button" type="button" data-rail-prev="featured-companies"
+                aria-label="Scroll companies back"><span aria-hidden="true">&larr;</span></button>
+              <button class="rail-button" type="button" data-rail-next="featured-companies"
+                aria-label="Scroll companies forward"><span aria-hidden="true">&rarr;</span></button>
             </div>
-            <div class="featured-companies" id="featured-companies"></div>
-          </section>
+          </div>
+          <div class="rail" id="featured-companies" tabindex="0" aria-label="Featured companies"></div>
+        </section>
 
-          <section class="discover-column" aria-labelledby="latest-jobs-heading">
-            <div class="discover-head">
+        <section class="rail-section" aria-labelledby="latest-jobs-heading">
+          <div class="rail-head">
+            <div>
               <h3 id="latest-jobs-heading">Latest open jobs</h3>
-              <a class="text-link" href="jobs.html">All jobs &rarr;</a>
+              <p>Published vacancies still inside their application deadline.</p>
             </div>
-            <div class="featured-jobs" id="featured-jobs"></div>
-          </section>
-        </div>
+            <div class="rail-controls">
+              <a class="text-link" href="jobs.html">All jobs &rarr;</a>
+              <button class="rail-button" type="button" data-rail-prev="featured-jobs"
+                aria-label="Scroll jobs back"><span aria-hidden="true">&larr;</span></button>
+              <button class="rail-button" type="button" data-rail-next="featured-jobs"
+                aria-label="Scroll jobs forward"><span aria-hidden="true">&rarr;</span></button>
+            </div>
+          </div>
+          <div class="rail" id="featured-jobs" tabindex="0" aria-label="Latest open jobs"></div>
+        </section>
+
+        <section class="rail-section" aria-labelledby="salary-spotlight-heading">
+          <div class="rail-head">
+            <div>
+              <h3 id="salary-spotlight-heading">Salary spotlight</h3>
+              <p>Approved community ranges, on one shared scale so they compare at a glance.</p>
+            </div>
+            <div class="rail-controls">
+              <a class="text-link" href="salaries.html">All salary insights &rarr;</a>
+              <button class="rail-button" type="button" data-rail-prev="salary-spotlight"
+                aria-label="Scroll salary insights back"><span aria-hidden="true">&larr;</span></button>
+              <button class="rail-button" type="button" data-rail-next="salary-spotlight"
+                aria-label="Scroll salary insights forward"><span aria-hidden="true">&rarr;</span></button>
+            </div>
+          </div>
+          <div class="rail" id="salary-spotlight" tabindex="0" aria-label="Salary spotlight"></div>
+        </section>
+
+        <section class="rail-section" aria-labelledby="recent-reviews-heading">
+          <div class="rail-head">
+            <div>
+              <h3 id="recent-reviews-heading">Recently approved reviews</h3>
+              <p>Moderated workplace reviews, newest first.</p>
+            </div>
+            <div class="rail-controls">
+              <a class="text-link" href="reviews.html">All reviews &rarr;</a>
+              <button class="rail-button" type="button" data-rail-prev="recent-reviews"
+                aria-label="Scroll reviews back"><span aria-hidden="true">&larr;</span></button>
+              <button class="rail-button" type="button" data-rail-next="recent-reviews"
+                aria-label="Scroll reviews forward"><span aria-hidden="true">&rarr;</span></button>
+            </div>
+          </div>
+          <div class="rail" id="recent-reviews" tabindex="0" aria-label="Recently approved reviews"></div>
+        </section>
 
         <section class="popular-roles" aria-labelledby="popular-roles-heading">
           <h3 id="popular-roles-heading">Popular roles right now</h3>
@@ -330,7 +411,29 @@
       </div>
     </section>
 
-    <!-- 8. Final call to action -------------------------------------------->
+    <!-- 8. Saple Guide invitation ------------------------------------------->
+    <section class="section" aria-labelledby="guide-invite-heading">
+      <div class="container">
+        <div class="guide-invite">
+          <div>
+            <p class="eyebrow">Saple Guide</p>
+            <h2 id="guide-invite-heading">Ask how anything on Saple works</h2>
+            <p>The guide explains salary ranges, verification, applications and moderation. It cannot see your
+              account, and it labels every answer with where it came from: the AI provider, or Saple's built-in
+              help when the provider is unavailable.</p>
+            <button class="button button-primary" type="button" data-open-guide hidden>Open the Saple Guide</button>
+          </div>
+          <div class="guide-invite-preview" aria-hidden="true">
+            <p class="guide-invite-bubble is-user">What is the difference between the two salary ranges?</p>
+            <p class="guide-invite-bubble is-guide">The Verified range uses only contributors verified for that exact
+              company and role. The Community range uses every approved salary.</p>
+            <p class="guide-invite-note">Example exchange. Do not type passwords or personal details into the guide.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Final call to action -------------------------------------------->
     <section class="section section-cta" aria-labelledby="cta-heading">
       <div class="container">
         <div class="final-cta">

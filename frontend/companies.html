@@ -6,10 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Browse and search real company records available on Saple.">
   <title>Companies | Saple</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/forms.css">
   <link rel="stylesheet" href="css/companies.css">
+  <link rel="stylesheet" href="css/premium.css">
 </head>
 
 <body>
@@ -65,23 +67,32 @@
             <div class="form-group"><label for="company-size">Company size</label><select id="company-size"><option value="">Any size</option></select></div>
             <div class="form-group"><label for="company-rating">Minimum rating</label><select id="company-rating"><option value="">Any rating</option><option value="3">3+</option><option value="4">4+</option><option value="4.5">4.5+</option></select></div>
           </div>
-          <fieldset class="salary-range-control" id="salary-range-control">
-            <legend>Salary range <span>(BDT)</span></legend>
-            <div class="dual-range-track">
-              <input type="range" min="0" max="500000" value="0" data-range-min aria-label="Minimum salary handle">
-              <input type="range" min="0" max="500000" value="500000" data-range-max aria-label="Maximum salary handle">
-            </div>
-            <div class="salary-value-boxes">
-              <div class="form-group"><label for="company-min-salary">Minimum BDT</label><input id="company-min-salary" type="text" inputmode="decimal" placeholder="No minimum" autocomplete="off"></div>
-              <div class="form-group"><label for="company-max-salary">Maximum BDT</label><input id="company-max-salary" type="text" inputmode="decimal" placeholder="No maximum" autocomplete="off"></div>
-            </div>
-          </fieldset>
           <div class="form-group directory-sort"><label for="company-sort">Sort by</label><select id="company-sort">
             <option value="name-asc">Company name A&ndash;Z</option><option value="name-desc">Company name Z&ndash;A</option>
             <option value="rating-desc">Highest rating</option><option value="rating-asc">Lowest rating</option>
             <option value="salary-desc">Highest salary</option><option value="salary-asc">Lowest salary</option>
           </select></div>
-          <div class="directory-checks"><label><input id="company-has-salary" type="checkbox"> Has salary data</label><label><input id="company-has-reviews" type="checkbox"> Has reviews</label><label><input id="company-has-interviews" type="checkbox"> Has interviews</label></div>
+          <!-- Opens by itself when the address already carries one of these filters. -->
+          <div class="disclosure" data-disclosure data-disclosure-params="minSalary maxSalary hasSalaryData hasReviews hasInterviews">
+            <button class="disclosure-toggle" type="button" aria-expanded="false" aria-controls="more-company-filters"
+              data-disclosure-toggle>More filters <span class="disclosure-hint">salary range and data</span></button>
+            <div class="disclosure-panel" id="more-company-filters">
+              <div class="disclosure-inner">
+                <fieldset class="salary-range-control" id="salary-range-control">
+                  <legend>Salary range <span>(BDT)</span></legend>
+                  <div class="dual-range-track">
+                    <input type="range" min="0" max="500000" value="0" data-range-min aria-label="Minimum salary handle">
+                    <input type="range" min="0" max="500000" value="500000" data-range-max aria-label="Maximum salary handle">
+                  </div>
+                  <div class="salary-value-boxes">
+                    <div class="form-group"><label for="company-min-salary">Minimum BDT</label><input id="company-min-salary" type="text" inputmode="decimal" placeholder="No minimum" autocomplete="off"></div>
+                    <div class="form-group"><label for="company-max-salary">Maximum BDT</label><input id="company-max-salary" type="text" inputmode="decimal" placeholder="No maximum" autocomplete="off"></div>
+                  </div>
+                </fieldset>
+                <div class="directory-checks"><label><input id="company-has-salary" type="checkbox"> Has salary data</label><label><input id="company-has-reviews" type="checkbox"> Has reviews</label><label><input id="company-has-interviews" type="checkbox"> Has interviews</label></div>
+              </div>
+            </div>
+          </div>
           <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><button id="clear-search" class="button button-secondary" type="reset">Clear</button></div>
         </form>
       </aside>
