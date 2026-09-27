@@ -1011,6 +1011,7 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 /* 11. Home ----------------------------------------------------------------- */
 
 .home-hero {
+  isolation: isolate;
   position: relative;
   overflow: hidden;
   padding-block: clamp(2.5rem, 6vw, 5.5rem) clamp(2.5rem, 5vw, 4.5rem);
@@ -1018,6 +1019,25 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
     radial-gradient(70% 90% at 88% 10%, rgba(47, 139, 103, 0.14), transparent 60%),
     radial-gradient(55% 70% at 8% 100%, rgba(195, 161, 95, 0.14), transparent 60%),
     var(--background);
+}
+
+/* The supplied homepage artwork is a quiet full-bleed layer rather than a
+   competing card. Its opacity and four-edge mask let the page ground show
+   through, so the hero flows into the snapshot while scrolling. */
+.home-hero-background {
+  position: absolute;
+  inset: -1rem 0 -2rem;
+  z-index: 0;
+  pointer-events: none;
+  background: url("../assets/hero/homepage.png") center / cover no-repeat;
+  opacity: 0.23;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 34%, rgba(0, 0, 0, 0.92) 62%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, #000 34%, rgba(0, 0, 0, 0.92) 62%, transparent 100%);
+}
+
+:root[data-theme="dark"] .home-hero-background {
+  opacity: 0.14;
+  filter: saturate(0.75) brightness(0.7);
 }
 
 /* A faint growth-grid behind the hero: the "data" half of the identity. */
@@ -1035,7 +1055,18 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
   content: "";
 }
 
-.home-hero > .container { position: relative; }
+.home-hero > .container {
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero .hero-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.home-hero .hero-content {
+  max-width: 56rem;
+}
 
 .hero-badge {
   border: 1px solid var(--saple-gold-soft);
@@ -1120,87 +1151,6 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 }
 
 .hero-quick-links a:hover { border-color: var(--saple-green-600); background: var(--saple-green-50); }
-
-/* Image-ready hero visual.
-   Recommended image: 4:3 (1200 x 900), docs/UI_IMAGE_GUIDE.md.
-   With no image, the layered background and the animated sapling carry the
-   area; an added <img class="hero-visual-image"> covers them. */
-.hero-visual-slot {
-  position: relative;
-  aspect-ratio: 4 / 3.4;
-  width: 100%;
-  max-width: 540px;
-  justify-self: end;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 2rem;
-  background:
-    radial-gradient(60% 60% at 50% 42%, rgba(47, 139, 103, 0.16), transparent 70%),
-    linear-gradient(160deg, var(--surface), var(--surface-muted));
-  box-shadow: var(--shadow-lg);
-}
-
-.hero-visual-slot::before {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.6;
-  pointer-events: none;
-  content: "";
-}
-
-.hero-visual-image {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-visual-slot .hero-visual {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-}
-
-/* Two small floating "insight" labels on the visual, describing what Saple
-   shows; decorative only. */
-.hero-float {
-  position: absolute;
-  z-index: 3;
-  padding: 0.55rem 0.8rem;
-  display: grid;
-  gap: 0.1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  font-size: 0.78rem;
-  line-height: 1.3;
-}
-
-.hero-float strong { color: var(--saple-green-900); font-size: 0.86rem; }
-.hero-float span { color: var(--text-secondary); }
-.hero-float-top { top: 1.2rem; left: 1.2rem; }
-.hero-float-bottom { right: 1.2rem; bottom: 1.2rem; }
-
-.hero-float-top::before {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.75rem;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--saple-green-500);
-  box-shadow: 0 0 0 4px rgba(47, 139, 103, 0.18);
-  content: "";
-}
 
 /* Live snapshot: a single editorial band of figures. */
 .section-snapshot { padding-block: 0 clamp(2.5rem, 5vw, 3.5rem); }
@@ -1972,9 +1922,12 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 }
 
 @media (max-width: 760px) {
+  .home-hero-background {
+    inset: 0 -8rem -1rem;
+    opacity: 0.16;
+  }
+
   .rail { grid-auto-columns: minmax(240px, 78%); }
-  .hero-visual-slot { max-width: 420px; justify-self: center; }
-  .hero-float { display: none; }
   .home-hero h1 { max-width: none; }
 }
 

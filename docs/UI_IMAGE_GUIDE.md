@@ -24,7 +24,7 @@ is an optional upgrade, never a missing piece.
 
 | Page / section | Image type | Aspect ratio | Suggested size | File to create | Optional |
 |---|---|---|---|---|---|
-| Homepage hero (`index.html`, `.hero-visual-slot`) | Editorial illustration or photo: a workspace, a growing plant, an abstract data-and-leaf composition | 4:3 | 1200 × 900 | `frontend/assets/hero/hero.webp` | Yes — the animated sapling is the fallback |
+| Homepage background (`index.html`, `.home-hero-background`) | Editorial illustration or photo: a workspace, a growing plant, an abstract data-and-leaf composition | 16:9 | 1672 × 941 | `frontend/assets/hero/homepage.png` | Optional — the four-edge fade keeps the hero usable without it |
 | Sign in (`login.html`, `.auth-scene`) | Calm botanical desk scene | 4:3 | 1000 × 750 | `frontend/assets/auth/login.webp` | Yes — an original SVG desk scene is there now; replace the `<svg>` inside `.auth-scene` with an `<img>` to use a file |
 | Register (`register.html`, `.auth-visual-slot`) | Illustration about contributing or joining | 5:3 | 1000 × 600 | `frontend/assets/auth/register.webp` | Yes |
 | Forgot / reset password (`.auth-visual-slot`) | Quiet illustration: a key, a leaf, an envelope | 5:3 | 1000 × 600 | `frontend/assets/auth/recovery.webp` | Yes |
@@ -32,18 +32,11 @@ is an optional upgrade, never a missing piece.
 
 ### Adding the homepage hero image
 
-Add this as the **first child** of `<div class="hero-visual-slot">` in
-`index.html`:
-
-```html
-<img class="hero-visual-image" src="assets/hero/hero.webp" alt=""
-  width="1200" height="900" decoding="async">
-```
-
-`alt=""` is right when the image is decorative. If it shows something the page
-text does not say, describe it in `alt` instead. The image covers the slot with
-`object-fit: cover`; the sapling stays underneath as a fallback if the file is
-ever missing, so a broken-image icon never appears.
+The supplied `frontend/assets/hero/homepage.png` is already used as the
+homepage hero background. CSS fades all four edges into Saple's page surface,
+and the artwork is intentionally low-contrast so the search and calls to
+action remain readable. Replace that file with another local 16:9 image if
+you want a different background.
 
 ### Adding an auth image
 

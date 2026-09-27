@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v5';
+const SHELL_CACHE = 'saple-shell-v6';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -15,7 +15,7 @@ const ASSETS = [
   'privacy.html', 'terms.html', 'security.html', 'contact.html',
   'css/common.css', 'css/home.css', 'css/info-pages.css', 'css/companies.css', 'css/company-details.css',
   'css/auth.css', 'css/forms.css', 'css/browse.css', 'css/profile.css', 'css/salary-form.css',
-  'css/jobs.css', 'css/premium.css', 'favicon.svg',
+  'css/jobs.css', 'css/premium.css', 'favicon.svg', 'assets/hero/homepage.png',
   'js/nav.js', 'js/theme.js', 'js/api.js', 'js/auth.js', 'js/ui.js', 'js/offline-cache.js',
   'js/announcements.js', 'js/assistant.js', 'js/companies.js', 'js/company-directory.js',
   'js/company-logo.js', 'js/salary-range.js', 'js/company-details.js', 'js/browse-shared.js', 'js/browse-controls.js',

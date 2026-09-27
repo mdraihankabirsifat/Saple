@@ -322,94 +322,6 @@ async function loadPopularRoles() {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Hero visual
-//
-// A local SVG of a growing sapling in two depth layers. The parallax is a small translation
-// driven by pointer position and written as a CSS custom property, so no
-// inline style attribute is needed and the strict CSP is satisfied. It runs
-// only when the figure is on screen, the tab is visible, and the visitor has
-// not asked for reduced motion.
-// ---------------------------------------------------------------------------
-
-function mountHeroVisual() {
-  const figure = document.querySelector('[data-hero-visual]');
-  if (!figure) return;
-
-  // The static first frame is the SVG itself; animation is purely additive.
-  if (prefersReducedMotion()) {
-    figure.dataset.motion = 'static';
-    return;
-  }
-
-  figure.dataset.motion = 'ready';
-
-  const layers = [...figure.querySelectorAll('.scene-layer')];
-  let visible = true;
-  let frame = null;
-  let targetX = 0;
-  let targetY = 0;
-  let currentX = 0;
-  let currentY = 0;
-
-  function apply() {
-    frame = null;
-    currentX += (targetX - currentX) * 0.12;
-    currentY += (targetY - currentY) * 0.12;
-
-    for (const layer of layers) {
-      const depth = Number(layer.dataset.depth) || 0;
-      layer.style.setProperty('--shift-x', `${(currentX * depth * 14).toFixed(2)}px`);
-      layer.style.setProperty('--shift-y', `${(currentY * depth * 10).toFixed(2)}px`);
-    }
-
-    if (visible && (Math.abs(targetX - currentX) > 0.001 || Math.abs(targetY - currentY) > 0.001)) {
-      frame = requestAnimationFrame(apply);
-    }
-  }
-
-  function schedule() {
-    if (!visible || frame !== null) return;
-    frame = requestAnimationFrame(apply);
-  }
-
-  function stop() {
-    if (frame !== null) cancelAnimationFrame(frame);
-    frame = null;
-  }
-
-  figure.addEventListener('pointermove', (event) => {
-    // Coarse pointers are touch: dragging a finger across a decoration is not
-    // something to chase, and it would fight with scrolling.
-    if (event.pointerType !== 'mouse') return;
-    const bounds = figure.getBoundingClientRect();
-    targetX = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
-    targetY = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
-    schedule();
-  });
-
-  figure.addEventListener('pointerleave', () => {
-    targetX = 0;
-    targetY = 0;
-    schedule();
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    visible = document.visibilityState === 'visible';
-    if (visible) schedule();
-    else stop();
-  });
-
-  if (typeof IntersectionObserver !== 'undefined') {
-    new IntersectionObserver((entries) => {
-      visible = entries.some((entry) => entry.isIntersecting)
-        && document.visibilityState === 'visible';
-      if (visible) schedule();
-      else stop();
-    }, { threshold: 0.05 }).observe(figure);
-  }
-}
-
 // Sections fade in once, and only when motion is welcome.
 function mountSectionReveal() {
   if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
@@ -429,7 +341,6 @@ function mountSectionReveal() {
   }
 }
 
-mountHeroVisual();
 mountSectionReveal();
 loadSnapshot();
 mountRails();

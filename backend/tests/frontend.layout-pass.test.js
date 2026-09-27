@@ -180,19 +180,13 @@ test('the Jobs disclaimer lives in the footer brand column, not under the result
   assert.match(read('js/nav.js'), /job applications made through Saple are handled inside Saple only/);
 });
 
-test('the homepage tree has no signal layer', () => {
+test('the homepage uses the supplied background artwork without a tree segment', () => {
   const home = read('index.html');
   const css = read('css/home.css');
 
-  assert.doesNotMatch(home, /signal-link|signal-node|scene-layer-front|৳|★|✓/);
-  assert.doesNotMatch(css, /signal-link|signal-node|node-pop/);
-  // The tree itself, its motion and its reduced-motion fallback remain.
-  for (const part of ['tree-seed', 'tree-shoot', 'tree-trunk', 'tree-branch', 'leaf-cluster', 'scene-layer-back', 'scene-layer-mid']) {
-    assert.match(home, new RegExp(part), part);
-  }
-  assert.match(home, /<figcaption class="sr-only">\s*A seed sprouts, grows a trunk and branches, and opens into a leafy young tree\.\s*<\/figcaption>/);
-  assert.doesNotMatch(home, /career signals/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.tree-seed,\n  \.tree-shoot,\n  \.tree-trunk,\n  \.tree-branch,\n  \.leaf-cluster \{/);
+  assert.match(home, /<div class="home-hero-background" aria-hidden="true"><\/div>/);
+  assert.doesNotMatch(home, /tree-seed|tree-shoot|tree-trunk|tree-branch|leaf-cluster|saple-scene|scene-layer/);
+  assert.doesNotMatch(css, /tree-seed|tree-shoot|tree-trunk|tree-branch|leaf-cluster|scene-layer/);
 });
 
 test('all five browse pages share the sticky sidebar and drawer system', () => {
