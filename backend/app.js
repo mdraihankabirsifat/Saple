@@ -4,6 +4,7 @@ const path = require('path');
 const hostingConfig = require('./config/hosting');
 const securityConfig = require('./config/security');
 const securityHeaders = require('./middleware/securityHeaders');
+const { isPrivatePath } = require('./config/pages');
 const healthRoutes = require('./routes/health.routes');
 const companyRoutes = require('./routes/company.routes');
 const authRoutes = require('./routes/auth.routes');
@@ -42,6 +43,78 @@ app.use(securityHeaders);
 app.use(cors(hostingConfig.createCorsOptionsDelegate()));
 app.use(express.json({ limit: securityConfig.MAX_JSON_BODY_BYTES }));
 app.use(express.urlencoded({ extended: true, limit: securityConfig.MAX_JSON_BODY_BYTES }));
+
+// Emergency hosted review mode for the public Render deployment.
+//
+// Google Safe Browsing flagged the hosted site for deceptive/phishing behavior.
+// While that review is unresolved, the public Render build is intentionally
+// browse-only: no hosted page collects credentials or other account data, and
+// no state-changing API accepts submissions. Local development is unaffected.
+//
+// After Google clears the deployment, the owner can explicitly re-enable the
+// interactive hosted demo by setting PUBLIC_INTERACTIVE_FEATURES=true in the
+// Render environment and redeploying. Keeping the opt-in explicit prevents a
+// future redeploy from accidentally restoring credential forms during review.
+const hostedReviewMode = hostingConfig.isRenderEnvironment()
+  && process.env.PUBLIC_INTERACTIVE_FEATURES !== 'true';
+
+function sendHostedReviewModePage(response) {
+  response.setHeader('Cache-Control', 'no-store');
+  response.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  return response.status(200).type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Saple hosted demo account features are temporarily unavailable during a security review.">
+  <title>Hosted demo review mode | Saple</title>
+  <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="Saple home"><span class="brand-mark" aria-hidden="true">S</span><span>Saple</span></a>
+    </nav>
+  </header>
+  <main class="container" id="main-content">
+    <section class="card" style="max-width:760px;margin:4rem auto;padding:2rem">
+      <p class="eyebrow">Hosted demo review mode</p>
+      <h1>Account and contribution features are temporarily unavailable.</h1>
+      <p>This public deployment is currently browse-only while its security listing is being reviewed. This page does not ask for passwords, login credentials, payment details, or company account credentials.</p>
+      <p>You can still browse Saple's public company, salary, review, interview, and job information.</p>
+      <p><a class="button button-primary" href="/">Return to Saple</a> <a class="button button-secondary" href="/security.html">Security information</a></p>
+    </section>
+  </main>
+  <footer class="site-footer"><p class="footer-fallback container">&copy; 2026 Saple. Independent BUET CSE academic project.</p></footer>
+</body>
+</html>`);
+}
+
+if (hostedReviewMode) {
+  app.use((request, response, next) => {
+    const isApiPath = request.path === '/api' || request.path.startsWith('/api/');
+
+    // Replace every hosted account/workspace/contribution page with a neutral,
+    // non-interactive explanation. The original pages remain available locally
+    // for the course demo and automated tests.
+    if (!isApiPath && isPrivatePath(request.path)) {
+      return sendHostedReviewModePage(response);
+    }
+
+    // Make the public hosted deployment read-only during review. GET/HEAD and
+    // CORS preflight remain available, but credential, account, application,
+    // moderation and contribution writes cannot be submitted remotely.
+    if (isApiPath && !['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+      return response.status(503).json({
+        success: false,
+        message: 'Interactive account and contribution features are temporarily disabled on the hosted demo during a security review.'
+      });
+    }
+
+    return next();
+  });
+}
 
 // Crawler and security-contact files are generated from the requesting origin,
 // so they stay correct on localhost and on any future domain.
