@@ -37,7 +37,7 @@ function interviewCard(item) {
       item.authorName || 'Anonymous', new Date(item.interviewDate).toLocaleDateString()
     ]),
     grid,
-    companyDetailsLink(item.companyId, 'View company and reporting options →')
+    companyDetailsLink(item.companyId, 'View company and reporting options')
   );
   return card;
 }

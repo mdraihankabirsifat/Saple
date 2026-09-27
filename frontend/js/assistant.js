@@ -84,8 +84,7 @@ async function submitQuestion(event) {
   const question = input.value.trim();
   if (!question) return;
 
-  transcript.querySelector('.guide-suggestions')?.remove();
-  transcript.querySelector('.guide-intro-empty')?.remove();
+  transcript.querySelector('.guide-suggestions-row')?.remove();
   appendMessage('user', question);
   conversation.push({ role: 'user', content: question });
   while (conversation.length > MAX_TURNS) conversation.shift();
@@ -237,13 +236,9 @@ function buildPanel() {
     el('div', { className: 'guide-head' }, [
       el('div', {}, [
         el('div', { className: 'guide-heading-row' }, [
-          el('h2', { className: 'guide-heading', text: status?.label || 'Saple Guide (AI-assisted)' }),
+          el('h2', { className: 'guide-heading', text: 'Saple Guide' }),
           statusPill
         ]),
-        el('p', {
-          className: 'guide-scope',
-          text: 'Helps with using Saple only. It cannot see your account or make changes.'
-        })
       ]),
       close
     ]),
@@ -269,16 +264,6 @@ function buildPanel() {
 }
 
 function renderIntro() {
-  const intro = el('li', { className: 'guide-message guide-message-assistant guide-intro-empty' }, [
-    el('span', { className: 'guide-author', text: 'Saple Guide' }),
-    el('p', {
-      className: 'guide-text',
-      text: status?.aiEnabled
-        ? 'Ask me anything about using Saple: companies, salary ranges, verification, jobs, applications or your account.'
-        : 'The AI provider is not configured for this deployment, so I am answering from Saple’s built-in help instead. Ask about salary ranges, verification, jobs, applications or your account.'
-    })
-  ]);
-  transcript.append(intro);
   const suggestions = renderSuggestions();
   if (suggestions) transcript.append(el('li', { className: 'guide-message guide-suggestions-row' }, [suggestions]));
 }
@@ -304,10 +289,7 @@ export async function mountAssistant() {
       'aria-controls': 'saple-guide-panel',
       'aria-label': 'Open the Saple Guide'
     }
-  }, [
-    el('span', { className: 'guide-launcher-icon', attrs: { 'aria-hidden': 'true' }, text: '?' }),
-    el('span', { className: 'guide-launcher-label', text: 'Saple Guide' })
-  ]);
+  }, [el('span', { className: 'guide-launcher-label', text: 'Saple Guide' })]);
   launcher.addEventListener('click', () => (panel.hidden ? openPanel() : closePanel()));
 
   // The panel comes first so it opens above the launcher, which stays in the

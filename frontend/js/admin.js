@@ -203,7 +203,7 @@ function renderHistory(history) {
     const note = document.createElement('p');
     const meta = document.createElement('p');
     item.className = 'history-item';
-    transition.textContent = `${action.actionType}: ${action.previousStatus || 'None'} → ${action.newStatus}`;
+    transition.textContent = `${action.actionType}: ${action.previousStatus || 'None'} to ${action.newStatus}`;
     note.textContent = action.actionNote || 'No note supplied.';
     meta.className = 'history-meta';
     meta.textContent = `${action.moderatorName} · ${formatDate(action.actionAt)}`;

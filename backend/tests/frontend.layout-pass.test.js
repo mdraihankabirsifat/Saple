@@ -112,7 +112,7 @@ test('the Saple Guide opens above its launcher with one scrolling region', () =>
   assert.match(script, /container\.append\(buildPanel\(\), launcher\)/);
   assert.doesNotMatch(script, /container\.append\(launcher, buildPanel\(\)\)/);
 
-  assert.match(css, /\.guide-panel \{[^}]*width: min\(420px, calc\(100vw - 32px\)\);[^}]*max-height: min\(650px, calc\(100dvh - 110px\)\);[^}]*display: flex;[^}]*flex-direction: column;[^}]*overflow: hidden;/);
+  assert.match(css, /\.guide-panel \{[^}]*width: min\(380px, calc\(100vw - 32px\)\);[^}]*max-height: min\(540px, calc\(100dvh - 32px\)\);[^}]*display: flex;[^}]*flex-direction: column;[^}]*overflow: hidden;/);
   assert.match(css, /\.guide-head \{\n  flex: none;/);
   assert.match(css, /\.guide-transcript \{[^}]*flex: 1 1 auto;[^}]*min-height: 0;[^}]*overflow-y: auto;/);
   assert.match(css, /\.guide-form \{[^}]*flex: none;[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/);
@@ -122,8 +122,8 @@ test('the Saple Guide opens above its launcher with one scrolling region', () =>
   // A short disclosure plus an expandable Privacy section.
   assert.match(script, /className: 'guide-disclosure'/);
   assert.match(script, /el\('details', \{ className: 'guide-privacy-details' \}, \[\n\s*el\('summary', \{ text: 'Privacy' \}\)/);
-  // Small screens: a bottom sheet; it steps aside for the filter drawer.
-  assert.match(css, /@media \(max-width: 600px\) \{\n  \.guide-root\.is-open \{\n    left: 0;\n    right: 0;\n    bottom: 0;/);
+  // Small screens stay compact and step aside for the filter drawer.
+  assert.match(css, /@media \(max-width: 600px\) \{\n  \.guide-root\.is-open \{\n    left: auto;\n    right: 12px;\n    bottom: 12px;/);
   assert.match(css, /\.filters-open \.guide-root \{\n  display: none;/);
 
   // Safety properties are unchanged.

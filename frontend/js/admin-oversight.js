@@ -96,7 +96,7 @@ function assignmentCard(assignment, reload) {
       history.append(el('ol', { className: 'application-history' }, entries.map((entry) => el('li', {}, [
         el('span', {
           className: 'application-history-status',
-          text: `${entry.actionType} → ${entry.newStatus}`
+          text: `${entry.actionType} to ${entry.newStatus}`
         }),
         el('time', {
           className: 'application-history-time',

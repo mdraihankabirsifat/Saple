@@ -40,7 +40,7 @@ function createMeta(values) {
   return meta;
 }
 
-function companyDetailsLink(companyId, label = 'View company details →') {
+function companyDetailsLink(companyId, label = 'View company details') {
   const link = document.createElement('a');
   link.className = 'card-link';
   link.href = `company-details.html?id=${encodeURIComponent(companyId)}`;

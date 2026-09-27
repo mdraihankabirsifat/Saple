@@ -1327,20 +1327,10 @@ a.notification-title:hover {
   background: var(--brand-hover);
 }
 
-.guide-launcher-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  font-weight: 900;
-}
-
 /* Header, composer and footer never scroll; only the transcript does. */
 .guide-panel {
-  width: min(420px, calc(100vw - 32px));
-  max-height: min(650px, calc(100dvh - 110px));
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(540px, calc(100dvh - 32px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1368,13 +1358,6 @@ a.notification-title:hover {
 .guide-heading {
   margin: 0;
   font-size: 0.98rem;
-}
-
-.guide-scope {
-  margin: 0.2rem 0 0;
-  color: var(--text-secondary);
-  font-size: 0.76rem;
-  line-height: 1.45;
 }
 
 .guide-close {
@@ -1564,13 +1547,13 @@ a.notification-title:hover {
   cursor: pointer;
 }
 
-/* Small screens: the open guide becomes a bottom sheet within the viewport,
-   and it steps aside while the filter drawer is open. */
+/* Keep the guide compact on phones as well; the transcript remains the only
+   scrolling region while the composer and actions stay visible. */
 @media (max-width: 600px) {
   .guide-root.is-open {
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: auto;
+    right: 12px;
+    bottom: 12px;
   }
 
   .guide-root.is-open .guide-launcher {
@@ -1578,18 +1561,18 @@ a.notification-title:hover {
   }
 
   .guide-root.is-open .guide-panel {
-    width: 100%;
-    max-height: min(85dvh, calc(100dvh - 56px));
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
-    border-bottom: 0;
+    width: min(390px, calc(100vw - 24px));
+    max-height: min(560px, calc(100dvh - 24px));
+    border-radius: var(--radius-xl);
+    border-bottom: 1px solid var(--border);
   }
 
   .guide-launcher-label {
-    display: none;
+    display: inline;
   }
 
   .guide-launcher {
-    padding: 0.65rem;
+    padding: 0.6rem 0.9rem;
   }
 }
 

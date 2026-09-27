@@ -88,10 +88,9 @@
   .register-main .choice-card { font-size: 0.95rem; }
 }
 
-/* Sign-in: a calm botanical desk scene ---------------------------------------
-   Original inline SVG and CSS only: no photograph, no remote asset, nothing
-   traced from another product. Colours come from the shared tokens, so the
-   scene works in both themes. */
+/* Sign-in foreground illustration -------------------------------------------
+   The supplied city artwork sits behind this layout in premium.css; this
+   small inline illustration remains a lightweight foreground accent. */
 .auth-intro-botanical {
   display: grid;
   gap: 1.1rem;

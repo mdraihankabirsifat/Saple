@@ -262,7 +262,7 @@ test('the representative workspace explains a closed door without guessing why',
 test('the guide is labelled, discloses its privacy position and can be closed by keyboard', () => {
   const script = read('js/assistant.js');
 
-  assert.match(script, /Saple Guide \(AI-assisted\)/);
+  assert.match(script, /text: 'Saple Guide'/);
   assert.match(script, /status\?\.privacyNotice/);
   assert.match(script, /role: 'dialog'/);
   assert.match(script, /trapFocus\(panel, \{ onEscape: closePanel \}\)/);
@@ -281,7 +281,7 @@ test('the guide button does not sit on top of the notification controls', () => 
   assert.match(guideRoot, /bottom: 16px/);
   assert.match(guideRoot, /right: 16px/);
   assert.match(css, /\.notification-bell \{\s*\n\s*position: relative/);
-  assert.match(css, /\.guide-panel \{[\s\S]*?width: min\(420px, calc\(100vw - 32px\)\)/);
+  assert.match(css, /\.guide-panel \{[\s\S]*?width: min\(380px, calc\(100vw - 32px\)\)/);
 });
 
 test('admin oversight starts only after its tab state is declared', () => {

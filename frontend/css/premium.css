@@ -135,9 +135,24 @@ body {
   font-size: 1rem;
   line-height: 1.6;
   color: var(--text-primary);
-  background: var(--background);
+  background-color: var(--background);
+  background-image:
+    linear-gradient(90deg, rgba(23, 61, 48, 0.045) 1px, transparent 1px),
+    linear-gradient(rgba(23, 61, 48, 0.045) 1px, transparent 1px),
+    radial-gradient(70% 55% at 8% 0%, rgba(47, 139, 103, 0.11), transparent 72%),
+    radial-gradient(55% 50% at 100% 34%, rgba(195, 161, 95, 0.1), transparent 74%);
+  background-size: 64px 64px, 64px 64px, 100% 100%, 100% 100%;
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+:root[data-theme="dark"] body {
+  background-image:
+    linear-gradient(90deg, rgba(180, 220, 190, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(180, 220, 190, 0.04) 1px, transparent 1px),
+    radial-gradient(70% 55% at 8% 0%, rgba(47, 139, 103, 0.16), transparent 72%),
+    radial-gradient(55% 50% at 100% 34%, rgba(195, 161, 95, 0.08), transparent 74%);
 }
 
 h1,
@@ -1014,7 +1029,7 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
   isolation: isolate;
   position: relative;
   overflow: hidden;
-  padding-block: clamp(2.5rem, 6vw, 5.5rem) clamp(2.5rem, 5vw, 4.5rem);
+  padding-block: clamp(1.5rem, 3vw, 3rem) clamp(1.5rem, 3vw, 2.5rem);
   background:
     radial-gradient(70% 90% at 88% 10%, rgba(47, 139, 103, 0.14), transparent 60%),
     radial-gradient(55% 70% at 8% 100%, rgba(195, 161, 95, 0.14), transparent 60%),
@@ -1066,6 +1081,10 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 
 .home-hero .hero-content {
   max-width: 56rem;
+}
+
+.rail[data-auto-loop="true"] {
+  scroll-snap-type: none;
 }
 
 .hero-badge {
@@ -1676,6 +1695,50 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
     radial-gradient(60% 80% at 90% 0%, rgba(47, 139, 103, 0.12), transparent 60%),
     radial-gradient(50% 60% at 0% 100%, rgba(195, 161, 95, 0.12), transparent 60%),
     var(--background);
+}
+
+/* Auth artwork stays behind the layout, with a quiet wash that keeps labels
+   and form controls readable in both themes. */
+.auth-main.login-main,
+.auth-main.register-main {
+  isolation: isolate;
+  overflow: hidden;
+  background: transparent;
+}
+
+.auth-main.login-main::before,
+.auth-main.register-main::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+}
+
+.auth-main.login-main::before {
+  background-image:
+    linear-gradient(100deg, rgba(246, 243, 234, 0.92), rgba(246, 243, 234, 0.72) 48%, rgba(246, 243, 234, 0.88)),
+    url("../assets/hero/login.png");
+}
+
+.auth-main.register-main::before {
+  background-image:
+    linear-gradient(100deg, rgba(246, 243, 234, 0.94), rgba(246, 243, 234, 0.74) 50%, rgba(246, 243, 234, 0.9)),
+    url("../assets/hero/singup.png");
+}
+
+:root[data-theme="dark"] .auth-main.login-main::before {
+  background-image:
+    linear-gradient(100deg, rgba(13, 25, 20, 0.94), rgba(13, 25, 20, 0.76) 48%, rgba(13, 25, 20, 0.9)),
+    url("../assets/hero/login.png");
+}
+
+:root[data-theme="dark"] .auth-main.register-main::before {
+  background-image:
+    linear-gradient(100deg, rgba(13, 25, 20, 0.95), rgba(13, 25, 20, 0.78) 50%, rgba(13, 25, 20, 0.92)),
+    url("../assets/hero/singup.png");
 }
 
 .auth-card {

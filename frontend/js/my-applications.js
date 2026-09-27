@@ -36,7 +36,7 @@ function historyList(history) {
     el('span', {
       className: 'application-history-status',
       text: entry.previousStatus
-        ? `${humanizeEnum(entry.previousStatus)} → ${humanizeEnum(entry.newStatus)}`
+        ? `${humanizeEnum(entry.previousStatus)} to ${humanizeEnum(entry.newStatus)}`
         : humanizeEnum(entry.newStatus)
     }),
     el('time', { className: 'application-history-time', text: formatDateTime(entry.actionAt), attrs: { datetime: entry.actionAt } }),

@@ -94,6 +94,7 @@ async function loadFeaturedCompanies() {
       });
     }));
     updateRailControls('featured-companies');
+    mountRailAutoplay(container);
   } catch (error) {
     railEmpty(container, 'The company directory could not be loaded right now.');
   }
@@ -122,6 +123,7 @@ async function loadLatestJobs() {
       ]
     })));
     updateRailControls('featured-jobs');
+    mountRailAutoplay(container);
   } catch (error) {
     railEmpty(container, 'Open jobs could not be loaded right now.');
   }
@@ -194,6 +196,7 @@ async function loadSalarySpotlight() {
       });
     }));
     updateRailControls('salary-spotlight');
+    mountRailAutoplay(container);
   } catch (error) {
     railEmpty(container, 'Salary insights could not be loaded right now.');
   }
@@ -226,13 +229,94 @@ async function loadRecentReviews() {
       ]
     })));
     updateRailControls('recent-reviews');
+    mountRailAutoplay(container);
   } catch (error) {
     railEmpty(container, 'Reviews could not be loaded right now.');
   }
 }
 
-// Previous/next buttons scroll one viewport of cards; they disable at either
-// end, and the right-edge fade disappears once the last card is in view.
+const railLoopStates = new WeakMap();
+
+function prepareRailLoop(rail) {
+  if (!rail || rail.dataset.autoLoopReady === 'true') return;
+  const cards = [...rail.children].filter((child) => !child.hidden && child.classList.contains('rail-card'));
+  if (cards.length < 2 || rail.scrollWidth <= rail.clientWidth + 2) return;
+
+  const fragment = document.createDocumentFragment();
+  for (const card of cards) {
+    const clone = card.cloneNode(true);
+    clone.dataset.railClone = 'true';
+    clone.setAttribute('aria-hidden', 'true');
+    clone.removeAttribute('id');
+    clone.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+    clone.querySelectorAll('a, button, input, select, textarea, summary, [tabindex]').forEach((node) => {
+      node.setAttribute('tabindex', '-1');
+    });
+    fragment.append(clone);
+  }
+  rail.append(fragment);
+  rail.dataset.autoLoopReady = 'true';
+  rail.dataset.autoLoop = 'true';
+
+  requestAnimationFrame(() => {
+    const state = railLoopStates.get(rail);
+    if (!state) return;
+    state.loopWidth = rail.scrollWidth / 2;
+    rail.scrollLeft = state.loopWidth;
+  });
+}
+
+function mountRailAutoplay(rail) {
+  if (!rail || prefersReducedMotion()) return;
+  let state = railLoopStates.get(rail);
+  if (!state) {
+    state = {
+      rail,
+      loopWidth: 0,
+      hovered: false,
+      focused: false,
+      pauseUntil: 0,
+      automaticScroll: false,
+      running: false,
+      lastTime: performance.now()
+    };
+    railLoopStates.set(rail, state);
+
+    rail.addEventListener('mouseenter', () => { state.hovered = true; });
+    rail.addEventListener('mouseleave', () => { state.hovered = false; });
+    rail.addEventListener('focusin', () => { state.focused = true; });
+    rail.addEventListener('focusout', (event) => {
+      if (!rail.contains(event.relatedTarget)) state.focused = false;
+    });
+    rail.addEventListener('pointerdown', () => { state.pauseUntil = performance.now() + 1800; }, { passive: true });
+    rail.addEventListener('wheel', () => { state.pauseUntil = performance.now() + 1800; }, { passive: true });
+    rail.addEventListener('touchstart', () => { state.pauseUntil = performance.now() + 1800; }, { passive: true });
+    rail.addEventListener('scroll', () => {
+      if (!state.automaticScroll) state.pauseUntil = performance.now() + 1600;
+    }, { passive: true });
+  }
+
+  prepareRailLoop(rail);
+  if (state.running) return;
+  state.running = true;
+  const tick = (now) => {
+    const elapsed = Math.min(now - state.lastTime, 100);
+    state.lastTime = now;
+    if (!prefersReducedMotion() && !state.hovered && !state.focused
+      && now >= state.pauseUntil && state.loopWidth > 0) {
+      state.automaticScroll = true;
+      // Decreasing scrollLeft makes the cards travel from left to right.
+      rail.scrollLeft -= Math.max(4, state.loopWidth / 35) * (elapsed / 1000);
+      if (rail.scrollLeft <= 0) rail.scrollLeft += state.loopWidth;
+      state.automaticScroll = false;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// Previous/next buttons scroll one viewport of cards; they remain available
+// while autoplay pauses for hover, focus and direct touch or wheel input.
 function updateRailControls(railId) {
   const rail = document.getElementById(railId);
   if (!rail) return;
@@ -249,6 +333,7 @@ function mountRails() {
   for (const rail of document.querySelectorAll('.rail[id]')) {
     rail.addEventListener('scroll', () => updateRailControls(rail.id), { passive: true });
     updateRailControls(rail.id);
+    mountRailAutoplay(rail);
   }
 
   document.addEventListener('click', (event) => {
@@ -265,7 +350,12 @@ function mountRails() {
   });
 
   window.addEventListener('resize', () => {
-    for (const rail of document.querySelectorAll('.rail[id]')) updateRailControls(rail.id);
+    for (const rail of document.querySelectorAll('.rail[id]')) {
+      prepareRailLoop(rail);
+      const state = railLoopStates.get(rail);
+      if (state?.loopWidth) state.loopWidth = rail.scrollWidth / 2;
+      updateRailControls(rail.id);
+    }
   });
 }
 

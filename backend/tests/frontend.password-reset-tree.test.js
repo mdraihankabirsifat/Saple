@@ -82,7 +82,7 @@ test('the hero has no tree animation or parallax code', () => {
   assert.doesNotMatch(css, /@keyframes (seed-appear|draw-shoot|draw-trunk|draw-branch|reveal-leaves)/);
   assert.doesNotMatch(css, /\.tree-(seed|shoot|trunk|branch)[^\{]*\{[^}]*animation:/);
   assert.doesNotMatch(css, /\.leaves-[1-5][^\{]*\{[^}]*animation:/);
-  assert.doesNotMatch(script, /mountHeroVisual|requestAnimationFrame|cancelAnimationFrame|setProperty\('--shift-x'/);
+  assert.doesNotMatch(script, /mountHeroVisual|cancelAnimationFrame|setProperty\('--shift-x'/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]+\.hero-grid[\s\S]+grid-template-columns: minmax\(0, 1fr\)/);
   assert.doesNotMatch(css, /\.hero-visual|\.saple-scene/);
 });

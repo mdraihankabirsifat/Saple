@@ -64,7 +64,7 @@ function createCompanyCard(company) {
   metadata.append(createMetaItem(appliedQuery.get('salarySource') === 'VERIFIED' ? 'Verified pay' : 'Community pay', salaryText(company)));
   metadata.append(createMetaItem('Interviews', company.interviewCount ? String(company.interviewCount) : 'None yet'));
   detailsLink.className = 'card-link'; detailsLink.href = `company-details.html?id=${encodeURIComponent(company.companyId)}`;
-  detailsLink.textContent = 'View company details →';
+  detailsLink.textContent = 'View company details';
   detailsLink.setAttribute('aria-label', `View details for ${company.companyName || 'this company'}`);
   article.append(logo, headingLine); if (company.industry) article.append(industry);
   article.append(metadata, detailsLink); return article;
