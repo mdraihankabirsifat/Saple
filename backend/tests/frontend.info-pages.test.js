@@ -2,7 +2,6 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { getNextAccordionIndex, initializeFaqAccordion } = require('../../frontend/js/faq');
 
 const frontendDirectory = path.resolve(__dirname, '../../frontend');
 const readFrontend = (relativePath) => fs.readFileSync(path.join(frontendDirectory, relativePath), 'utf8');
@@ -77,20 +76,54 @@ test('auth-aware and verified-contributor navigation behavior remains connected'
   assert.match(script, /updateContributionVisibility/);
 });
 
-test('FAQ has fourteen uniquely linked, initially collapsed accessible regions', () => {
+test('FAQ shows fourteen uniquely identified questions and visible answers', () => {
   const html = readFrontend('faq.html');
-  const buttons = [...html.matchAll(/<button id="([^"]+)" class="faq-question"[^>]+aria-expanded="false"\s+aria-controls="([^"]+)"\s+data-faq-button>/g)];
-  const panels = [...html.matchAll(/<div id="([^"]+)" class="faq-answer" role="region"\s+aria-labelledby="([^"]+)"\s+hidden>/g)];
+  const faq = html.slice(html.indexOf('<section class="section"'), html.indexOf('</main>'));
+  const questions = [...faq.matchAll(/<h2 id="([^"]+)" class="faq-question">/g)];
+  const panels = [...faq.matchAll(/<div id="([^"]+)" class="faq-answer">/g)];
 
-  assert.equal(buttons.length, 14);
+  assert.equal(questions.length, 14);
   assert.equal(panels.length, 14);
-  assert.equal(new Set(buttons.map((match) => match[1])).size, 14);
+  assert.equal(new Set(questions.map((match) => match[1])).size, 14);
   assert.equal(new Set(panels.map((match) => match[1])).size, 14);
+  assert.doesNotMatch(faq, /data-faq-button|aria-expanded|aria-controls|\bhidden>/);
+  assert.doesNotMatch(html, /js\/faq\.js/);
+});
 
-  buttons.forEach((button, index) => {
-    assert.equal(button[2], panels[index][1]);
-    assert.equal(panels[index][2], button[1]);
-  });
+test('Contact sits between FAQ and About and provides the developer details', () => {
+  const nav = readFrontend('js/nav.js');
+  const contact = readFrontend('contact.html');
+  const publicLinks = nav.slice(nav.indexOf('const publicNavigation'), nav.indexOf('const informationPages'));
+  assert.match(publicLinks, /label: 'FAQ'[\s\S]*label: 'Contact'[\s\S]*label: 'About'/);
+  for (const detail of [
+    'Md. Raihan Kabir Sifat',
+    'Computer Science &amp; Engineering Undergraduate, BUET',
+    'Dhaka, Bangladesh',
+    'Bangladesh University of Engineering and Technology (BUET)',
+    'Shahbagh, Dhaka-1000, Bangladesh',
+    'academic database project'
+  ]) assert.ok(contact.includes(detail), detail);
+  assert.match(contact, /href="mailto:www\.raihankabireusc@gmail\.com"/);
+  assert.match(contact, /frontend\/assets\/docs\/Md_Raihan_Kabir_Sifat_resume\.pdf/);
+  assert.match(contact, /View Resume \(coming soon\)/);
+});
+
+test('every supplied page image is mapped to its intended hero', () => {
+  const css = readFrontend('css/premium.css');
+  for (const [page, className, image] of [
+    ['companies.html', 'companies', 'companies.png'],
+    ['salaries.html', 'salaries', 'salaries.png'],
+    ['reviews.html', 'reviews', 'Reviews.png'],
+    ['interviews.html', 'interviews', 'Interviews.png'],
+    ['jobs.html', 'jobs', 'job.png'],
+    ['faq.html', 'faq', 'FAQ.png'],
+    ['contact.html', 'faq', 'FAQ.png'],
+    ['about.html', 'faq', 'FAQ.png']
+  ]) {
+    assert.match(readFrontend(page), new RegExp(`page-art-${className}`), page);
+    assert.ok(css.includes(`.page-art-${className} { --page-art-image: url("../assets/hero/${image}"); }`));
+    assert.ok(fs.existsSync(path.join(frontendDirectory, 'assets/hero', image)), image);
+  }
 });
 
 test('FAQ and About describe implemented boundaries without exposing private values', () => {
@@ -106,56 +139,6 @@ test('FAQ and About describe implemented boundaries without exposing private val
   assert.match(content, /synthetic (?:academic )?demonstration data/i);
   assert.doesNotMatch(content, /demo:\/\/proof/i);
   assert.doesNotMatch(content, /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-});
-
-test('accordion keyboard index movement wraps and supports Home and End', () => {
-  assert.equal(getNextAccordionIndex('ArrowDown', 2, 4), 3);
-  assert.equal(getNextAccordionIndex('ArrowDown', 3, 4), 0);
-  assert.equal(getNextAccordionIndex('ArrowUp', 0, 4), 3);
-  assert.equal(getNextAccordionIndex('Home', 3, 4), 0);
-  assert.equal(getNextAccordionIndex('End', 0, 4), 3);
-});
-
-test('accordion permits only one open panel and responds to keyboard controls', () => {
-  class FakeButton {
-    constructor(panelId) {
-      this.attributes = new Map([['aria-controls', panelId], ['aria-expanded', 'false']]);
-      this.listeners = {};
-      this.focused = false;
-    }
-    getAttribute(name) { return this.attributes.get(name); }
-    setAttribute(name, value) { this.attributes.set(name, value); }
-    addEventListener(type, listener) { this.listeners[type] = listener; }
-    focus() { this.focused = true; }
-    trigger(type, event = {}) { this.listeners[type](event); }
-  }
-
-  const buttons = [new FakeButton('panel-1'), new FakeButton('panel-2'), new FakeButton('panel-3')];
-  const panels = new Map(buttons.map((button) => [button.getAttribute('aria-controls'), { hidden: true }]));
-  const root = {
-    querySelectorAll: () => buttons,
-    getElementById: (id) => panels.get(id)
-  };
-
-  initializeFaqAccordion(root);
-  buttons[0].trigger('click');
-  assert.equal(buttons[0].getAttribute('aria-expanded'), 'true');
-  assert.equal(panels.get('panel-1').hidden, false);
-
-  buttons[1].trigger('click');
-  assert.equal(buttons[0].getAttribute('aria-expanded'), 'false');
-  assert.equal(panels.get('panel-1').hidden, true);
-  assert.equal(buttons[1].getAttribute('aria-expanded'), 'true');
-  assert.equal(panels.get('panel-2').hidden, false);
-
-  let prevented = false;
-  buttons[1].trigger('keydown', { key: 'ArrowDown', preventDefault: () => { prevented = true; } });
-  assert.equal(prevented, true);
-  assert.equal(buttons[2].focused, true);
-
-  buttons[1].trigger('keydown', { key: 'Escape', preventDefault: () => {} });
-  assert.equal(buttons[1].getAttribute('aria-expanded'), 'false');
-  assert.equal(panels.get('panel-2').hidden, true);
 });
 
 test('shared and information-page styles guard mobile navigation and overflow', () => {

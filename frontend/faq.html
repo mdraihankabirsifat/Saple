@@ -50,7 +50,7 @@
   </header>
 
   <main>
-    <section class="info-hero" aria-labelledby="faq-heading">
+    <section class="info-hero page-art page-art-faq" aria-labelledby="faq-heading">
       <div class="info-hero-content container">
         <p class="eyebrow">Project guide</p>
         <h1 id="faq-heading">Frequently asked questions</h1>
@@ -62,9 +62,8 @@
     <section class="section" aria-label="Saple questions and answers">
       <div class="faq-list container">
         <article class="faq-item">
-          <h2><button id="faq-question-1" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-1" data-faq-button>1. What is Saple?</button></h2>
-          <div id="faq-answer-1" class="faq-answer" role="region" aria-labelledby="faq-question-1" hidden>
+          <h2 id="faq-question-1" class="faq-question">1. What is Saple?</h2>
+          <div id="faq-answer-1" class="faq-answer">
             <p>Saple is a database-focused academic platform for exploring companies, benefits, approved salary
               information, employee reviews, and interview experiences. It demonstrates relational data, authorization,
               verification, moderation, aggregation, and privacy-aware public views.</p>
@@ -72,19 +71,17 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-2" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-2" data-faq-button>2. Who can browse salary, review, and interview
-              information?</button></h2>
-          <div id="faq-answer-2" class="faq-answer" role="region" aria-labelledby="faq-question-2" hidden>
+          <h2 id="faq-question-2" class="faq-question">2. Who can browse salary, review, and interview
+              information?</h2>
+          <div id="faq-answer-2" class="faq-answer">
             <p>Anyone can browse the approved public information without signing in. Pending, rejected, and flagged
               contributions are excluded from public results.</p>
           </div>
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-3" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-3" data-faq-button>3. Who can contribute information?</button></h2>
-          <div id="faq-answer-3" class="faq-answer" role="region" aria-labelledby="faq-question-3" hidden>
+          <h2 id="faq-question-3" class="faq-question">3. Who can contribute information?</h2>
+          <div id="faq-answer-3" class="faq-answer">
             <p>An employee account may contribute only while it has a valid, active employment verification for the
               selected company. Administrator status does not automatically grant contribution rights. Every accepted
               contribution still enters moderation before publication.</p>
@@ -92,9 +89,8 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-4" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-4" data-faq-button>4. How does employee verification work?</button></h2>
-          <div id="faq-answer-4" class="faq-answer" role="region" aria-labelledby="faq-question-4" hidden>
+          <h2 id="faq-question-4" class="faq-question">4. How does employee verification work?</h2>
+          <div id="faq-answer-4" class="faq-answer">
             <p>An employee submits a request for a specific company using company-email or document-reference evidence.
               A moderator can verify or reject the request. Verified access expires after the configured period and
               never makes the private evidence public.</p>
@@ -102,20 +98,17 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-5" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-5" data-faq-button>5. Who reviews an employee-verification request?</button>
-          </h2>
-          <div id="faq-answer-5" class="faq-answer" role="region" aria-labelledby="faq-question-5" hidden>
+          <h2 id="faq-question-5" class="faq-question">5. Who reviews an employee-verification request?</h2>
+          <div id="faq-answer-5" class="faq-answer">
             <p>A user with the ADMIN account role reviews the private request metadata and records a verified or
               rejected decision. A rejection requires a reason.</p>
           </div>
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-6" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-6" data-faq-button>6. Why can a verified employee contribute only for the
-              approved company and designation?</button></h2>
-          <div id="faq-answer-6" class="faq-answer" role="region" aria-labelledby="faq-question-6" hidden>
+          <h2 id="faq-question-6" class="faq-question">6. Why can a verified employee contribute only for the
+              approved company and designation?</h2>
+          <div id="faq-answer-6" class="faq-answer">
             <p>Limited employment scope prevents one approval from becoming permission to post for unrelated employers.
               The current Saple implementation enforces the approved company; it does not yet store or enforce a
               separate designation scope. Designation-specific authorization is therefore future scope and is not
@@ -124,10 +117,9 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-7" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-7" data-faq-button>7. What is the difference between Verified Salary Range and
-              Community Salary Range?</button></h2>
-          <div id="faq-answer-7" class="faq-answer" role="region" aria-labelledby="faq-question-7" hidden>
+          <h2 id="faq-question-7" class="faq-question">7. What is the difference between Verified Salary Range and
+              Community Salary Range?</h2>
+          <div id="faq-answer-7" class="faq-answer">
             <p>The Verified Salary Range uses approved salary records marked with verified contributor status. The
               Community Salary Range uses all eligible approved salary records under the current project query,
               including both verified and unverified approved records. Contribution counts provide essential context for
@@ -136,9 +128,8 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-8" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-8" data-faq-button>8. How are submissions moderated?</button></h2>
-          <div id="faq-answer-8" class="faq-answer" role="region" aria-labelledby="faq-question-8" hidden>
+          <h2 id="faq-question-8" class="faq-question">8. How are submissions moderated?</h2>
+          <div id="faq-answer-8" class="faq-answer">
             <p>New salary, review, and interview submissions start as pending. An administrator can approve, reject, or
               flag an allowed transition, and the status change plus its moderation-history record are written
               atomically. Only approved records appear publicly.</p>
@@ -146,9 +137,8 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-9" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-9" data-faq-button>9. Are contributor identities shown publicly?</button></h2>
-          <div id="faq-answer-9" class="faq-answer" role="region" aria-labelledby="faq-question-9" hidden>
+          <h2 id="faq-question-9" class="faq-question">9. Are contributor identities shown publicly?</h2>
+          <div id="faq-answer-9" class="faq-answer">
             <p>Public review and interview responses show an author name only when the contributor chose nonanonymous
               display. User IDs, email addresses, verification evidence, and moderation details are never included in
               public responses. Saple keeps internal ownership for authorization and accountability.</p>
@@ -156,10 +146,9 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-10" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-10" data-faq-button>10. How can users report suspicious or inappropriate
-              content?</button></h2>
-          <div id="faq-answer-10" class="faq-answer" role="region" aria-labelledby="faq-question-10" hidden>
+          <h2 id="faq-question-10" class="faq-question">10. How can users report suspicious or inappropriate
+              content?</h2>
+          <div id="faq-answer-10" class="faq-answer">
             <p>A signed-in user can open the report control on an approved public review or interview, choose a reason,
               and provide details. Administrators review reports separately and may use the audited
               submission-moderation process to flag or reject the reported content.</p>
@@ -167,9 +156,8 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-11" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-11" data-faq-button>11. How does the forgot-password process work?</button></h2>
-          <div id="faq-answer-11" class="faq-answer" role="region" aria-labelledby="faq-question-11" hidden>
+          <h2 id="faq-question-11" class="faq-question">11. How does the forgot-password process work?</h2>
+          <div id="faq-answer-11" class="faq-answer">
             <p>Enter the registered email on the Forgot Password page. When SMTP is configured, Saple sends a temporary,
               single-use reset link; it never emails the existing password. The link expires after the configured short
               period, which defaults to 15 minutes. Check spam or junk folders if delivery is delayed. This academic
@@ -178,10 +166,9 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-12" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-12" data-faq-button>12. Why might some companies or roles have limited
-              data?</button></h2>
-          <div id="faq-answer-12" class="faq-answer" role="region" aria-labelledby="faq-question-12" hidden>
+          <h2 id="faq-question-12" class="faq-question">12. Why might some companies or roles have limited
+              data?</h2>
+          <div id="faq-answer-12" class="faq-answer">
             <p>Saple publishes only eligible approved contributions. A newly listed company or role may have few or no
               records, and small samples should not be treated as representative. Directory coverage does not guarantee
               salary, review, or interview coverage.</p>
@@ -189,19 +176,17 @@
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-13" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-13" data-faq-button>13. Are the displayed salary figures official company
-              information?</button></h2>
-          <div id="faq-answer-13" class="faq-answer" role="region" aria-labelledby="faq-question-13" hidden>
+          <h2 id="faq-question-13" class="faq-question">13. Are the displayed salary figures official company
+              information?</h2>
+          <div id="faq-answer-13" class="faq-answer">
             <p>No. Salary figures and ratings are community or synthetic academic demonstration data, not official
               claims or statements from any company. Saple is not affiliated with the employers in its directory.</p>
           </div>
         </article>
 
         <article class="faq-item">
-          <h2><button id="faq-question-14" class="faq-question" type="button" aria-expanded="false"
-              aria-controls="faq-answer-14" data-faq-button>14. How is the optional ML feature used?</button></h2>
-          <div id="faq-answer-14" class="faq-answer" role="region" aria-labelledby="faq-question-14" hidden>
+          <h2 id="faq-question-14" class="faq-question">14. How is the optional ML feature used?</h2>
+          <div id="faq-answer-14" class="faq-answer">
             <p>ML is not active in the current build. The proposed minimal extension is decision support only and never
               replaces a moderator. Under that design it remains inactive for a role until at least 50
               moderator-reviewed historical records exist for that role.</p>
@@ -216,7 +201,6 @@
     <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
   </footer>
   <script src="js/nav.js" defer></script>
-  <script src="js/faq.js" defer></script>
 </body>
 
 </html>

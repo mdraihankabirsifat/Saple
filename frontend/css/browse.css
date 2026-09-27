@@ -19,6 +19,22 @@
 .browse-results-column > .state-message:first-child { margin-top: 0; }
 .browse-results { display: grid; gap: 1rem; min-width: 0; }
 
+/* Salary paging belongs to the results column and sits at its right edge on
+   desktop without changing the shared pagination logic. */
+#salary-pagination {
+  display: flex;
+  justify-content: flex-end;
+}
+
+#salary-pagination .pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+
 .insight-card,
 .content-card {
   min-width: 0;
@@ -83,4 +99,6 @@
   .salary-ranges, .content-grid { grid-template-columns: 1fr; }
   .browse-header .button { width: 100%; }
   .card-heading-row { flex-direction: column; }
+  #salary-pagination,
+  #salary-pagination .pagination { justify-content: flex-start; }
 }

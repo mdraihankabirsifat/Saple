@@ -1744,6 +1744,13 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 .auth-card {
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
+  background: rgba(255, 253, 247, 0.9);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+}
+
+:root[data-theme="dark"] .auth-card {
+  background: rgba(19, 34, 27, 0.9);
 }
 
 .auth-card h2 {
@@ -1952,6 +1959,76 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 }
 
 .info-hero h1 { letter-spacing: -0.012em; }
+
+/* Page-specific artwork lives in the existing hero containers, away from
+   controls and result lists. The fade keeps headings legible in both themes. */
+.page-art-companies { --page-art-image: url("../assets/hero/companies.png"); }
+.page-art-salaries { --page-art-image: url("../assets/hero/salaries.png"); }
+.page-art-reviews { --page-art-image: url("../assets/hero/Reviews.png"); }
+.page-art-interviews { --page-art-image: url("../assets/hero/Interviews.png"); }
+.page-art-jobs { --page-art-image: url("../assets/hero/job.png"); }
+.page-art-faq { --page-art-image: url("../assets/hero/FAQ.png"); }
+
+.page-header.page-art,
+.directory-header.page-art { min-height: 13rem; }
+
+/* Browse headers also hold a contribution action or result count. Give the
+   artwork its own full-width row, as on the Companies page. */
+.browse-header--hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.browse-header--hero .page-header.page-art {
+  width: 100%;
+  max-width: none;
+}
+
+.browse-header--hero > .button,
+.browse-header--hero > .job-count { justify-self: end; }
+
+.page-art::before {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(52%, 720px);
+  background: var(--page-art-image) center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 32%);
+  mask-image: linear-gradient(90deg, transparent, #000 32%);
+  opacity: 0.78;
+  pointer-events: none;
+  content: "";
+}
+
+.page-header.page-art::after,
+.directory-header.page-art::after,
+.info-hero.page-art::after { display: none; }
+
+.page-header.page-art > *,
+.directory-header.page-art .page-header { max-width: 55%; }
+
+.info-hero.page-art .info-hero-content { max-width: 1320px; }
+.info-hero.page-art .info-hero-content > * { max-width: min(56%, 680px); }
+
+:root[data-theme="dark"] .page-art::before { opacity: 0.38; }
+
+.contact-grid { max-width: 1020px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.contact-card { min-width: 0; }
+.contact-card h2 { overflow-wrap: anywhere; }
+.contact-card p { line-height: 1.6; }
+.contact-card address { margin-top: 1.2rem; color: var(--text-secondary); font-style: normal; line-height: 1.7; }
+.contact-email { display: inline-block; max-width: 100%; overflow-wrap: anywhere; color: var(--saple-green-700); font-weight: 700; }
+.contact-resume-note { margin-top: 1.2rem; cursor: default; opacity: 0.72; }
+
+@media (max-width: 760px) {
+  .page-art::before { width: 100%; opacity: 0.1; -webkit-mask-image: linear-gradient(90deg, transparent, #000); mask-image: linear-gradient(90deg, transparent, #000); }
+  :root[data-theme="dark"] .page-art::before { opacity: 0.08; }
+  .page-header.page-art > *,
+  .directory-header.page-art .page-header,
+  .info-hero.page-art .info-hero-content > * { max-width: none; }
+  .contact-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* A FAQ question is an h2 for the outline, but reads as a list item. */
 .faq-item h2 {

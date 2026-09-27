@@ -238,7 +238,7 @@ async function loadRecentReviews() {
 const railLoopStates = new WeakMap();
 
 function prepareRailLoop(rail) {
-  if (!rail || rail.dataset.autoLoopReady === 'true') return;
+  if (!rail || prefersReducedMotion() || rail.dataset.autoLoopReady === 'true') return;
   const cards = [...rail.children].filter((child) => !child.hidden && child.classList.contains('rail-card'));
   if (cards.length < 2 || rail.scrollWidth <= rail.clientWidth + 2) return;
 
@@ -258,12 +258,8 @@ function prepareRailLoop(rail) {
   rail.dataset.autoLoopReady = 'true';
   rail.dataset.autoLoop = 'true';
 
-  requestAnimationFrame(() => {
-    const state = railLoopStates.get(rail);
-    if (!state) return;
-    state.loopWidth = rail.scrollWidth / 2;
-    rail.scrollLeft = state.loopWidth;
-  });
+  const state = railLoopStates.get(rail);
+  if (state) state.loopWidth = rail.querySelector('[data-rail-clone]').offsetLeft - cards[0].offsetLeft;
 }
 
 function mountRailAutoplay(rail) {
@@ -275,25 +271,25 @@ function mountRailAutoplay(rail) {
       loopWidth: 0,
       hovered: false,
       focused: false,
+      pointerActive: false,
       pauseUntil: 0,
-      automaticScroll: false,
       running: false,
       lastTime: performance.now()
     };
     railLoopStates.set(rail, state);
 
-    rail.addEventListener('mouseenter', () => { state.hovered = true; });
-    rail.addEventListener('mouseleave', () => { state.hovered = false; });
-    rail.addEventListener('focusin', () => { state.focused = true; });
-    rail.addEventListener('focusout', (event) => {
-      if (!rail.contains(event.relatedTarget)) state.focused = false;
+    const section = rail.closest('.rail-section');
+    section.addEventListener('mouseenter', () => { state.hovered = true; });
+    section.addEventListener('mouseleave', () => { state.hovered = false; });
+    section.addEventListener('focusin', () => { state.focused = true; });
+    section.addEventListener('focusout', (event) => {
+      if (!section.contains(event.relatedTarget)) state.focused = false;
     });
-    rail.addEventListener('pointerdown', () => { state.pauseUntil = performance.now() + 1800; }, { passive: true });
+    section.addEventListener('pointerdown', () => { state.pointerActive = true; }, { passive: true });
+    window.addEventListener('pointerup', () => { if (state.pointerActive) { state.pointerActive = false; state.pauseUntil = performance.now() + 1800; } }, { passive: true });
+    window.addEventListener('pointercancel', () => { state.pointerActive = false; state.pauseUntil = performance.now() + 1800; }, { passive: true });
     rail.addEventListener('wheel', () => { state.pauseUntil = performance.now() + 1800; }, { passive: true });
-    rail.addEventListener('touchstart', () => { state.pauseUntil = performance.now() + 1800; }, { passive: true });
-    rail.addEventListener('scroll', () => {
-      if (!state.automaticScroll) state.pauseUntil = performance.now() + 1600;
-    }, { passive: true });
+    rail.addEventListener('keydown', () => { state.pauseUntil = performance.now() + 1800; });
   }
 
   prepareRailLoop(rail);
@@ -302,13 +298,12 @@ function mountRailAutoplay(rail) {
   const tick = (now) => {
     const elapsed = Math.min(now - state.lastTime, 100);
     state.lastTime = now;
-    if (!prefersReducedMotion() && !state.hovered && !state.focused
+    if (!prefersReducedMotion() && !document.hidden && !state.hovered && !state.focused && !state.pointerActive
       && now >= state.pauseUntil && state.loopWidth > 0) {
-      state.automaticScroll = true;
-      // Decreasing scrollLeft makes the cards travel from left to right.
-      rail.scrollLeft -= Math.max(4, state.loopWidth / 35) * (elapsed / 1000);
-      if (rail.scrollLeft <= 0) rail.scrollLeft += state.loopWidth;
-      state.automaticScroll = false;
+      // Increasing scrollLeft moves the cards from right to left. The cloned
+      // group begins at exactly loopWidth, so the wrap has no visible jump.
+      rail.scrollLeft += Math.max(20, state.loopWidth / 35) * (elapsed / 1000);
+      if (rail.scrollLeft >= state.loopWidth) rail.scrollLeft -= state.loopWidth;
     }
     requestAnimationFrame(tick);
   };
@@ -327,6 +322,27 @@ function updateRailControls(railId) {
   const next = document.querySelector(`[data-rail-next="${railId}"]`);
   if (previous) previous.disabled = atStart;
   if (next) next.disabled = atEnd;
+}
+
+function refreshRailLoop(rail) {
+  const clone = rail.querySelector('[data-rail-clone]');
+  if (!clone) {
+    if (!prefersReducedMotion()) mountRailAutoplay(rail);
+    return;
+  }
+
+  const firstCard = rail.querySelector('.rail-card');
+  const loopWidth = clone.offsetLeft - firstCard.offsetLeft;
+  const state = railLoopStates.get(rail);
+  if (prefersReducedMotion() || loopWidth <= rail.clientWidth + 2) {
+    rail.querySelectorAll('[data-rail-clone]').forEach((card) => card.remove());
+    delete rail.dataset.autoLoopReady;
+    delete rail.dataset.autoLoop;
+    if (state) state.loopWidth = 0;
+    rail.scrollLeft = 0;
+  } else if (state) {
+    state.loopWidth = loopWidth;
+  }
 }
 
 function mountRails() {
@@ -351,11 +367,13 @@ function mountRails() {
 
   window.addEventListener('resize', () => {
     for (const rail of document.querySelectorAll('.rail[id]')) {
-      prepareRailLoop(rail);
-      const state = railLoopStates.get(rail);
-      if (state?.loopWidth) state.loopWidth = rail.scrollWidth / 2;
+      refreshRailLoop(rail);
       updateRailControls(rail.id);
     }
+  });
+
+  window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', () => {
+    for (const rail of document.querySelectorAll('.rail[id]')) refreshRailLoop(rail);
   });
 }
 

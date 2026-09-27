@@ -22,9 +22,11 @@
 }
 
 .faq-list {
-  max-width: 900px;
+  min-width: 0;
+  width: min(1320px, calc(100vw - 2.5rem));
+  max-width: 1320px;
   display: grid;
-  gap: 0.8rem;
+  gap: 0.65rem;
 }
 
 .faq-item {
@@ -40,46 +42,16 @@
 }
 
 .faq-question {
-  width: 100%;
-  min-height: 64px;
-  padding: 1rem 3.5rem 1rem 1.25rem;
-  position: relative;
-  border: 0;
+  margin: 0;
+  padding: 0.9rem 1.25rem 0.35rem;
   color: var(--saple-green-900);
-  background: transparent;
   font-weight: 780;
   line-height: 1.35;
   text-align: left;
-  cursor: pointer;
-}
-
-.faq-question::after {
-  width: 1.75rem;
-  height: 1.75rem;
-  position: absolute;
-  top: 50%;
-  right: 1.15rem;
-  display: grid;
-  place-items: center;
-  transform: translateY(-50%);
-  border-radius: 50%;
-  content: "+";
-  color: var(--saple-green-700);
-  background: var(--saple-green-100);
-  font-size: 1.2rem;
-}
-
-.faq-question[aria-expanded="true"] {
-  background: var(--saple-green-50);
-}
-
-.faq-question[aria-expanded="true"]::after {
-  content: "\2212";
 }
 
 .faq-answer {
-  padding: 1.1rem 1.25rem 1.3rem;
-  border-top: 1px solid var(--border);
+  padding: 0 1.25rem 1rem;
 }
 
 .faq-answer p,
@@ -135,6 +107,6 @@
 
   .faq-question {
     padding-left: 1rem;
-    padding-right: 3.15rem;
+    padding-right: 1rem;
   }
 }

@@ -24,8 +24,8 @@ test('no page shows a brand tagline beside the logo', () => {
   assert.doesNotMatch(css, /\.brand-tagline/);
   for (const page of htmlFiles()) assert.doesNotMatch(read(page), /brand-tagline/, page);
 
-  // The academic disclosure is kept where it belongs.
-  assert.match(read('index.html'), /class="hero-badge">Independent BUET CSE academic project/);
+  // The compact homepage hero does not carry the academic badge.
+  assert.doesNotMatch(read('index.html'), /class="hero-badge"|Independent BUET CSE academic project/);
   assert.match(read('about.html'), /BUET/);
   assert.match(nav, /SITE_IDENTITY = 'Saple - an independent BUET CSE academic project/);
 });
@@ -92,11 +92,12 @@ test('the account safety notice is placed inside the form card, never as a third
   }
 
   // Truthful: Saple accounts only, never third-party passwords.
-  for (const page of AUTH_PAGES) {
+  for (const page of AUTH_PAGES.filter((name) => !['login.html', 'register.html'].includes(name))) {
     const line = nav.match(new RegExp(`'${page.replace('.', '\\.')}': '([^']+)'`))[1];
     assert.match(line, /Saple account/, page);
     assert.match(line, /company, Google, Microsoft or email-provider password/, page);
   }
+  assert.doesNotMatch(nav, /'login\.html':|'register\.html':/);
 
   const css = read('css/auth.css');
   assert.match(css, /\.auth-main \{\n  padding-block: clamp\(1\.5rem, 4vw, 3rem\);/);

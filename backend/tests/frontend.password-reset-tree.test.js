@@ -48,7 +48,8 @@ test('the homepage hero uses local background artwork with no tree visual segmen
 test('the homepage states what Saple is and what it is not, above the fold', () => {
   const home = readFrontend('index.html');
 
-  assert.match(home, /Independent BUET CSE academic project/);
+  assert.doesNotMatch(home, /class="hero-badge"|Independent BUET CSE academic project/);
+  assert.match(home, /Saple collects company profiles/);
   assert.match(home, /not affiliated with, endorsed by, or an official login or careers service/);
 
   // The primary and secondary calls to action the redesign requires.

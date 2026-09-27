@@ -91,7 +91,6 @@ Pending submissions allow all three decisions. Approved reported submissions all
 | `js/api.js` | API base URL, token-aware JSON requests, safe errors |
 | `js/auth.js` | Session storage and current-user lookup |
 | `js/nav.js` | Responsive navigation, identity, sign-out, employee link |
-| `js/faq.js` | Single-open FAQ state and accordion keyboard navigation |
 | `js/companies.js` | Directory loading and search |
 | `js/browse-shared.js` | Shared public browse options, queries, metadata, and links |
 | `js/browse-controls.js` | Shared browse behaviour: filter drawer below 1050px, address-bar filters, active-filter count, Apply/Clear, client-side paging |

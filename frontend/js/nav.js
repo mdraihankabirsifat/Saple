@@ -53,13 +53,14 @@ const publicNavigation = [
   { label: 'Interviews', destination: 'interviews.html', pages: ['interviews.html', 'interview-experience.html'] },
   { label: 'Jobs', destination: 'jobs.html', pages: ['jobs.html', 'job-details.html', 'my-applications.html'] },
   { label: 'FAQ', destination: 'faq.html', pages: ['faq.html'] },
+  { label: 'Contact', destination: 'contact.html', pages: ['contact.html'] },
   { label: 'About', destination: 'about.html', pages: ['about.html'] }
 ];
 
 const informationPages = [
   { label: 'FAQ', destination: 'faq.html' },
-  { label: 'About', destination: 'about.html' },
   { label: 'Contact', destination: 'contact.html' },
+  { label: 'About', destination: 'about.html' },
   { label: 'Privacy', destination: 'privacy.html' },
   { label: 'Terms', destination: 'terms.html' },
   { label: 'Security', destination: 'security.html' }
@@ -84,11 +85,9 @@ function ensureSkipLink() {
   document.body.prepend(skip);
 }
 
-// Account and verification forms carry their own statement of whose site this
-// is, next to the form, because that is where a look-alike page would lie.
+// Context notices remain beside flows where their scope affects a decision.
+// Sign-in and registration identify Saple in their existing headings and copy.
 const ACCOUNT_SURFACES = {
-  'login.html': 'Sign in with your Saple account only. Saple is an independent BUET CSE academic project and never asks for a company, Google, Microsoft or email-provider password.',
-  'register.html': 'You are creating a Saple account only. Saple is an independent BUET CSE academic project, not a company careers or login service, and never asks for a company, Google, Microsoft or email-provider password.',
   'forgot-password.html': 'This resets a Saple account only. Saple emails a single-use link and never asks for your password, or for a company, Google, Microsoft or email-provider password.',
   'reset-password.html': 'You are setting a new password for your Saple account only. Saple is an independent BUET CSE academic project, and never asks for a company, Google, Microsoft or email-provider password.',
   'employee-verification.html': 'Verification is reviewed inside Saple, an independent academic project. Never enter your company email password or any login credentials here.',
@@ -141,9 +140,8 @@ function renderPublicNavigation() {
   }));
 }
 
-// The wordmark keeps an accessible identity in its title only. The visible
-// academic disclosure lives in the hero badge, the account notices, the About
-// page and the footer, so it never takes header space from the navigation.
+// The wordmark keeps an accessible identity in its title only. The academic
+// disclosure remains in the About page and footer without taking header space.
 function renderBrandIdentity() {
   const brand = document.querySelector('.site-header .brand');
   if (!brand) return;

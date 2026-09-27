@@ -136,14 +136,14 @@ test('public browsing pages never require a session', () => {
     ['salaries.html', 'js/salaries.js'],
     ['reviews.html', 'js/reviews.js'],
     ['interviews.html', 'js/interviews.js'],
-    ['jobs.html', 'js/jobs.js'],
-    ['faq.html', 'js/faq.js']
+    ['jobs.html', 'js/jobs.js']
   ];
 
   for (const [page, script] of publicPages) {
     assert.doesNotMatch(read(script), /requireSession\(/, `${page} must stay public`);
     assert.doesNotMatch(read(page), /require-session\.js/, `${page} must not load the guard`);
   }
+  assert.doesNotMatch(read('faq.html'), /require-session\.js/, 'faq.html must stay public');
 });
 
 test('the private guard is never cached by the service worker', () => {

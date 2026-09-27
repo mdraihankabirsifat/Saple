@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v8';
+const SHELL_CACHE = 'saple-shell-v9';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -17,12 +17,14 @@ const ASSETS = [
   'css/auth.css', 'css/forms.css', 'css/browse.css', 'css/profile.css', 'css/salary-form.css',
   'css/jobs.css', 'css/premium.css', 'favicon.svg', 'assets/hero/homepage.png',
   'assets/hero/login.png', 'assets/hero/singup.png',
+  'assets/hero/companies.png', 'assets/hero/salaries.png', 'assets/hero/Reviews.png',
+  'assets/hero/Interviews.png', 'assets/hero/job.png', 'assets/hero/FAQ.png',
   'js/nav.js', 'js/theme.js', 'js/api.js', 'js/auth.js', 'js/ui.js', 'js/offline-cache.js',
   'js/announcements.js', 'js/assistant.js', 'js/companies.js', 'js/company-directory.js',
   'js/company-logo.js', 'js/salary-range.js', 'js/company-details.js', 'js/browse-shared.js', 'js/browse-controls.js',
   'js/contribution-access.js', 'js/salaries.js', 'js/reviews.js', 'js/interviews.js',
   'js/home.js', 'js/jobs.js', 'js/job-details.js',
-  'js/login.js', 'js/register.js', 'js/forgot-password.js', 'js/reset-password.js', 'js/faq.js'
+  'js/login.js', 'js/register.js', 'js/forgot-password.js', 'js/reset-password.js'
 ].map((file) => new URL(file, self.registration.scope).href);
 const allowed = new Set(ASSETS);
 const offlinePages = new Set();

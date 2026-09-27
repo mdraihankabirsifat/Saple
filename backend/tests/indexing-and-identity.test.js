@@ -140,14 +140,20 @@ test('the profile page offers an emailed reset instead of a password form', () =
   assert.doesNotMatch(read('js/profile.js'), /password/i);
 });
 
-test('every credential page states the academic identity beside the form', () => {
+test('credential pages identify Saple while keeping sign-in and registration compact', () => {
   const nav = read('js/nav.js');
 
-  for (const page of ['login.html', 'register.html', 'forgot-password.html', 'reset-password.html']) {
+  for (const page of ['login.html', 'register.html']) {
+    const html = read(page);
+    assert.match(html, /Saple account|Join Saple/, page);
+    assert.match(html, /BUET CSE Database Project/, page);
+    assert.doesNotMatch(nav, new RegExp(`'${page.replace('.', '\\.')}': '`));
+  }
+  for (const page of ['forgot-password.html', 'reset-password.html']) {
     const notice = nav.match(new RegExp(`'${page.replace('.', '\\.')}': '([^']+)'`))[1];
     assert.match(notice, /Saple account/, page);
     assert.match(notice, /BUET CSE academic project|never asks/, page);
   }
-  // The notice is rendered inside the form card, not only in the footer.
+  // Recovery notices remain inside their form cards.
   assert.match(nav, /main\.querySelector\('\.auth-card \.auth-form'\)/);
 });
