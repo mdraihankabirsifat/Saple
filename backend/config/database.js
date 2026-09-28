@@ -1,4 +1,4 @@
-const { Pool, types } = require('pg');
+const { Pool, Client, types } = require('pg');
 
 types.setTypeParser(20, (value) => Number(value));
 types.setTypeParser(1700, (value) => Number(value));
@@ -8,6 +8,8 @@ let fallbackPool;
 let activePool;
 let activeSource = 'supabase';
 let switching;
+let workerConnectionString;
+let workerMode = false;
 
 function readPositiveInteger(name, defaultValue) {
   const raw = process.env[name];
@@ -45,6 +47,43 @@ function makePool(connectionString, ssl) {
 
 function fallbackEnabled() { return readBoolean('DB_FALLBACK_ENABLED', false); }
 
+function configureWorker({ connectionString } = {}) {
+  if (typeof connectionString !== 'string' || !connectionString.trim()) {
+    throw new Error('Cloudflare Worker requires HYPERDRIVE.connectionString');
+  }
+  workerConnectionString = connectionString.trim();
+  workerMode = true;
+  activePool = undefined;
+  activeSource = 'hyperdrive';
+}
+
+function isWorkerMode() { return workerMode; }
+
+function workerClient() {
+  if (!workerMode || !workerConnectionString) {
+    throw new Error('Cloudflare Worker database has not been configured');
+  }
+  const client = new Client({ connectionString: workerConnectionString });
+  let released = false;
+  const end = client.end.bind(client);
+  client.release = () => {
+    if (released) return undefined;
+    released = true;
+    return end();
+  };
+  return client;
+}
+
+async function workerQuery(text, values = []) {
+  const client = workerClient();
+  await client.connect();
+  try {
+    return await client.query(text, values);
+  } finally {
+    await Promise.resolve(client.release());
+  }
+}
+
 async function connectFallback() {
   if (!fallbackEnabled()) throw new Error('Local database fallback is disabled');
   const connectionString = process.env.LOCAL_DATABASE_URL?.trim();
@@ -64,6 +103,7 @@ async function switchToFallback() {
 }
 
 async function initializePool() {
+  if (workerMode) return;
   const connectionString = process.env.DATABASE_URL?.trim();
   if (!connectionString) throw new Error('Missing required database configuration: DATABASE_URL');
   if (fallbackEnabled() && !process.env.LOCAL_DATABASE_URL?.trim()) {
@@ -95,6 +135,7 @@ function requirePool() {
 }
 
 async function query(text, values = []) {
+  if (workerMode) return workerQuery(text, values);
   const selected = requirePool();
   try { return await selected.query(text, values); }
   catch (error) {
@@ -106,6 +147,11 @@ async function query(text, values = []) {
 }
 
 async function getClient() {
+  if (workerMode) {
+    const client = workerClient();
+    await client.connect();
+    return client;
+  }
   const selected = requirePool();
   try { return await selected.connect(); }
   catch (error) {
@@ -118,6 +164,7 @@ async function getClient() {
 
 // Messaging must never be sent to the independent local demo database.
 function requireCloud() {
+  if (workerMode) return true;
   if (activeSource !== 'supabase' || !primaryPool) {
     const error = new Error('Messaging is temporarily unavailable while using the local database');
     error.statusCode = 503;
@@ -125,8 +172,18 @@ function requireCloud() {
   }
   return primaryPool;
 }
-async function cloudQuery(text, values = []) { return requireCloud().query(text, values); }
-async function cloudClient() { return requireCloud().connect(); }
+async function cloudQuery(text, values = []) {
+  if (workerMode) return workerQuery(text, values);
+  return requireCloud().query(text, values);
+}
+async function cloudClient() {
+  if (workerMode) {
+    const client = workerClient();
+    await client.connect();
+    return client;
+  }
+  return requireCloud().connect();
+}
 async function withCloudTransaction(work) {
   const client = await cloudClient();
   try {
@@ -137,7 +194,9 @@ async function withCloudTransaction(work) {
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {});
     throw error;
-  } finally { client.release(); }
+  } finally {
+    await Promise.resolve(client.release());
+  }
 }
 
 async function withTransaction(work, existingClient = null) {
@@ -152,10 +211,18 @@ async function withTransaction(work, existingClient = null) {
     try { await client.query('ROLLBACK'); }
     catch (rollbackError) { console.error('Rollback failed after a transaction error:', rollbackError.message); }
     throw error;
-  } finally { client.release(); }
+  } finally {
+    await Promise.resolve(client.release());
+  }
 }
 
 async function closePool() {
+  if (workerMode) {
+    workerConnectionString = undefined;
+    workerMode = false;
+    activeSource = 'supabase';
+    return;
+  }
   const pools = [...new Set([primaryPool, fallbackPool].filter(Boolean))];
   primaryPool = fallbackPool = activePool = undefined;
   activeSource = 'supabase';
@@ -163,4 +230,17 @@ async function closePool() {
 }
 
 function getSource() { return activeSource; }
-module.exports = { initializePool, query, getClient, withTransaction, withCloudTransaction, closePool, getSource, cloudQuery, cloudClient, isConnectivityError };
+module.exports = {
+  initializePool,
+  configureWorker,
+  isWorkerMode,
+  query,
+  getClient,
+  withTransaction,
+  withCloudTransaction,
+  closePool,
+  getSource,
+  cloudQuery,
+  cloudClient,
+  isConnectivityError
+};

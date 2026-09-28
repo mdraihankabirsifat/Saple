@@ -1,5 +1,5 @@
 const path = require('path');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 require('dotenv').config({
   path: path.join(__dirname, '..', '.env'),
@@ -88,7 +88,7 @@ async function main() {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
     await database.closePool();
   }
 }

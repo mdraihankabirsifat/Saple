@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const userRepository = require('../repositories/user.repository');
 const passwordResetRepository = require('../repositories/password-reset.repository');
 const mailService = require('../services/mail.service');

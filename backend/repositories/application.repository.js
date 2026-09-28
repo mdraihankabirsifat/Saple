@@ -211,7 +211,7 @@ async function createApplication({ jobId, applicantUserId, coverLetter }) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -273,7 +273,7 @@ async function changeApplicationStatus({
     await client.query('ROLLBACK');
     throw translateDecisionError(error);
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

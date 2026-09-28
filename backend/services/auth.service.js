@@ -1,4 +1,6 @@
-const bcrypt = require('bcrypt');
+// bcryptjs uses the same standard bcrypt hash format without a native addon,
+// so existing hashes remain valid in Node and Cloudflare Workers.
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const authConfig = require('../config/auth');
@@ -9,8 +11,21 @@ const mailService = require('./mail.service');
 const createHttpError = require('../utils/httpError');
 const storage = require('../config/supabase-storage');
 
+// bcryptjs normally uses Node's crypto module. Workers provides WebCrypto but
+// no Node crypto implementation early enough for this module's timing-safe
+// dummy hash, so bridge the portable random source only in Worker mode.
+if (process.env.SAPLE_RUNTIME === 'cloudflare' && typeof bcrypt.setRandomFallback === 'function') {
+  bcrypt.setRandomFallback((length) => {
+    const bytes = new Uint8Array(length);
+    globalThis.crypto.getRandomValues(bytes);
+    return Array.from(bytes);
+  });
+}
+
 const PASSWORD_SALT_ROUNDS = 12;
-const DUMMY_PASSWORD_HASH = bcrypt.hashSync('saple-timing-placeholder', PASSWORD_SALT_ROUNDS);
+// A fixed bcrypt hash keeps unknown-account comparisons constant-time without
+// doing random work during Worker module initialization.
+const DUMMY_PASSWORD_HASH = '$2b$12$QYozlp8EXP06fdpuPzKJa.FHOSboZaK/l/mjS6lmWQEG4O3IVw8sq';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USER_TYPES = new Set(['NORMAL', 'EMPLOYEE']);
 const EMPLOYMENT_STATUSES = new Set(['CURRENT', 'FORMER']);

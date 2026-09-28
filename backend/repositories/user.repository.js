@@ -117,7 +117,7 @@ async function createUserWithOptionalEmployee({ fullName, email, passwordHash, u
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

@@ -41,7 +41,7 @@ async function createTokenWithDelivery({ userId, tokenHash, expiresMinutes, deli
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -102,7 +102,7 @@ async function consumeTokenAndUpdatePassword({ tokenHash, passwordHash }) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

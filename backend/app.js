@@ -30,9 +30,14 @@ const errorHandler = require('./middleware/errorHandler');
 const { sendSuccess } = require('./utils/apiResponse');
 
 const app = express();
-const frontendDirectory = path.resolve(__dirname, '..', 'frontend');
+// Workers serves frontend/ through Static Assets, so it must not evaluate the
+// Node-only __dirname path while importing the shared app.
+const isCloudflareRuntime = hostingConfig.isCloudflareEnvironment() || typeof __dirname !== 'string';
+const frontendDirectory = isCloudflareRuntime
+  ? null
+  : path.resolve(__dirname, '..', 'frontend');
 
-if (hostingConfig.isRenderEnvironment()) {
+if (hostingConfig.isHostedEnvironment()) {
   app.set('trust proxy', 1);
 }
 
@@ -75,13 +80,15 @@ app.use('/api/companies', salaryRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/submissions', reportRoutes);
 
-app.use(express.static(frontendDirectory, {
+if (!isCloudflareRuntime) {
+  app.use(express.static(frontendDirectory, {
   // Directory listing is off by default; being explicit keeps it that way,
   // and dotfiles such as .env can never be served even if one appears here.
   dotfiles: 'ignore',
   index: 'index.html',
   redirect: false
-}));
+  }));
+}
 
 app.use(notFound);
 app.use(errorHandler);

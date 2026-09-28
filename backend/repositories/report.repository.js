@@ -40,7 +40,7 @@ async function createReport({ reporterUserId, submissionId, reasonCategory, desc
     }
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -126,7 +126,7 @@ async function updateReportStatus(input) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

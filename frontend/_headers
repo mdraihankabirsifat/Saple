@@ -1,0 +1,52 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=(), xr-spatial-tracking=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-Permitted-Cross-Domain-Policies: none
+  Origin-Agent-Cluster: ?1
+  Strict-Transport-Security: max-age=15552000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://*.supabase.co; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'
+
+/admin.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/admin
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/profile.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/profile
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/user-profile.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/user-profile
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/representative.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/representative
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/my-applications.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/my-applications
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/employee-verification.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/employee-verification
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/submit-salary.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/submit-salary
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/submit-review.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/submit-review
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/interview-experience.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/interview-experience
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/reset-password.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/reset-password
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet

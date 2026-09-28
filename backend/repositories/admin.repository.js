@@ -153,7 +153,7 @@ async function updateSubmissionStatusWithAudit(input) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

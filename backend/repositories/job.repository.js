@@ -220,7 +220,7 @@ async function createJob(input) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -270,7 +270,7 @@ async function updateJob(jobId, input) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -343,7 +343,7 @@ async function changeJobStatus({ jobId, actorUserId, newStatus, allowedPreviousS
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

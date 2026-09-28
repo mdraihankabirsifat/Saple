@@ -48,7 +48,7 @@ async function probeReferenceIdentityGenerators(uniqueSuffix) {
     };
   } finally {
     await client.query('ROLLBACK');
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -206,7 +206,7 @@ async function cleanupWorkflowUsers(normalEmail, employeeEmail) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

@@ -121,6 +121,13 @@ Express API  (routes → controllers → services → repositories)
 Supabase PostgreSQL
 ```
 
+The same Express app also has an optional Cloudflare Workers target. Wrangler
+serves `frontend/` as Worker Static Assets and invokes the thin
+[`cloudflare/worker.mjs`](cloudflare/worker.mjs) adapter for `/api/*` and the
+generated crawler/security files. The adapter configures the existing database
+module with a Hyperdrive connection to the same Supabase PostgreSQL database;
+it does not create a second schema or a second application implementation.
+
 Supabase is used only as hosted PostgreSQL. The browser never connects to it directly and never receives database credentials, and authentication is handled by the Express backend, not Supabase Auth.
 
 Work the database does itself: `saple_set_updated_at()` with one `BEFORE UPDATE`
@@ -193,6 +200,7 @@ The two integration commands run against the database in `DATABASE_URL`, so poin
 - [`docs/relational_schema.md`](docs/relational_schema.md): tables, constraints and status transitions
 - [`docs/supabase_setup.md`](docs/supabase_setup.md): database setup and migrations
 - [`docs/deployment.md`](docs/deployment.md): Supabase connection and Render hosting
+- [`docs/cloudflare-deployment.md`](docs/cloudflare-deployment.md): Hyperdrive, Worker secrets and deployment
 - [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md): security controls and a safe deployment checklist
 - [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md): Saple Guide provider configuration
 - [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md): SMTP setup for password recovery

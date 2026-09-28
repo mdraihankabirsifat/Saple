@@ -96,7 +96,7 @@ async function createVerificationRequest(input) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -237,7 +237,7 @@ async function decideVerification({ verificationId, reviewerUserId, status, reje
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 

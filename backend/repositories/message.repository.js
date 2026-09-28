@@ -53,7 +53,7 @@ async function history(userId, peerId, beforeMessageId = null) {
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {});
     throw error;
-  } finally { client.release(); }
+  } finally { await Promise.resolve(client.release()); }
 }
 
 async function send(senderId, recipientId, body) {

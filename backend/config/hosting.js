@@ -43,6 +43,14 @@ function isRenderEnvironment() {
   return process.env.RENDER === 'true';
 }
 
+function isCloudflareEnvironment() {
+  return process.env.SAPLE_RUNTIME === 'cloudflare';
+}
+
+function isHostedEnvironment() {
+  return isRenderEnvironment() || isCloudflareEnvironment();
+}
+
 function createCorsOptionsDelegate(rawValue = process.env.CORS_ORIGINS) {
   const allowedOrigins = getAllowedCorsOrigins(rawValue);
 
@@ -91,5 +99,7 @@ module.exports = {
   createCorsOptionsDelegate,
   getAllowedCorsOrigins,
   isRenderEnvironment,
+  isCloudflareEnvironment,
+  isHostedEnvironment,
   normalizeHttpOrigin
 };

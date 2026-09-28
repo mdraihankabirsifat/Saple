@@ -15,6 +15,9 @@ backend/.env.*
 .env.local
 *.secrets
 secrets.json
+.dev.vars
+.dev.vars.*
+.wrangler/
 
 # Keys, certificates and provider credential files.
 *.pem

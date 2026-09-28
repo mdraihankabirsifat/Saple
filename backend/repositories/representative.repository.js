@@ -177,7 +177,7 @@ async function createAssignmentRequest({ userId, companyId, jobTitle, requestNot
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
@@ -302,7 +302,7 @@ async function decideAssignment({ assignmentId, actorUserId, action, note }) {
     await client.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
+    await Promise.resolve(client.release());
   }
 }
 
