@@ -4,6 +4,7 @@
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-28",
   "workers_dev": true,
+  "keep_vars": true,
   "assets": {
     "directory": "./frontend",
     "binding": "ASSETS",
