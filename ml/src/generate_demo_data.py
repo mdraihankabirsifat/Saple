@@ -53,7 +53,7 @@ def generate_demo_dataset(records: int = 100, seed: int = 42) -> pd.DataFrame:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate SYNTHETIC DEMO DATA; never insert it into Oracle."
+        description="Generate SYNTHETIC DEMO DATA; never insert it into the database."
     )
     parser.add_argument("--output", default="data/salary_training.csv")
     parser.add_argument("--records", type=int, default=100)

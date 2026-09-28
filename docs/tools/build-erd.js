@@ -292,7 +292,7 @@ function renderSvg({ tables, views }, rels, geometry) {
 <rect class="canvas" x="0" y="0" width="${width}" height="${height}"/>
 <text class="title" x="${LEFT}" y="70">Saple — PostgreSQL entity-relationship diagram</text>
 <text class="subtitle" x="${LEFT}" y="104">Active schema: database/postgres/01_final_schema_postgres.sql · ${tableCount} tables · ${viewCount} views · generated from the schema file by docs/tools/build-erd.js</text>
-<text class="subtitle" x="${LEFT}" y="130">Saple is an independent BUET CSE academic project. The Oracle 19c milestone diagram is preserved in docs/archive/.</text>
+<text class="subtitle" x="${LEFT}" y="130">Saple is an independent BUET CSE216 academic project.</text>
 <g class="legend">
   <text x="${width - 760}" y="62">PK primary key · FK foreign key · UK unique key · UK* partial unique (open scope only) · * NOT NULL</text>
   <text x="${width - 760}" y="86">Crow's foot = many · bars = exactly one · circle = optional · thick line = ON DELETE RESTRICT</text>
@@ -380,8 +380,7 @@ function renderMarkdown({ tables, views }, rels) {
   lines.push('');
   lines.push(`The active schema has **${tables.size} tables and ${views.length} views**. This diagram is generated from the`);
   lines.push('schema file, so it always matches it. A printable version is [ERD.html](ERD.html) and');
-  lines.push('`ERD.pdf` at the repository root. The Oracle 19c milestone diagram is kept in');
-  lines.push('[archive/](archive/).');
+  lines.push('`ERD.pdf` at the repository root.');
   lines.push('');
   lines.push('Actor columns that only record *who acted* (`reviewed_by`, `approved_by`, `revoked_by`,');
   lines.push('`resolved_by`, `moderator_user_id`, `actor_user_id`, `created_by`, `created_by_user_id`)');

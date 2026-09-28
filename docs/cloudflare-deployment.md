@@ -54,8 +54,8 @@ a cached read can briefly miss the new row. The live configuration runs with
 caching disabled.
 
 `wrangler.jsonc` holds this deployment's settings. To deploy a separate copy,
-start from [`wrangler.example.jsonc`](../wrangler.example.jsonc), which has the
-same bindings with placeholder values.
+change its `name`, the Hyperdrive ID and the URL and account values under
+`vars`, and set your own secrets.
 
 ## 2. Install and configure the Worker
 

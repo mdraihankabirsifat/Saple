@@ -71,7 +71,7 @@ database/postgres/02_final_demo_data_postgres.sql
 database/postgres/03_schema_and_data_demo_postgres.sql
 ```
 
-Run the third PostgreSQL file at any time for read-only validation. The original Oracle files remain preserved under `database/sql/` as the prior milestone and are not used by the active backend.
+Run the third PostgreSQL file at any time for read-only validation.
 
 ```bash
 npm run dev
@@ -287,11 +287,11 @@ The active PostgreSQL seed uses `setval` with `pg_get_serial_sequence` for:
 - `REPORTS.REPORT_ID`
 - `MODERATION_ACTIONS.ACTION_ID`
 
-This advances every generated identity beyond explicit sample IDs. The preserved Oracle seed still contains its original `START WITH LIMIT VALUE` synchronization.
+This advances every generated identity beyond explicit sample IDs.
 
 ## Expanded Reference Data
 
-The PostgreSQL seed uses `INSERT ... ON CONFLICT DO NOTHING` to add the same 50 company references (35 Bangladesh-focused and 15 international) and 55 cross-industry roles as the preserved Oracle `MERGE` seed. Company sources are recorded in `database/company_seed_sources.md`.
+The PostgreSQL seed uses `INSERT ... ON CONFLICT DO NOTHING` to add the same 50 company references (35 Bangladesh-focused and 15 international) and 55 cross-industry roles. Company sources are recorded in `database/company_seed_sources.md`.
 
 ## Architecture
 

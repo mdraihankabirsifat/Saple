@@ -1,6 +1,4 @@
 -- SAPLE SUPABASE POSTGRESQL SCHEMA
--- PostgreSQL equivalent of database/sql/01_final_schema.sql.
--- The Oracle files remain the preserved prior milestone implementation.
 
 BEGIN;
 

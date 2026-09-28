@@ -1,6 +1,6 @@
 # Saple optional ML moderation-risk demo
 
-This folder is a small, removable extension to Saple's database project. It demonstrates how an explainable model could assist salary-submission moderation without changing the Oracle schema, Node backend, frontend, or existing moderation workflow.
+This folder is a small, removable extension to Saple's database project. It demonstrates how an explainable model could assist salary-submission moderation without changing the PostgreSQL schema, Node backend, frontend, or existing moderation workflow.
 
 The model reports **moderation risk**, not whether a submission is definitively fake. It never approves, rejects, flags, deletes, or otherwise changes a submission. A human moderator remains the final authority.
 
@@ -18,7 +18,7 @@ Training is role-specific. A role is eligible only when its CSV contains at leas
 
 ## Labels and features
 
-The final Oracle submission status becomes the binary training label:
+The final moderated submission status becomes the binary training label:
 
 - `APPROVED` -> `0` (legitimate example)
 - `REJECTED` -> `1` (suspicious example)
@@ -50,7 +50,7 @@ salary_year
 moderation_status
 ```
 
-The read-only [data/export_reviewed_salary.sql](data/export_reviewed_salary.sql) helper can export final moderator-reviewed salary rows from Oracle through SQL*Plus or SQLcl. Run it from `ml/data/` so it writes `salary_training.csv` there. CSV files in that folder are ignored by Git; inspect exports for privacy before moving or sharing them. Never commit private production data.
+The read-only [data/export_reviewed_salary.sql](data/export_reviewed_salary.sql) helper exports final moderator-reviewed salary rows from PostgreSQL through `psql`. Run it from `ml/data/` as `psql "$DATABASE_URL" -X -q -f export_reviewed_salary.sql > salary_training.csv`. CSV files in that folder are ignored by Git; inspect exports for privacy before moving or sharing them. Never commit private production data.
 
 ## Setup on Windows
 
@@ -71,7 +71,7 @@ For Command Prompt, activate with:
 
 ## Synthetic classroom demo
 
-The live database may not yet have 50 reviewed examples for one role. Generate 100 fictional Software Engineer records (80 approved, 20 rejected) without touching Oracle:
+The live database may not yet have 50 reviewed examples for one role. Generate 100 fictional Software Engineer records (80 approved, 20 rejected) without touching the database:
 
 ```powershell
 python -m src.generate_demo_data --output data/salary_training.csv
@@ -158,7 +158,7 @@ The notebook walks through loading data, role counts, eligibility, class balance
 ## Future integration (documentation only)
 
 ```text
-Oracle reviewed submissions
+PostgreSQL reviewed submissions
         |
 export training CSV
         |
@@ -176,5 +176,5 @@ admin moderation UI
 human moderator makes the final decision
 ```
 
-A later milestone could expose `risk_probability` and `risk_level` to the admin moderation screen. This prototype deliberately adds no Oracle columns, changes no `SUBMISSIONS` schema, and does not call Python from Node.
+A later milestone could expose `risk_probability` and `risk_level` to the admin moderation screen. This prototype deliberately adds no database columns, changes no `submissions` schema, and does not call Python from Node.
 

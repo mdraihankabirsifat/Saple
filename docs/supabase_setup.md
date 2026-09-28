@@ -19,8 +19,6 @@ Open the Supabase SQL editor and execute these files in order:
 
 The third file is read-only validation. The first two target a fresh project; do not rerun them against a populated database unless you intend to rebuild it.
 
-The original Oracle files under `database/sql/` are preserved for the earlier course milestone. The active backend does not execute them.
-
 > **Already have a Saple project on Supabase?** Do not run the files above on it.
 > Apply the eight additive migrations in `database/postgres/migrations/` instead,
 > following that folder's README, and rehearse on a backup first. The final

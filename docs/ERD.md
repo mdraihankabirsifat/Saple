@@ -4,8 +4,7 @@
 
 The active schema has **26 tables and 5 views**. This diagram is generated from the
 schema file, so it always matches it. A printable version is [ERD.html](ERD.html) and
-`ERD.pdf` at the repository root. The Oracle 19c milestone diagram is kept in
-[archive/](archive/).
+`ERD.pdf` at the repository root.
 
 Actor columns that only record *who acted* (`reviewed_by`, `approved_by`, `revoked_by`,
 `resolved_by`, `moderator_user_id`, `actor_user_id`, `created_by`, `created_by_user_id`)

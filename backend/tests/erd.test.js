@@ -37,7 +37,7 @@ test('the committed ERD is exactly what the current schema generates', () => {
   assert.equal(after.md, before.md, 'docs/ERD.md is stale');
 });
 
-test('the ERD describes PostgreSQL and every table, not the Oracle milestone', () => {
+test('the ERD describes the PostgreSQL schema and every table', () => {
   const html = read('docs/ERD.html');
   const md = read('docs/ERD.md');
 
@@ -54,7 +54,5 @@ test('the ERD describes PostgreSQL and every table, not the Oracle milestone', (
     assert.match(md, new RegExp(`\\b${table.toUpperCase()} \\{`), table);
   }
 
-  // The Oracle milestone diagram is preserved, not deleted.
-  assert.ok(fs.existsSync(path.join(root, 'docs/archive/ERD-oracle-milestone.pdf')));
   assert.ok(fs.existsSync(path.join(root, 'ERD.pdf')));
 });

@@ -5,9 +5,9 @@ const path = require('node:path');
 
 const repositoryRoot = path.resolve(__dirname, '../..');
 
-test('final Oracle schema enforces hashed single-use expiring reset-token storage', () => {
+test('final PostgreSQL schema enforces hashed single-use expiring reset-token storage', () => {
   const schema = fs.readFileSync(
-    path.join(repositoryRoot, 'database/sql/01_final_schema.sql'),
+    path.join(repositoryRoot, 'database/postgres/01_final_schema_postgres.sql'),
     'utf8'
   );
 

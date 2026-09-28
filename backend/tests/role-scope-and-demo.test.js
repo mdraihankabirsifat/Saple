@@ -15,13 +15,13 @@ test.afterEach(() => {
 });
 
 test('final schema directly creates nullable role-scoped verification integrity objects', () => {
-  const sql = read('database/sql/01_final_schema.sql');
+  const sql = read('database/postgres/01_final_schema_postgres.sql');
   const table = sql.match(/CREATE TABLE employment_verifications\s*\([\s\S]*?\n\);/i)?.[0];
 
   assert.ok(table);
-  assert.match(table, /^\s*role_id\s+NUMBER\s*,\s*$/im);
+  assert.match(table, /^\s*role_id\s+BIGINT\s*,\s*$/im);
   assert.match(table, /CONSTRAINT fk_emp_verify_role FOREIGN KEY \(role_id\)[\s\S]*?REFERENCES job_roles \(role_id\)/i);
-  assert.doesNotMatch(table, /^\s*role_id\s+NUMBER\s+NOT NULL/im);
+  assert.doesNotMatch(table, /^\s*role_id\s+BIGINT\s+NOT NULL/im);
   assert.match(sql, /CREATE INDEX ix_emp_verify_scope_status\s+ON employment_verifications \(employee_id, company_id, role_id, verification_status\)/i);
 });
 
@@ -88,13 +88,15 @@ test('verified-scope frontend controls never load arbitrary contribution roles',
 });
 
 test('consolidated demonstration data is guarded, synthetic, role-scoped, and dense by construction', () => {
-  const sql = read('database/sql/02_final_demo_data.sql');
-  assert.match(sql, /saple\.demo\.c.*@example\.invalid/i);
+  const sql = read('database/postgres/02_final_demo_data_postgres.sql');
+  assert.match(sql, /'saple\.demo\.c'[\s\S]*?'@example\.invalid'/i);
   assert.match(sql, /FOR salary_number IN 1\.\.5 LOOP/i);
   assert.match(sql, /FOR review_number IN 1\.\.3 LOOP/i);
   assert.match(sql, /role_id, verification_method/i);
   assert.match(sql, /WHERE NOT EXISTS/gi);
-  assert.match(sql, /ROLLBACK;\s*RAISE;/i);
+  // One transaction: the whole seed commits or none of it does.
+  assert.match(sql, /^BEGIN;/m);
+  assert.match(sql, /^COMMIT;/m);
   assert.doesNotMatch(sql, /\bDELETE\b/i);
-  assert.match(sql, /must never be used as trustworthy ML training data/i);
+  assert.match(sql, /must never be treated as production claims/i);
 });

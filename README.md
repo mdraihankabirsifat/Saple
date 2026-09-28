@@ -1,157 +1,228 @@
 # 🌱 Saple
+
+**Company and career insights you can actually trust.**
+
+Saple brings company profiles, salaries, workplace reviews, interview experiences and job openings into one place, and shows how far each piece of information can be trusted: who verified it, and whether a moderator approved it.
+
 [![CI](https://github.com/mdraihankabirsifat/Saple/actions/workflows/ci.yml/badge.svg)](https://github.com/mdraihankabirsifat/Saple/actions/workflows/ci.yml)
+![Node.js](https://img.shields.io/badge/Node.js-22-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169E1?logo=postgresql&logoColor=white)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare&logoColor=white)
+![JavaScript](https://img.shields.io/badge/Vanilla-JavaScript-F7DF1E?logo=javascript&logoColor=black)
 
-**Saple is a company and career insights platform that shows salaries, reviews, interview experiences and jobs together with how far each piece of information can be trusted.**
+### 🌐 Live demo: [saple.www-raihankabireusc.workers.dev](https://saple.www-raihankabireusc.workers.dev/)
 
-Saple is an independent BUET CSE academic project. It is not affiliated with, endorsed by, or an official login or careers service for any company it lists, and all people, salaries, reviews and vacancies in the demo data are synthetic.
+> **Academic project.** Saple is a BUET CSE216 Database Sessional project. It is not affiliated with, or an official service of, any company it lists, and the people, salaries, reviews and vacancies in the demo data are synthetic.
 
-## Application Preview
+<img src="assets/screenshots/homepage.webp" alt="Saple homepage with the headline 'Know the company before you join', a company search bar and live site statistics" width="100%">
 
-<img src="assets/screenshots/homepage.webp" alt="Saple homepage with the headline 'Know the company before you join', a growing-sapling illustration and live counts of companies, insights, jobs and reviews" width="100%">
+## Overview
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/companies-directory.webp" alt="Company directory with a filter sidebar and company cards showing ratings, industry, location and community pay" width="100%">
-      <br><sub><b>Company directory</b>: search, filter and sort companies.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/company-details.webp" alt="Company profile showing the Verified Salary Range by role with minimum, maximum, average and contribution count" width="100%">
-      <br><sub><b>Company profile</b>: verified and community salary ranges by role.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/salary-insights.webp" alt="Salary insights page listing verified and community salary ranges per company and role" width="100%">
-      <br><sub><b>Salary insights</b>: approved ranges across companies.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/reviews.webp" alt="Workplace reviews page with approved reviews showing rating, role, verification badge and pros and cons" width="100%">
-      <br><sub><b>Workplace reviews</b>: moderated, optionally anonymous.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/jobs.webp" alt="Jobs directory listing open vacancies with salary, work mode and application deadline" width="100%">
-      <br><sub><b>Jobs</b>: published vacancies still inside their deadline.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/saple-guide.webp" alt="Saple Guide panel open, answering what the difference between verified and community salary ranges is" width="100%">
-      <br><sub><b>Saple Guide</b>: help with using the site, with a built-in fallback.</sub>
-    </td>
-  </tr>
-</table>
+Job seekers usually piece together company information from scattered, unverifiable sources. Saple keeps it in one place and is honest about where each number came from.
 
-### Role-based Workspaces
+Anyone can browse companies, salaries, reviews, interviews and jobs. Employees can contribute, but only for the exact company and role they have been verified for, and nothing becomes public until an administrator approves it. Salaries are shown as two separate ranges: a **Verified** range from verified contributors, and a wider **Community** range from all approved submissions, each with its contribution count.
+
+Around that core, Saple has professional profiles, member and company search, direct messaging, notifications, job applications, company representatives and an AI helper, the Saple Guide.
+
+## Features
 
 <table>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/user-workspace.webp" alt="My applications page for a signed-in job seeker, showing application statuses such as shortlisted and under review" width="100%">
-      <br><sub><b>Job seeker</b>: track and withdraw applications.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/representative-workspace.webp" alt="Company representative workspace listing the company's vacancies with status, deadline and application counts" width="100%">
-      <br><sub><b>Company representative</b>: vacancies, applications and verifications for assigned companies.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/admin-dashboard.webp" alt="Administrator moderation dashboard with the pending submission queue" width="100%">
-      <br><sub><b>Administrator</b>: moderation queue with an audited decision history.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <img src="assets/screenshots/job-application.webp" alt="Job details page with the vacancy description and an application statement form" width="100%">
-      <br><sub><b>Applying</b>: one statement per vacancy; no file uploads.</sub>
-    </td>
-  </tr>
+<tr>
+<td width="50%" valign="top">
+
+**Career insights**
+- Company profiles with ratings and benefits
+- Verified and community salary ranges by role
+- Moderated workplace reviews and interview experiences
+- Jobs published by company representatives, with applications and status tracking
+
+</td>
+<td width="50%" valign="top">
+
+**Professional network**
+- Public profiles with headline, about, experience, education and skills
+- Search for members and companies from any page
+- Live company suggestions in the homepage search
+- Private direct messages between members
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Trust and verification**
+- Employee verification for one company and role at a time
+- Nothing is public until an administrator approves it
+- Company representatives manage their own companies only
+- Reports, and an audited history of every moderation decision
+
+</td>
+<td width="50%" valign="top">
+
+**Platform**
+- Notifications and site-wide announcements
+- Password recovery through a single-use emailed link
+- Profile pictures and company logos in Supabase Storage
+- Saple Guide: AI help with a built-in fallback
+- Responsive light and dark themes with subtle motion
+
+</td>
+</tr>
 </table>
 
-More captures, including interview experiences, are in [`assets/screenshots/`](assets/screenshots/).
+## Screenshots
 
-## What Saple Does
+### Explore companies and careers
 
-- **Company profiles** with benefits, ratings and every approved salary, review and interview for that company.
-- **Two salary ranges**: a *Verified Salary Range* from contributors verified for that exact company and role, and a *Community Salary Range* from all approved salaries, each with its contribution count.
-- **Moderated reviews and interview experiences**: nothing is public until an administrator approves it.
-- **Jobs and applications**: company representatives publish vacancies; job seekers apply, track status and withdraw.
-- **Employee verification** for a specific company and role, decided by that company's representative, with administrators as fallback.
-- **Reports and moderation**: any signed-in user can report a contribution; administrators triage reports and record every decision.
-- **Notifications and announcements** for decisions, application updates and site-wide notices.
-- **Profile pictures and company logos** in Supabase Storage, with initials when no image is available.
-- **Member profiles** with a headline, an about section, experience, education and skills, readable by any visitor; email and account data are never shown.
-- **Search** for members and companies from the navigation bar, and live company suggestions in the homepage search.
-- **Private direct messages** between signed-in members, including recruiter and applicant contact actions.
-- **Optional local PostgreSQL failover** for demos when Supabase is unreachable; see [backend setup](backend/README.md#demo-day-offline-database-fallback).
-- **Saple Guide** (AI): questions about using Saple go through Saple's own backend to an OpenAI-compatible provider. When no provider is configured, or it times out or rate-limits, the panel answers from a built-in knowledge base and labels that answer "Built-in Saple help (not AI)" rather than passing it off as the model.
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/companies.webp" alt="Company directory with filters and company cards showing ratings, location and community pay" width="100%">
+<br><sub><b>Company directory</b>: search, filter and sort.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/company-details.webp" alt="Company page showing the Verified Salary Range per role with minimum, maximum, average and contribution count" width="100%">
+<br><sub><b>Company details</b>: verified and community salary ranges.</sub>
+</td>
+</tr>
+</table>
 
-## Roles and Trust Model
+### Search and connect
 
-| Role | What it can do |
-|------|----------------|
-| **User** | Browse, apply to jobs, report content, request verification or a representative assignment. Registration always creates this role. |
-| **Verified employee** | Contribute salaries, reviews and interviews, but only for the exact company and role they are verified for. |
-| **Company representative** | Assigned by an administrator. Decides verification requests, manages vacancies and reviews applications for their own companies only. |
-| **Administrator** | Moderates contributions, triages reports, approves or revokes representatives, publishes announcements and oversees jobs. |
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/home-search.webp" alt="Homepage search showing live company suggestions for the word bank" width="100%">
+<br><sub><b>Homepage search</b>: company suggestions while you type.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/global-search.webp" alt="Navigation search results grouped into People and Companies" width="100%">
+<br><sub><b>Global search</b>: people and companies from any page.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/professional-profile.webp" alt="Member profile with headline, about, experience, education, skills and a Message button" width="100%">
+<br><sub><b>Professional profile</b>: experience, education and skills.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/messages-guide.webp" alt="Messages and Saple Guide panel open on a conversation with a company representative" width="100%">
+<br><sub><b>Messages and Saple Guide</b>: one panel for both.</sub>
+</td>
+</tr>
+</table>
 
-Three rules hold throughout:
+### Work and moderate
 
-- **Approved-only publication.** Contributions start as pending and affect nothing public until approved.
-- **Exact scope.** Verification for one company or role never implies another, and every request re-checks roles and scopes in the database, so a revocation applies on the next click.
-- **Anonymous publicly, accountable internally.** Contributions can be shown without a name, while Saple keeps the internal link needed to investigate reports.
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/jobs.webp" alt="Jobs page listing open vacancies with salary, work mode and application deadline" width="100%">
+<br><sub><b>Jobs</b>: published vacancies still inside their deadline.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/admin-dashboard.webp" alt="Administrator moderation workspace with the pending queue and a salary submission's details" width="100%">
+<br><sub><b>Admin moderation</b>: review queue with full submission context.</sub>
+</td>
+</tr>
+</table>
 
-## Tech Stack
+<sub>Public pages were captured from the live site. The profile, messages, jobs, search and admin views use the synthetic demo accounts.</sub>
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | HTML, CSS and vanilla JavaScript modules; no build step, no third-party scripts |
-| Backend | Node.js and Express 5 with raw parameterized SQL through `pg` |
-| Database | PostgreSQL hosted on Supabase: 26 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
-| Auth and email | BCrypt password hashing, JSON Web Tokens, Nodemailer for the emailed password reset |
-| AI (optional) | Any OpenAI-compatible chat endpoint for the Saple Guide; Groq's free tier is the documented default |
-| Research prototype | A standalone Python ML experiment in [`ml/`](ml/), not wired into the app |
+## Database design
+
+The database is the heart of the project. It runs on **PostgreSQL**, hosted by **Supabase**.
+
+| | |
+|---|---|
+| Tables | **26**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, and jobs and applications |
+| Views | **5** public read models, for example approved reviews and salary summaries |
+| Keys and constraints | 44 foreign keys, 100 named `CHECK` constraints, unique and partial-unique keys |
+| Indexes | 44, including partial and case-insensitive unique indexes |
+| Migrations | **8** additive, re-runnable migrations from the original 14-table schema |
+| ERD | [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md), generated from the schema file |
+
+Some design choices worth pointing out:
+
+- **Supertype and subtypes.** `submissions` holds what every contribution shares; `salary_submissions`, `company_reviews` and `interview_experiences` hold the rest, one-to-one on the same key.
+- **Many-to-many links** such as `company_benefits` and `user_skills`, with a shared, case-insensitive skill catalogue.
+- **Audit tables** (`moderation_actions`, `job_application_status_history`, `representative_assignment_actions`) use `ON DELETE RESTRICT`, so history cannot be deleted by accident.
+- **Database-side logic:**
+  - a trigger function, `saple_set_updated_at()`, with seven `BEFORE UPDATE` triggers;
+  - a statistics function, `saple_company_insight_summary()`, that counts approved data only;
+  - a procedure, `saple_apply_application_decision()`, that updates an application and writes its history row together.
+- **Explicit transactions.** Every write runs inside `BEGIN … COMMIT`, with `SELECT … FOR UPDATE` where two requests could race.
+- **Scoped access.** Every protected request reloads the account's role, status and company scopes from the database, so a revoked permission takes effect on the next click.
+
+Details: [`docs/relational_schema.md`](docs/relational_schema.md) and [`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md).
 
 ## Architecture
 
 ```text
-Browser (static pages, strict Content-Security-Policy)
-   │  same-origin HTTPS
+Browser  (static pages, strict Content-Security-Policy)
+   │
    ▼
-Express API  (routes → controllers → services → repositories)
-   │  parameterized SQL, one transaction per multi-step write
+Cloudflare Worker  ── serves frontend/ as static assets
+   │
+   ▼
+Express app  (route → controller → service → repository)
+   │  parameterized SQL through pg
+   ▼
+Cloudflare Hyperdrive  (connection pooling)
+   │
    ▼
 Supabase PostgreSQL
 ```
 
-The live deployment runs this same Express app on Cloudflare Workers. Wrangler
-serves `frontend/` as Worker Static Assets and invokes the thin
-[`cloudflare/worker.mjs`](cloudflare/worker.mjs) adapter for `/api/*` and the
-generated crawler/security files. The adapter connects the existing database
-module to Supabase PostgreSQL through Cloudflare Hyperdrive; there is no second
-schema or second application. The Node server (`backend/server.js`) still runs
-locally, in Docker and on Render from `render.yaml`.
+Alongside the database:
 
-Supabase is used only as hosted PostgreSQL. The browser never connects to it directly and never receives database credentials, and authentication is handled by the Express backend, not Supabase Auth.
+- **Supabase Storage** holds profile pictures and company logos.
+- **SMTP** (Gmail, through Nodemailer) sends password recovery emails.
+- **Groq**, or any OpenAI-compatible API, answers Saple Guide questions through the backend.
 
-Work the database does itself: `saple_set_updated_at()` with one `BEFORE UPDATE`
-trigger per table that has `updated_at`; `saple_company_insight_summary()`, which
-computes a company's approved-only statistics; and
-`saple_apply_application_decision()`, which applies one job-application decision
-to `job_applications` and `job_application_status_history` together. Every runtime
-write runs inside an explicit transaction. See
-[`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md).
+The backend is written in layers. Routes only map URLs, controllers handle HTTP, services hold the rules and authorization, and repositories are the only place SQL is written, always with `$1`-style parameters and never string-built. The browser never talks to the database or holds a database credential, and authentication is Saple's own (JWT), not Supabase Auth.
 
-Security highlights:
+## Tech stack
 
-- Every protected request reloads the account's status, role and company scopes from the database.
-- Pages load no third-party code and run under a self-only Content-Security-Policy; dynamic text is rendered with `textContent`, never as HTML.
-- Sign-in, recovery, reports, applications and the Saple Guide are rate-limited; reset links are single-use and stored only as hashes.
-- A password is entered on three pages only: sign in, register, and the reset page reached through an emailed single-use link. No signed-in page asks for a password, and `PATCH /api/auth/me/password` no longer exists.
-- Account, contribution and workspace pages are `noindex, nofollow` in both the HTML and the `X-Robots-Tag` header; the public directory stays indexable.
+| Layer | Technology |
+|-------|------------|
+| Frontend | HTML, CSS, vanilla JavaScript modules; no build step, no third-party scripts |
+| Backend | Node.js, Express 5 |
+| Database | PostgreSQL on Supabase |
+| Database connection | `pg`, through Cloudflare Hyperdrive in production |
+| Hosting | Cloudflare Workers (static assets and the API) |
+| Storage | Supabase Storage |
+| Authentication | JWT and bcrypt |
+| Email | Nodemailer with Gmail SMTP |
+| AI | Groq (OpenAI-compatible API) |
 
-Details are in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md), and the remediation status is in [`docs/security-remediation-checklist.md`](docs/security-remediation-checklist.md).
+The [`ml/`](ml/) folder is a separate Python prototype that estimates moderation risk for salary submissions. It is not wired into the app.
 
-## Quick Start
+## Project structure
+
+```text
+Saple/
+├── backend/            Express API
+│   ├── config/         database, auth, storage, mail and AI settings
+│   ├── controllers/
+│   ├── middleware/     authentication, rate limits, security headers
+│   ├── repositories/   all SQL lives here
+│   ├── routes/
+│   ├── services/
+│   └── tests/
+├── cloudflare/         Worker entry point
+├── database/postgres/  schema, demo data, validation queries, migrations/
+├── docs/               setup, deployment, schema and compliance documents
+├── frontend/           pages, css/, js/, assets/, service worker
+├── ml/                 optional ML prototype
+├── assets/screenshots/
+├── ERD.pdf
+├── render.yaml
+└── wrangler.jsonc
+```
+
+## Quick start
 
 You need Node.js 22 or newer and a PostgreSQL database, such as a Supabase project.
 
@@ -159,63 +230,53 @@ You need Node.js 22 or newer and a PostgreSQL database, such as a Supabase proje
 git clone https://github.com/mdraihankabirsifat/Saple.git
 cd Saple/backend
 npm ci
-cp .env.example .env
+cp .env.example .env    # then set DATABASE_URL and JWT_SECRET
 npm start
 ```
 
-Before `npm start`, set these values in `backend/.env`:
+Open <http://localhost:3000>; one Express server serves both the pages and the API. Every setting is described in [`backend/.env.example`](backend/.env.example), and database setup is in [`docs/supabase_setup.md`](docs/supabase_setup.md).
 
-| Variable | Value |
-|----------|-------|
-| `DATABASE_URL` | Your PostgreSQL connection string (for Supabase, copy it from **Connect**; the Session pooler works on IPv4 networks) |
-| `DB_SSL` | `true` for Supabase, `false` for a local server without TLS |
-| `JWT_SECRET` | A long random secret |
+With Docker Desktop running, `npm run local:up --prefix backend` starts the app with its own seeded PostgreSQL, no Supabase needed.
 
-Then open <http://localhost:3000>. Express serves both the pages and the API from that one origin. Without `DATABASE_URL`, the server refuses to start.
+## Deployment
 
-Keep secrets in `backend/.env` (ignored by Git) or in your host's private environment settings, and never commit them. Every other variable, including SMTP and AI settings, is listed in [`backend/.env.example`](backend/.env.example).
+**Production:** Cloudflare Workers, with Hyperdrive in front of Supabase PostgreSQL.
+**Live URL:** <https://saple.www-raihankabireusc.workers.dev/>
 
-To create the schema, load the synthetic demo data, or upgrade an existing database, follow [`docs/supabase_setup.md`](docs/supabase_setup.md) and [`database/postgres/migrations/README.md`](database/postgres/migrations/README.md).
+The same code still runs as a plain Node server locally, in Docker, and on Render through [`render.yaml`](render.yaml), but Render is not the current production host. For an offline demo, the Node server can also fall back to a local PostgreSQL database.
 
-**Docker alternative:** with Docker Desktop running, `npm run local:up --prefix backend` (from the repository root) starts the app with its own seeded PostgreSQL. It needs no Supabase credentials, and `npm run local:accounts --prefix backend` prepares demo sign-ins.
+See [`docs/cloudflare-deployment.md`](docs/cloudflare-deployment.md), and [`docs/deployment.md`](docs/deployment.md) for Render.
 
-## Tests
+## Security
 
-From `backend/`:
+- Passwords are stored as bcrypt hashes; sessions use signed JWTs, and logging out revokes the token server-side.
+- Password reset links are single-use, expire, and are stored only as hashes.
+- Sign-in, recovery, search, messages and the Saple Guide are rate-limited.
+- All SQL is parameterized; authorization is checked on the server for every request.
+- Pages load no third-party code and run under a strict Content-Security-Policy with security headers; dynamic text is rendered as text, never as HTML.
+- Secrets live in environment variables and Cloudflare secrets, never in the frontend or the repository.
+
+More in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md).
+
+## Testing
 
 ```bash
-npm test                        # unit and HTTP tests; no database needed
-npm run test:integration        # end-to-end workflows against a prepared database
-npm run test:integration:jobs   # representatives, jobs, notifications, announcements
+npm test --prefix backend    # unit, HTTP and database tests (PGlite); no external database needed
+npm run cf:dry-run           # builds the Cloudflare Worker bundle without deploying
 ```
 
-```bash
-npm run verify:database        # read-only: checks tables, views, triggers, function, procedure
-```
-
-The two integration commands run against the database in `DATABASE_URL`, so point them at a test or local database, not production. `verify:database` only reads, and is safe against any database. The ML prototype has its own tests: `python -m unittest discover -s tests` from `ml/`. CI runs the unit suite on every push.
+GitHub Actions runs the backend suite, the ML tests and a set of security checks on every push.
 
 ## Documentation
 
-- [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md): entity-relationship diagram, generated from the schema
-- [`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md): the CSE216 checklist mapped to code, database objects, tests and a demonstration
+- [`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md): course requirements mapped to code, database objects and tests
+- [`docs/relational_schema.md`](docs/relational_schema.md) and [`docs/ERD.md`](docs/ERD.md): tables, constraints and relationships
 - [`docs/requirement_analysis.md`](docs/requirement_analysis.md): requirements and scope
-- [`docs/relational_schema.md`](docs/relational_schema.md): tables, constraints and status transitions
-- [`docs/supabase_setup.md`](docs/supabase_setup.md): database setup and migrations
-- [`docs/cloudflare-deployment.md`](docs/cloudflare-deployment.md): Hyperdrive, Worker secrets and deployment
-- [`docs/deployment.md`](docs/deployment.md): Supabase connection and Render hosting
-- [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md): security controls and a safe deployment checklist
-- [`docs/security-remediation-checklist.md`](docs/security-remediation-checklist.md): what the code now enforces, and the manual steps only the owner can take
-- [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md): Saple Guide provider configuration
-- [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md): SMTP setup for password recovery
-- [`docs/UI_IMAGE_GUIDE.md`](docs/UI_IMAGE_GUIDE.md): where the page images live and how to replace them
-- [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md): API contracts and frontend structure
-- [`docs/archive/`](docs/archive/): earlier milestone documents, including the Oracle 19c ERD
+- [`docs/supabase_setup.md`](docs/supabase_setup.md) and [`database/postgres/migrations/README.md`](database/postgres/migrations/README.md): database setup and migrations
+- [`docs/cloudflare-deployment.md`](docs/cloudflare-deployment.md) and [`docs/deployment.md`](docs/deployment.md): hosting
+- [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md) and [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md): Saple Guide and email
+- [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md): API and frontend details
 
-## Project Status
+## License
 
-The application, schema, eight migrations, tests and documentation are complete. Saple is deployed on Cloudflare Workers with Hyperdrive and Supabase PostgreSQL; profile pictures and company logos are stored in Supabase Storage. Email delivery and the AI provider depend on private configuration supplied by the owner.
-
-## License / Academic Notice
-
-This repository does not include an open-source license. Saple is an independent BUET CSE academic project and is not an official service of any company it lists.
+This repository has no open-source license. Saple is an independent BUET CSE academic project and is not an official service of any company it lists.
