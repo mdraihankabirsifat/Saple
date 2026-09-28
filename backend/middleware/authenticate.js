@@ -74,5 +74,14 @@ async function authenticate(request, response, next) {
   }
 }
 
+// For public routes that behave slightly differently for a signed-in visitor.
+// No Authorization header means an anonymous request; a header that is present
+// is still checked in full, so a bad or revoked token is never ignored.
+function optionalAuthenticate(request, response, next) {
+  if (!request.get('Authorization')) return next();
+  return authenticate(request, response, next);
+}
+
 module.exports = authenticate;
 module.exports.ACCOUNT_ROLES = ACCOUNT_ROLES;
+module.exports.optionalAuthenticate = optionalAuthenticate;

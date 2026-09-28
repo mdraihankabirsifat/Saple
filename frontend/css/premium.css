@@ -2118,3 +2118,131 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 
   .rail { scroll-behavior: auto; }
 }
+
+/* 20. Hero live search ----------------------------------------------------- */
+
+/* Live company recommendations under the homepage search, in the same style
+   as the navbar search. The hero clips its overflow, so the list stays short. */
+.hero-search { position: relative; z-index: 5; }
+
+.hero-search-results {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: calc(100% + 0.45rem);
+  max-height: min(19rem, 55vh);
+  text-align: left;
+  /* Opaque, unlike the glass surface token: it sits over the hero's buttons. */
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.hero-search-results .nav-search-result { padding: 0.55rem 0.65rem; }
+.hero-search-results .nav-search-avatar { width: 2.25rem; height: 2.25rem; border-radius: var(--radius-sm); }
+
+/* 21. Motion: entrance and scroll reveal ----------------------------------- */
+
+/* Page-load entrance for the first screen of static markup. Pure CSS, so text
+   never waits on a script; `backwards` fill hands every property back to the
+   element afterwards, so hover lifts and transitions keep working. */
+@keyframes saple-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes saple-enter-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.home-hero h1,
+.home-hero .hero-text,
+.home-hero .hero-search,
+.home-hero .hero-quick-links,
+.home-hero .hero-actions,
+.home-hero .hero-secondary,
+.home-hero .hero-disclaimer,
+:is(.page-header, .info-hero-content) > :is(.eyebrow, h1, p),
+.auth-intro,
+.auth-card,
+.company-profile,
+.profile-card,
+.user-profile-card:not([hidden]) {
+  animation: saple-enter 520ms var(--ease-out) backwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* The italic line fades in after the heading; opacity only, so the heading
+   wraps exactly as before. */
+.home-hero .hero-highlight {
+  animation: saple-enter-fade 600ms var(--ease-out) 180ms backwards;
+}
+
+.home-hero .hero-text { --reveal-delay: 110ms; }
+.home-hero .hero-search { --reveal-delay: 190ms; }
+.home-hero .hero-quick-links { --reveal-delay: 250ms; }
+.home-hero .hero-actions { --reveal-delay: 290ms; }
+.home-hero :is(.hero-secondary, .hero-disclaimer) { --reveal-delay: 330ms; }
+:is(.page-header, .info-hero-content) > h1 { --reveal-delay: 70ms; }
+:is(.page-header, .info-hero-content) > p:not(.eyebrow) { --reveal-delay: 140ms; }
+.auth-card { --reveal-delay: 120ms; }
+.profile-card:nth-child(2) { --reveal-delay: 60ms; }
+.profile-card:nth-child(3) { --reveal-delay: 120ms; }
+.profile-card:nth-child(n + 4) { --reveal-delay: 160ms; }
+
+/* Reusable stagger steps. */
+.reveal-delay-1 { --reveal-delay: 80ms; }
+.reveal-delay-2 { --reveal-delay: 160ms; }
+.reveal-delay-3 { --reveal-delay: 240ms; }
+
+/* Scroll reveal (js/reveal.js): a block below the first screen waits, then
+   fades up once when it enters the viewport. The classes are removed as soon
+   as it has arrived. */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* Blocks rendered later from the API, already on screen. */
+.reveal-enter {
+  animation: saple-enter 460ms var(--ease-out) backwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+@media print {
+  .reveal { opacity: 1 !important; transform: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero h1,
+  .home-hero .hero-highlight,
+  .home-hero .hero-text,
+  .home-hero .hero-search,
+  .home-hero .hero-quick-links,
+  .home-hero .hero-actions,
+  .home-hero .hero-secondary,
+  .home-hero .hero-disclaimer,
+  :is(.page-header, .info-hero-content) > :is(.eyebrow, h1, p),
+  .auth-intro,
+  .auth-card,
+  .company-profile,
+  .profile-card,
+  .user-profile-card,
+  .reveal-enter {
+    animation: none !important;
+  }
+
+  .reveal,
+  .reveal.is-revealed {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

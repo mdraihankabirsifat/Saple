@@ -152,7 +152,9 @@ test('every section route is signed-in only and writes are rate limited', () => 
   const controller = read('backend/controllers/professional-profile.controller.js');
   assert.equal((controller.match(/req\.user\.userId/g) || []).length, 9);
   assert.doesNotMatch(controller, /req\.(params|body)\.userId/);
-  assert.match(read('backend/routes/user.routes.js'), /router\.use\(authenticate\);[\s\S]*'\/:userId\/profile'/);
+  // Profiles are public and read-only; people search for messaging stays signed-in.
+  assert.match(read('backend/routes/user.routes.js'),
+    /'\/:userId\/profile', searchLimit[\s\S]*router\.use\(authenticate\);[\s\S]*'\/search'/);
 });
 
 test('the migration adds the sections without a LinkedIn field', () => {

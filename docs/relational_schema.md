@@ -320,6 +320,6 @@ deletes only the `user_skills` link, and `ON DELETE RESTRICT` keeps a skill
 that profiles still list. The API caps each profile at 20 education records,
 40 experience records and 50 skills.
 
-Signed-in members see another member's name, picture, headline, about text,
+Any visitor can see an active member's name, picture, headline, about text,
 experience, education and skills. Email, authentication data, submissions,
 applications and verification evidence are never part of a public profile.

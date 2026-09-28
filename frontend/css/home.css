@@ -469,19 +469,6 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* Section reveal ---------------------------------------------------------- */
-
-[data-reveal="pending"] {
-  opacity: 0;
-  transform: translateY(0.75rem);
-}
-
-[data-revealed="true"] {
-  opacity: 1;
-  transform: none;
-  transition: opacity var(--motion-slow) var(--ease-out), transform var(--motion-slow) var(--ease-out);
-}
-
 /* Responsive -------------------------------------------------------------- */
 
 @media (max-width: 1050px) {
@@ -522,12 +509,5 @@
   .hero-actions .button,
   .cta-actions .button {
     width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal="pending"] {
-    opacity: 1;
-    transform: none;
   }
 }

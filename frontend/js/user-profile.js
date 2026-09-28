@@ -20,9 +20,10 @@ function section(title, items, describe) {
 function dates(item, currentField) {
   return `${item.startDate} – ${item[currentField] ? 'Present' : item.endDate}`;
 }
-if (!isAuthenticated()) location.replace(`login.html?returnTo=${encodeURIComponent(`user-profile.html?id=${raw || ''}`)}`);
-else if (!/^\d+$/.test(raw || '')) status.textContent = 'Invalid member profile.';
-else apiRequest(`/api/users/${raw}/profile`, { auth: true }).then(({ user }) => {
+// Profiles are public and read-only; messaging a member needs an account.
+const signedIn = isAuthenticated();
+if (!/^\d+$/.test(raw || '')) status.textContent = 'Invalid member profile.';
+else apiRequest(`/api/users/${raw}/profile`, { auth: signedIn }).then(({ user }) => {
   status.hidden = true;
   content.hidden = false;
   document.title = `${user.fullName} | Saple`;
@@ -32,11 +33,14 @@ else apiRequest(`/api/users/${raw}/profile`, { auth: true }).then(({ user }) => 
     image.addEventListener('error', () => { image.remove(); avatar.textContent = user.fullName[0]?.toUpperCase() || 'S'; });
     avatar.append(image);
   } else avatar.textContent = user.fullName[0]?.toUpperCase() || 'S';
-  const own = user.userId === getStoredUser()?.userId;
+  const own = signedIn && user.userId === getStoredUser()?.userId;
+  const signInToMessage = `login.html?returnTo=${encodeURIComponent(`user-profile.html?id=${user.userId}`)}`;
   const action = own
     ? el('a', { className: 'button button-primary', text: 'View my profile', attrs: { href: 'profile.html' } })
-    : el('button', { className: 'button button-primary', text: 'Message', attrs: { type: 'button' } });
-  if (!own) action.addEventListener('click', async () => {
+    : signedIn
+      ? el('button', { className: 'button button-primary', text: 'Message', attrs: { type: 'button' } })
+      : el('a', { className: 'button button-primary', text: 'Sign in to message', attrs: { href: signInToMessage } });
+  if (!own && signedIn) action.addEventListener('click', async () => {
     const { mountMessages, openConversation } = await import('./messages.js');
     await mountMessages();
     await openConversation(user.userId);

@@ -175,13 +175,17 @@ async function findCompanyById(companyId) {
   return rows[0] || null;
 }
 
-async function searchCompanies(query, limit = 8) {
+// broad also matches industry and city (the homepage search); name matches
+// always rank first.
+async function searchCompanies(query, limit = 8, { broad = false } = {}) {
   return executeQuery(`
     SELECT company_id AS "companyId", company_name AS "companyName", industry,
-      logo_path AS "logoPath", updated_at AS "updatedAt"
-    FROM companies WHERE company_name ILIKE $1 ESCAPE '\\'
-    ORDER BY company_name, company_id LIMIT $2
-  `, [query, limit]);
+      headquarters_city AS city, logo_path AS "logoPath", updated_at AS "updatedAt"
+    FROM companies
+    WHERE company_name ILIKE $1 ESCAPE '\\'
+      OR ($3::boolean AND (industry ILIKE $1 ESCAPE '\\' OR headquarters_city ILIKE $1 ESCAPE '\\'))
+    ORDER BY (company_name ILIKE $1 ESCAPE '\\') DESC, company_name, company_id LIMIT $2
+  `, [query, limit, broad]);
 }
 
 // The public figures for one company come from the database function, so the

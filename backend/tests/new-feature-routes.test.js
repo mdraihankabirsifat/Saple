@@ -25,7 +25,12 @@ test('new private routes enforce authentication, exact company scope and image l
   });
   try {
     assert.equal((await request('/api/messages/conversations')).status, 401);
-    assert.equal((await request('/api/users/8/profile')).status, 401);
+    // Profiles and the global search are public; finding people to message is not.
+    assert.equal((await request('/api/users/8/profile')).status, 200);
+    assert.equal((await request('/api/search?q=ab')).status, 200);
+    assert.equal((await request('/api/search?q=ab', 'not-a-valid-token')).status, 401);
+    assert.equal((await request('/api/search?q=ab&scope=everything')).status, 400);
+    assert.equal((await request('/api/users/search?q=ab')).status, 401);
     assert.equal((await request('/api/me/avatar', null, 'DELETE')).status, 401);
     const rep = token(7, 'COMPANY_REPRESENTATIVE');
     const other = token(8, 'USER');

@@ -87,14 +87,15 @@ async function updatePublicProfile(userId, fullName, headline, bio) {
   return result.rowCount === 1;
 }
 
+// excludedUserId is null for an anonymous search.
 async function searchActiveUsers(query, excludedUserId, limit = 8) {
   const result = await database.query(`
-    SELECT user_id AS "userId", full_name AS "fullName", account_role AS "accountRole",
-      avatar_path AS "avatarPath", updated_at AS "updatedAt"
-    FROM users
-    WHERE account_status = 'ACTIVE' AND user_id <> $2
-      AND full_name ILIKE $1 ESCAPE '\\'
-    ORDER BY full_name, user_id LIMIT $3
+    SELECT u.user_id AS "userId", u.full_name AS "fullName", u.account_role AS "accountRole",
+      u.avatar_path AS "avatarPath", to_jsonb(u)->>'headline' AS headline, u.updated_at AS "updatedAt"
+    FROM users u
+    WHERE u.account_status = 'ACTIVE' AND ($2::bigint IS NULL OR u.user_id <> $2)
+      AND u.full_name ILIKE $1 ESCAPE '\\'
+    ORDER BY u.full_name, u.user_id LIMIT $3
   `, [query, excludedUserId, limit]);
   return result.rows;
 }

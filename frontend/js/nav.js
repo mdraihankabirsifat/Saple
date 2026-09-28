@@ -9,6 +9,7 @@ const announcementsModuleUrl = new URL('./announcements.js', moduleBase);
 const assistantModuleUrl = new URL('./assistant.js', moduleBase);
 const messagesModuleUrl = new URL('./messages.js', moduleBase);
 const globalSearchModuleUrl = new URL('./global-search.js', moduleBase);
+const revealModuleUrl = new URL('./reveal.js', moduleBase);
 
 // Saple identifies itself the same way on every page. These two sentences are
 // injected here rather than copied into 20 HTML files so they cannot drift.
@@ -353,6 +354,9 @@ import(announcementsModuleUrl.href)
 import(assistantModuleUrl.href)
   .then((assistant) => assistant.mountAssistant())
   .catch(() => {});
+import(revealModuleUrl.href)
+  .then((reveal) => reveal.mountReveal())
+  .catch(() => {});
 
 function updateContributionVisibility(user) {
   const verified = Array.isArray(user?.verifiedScopes) && user.verifiedScopes.length > 0;
@@ -583,6 +587,11 @@ async function updateAuthenticationNavigation() {
   const auth = await import(authModuleUrl.href);
 
   if (!auth.isAuthenticated()) {
+    // Search is public; signed-out visitors get it before the sign-in links.
+    import(globalSearchModuleUrl.href)
+      .then((search) => search.mountGlobalSearch(navigationActions,
+        navigationActions.querySelector('a[href="login.html"]')))
+      .catch(() => {});
     return;
   }
 

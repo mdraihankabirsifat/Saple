@@ -4,6 +4,7 @@ import {
   formatSalaryRange, formatDate, humanizeEnum
 } from './ui.js';
 import { createCompanyLogo } from './company-logo.js';
+import { mountHeroSearch } from './global-search.js';
 
 // ---------------------------------------------------------------------------
 // Live snapshot. Counters animate only after real numbers arrive; nothing is
@@ -430,26 +431,8 @@ async function loadPopularRoles() {
   }
 }
 
-// Sections fade in once, and only when motion is welcome.
-function mountSectionReveal() {
-  if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
-
-  const sections = document.querySelectorAll('main .section');
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
-      entry.target.dataset.revealed = 'true';
-      observer.unobserve(entry.target);
-    }
-  }, { rootMargin: '0px 0px -10% 0px' });
-
-  for (const section of sections) {
-    section.dataset.reveal = 'pending';
-    observer.observe(section);
-  }
-}
-
-mountSectionReveal();
+// Sections reveal on scroll through the shared js/reveal.js, loaded by nav.js.
+mountHeroSearch(document.querySelector('.hero-search'));
 loadSnapshot();
 mountRails();
 loadFeaturedCompanies();

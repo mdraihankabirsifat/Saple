@@ -15,6 +15,7 @@ function safeUser(user) {
     userId: user.userId,
     fullName: user.fullName,
     displayLabel: user.accountRole === 'COMPANY_REPRESENTATIVE' ? 'Company representative' : 'Saple member',
+    headline: user.headline || null,
     avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt)
   };
 }
@@ -24,11 +25,17 @@ async function people(value, currentUserId) {
   return (await users.searchActiveUsers(pattern, currentUserId)).map(safeUser);
 }
 
-async function all(value, currentUserId) {
+// scope 'companies' is the homepage search: companies only, matched by name,
+// industry or city, so it costs one query instead of two.
+async function all(value, currentUserId = null, { scope } = {}) {
+  if (scope !== undefined && scope !== 'all' && scope !== 'companies') {
+    throw createHttpError(400, 'Unknown search scope');
+  }
   const pattern = `%${normalizeQuery(value)}%`;
+  const companiesOnly = scope === 'companies';
   const [userRows, companyRows] = await Promise.all([
-    users.searchActiveUsers(pattern, currentUserId),
-    companies.searchCompanies(pattern)
+    companiesOnly ? [] : users.searchActiveUsers(pattern, currentUserId),
+    companies.searchCompanies(pattern, 8, { broad: companiesOnly })
   ]);
   return {
     users: userRows.map(safeUser),
@@ -36,6 +43,7 @@ async function all(value, currentUserId) {
       companyId: company.companyId,
       companyName: company.companyName,
       industry: company.industry,
+      city: company.city || null,
       logoUrl: storage.publicUrl('logo', company.logoPath, company.updatedAt)
     }))
   };

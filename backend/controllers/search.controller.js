@@ -12,7 +12,7 @@ async function people(request, response, next) {
 async function all(request, response, next) {
   try {
     return sendSuccess(response, 200, 'Search results retrieved',
-      await service.all(request.query.q, request.user.userId));
+      await service.all(request.query.q, request.user?.userId ?? null, { scope: request.query.scope }));
   } catch (error) { return next(error); }
 }
 
