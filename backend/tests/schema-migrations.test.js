@@ -19,7 +19,11 @@ const NEW_TABLES = [
   'job_application_status_history',
   'announcements',
   'notifications',
-  'direct_messages'
+  'direct_messages',
+  'user_education',
+  'user_experience',
+  'skills',
+  'user_skills'
 ];
 
 function migrations() {
@@ -170,7 +174,7 @@ test('a fresh install and a migrated install declare the same new tables', () =>
     assert.match(migrationSql, new RegExp(`CREATE TABLE IF NOT EXISTS ${table} \\(`), `${table} in migrations`);
   }
 
-  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 22);
+  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 26);
   assert.equal((schema.match(/^CREATE OR REPLACE VIEW /gm) || []).length, 5);
   assert.match(schema, /CREATE OR REPLACE VIEW vw_public_open_jobs/);
   assert.match(migrationSql, /CREATE OR REPLACE VIEW vw_public_open_jobs/);
@@ -355,7 +359,7 @@ test('the demonstration data shows the rules rather than only the happy path', (
 });
 
 test('the read-only validation script checks the final shape and the new rules', () => {
-  assert.match(validation, /22 base tables and 5 views/);
+  assert.match(validation, /26 base tables and 5 views/);
   for (const table of NEW_TABLES) {
     assert.ok(validation.includes(`'${table}'`), table);
   }
@@ -378,6 +382,6 @@ test('the migration guide tells the owner to rehearse before touching live data'
   assert.match(guide, /001_account_roles_and_company_representatives\.sql/);
   assert.match(guide, /004_public_job_views_and_grants\.sql/);
   assert.match(guide, /backup/i);
-  assert.match(guide, /22 base tables and 5 views/);
+  assert.match(guide, /26 base tables and 5 views/);
   assert.match(guide, /ON DELETE RESTRICT/);
 });

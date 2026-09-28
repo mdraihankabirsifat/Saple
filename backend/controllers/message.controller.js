@@ -23,5 +23,5 @@ const unreadCount = handle(async (req, res) => sendSuccess(res, 200, 'Unread cou
 const contacts = handle(async (req, res) => sendSuccess(res, 200, 'Company contacts retrieved',
   { contacts: await service.companyContacts(req.params.companyId) }));
 const profile = handle(async (req, res) => sendSuccess(res, 200, 'User profile retrieved',
-  { user: await service.userProfile(req.params.userId) }));
+  { user: await service.userProfile(req.params.userId, { includeSections: true }) }));
 module.exports = { conversations, history, send, edit, remove, unreadCount, contacts, profile };

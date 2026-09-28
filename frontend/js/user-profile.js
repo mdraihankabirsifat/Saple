@@ -5,6 +5,21 @@ import { el } from './ui.js';
 const status = document.querySelector('#user-profile-status');
 const content = document.querySelector('#user-profile-content');
 const raw = new URLSearchParams(location.search).get('id');
+function section(title, items, describe) {
+  if (!items?.length) return null;
+  const list = el('ul', { className: 'professional-list' });
+  for (const item of items) {
+    const { heading, detail, description } = describe(item);
+    list.append(el('li', { className: 'professional-item' }, [el('div', {}, [
+      el('h3', { text: heading }), el('p', { className: 'professional-meta', text: detail }),
+      description ? el('p', { text: description }) : null
+    ])]));
+  }
+  return el('section', { className: 'public-profile-section' }, [el('h3', { text: title }), list]);
+}
+function dates(item, currentField) {
+  return `${item.startDate} – ${item[currentField] ? 'Present' : item.endDate}`;
+}
 if (!isAuthenticated()) location.replace(`login.html?returnTo=${encodeURIComponent(`user-profile.html?id=${raw || ''}`)}`);
 else if (!/^\d+$/.test(raw || '')) status.textContent = 'Invalid member profile.';
 else apiRequest(`/api/users/${raw}/profile`, { auth: true }).then(({ user }) => {
@@ -26,9 +41,26 @@ else apiRequest(`/api/users/${raw}/profile`, { auth: true }).then(({ user }) => 
     await mountMessages();
     await openConversation(user.userId);
   });
-  const linkedin = user.linkedinUrl ? el('a', { text: 'LinkedIn profile', attrs: {
-    href: user.linkedinUrl, target: '_blank', rel: 'noopener noreferrer'
-  } }) : null;
-  content.append(avatar, el('h2', { text: user.fullName }),
-    el('p', { text: user.displayLabel || 'Saple member' }), linkedin, action);
+  const experience = section('Experience', user.experience, (item) => ({
+    heading: `${item.jobTitle} · ${item.organization}`,
+    detail: [item.employmentType, item.location, dates(item, 'currentlyWorking')].filter(Boolean).join(' · '),
+    description: item.description
+  }));
+  const education = section('Education', user.education, (item) => ({
+    heading: `${item.degree} · ${item.institution}`,
+    detail: `${item.fieldOfStudy} · ${dates(item, 'currentlyStudying')}`,
+    description: item.description
+  }));
+  const skills = user.skills?.length ? el('section', { className: 'public-profile-section' }, [
+    el('h3', { text: 'Skills' }),
+    el('ul', { className: 'professional-skills' }, user.skills.map((skill) =>
+      el('li', { className: 'professional-skill', text: skill.name })))
+  ]) : null;
+  content.append(...[el('div', { className: 'public-profile-header' }, [avatar,
+    el('div', {}, [el('h2', { text: user.fullName }),
+      user.headline ? el('p', { className: 'public-profile-headline', text: user.headline }) : null,
+      el('p', { className: 'professional-meta', text: user.displayLabel || 'Saple member' })]), action]),
+  user.bio ? el('section', { className: 'public-profile-section' }, [
+    el('h3', { text: 'About' }), el('p', { text: user.bio })
+  ]) : null, experience, education, skills].filter(Boolean));
 }).catch((error) => { status.textContent = error.message; });

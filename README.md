@@ -104,7 +104,7 @@ Three rules hold throughout:
 |-------|------------|
 | Frontend | HTML, CSS and vanilla JavaScript modules; no build step, no third-party scripts |
 | Backend | Node.js and Express 5 with raw parameterized SQL through `pg` |
-| Database | PostgreSQL hosted on Supabase: 22 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
+| Database | PostgreSQL hosted on Supabase: 26 tables, 5 views, plus a timestamp trigger, a statistics function and a decision procedure |
 | Auth and email | BCrypt password hashing, JSON Web Tokens, Nodemailer for the emailed password reset |
 | AI (optional) | Any OpenAI-compatible chat endpoint for the Saple Guide; Groq's free tier is the documented default |
 | Research prototype | A standalone Python ML experiment in [`ml/`](ml/), not wired into the app |

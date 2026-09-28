@@ -36,7 +36,7 @@ const PRIVATE_PATHS = [
   'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
   'employee-verification.html', 'submit-salary.html', 'submit-review.html',
   'interview-experience.html',
-  'js/profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js', 'js/representative.js', 'js/my-applications.js',
+  'js/profile.js', 'js/professional-profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js', 'js/representative.js', 'js/my-applications.js',
   'js/notifications.js', 'js/verification.js', 'js/submit-salary.js', 'js/review.js',
   'js/interview.js', 'js/representative-request.js', 'js/admin-oversight.js',
   'js/require-session.js',

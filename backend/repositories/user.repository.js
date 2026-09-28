@@ -11,7 +11,8 @@ async function findUserByEmail(email) {
       u.password_hash AS "passwordHash", u.user_type AS "userType",
       u.account_role AS "accountRole", u.account_status AS "accountStatus",
       u.token_version AS "tokenVersion", e.employment_status AS "employmentStatus",
-      u.avatar_path AS "avatarPath", to_jsonb(u)->>'linkedin_url' AS "linkedinUrl",
+      u.avatar_path AS "avatarPath", to_jsonb(u)->>'headline' AS headline,
+      to_jsonb(u)->>'bio' AS bio,
       u.updated_at AS "updatedAt"
     FROM users u
     LEFT JOIN employees e ON e.user_id = u.user_id
@@ -34,7 +35,8 @@ async function findSafeUserById(userId) {
       u.user_type AS "userType", u.account_role AS "accountRole",
       u.account_status AS "accountStatus", e.employment_status AS "employmentStatus",
       u.created_at AS "createdAt", u.avatar_path AS "avatarPath",
-      to_jsonb(u)->>'linkedin_url' AS "linkedinUrl", u.updated_at AS "updatedAt"
+      to_jsonb(u)->>'headline' AS headline, to_jsonb(u)->>'bio' AS bio,
+      u.updated_at AS "updatedAt"
     FROM users u
     LEFT JOIN employees e ON e.user_id = u.user_id
     WHERE u.user_id = $1
@@ -77,11 +79,11 @@ async function updateFullName(userId, fullName) {
   return result.rowCount === 1;
 }
 
-async function updatePublicProfile(userId, fullName, linkedinUrl) {
+async function updatePublicProfile(userId, fullName, headline, bio) {
   const result = await database.withTransaction((client) => client.query(`
-    UPDATE users SET full_name = $1, linkedin_url = $2, updated_at = CURRENT_TIMESTAMP
-    WHERE user_id = $3 AND account_status = 'ACTIVE'
-  `, [fullName, linkedinUrl, userId]));
+    UPDATE users SET full_name = $1, headline = $2, bio = $3, updated_at = CURRENT_TIMESTAMP
+    WHERE user_id = $4 AND account_status = 'ACTIVE'
+  `, [fullName, headline, bio, userId]));
   return result.rowCount === 1;
 }
 

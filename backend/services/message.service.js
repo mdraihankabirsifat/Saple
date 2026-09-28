@@ -1,6 +1,7 @@
 const repository = require('../repositories/message.repository');
 const storage = require('../config/supabase-storage');
 const createHttpError = require('../utils/httpError');
+const professionalProfiles = require('../repositories/professional-profile.repository');
 
 function id(value, label = 'User ID') {
   if (!/^\d+$/.test(String(value))) throw createHttpError(400, `Invalid ${label}`);
@@ -18,12 +19,14 @@ function safeProfile(user) {
   return { userId: user.userId, fullName: user.fullName,
     displayLabel: user.accountRole === 'COMPANY_REPRESENTATIVE' ? 'Company representative' : 'Saple member',
     avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt || user.avatarUpdatedAt),
-    linkedinUrl: user.linkedinUrl || null };
+    headline: user.headline || null, bio: user.bio || null };
 }
-async function userProfile(value) {
+async function userProfile(value, { includeSections = false } = {}) {
   const user = await repository.profile(id(value));
   if (!user) throw createHttpError(404, 'User not found');
-  return safeProfile(user);
+  return includeSections
+    ? { ...safeProfile(user), ...await professionalProfiles.listSections(user.userId) }
+    : safeProfile(user);
 }
 async function listConversations(userId) {
   return (await repository.conversations(userId)).map((item) => ({ ...safeProfile(item),

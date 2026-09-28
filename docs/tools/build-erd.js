@@ -87,6 +87,11 @@ function parseSchema(sql) {
     }
   }
 
+  // A case-insensitive unique index is a unique key on that column.
+  for (const match of sql.matchAll(/CREATE UNIQUE INDEX \w+\s+ON (\w+) \(LOWER\((\w+)\)\);/g)) {
+    tables.get(match[1])?.uniqueKeys.push([match[2]]);
+  }
+
   const views = [];
   for (const match of sql.matchAll(/CREATE OR REPLACE VIEW (\w+) AS([\s\S]*?);/g)) {
     const sources = [...match[2].matchAll(/(?:FROM|JOIN) (\w+)/g)].map((item) => item[1]);
@@ -144,6 +149,7 @@ function keyFlags(table, columnName) {
 
 const DOMAINS = [
   { title: 'Accounts', tone: 'account', tables: ['users', 'employees', 'password_reset_tokens', 'notifications', 'direct_messages'] },
+  { title: 'Professional profile', tone: 'profile', tables: ['user_experience', 'user_education', 'user_skills', 'skills'] },
   { title: 'Verification and representatives', tone: 'trust', tables: ['employment_verifications', 'company_representatives', 'representative_assignment_actions'] },
   { title: 'Company reference', tone: 'reference', tables: ['companies', 'job_roles', 'benefits', 'company_benefits'] },
   { title: 'Contributions', tone: 'content', tables: ['submissions', 'salary_submissions', 'company_reviews', 'interview_experiences'] },
@@ -330,6 +336,7 @@ function renderHtml(svg) {
   .col-pk { font-weight: 800; text-decoration: underline; }
   .type { font-size: 11.5px; fill: #6b7c73; font-family: Consolas, "Courier New", monospace; }
   .entity-account .head { fill: #1f6b4d; }   .domain-account { fill: #1f6b4d; }
+  .entity-profile .head { fill: #4f6f2a; }   .domain-profile { fill: #4f6f2a; }
   .entity-trust .head { fill: #6b4f9a; }     .domain-trust { fill: #6b4f9a; }
   .entity-reference .head { fill: #2f6d86; } .domain-reference { fill: #2f6d86; }
   .entity-content .head { fill: #8a5a1f; }   .domain-content { fill: #8a5a1f; }

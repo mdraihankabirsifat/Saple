@@ -1,7 +1,7 @@
 # Saple PostgreSQL migrations
 
 These migrations upgrade an **existing** Supabase PostgreSQL project from the
-14-table Saple schema to the current 22-table schema without touching a single
+14-table Saple schema to the current 26-table schema without touching a single
 existing row.
 
 A brand-new installation does **not** need them: `01_final_schema_postgres.sql`
@@ -21,7 +21,7 @@ Run exactly once, in this order, in the Supabase SQL editor or `psql`:
 | 5 | `005_cse216_final_database_features.sql` | `saple_set_updated_at()` and seven `trg_*_set_updated_at` triggers, `saple_company_insight_summary()`, `saple_apply_application_decision()` |
 | 6 | `006_profile_and_company_images.sql` | nullable Storage object paths for account pictures and company logos |
 | 7 | `007_direct_messages.sql` | private direct messages, unread state and supporting indexes |
-| 8 | `008_public_profiles_and_search.sql` | optional public LinkedIn profile URL |
+| 8 | `008_public_profiles_and_search.sql` | `users.headline` and `users.bio`; professional-profile sections `user_education`, `user_experience`, `skills` and `user_skills` |
 
 The fresh schema already includes all eight migrations' tables, columns,
 views and routines. Run only the migrations that an existing database has not
@@ -52,7 +52,7 @@ Each file is a single transaction. If one fails, nothing in it is applied.
 1. Take a Supabase backup, or restore a copy into a scratch project first.
 2. Apply all eight files to the scratch project, in order.
 3. Run `03_schema_and_data_demo_postgres.sql` there and confirm section 1
-   reports **22 base tables and 5 views**, and that its last two sections list
+   reports **26 base tables and 5 views**, and that its last two sections list
    the three `saple_*` routines and the seven `trg_*_set_updated_at` triggers.
 4. Only then apply the same eight files to the live project. If migrations 001–007
    have already been applied, run only 008.

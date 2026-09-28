@@ -69,12 +69,60 @@
                 required></div>
             <div class="form-group"><label for="profile-email">Email</label><input id="profile-email" type="email"
                 readonly aria-readonly="true"></div>
-            <div class="form-group"><label for="profile-linkedin">LinkedIn profile (optional)</label><input id="profile-linkedin" type="url"
-                maxlength="500" placeholder="LinkedIn profile URL" title="Use an HTTPS linkedin.com/in/ profile URL" autocomplete="url">
-              <p class="profile-note">Your name, picture and LinkedIn link are visible to signed-in Saple members.</p></div>
+            <div class="form-group"><label for="profile-headline">Headline</label><input id="profile-headline"
+                maxlength="160" placeholder="What you do or hope to do"></div>
+            <div class="form-group"><label for="profile-bio">About</label><textarea id="profile-bio" rows="5"
+                maxlength="2000" placeholder="Introduce your work, interests and goals"></textarea></div>
+            <p class="profile-note">Your name, picture, headline and about section are visible to signed-in Saple members.</p>
             <div class="form-actions"><button class="button button-primary" type="submit">Save profile</button></div>
           </form>
           <p id="profile-status" class="state-message form-status" role="status" hidden></p>
+        </section>
+        <section class="profile-card card profile-card-full">
+          <h2>Experience</h2>
+          <ul id="profile-experience-list" class="professional-list"></ul>
+          <form id="profile-experience-form" class="professional-form">
+            <h3 id="profile-experience-form-title">Add experience</h3>
+            <div class="professional-fields">
+              <div class="form-group"><label for="experience-organization">Organization or company</label><input id="experience-organization" maxlength="180" required></div>
+              <div class="form-group"><label for="experience-title">Job title</label><input id="experience-title" maxlength="160" required></div>
+              <div class="form-group"><label for="experience-type">Employment type (optional)</label><input id="experience-type" maxlength="60"></div>
+              <div class="form-group"><label for="experience-location">Location (optional)</label><input id="experience-location" maxlength="160"></div>
+              <div class="form-group"><label for="experience-start">Start month</label><input id="experience-start" type="month" required></div>
+              <div class="form-group"><label for="experience-end">End month</label><input id="experience-end" type="month" required></div>
+            </div>
+            <label class="professional-current"><input id="experience-current" type="checkbox"> I currently work here</label>
+            <div class="form-group"><label for="experience-description">Description (optional)</label><textarea id="experience-description" rows="3" maxlength="2000"></textarea></div>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save experience</button><button id="experience-cancel" class="button button-secondary" type="button" hidden>Cancel editing</button></div>
+            <p id="experience-status" class="state-message form-status" role="status" hidden></p>
+          </form>
+        </section>
+        <section class="profile-card card profile-card-full">
+          <h2>Education</h2>
+          <ul id="profile-education-list" class="professional-list"></ul>
+          <form id="profile-education-form" class="professional-form">
+            <h3 id="profile-education-form-title">Add education</h3>
+            <div class="professional-fields">
+              <div class="form-group"><label for="education-institution">Institution</label><input id="education-institution" maxlength="180" required></div>
+              <div class="form-group"><label for="education-degree">Degree</label><input id="education-degree" maxlength="160" required></div>
+              <div class="form-group"><label for="education-field">Field of study</label><input id="education-field" maxlength="160" required></div>
+              <div class="form-group"><label for="education-start">Start month</label><input id="education-start" type="month" required></div>
+              <div class="form-group"><label for="education-end">End month</label><input id="education-end" type="month" required></div>
+            </div>
+            <label class="professional-current"><input id="education-current" type="checkbox"> I currently study here</label>
+            <div class="form-group"><label for="education-description">Description (optional)</label><textarea id="education-description" rows="3" maxlength="2000"></textarea></div>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save education</button><button id="education-cancel" class="button button-secondary" type="button" hidden>Cancel editing</button></div>
+            <p id="education-status" class="state-message form-status" role="status" hidden></p>
+          </form>
+        </section>
+        <section class="profile-card card profile-card-full">
+          <h2>Skills</h2>
+          <ul id="profile-skills-list" class="professional-skills"></ul>
+          <form id="profile-skills-form" class="professional-skill-form">
+            <div class="form-group"><label for="profile-skill-name">Add a skill</label><input id="profile-skill-name" maxlength="80" required></div>
+            <button class="button button-primary" type="submit">Add skill</button>
+          </form>
+          <p id="profile-skills-status" class="state-message form-status" role="status" hidden></p>
         </section>
         <section class="profile-card card">
           <h2>Account status</h2>

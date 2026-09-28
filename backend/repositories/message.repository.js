@@ -3,7 +3,8 @@ const database = require('../config/database');
 async function profile(userId) {
   const result = await database.query(`
     SELECT u.user_id AS "userId", u.full_name AS "fullName", u.account_role AS "accountRole",
-      u.avatar_path AS "avatarPath", to_jsonb(u)->>'linkedin_url' AS "linkedinUrl",
+      u.avatar_path AS "avatarPath", to_jsonb(u)->>'headline' AS headline,
+      to_jsonb(u)->>'bio' AS bio,
       u.updated_at AS "updatedAt"
     FROM users u WHERE u.user_id = $1 AND u.account_status = 'ACTIVE'
   `, [userId]);

@@ -1,5 +1,6 @@
 import { apiRequest } from './api.js';
 import { getCurrentUser, isAuthenticated, setStoredUser } from './auth.js';
+import { mountProfessionalProfile } from './professional-profile.js';
 
 const loadStatus = document.querySelector('#profile-load-status');
 const content = document.querySelector('#profile-content');
@@ -35,7 +36,8 @@ function render(user) {
   currentUser = user;
   renderAvatar(user);
   document.querySelector('#profile-name').value = user.fullName || '';
-  document.querySelector('#profile-linkedin').value = user.linkedinUrl || '';
+  document.querySelector('#profile-headline').value = user.headline || '';
+  document.querySelector('#profile-bio').value = user.bio || '';
   document.querySelector('#profile-email').value = user.email || '';
   document.querySelector('#profile-user-type').textContent = user.userType || 'Unknown';
   document.querySelector('#profile-employment-status').textContent = user.employmentStatus || 'Not applicable';
@@ -114,7 +116,8 @@ profileForm.addEventListener('submit', async (event) => {
     const data = await apiRequest('/api/auth/me', {
       method: 'PATCH', auth: true, body: {
         fullName: document.querySelector('#profile-name').value,
-        linkedinUrl: document.querySelector('#profile-linkedin').value
+        headline: document.querySelector('#profile-headline').value,
+        bio: document.querySelector('#profile-bio').value
       }
     });
     setStoredUser(data.user); render(data.user); show(profileStatus, 'Profile updated successfully.', 'success');
@@ -129,6 +132,7 @@ profileForm.addEventListener('submit', async (event) => {
   }
   try {
     render(await getCurrentUser());
+    await mountProfessionalProfile();
     const data = await apiRequest('/api/auth/me/submissions', { auth: true });
     renderContributions(data.submissions);
   }

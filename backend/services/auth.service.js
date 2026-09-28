@@ -58,7 +58,8 @@ function toSafeUser(user, verifiedScopes = []) {
     accountStatus: user.accountStatus,
     employmentStatus: user.employmentStatus || null,
     avatarPath: user.avatarPath || null,
-    linkedinUrl: user.linkedinUrl || null,
+    headline: user.headline || null,
+    bio: user.bio || null,
     avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt),
     verifiedScopes,
     ...(user.createdAt ? { createdAt: user.createdAt } : {})
@@ -297,8 +298,17 @@ async function getCurrentUser(userId) {
   return toSafeUser(user, verifiedScopes);
 }
 
+function optionalProfileText(value, limit, label) {
+  if (value !== null && value !== undefined && typeof value !== 'string') {
+    throw createHttpError(400, `${label} must be text`);
+  }
+  const normalized = value?.trim() || null;
+  if (normalized && normalized.length > limit) throw createHttpError(400, `${label} is too long`);
+  return normalized;
+}
+
 async function updateProfile(userId, input = {}) {
-  const allowedFields = new Set(['fullName', 'linkedinUrl']);
+  const allowedFields = new Set(['fullName', 'headline', 'bio']);
   const unexpected = Object.keys(input).filter((key) => !allowedFields.has(key));
   if (unexpected.length > 0) {
     throw createHttpError(400, `Profile field cannot be changed: ${unexpected[0]}`);
@@ -309,25 +319,25 @@ async function updateProfile(userId, input = {}) {
   if (fullName.length < 2 || fullName.length > 120) {
     throw createHttpError(400, 'Full name must be between 2 and 120 characters');
   }
-  let linkedinUrl;
-  if (Object.hasOwn(input, 'linkedinUrl')) {
-    if (input.linkedinUrl !== null && typeof input.linkedinUrl !== 'string') {
-      throw createHttpError(400, 'LinkedIn profile must be a URL');
-    }
-    linkedinUrl = input.linkedinUrl?.trim() || null;
-    if (linkedinUrl) {
-      if (linkedinUrl.length > 500) throw createHttpError(400, 'LinkedIn profile must not exceed 500 characters');
-      let parsed;
-      try { parsed = new URL(linkedinUrl); } catch { throw createHttpError(400, 'Enter a valid LinkedIn URL'); }
-      if (parsed.protocol !== 'https:' || !['linkedin.com', 'www.linkedin.com'].includes(parsed.hostname.toLowerCase())
-        || parsed.username || parsed.password || parsed.port || !parsed.pathname.startsWith('/in/')) {
-        throw createHttpError(400, 'Use an HTTPS linkedin.com/in/ profile URL');
-      }
+  const hasSections = Object.hasOwn(input, 'headline') || Object.hasOwn(input, 'bio');
+  let updated;
+  if (!hasSections) {
+    updated = await userRepository.updateFullName(userId, fullName);
+  } else {
+    // A field left out of the request keeps its stored value.
+    const existing = await userRepository.findSafeUserById(userId);
+    const headline = Object.hasOwn(input, 'headline')
+      ? optionalProfileText(input.headline, 160, 'Headline') : existing?.headline || null;
+    const bio = Object.hasOwn(input, 'bio')
+      ? optionalProfileText(input.bio, 2000, 'About') : existing?.bio || null;
+    try {
+      updated = await userRepository.updatePublicProfile(userId, fullName, headline, bio);
+    } catch (error) {
+      // A code rollout can precede the owner's manual migration 008.
+      if (error.code === '42703') throw createHttpError(503, 'Profile headline and about are temporarily unavailable');
+      throw error;
     }
   }
-  const updated = linkedinUrl === undefined
-    ? await userRepository.updateFullName(userId, fullName)
-    : await userRepository.updatePublicProfile(userId, fullName, linkedinUrl);
   if (!updated) {
     throw createHttpError(401, 'Authenticated account is unavailable');
   }

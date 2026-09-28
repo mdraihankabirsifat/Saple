@@ -4,6 +4,7 @@ const notificationController = require('../controllers/notification.controller')
 const representativeController = require('../controllers/representative.controller');
 const authenticate = require('../middleware/authenticate');
 const imageController = require('../controllers/image.controller');
+const professionalProfile = require('../controllers/professional-profile.controller');
 const { imageUpload } = require('../middleware/imageUpload');
 const { createRateLimit, accountOrAddressKey } = require('../middleware/rateLimit');
 
@@ -23,6 +24,18 @@ router.use(authenticate);
 
 router.put('/avatar', imageUpload('avatar', 2 * 1024 * 1024), imageController.putAvatar);
 router.delete('/avatar', imageController.deleteAvatar);
+
+const profileWriteLimit = createRateLimit({ limit: 60, windowMs: 60000,
+  keyFor: accountOrAddressKey, message: 'Too many profile changes. Please wait a minute.' });
+router.get('/professional-profile', professionalProfile.own);
+router.post('/education', profileWriteLimit, professionalProfile.addEducation);
+router.patch('/education/:recordId', profileWriteLimit, professionalProfile.editEducation);
+router.delete('/education/:recordId', profileWriteLimit, professionalProfile.removeEducation);
+router.post('/experience', profileWriteLimit, professionalProfile.addExperience);
+router.patch('/experience/:recordId', profileWriteLimit, professionalProfile.editExperience);
+router.delete('/experience/:recordId', profileWriteLimit, professionalProfile.removeExperience);
+router.post('/skills', profileWriteLimit, professionalProfile.addSkill);
+router.delete('/skills/:skillId', profileWriteLimit, professionalProfile.removeSkill);
 
 router.get('/applications', applicationController.listOwn);
 router.get('/applications/:applicationId', applicationController.getOwn);

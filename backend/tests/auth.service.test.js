@@ -199,22 +199,34 @@ test('profile update permits only a normalized full name', async () => {
   );
 });
 
-test('LinkedIn updates accept only HTTPS profile URLs and empty removes the link', async () => {
+test('headline and about are trimmed, bounded, clearable and kept when omitted', async () => {
   const writes = [];
   userRepository.updatePublicProfile = async (...args) => { writes.push(args); return true; };
   userRepository.findSafeUserById = async () => ({ userId: 8, fullName: 'Safe Name',
-    userType: 'NORMAL', accountRole: 'USER', accountStatus: 'ACTIVE', linkedinUrl: writes.at(-1)?.[2] });
+    userType: 'NORMAL', accountRole: 'USER', accountStatus: 'ACTIVE',
+    headline: writes.at(-1)?.[2] ?? null, bio: writes.at(-1)?.[3] ?? null });
 
-  await authService.updateProfile(8, { fullName: 'Safe Name', linkedinUrl: 'https://www.linkedin.com/in/example' });
-  assert.deepEqual(writes.at(-1), [8, 'Safe Name', 'https://www.linkedin.com/in/example']);
-  await authService.updateProfile(8, { fullName: 'Safe Name', linkedinUrl: '' });
-  assert.deepEqual(writes.at(-1), [8, 'Safe Name', null]);
-  for (const url of ['http://linkedin.com/in/example', 'https://linkedin.com.evil.test/in/example',
-    'https://linkedin.com/jobs', 'javascript:alert(1)', 'https://linkedin.com:444/in/example']) {
-    await assert.rejects(authService.updateProfile(8, { fullName: 'Safe Name', linkedinUrl: url }),
-      (error) => error.statusCode === 400, url);
+  const user = await authService.updateProfile(8, { fullName: 'Safe Name',
+    headline: '  Data engineer  ', bio: '  Builds pipelines.\nLikes maps.  ' });
+  assert.deepEqual(writes.at(-1), [8, 'Safe Name', 'Data engineer', 'Builds pipelines.\nLikes maps.']);
+  assert.equal(user.headline, 'Data engineer');
+  assert.equal(user.bio, 'Builds pipelines.\nLikes maps.');
+
+  // A field left out keeps its stored value; an empty one clears it.
+  await authService.updateProfile(8, { fullName: 'Safe Name', headline: '' });
+  assert.deepEqual(writes.at(-1), [8, 'Safe Name', null, 'Builds pipelines.\nLikes maps.']);
+
+  for (const input of [{ headline: 'x'.repeat(161) }, { bio: 'x'.repeat(2001) }, { headline: 7 },
+    { bio: ['about'] }, { linkedinUrl: 'https://www.linkedin.com/in/example' }]) {
+    await assert.rejects(authService.updateProfile(8, { fullName: 'Safe Name', ...input }),
+      (error) => error.statusCode === 400, JSON.stringify(input));
   }
   assert.equal(writes.length, 2);
+
+  // Before migration 008 the columns are missing: a clear 503, not a crash.
+  userRepository.updatePublicProfile = async () => { throw Object.assign(new Error('column'), { code: '42703' }); };
+  await assert.rejects(authService.updateProfile(8, { fullName: 'Safe Name', headline: 'Engineer' }),
+    (error) => error.statusCode === 503);
 });
 
 test('there is no signed-in password change anywhere in the backend', () => {

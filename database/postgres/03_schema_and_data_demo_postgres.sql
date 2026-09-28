@@ -1,7 +1,7 @@
 -- SAPLE SUPABASE POSTGRESQL READ-ONLY DEMONSTRATION QUERIES
 -- Run after the PostgreSQL schema and demonstration data scripts.
 
--- 1. Expected project shape: 22 base tables and 5 views.
+-- 1. Expected project shape: 26 base tables and 5 views.
 SELECT
   COUNT(*) FILTER (WHERE table_type = 'BASE TABLE') AS base_table_count,
   COUNT(*) FILTER (WHERE table_type = 'VIEW') AS view_count
@@ -14,6 +14,7 @@ WHERE table_schema = 'public'
     'reports', 'moderation_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
     'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
+    'user_education', 'user_experience', 'skills', 'user_skills',
     'vw_public_companies', 'vw_public_approved_reviews',
     'vw_verified_salary_summary', 'vw_community_salary_summary',
     'vw_public_open_jobs'
@@ -29,7 +30,8 @@ WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
     'salary_submissions', 'company_reviews', 'interview_experiences',
     'reports', 'moderation_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
-    'job_application_status_history', 'announcements', 'notifications', 'direct_messages'
+    'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
+    'user_education', 'user_experience', 'skills', 'user_skills'
   )
 ORDER BY table_name;
 
@@ -44,7 +46,8 @@ WHERE table_schema = 'public'
     'salary_submissions', 'company_reviews', 'interview_experiences',
     'reports', 'moderation_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
-    'job_application_status_history', 'announcements', 'notifications'
+    'job_application_status_history', 'announcements', 'notifications',
+    'user_education', 'user_experience', 'skills', 'user_skills'
   )
 ORDER BY table_name, ordinal_position;
 

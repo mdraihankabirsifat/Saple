@@ -90,7 +90,7 @@ test('the service worker never caches a private page, script or stylesheet', () 
   for (const file of [
     'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
     'employee-verification.html', 'js/notifications.js', 'js/admin.js',
-    'js/representative.js', 'js/profile.js', 'js/messages.js', 'js/user-profile.js'
+    'js/representative.js', 'js/profile.js', 'js/professional-profile.js', 'js/messages.js', 'js/user-profile.js'
   ]) {
     assert.equal(assets.includes(`'${file}'`), false, `${file} must not be cached`);
     assert.equal(privatePaths.includes(`'${file}'`), true, `${file} must be purged`);

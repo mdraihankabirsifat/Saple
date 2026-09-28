@@ -14,13 +14,13 @@ test('search and public profiles expose only active, public records', async () =
   database.query = (sql, values) => pg.query(sql, values);
   try {
     await pg.exec(fs.readFileSync(path.join(__dirname, '../../database/postgres/01_final_schema_postgres.sql'), 'utf8'));
-    for (const [name, email, status, linkedin] of [
-      ['Ada Search', 'ada@example.invalid', 'ACTIVE', 'https://linkedin.com/in/ada'],
+    for (const [name, email, status, headline] of [
+      ['Ada Search', 'ada@example.invalid', 'ACTIVE', 'Analyst'],
       ['Alan Search', 'alan@example.invalid', 'ACTIVE', null],
       ['Hidden Search', 'hidden@example.invalid', 'SUSPENDED', null]
     ]) {
-      await pg.query(`INSERT INTO users (full_name, email, password_hash, account_status, linkedin_url)
-        VALUES ($1, $2, $3, $4, $5)`, [name, email, 'x'.repeat(60), status, linkedin]);
+      await pg.query(`INSERT INTO users (full_name, email, password_hash, account_status, headline, bio)
+        VALUES ($1, $2, $3, $4, $5, $6)`, [name, email, 'x'.repeat(60), status, headline, headline && 'About Ada']);
     }
     await pg.query(`INSERT INTO companies (company_name, industry, headquarters_city, country)
       VALUES ($1, $2, $3, $4)`, ['Search Labs', 'Technology', 'Dhaka', 'Bangladesh']);
@@ -36,7 +36,8 @@ test('search and public profiles expose only active, public records', async () =
       ['companyId', 'companyName', 'industry', 'logoUrl']);
 
     const profile = await messages.userProfile(1);
-    assert.equal(profile.linkedinUrl, 'https://linkedin.com/in/ada');
+    assert.equal(profile.headline, 'Analyst');
+    assert.equal(profile.bio, 'About Ada');
     assert.equal('email' in profile, false);
     assert.equal('passwordHash' in profile, false);
     await assert.rejects(messages.userProfile(3), (error) => error.statusCode === 404);
@@ -44,10 +45,13 @@ test('search and public profiles expose only active, public records', async () =
     assert.throws(() => search.normalizeQuery('x'), (error) => error.statusCode === 400);
 
     // A code rollout can precede the owner's manual Supabase migration.
-    await pg.exec('ALTER TABLE users DROP COLUMN linkedin_url');
-    assert.equal((await users.findUserByEmail('ada@example.invalid')).linkedinUrl, null);
-    assert.equal((await users.findSafeUserById(1)).linkedinUrl, null);
-    assert.equal((await messages.userProfile(1)).linkedinUrl, null);
+    await pg.exec('ALTER TABLE users DROP COLUMN headline, DROP COLUMN bio');
+    assert.equal((await users.findUserByEmail('ada@example.invalid')).headline, null);
+    assert.equal((await users.findSafeUserById(1)).bio, null);
+    assert.equal((await messages.userProfile(1)).headline, null);
+    await pg.exec('DROP TABLE user_skills, skills, user_experience, user_education');
+    const bare = await messages.userProfile(1, { includeSections: true });
+    assert.deepEqual([bare.education, bare.experience, bare.skills], [[], [], []]);
   } finally {
     database.query = originalQuery;
     await pg.close();
