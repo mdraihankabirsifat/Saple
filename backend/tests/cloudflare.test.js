@@ -18,7 +18,10 @@ test('Cloudflare configuration uses the shared Worker, static assets and Hyperdr
   assert.match(config, /"binding"\s*:\s*"ASSETS"/);
   assert.match(config, /"run_worker_first"\s*:\s*\[[\s\S]*"\/api\/\*"/);
   assert.match(config, /"binding"\s*:\s*"HYPERDRIVE"/);
-  assert.match(config, /00000000000000000000000000000000/);
+  const hyperdriveId = config.match(/"binding"\s*:\s*"HYPERDRIVE"[\s\S]*?"id"\s*:\s*"([^"]+)"/);
+  assert.ok(hyperdriveId, 'Hyperdrive binding must include an ID');
+  assert.match(hyperdriveId[1], /^[a-f0-9]{32}$/i);
+  assert.notEqual(hyperdriveId[1], '00000000000000000000000000000000');
   assert.doesNotMatch(config, /postgres(?:ql)?:\/\//i);
   assert.match(headers, /Content-Security-Policy:/);
   assert.match(headers, /X-Frame-Options:\s*DENY/);

@@ -30,7 +30,7 @@ The connection string must never be committed or placed in a Worker variable.
 From the repository root, create the Hyperdrive configuration:
 
 ```powershell
-npx wrangler hyperdrive create saple-supabase --connection-string="postgres://USER:PASSWORD@HOST:5432/DATABASE"
+npx wrangler hyperdrive create saple-supabase --connection-string="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}"
 ```
 
 Use the exact host, port, database and URL-encoded password supplied by
@@ -110,7 +110,7 @@ binding-specific connection string privately. The value is read only by
 Wrangler and is not committed:
 
 ```powershell
-$env:CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE = "postgres://USER:PASSWORD@127.0.0.1:5433/saple_local"
+$env:CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE = "postgres://${DB_USER}:${DB_PASSWORD}@127.0.0.1:5433/saple_local"
 npm run cf:dev -- --persist-to D:\wrangler-state-saple
 ```
 
