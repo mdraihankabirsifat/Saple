@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "saple-academic",
+  "name": "saple",
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-28",
   "workers_dev": true,
@@ -19,7 +19,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "00000000000000000000000000000000"
+      "id": "07bc21432aeb4508aa304662329faf28"
     }
   ],
   "vars": {
