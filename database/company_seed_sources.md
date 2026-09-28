@@ -55,4 +55,73 @@ The reference-data section in `database/postgres/02_final_demo_data_postgres.sql
 | Pfizer | https://www.pfizer.com/about | identity, biopharmaceutical focus, global headquarters |
 | HSBC | https://www.hsbc.com/who-we-are | identity, banking focus, global headquarters |
 
+
+## Companies added by the optional bulk demo data
+
+`database/postgres/04_bulk_demo_data_postgres.sql` adds the 59 companies below. Only their reference metadata (name, industry, headquarters city and country, website, a broad size bucket for very large employers, and a neutral one-line description) comes from these sources. Every salary, review, interview experience, job vacancy and application that the same file creates is synthetic academic demo data, and is neither sourced from nor attributed to these organisations.
+
+Each official website below was confirmed to respond on 2026-09-29; some answer automated requests with HTTP 403, which still confirms the site. Five candidates whose official sites could not be confirmed from this environment were left out. Industry and headquarters follow each organisation's publicly stated corporate details.
+
+| Company | Official source | Metadata supported |
+|---|---|---|
+| REVE Systems | https://www.revesoft.com | identity, software focus, Dhaka presence |
+| DataSoft Systems Bangladesh | https://datasoft-bd.com | identity, software and IT services, Dhaka |
+| Tiger IT Bangladesh | https://www.tigerit.com | identity, software focus, Dhaka |
+| Cefalo Bangladesh | https://www.cefalo.com | identity, software engineering, Bangladesh office |
+| Kaz Software | https://kaz.com.bd | identity, software development, Dhaka |
+| SELISE Digital Platforms | https://selise.ch | identity, software focus, Zurich headquarters |
+| Vivasoft | https://vivasoftltd.com | identity, software development, Dhaka |
+| Dynamic Solution Innovators | https://www.dsinnovators.com | identity, software development, Dhaka |
+| Southtech | https://www.southtechgroup.com | identity, software and enterprise solutions, Dhaka |
+| Teletalk Bangladesh | https://www.teletalk.com.bd | identity, telecommunications, Dhaka |
+| IFIC Bank | https://www.ificbank.com.bd | identity, banking, Dhaka |
+| Mutual Trust Bank | https://www.mutualtrustbank.com | identity, banking, Dhaka |
+| Prime Bank | https://www.primebank.com.bd | identity, banking, Dhaka |
+| Bank Asia | https://www.bankasia-bd.com | identity, banking, Dhaka |
+| Islami Bank Bangladesh | https://www.islamibankbd.com | identity, Shariah-based banking, Dhaka |
+| Pubali Bank | https://www.pubalibangla.com | identity, banking, Dhaka |
+| Eskayef Pharmaceuticals | https://www.skfbd.com | identity, pharmaceutical manufacturing, Dhaka |
+| Healthcare Pharmaceuticals | https://www.hplbd.com | identity, pharmaceutical manufacturing, Dhaka |
+| ACME Laboratories | https://www.acmeglobal.com | identity, pharmaceutical manufacturing, Dhaka |
+| Marico Bangladesh | https://marico.com/bangladesh | identity, consumer goods, Bangladesh business |
+| City Group | https://www.citygroup.com.bd | identity, consumer goods and food manufacturing, Dhaka |
+| BSRM | https://www.bsrm.com | identity, steel manufacturing, Chattogram |
+| Abul Khair Group | https://www.abulkhairgroup.com | identity, diversified industrial group, Chattogram |
+| Rahimafrooz | https://www.rahimafrooz.com | identity, diversified group, Dhaka |
+| Ha-Meem Group | https://www.hameemgroup.net | identity, apparel and textiles, Dhaka |
+| Epyllion Group | https://www.epylliongroup.com | identity, apparel and textiles, Dhaka |
+| Envoy Textiles | https://www.envoytextiles.com | identity, denim textile manufacturing, Dhaka |
+| RedX | https://redx.com.bd | identity, delivery and logistics, Dhaka |
+| Paperfly | https://paperfly.com.bd | identity, e-commerce logistics, Dhaka |
+| Shohoz | https://www.shohoz.com | identity, ticketing and travel platform, Dhaka |
+| LightCastle Partners | https://lightcastlepartners.com | identity, management consulting and research, Dhaka |
+| icddr,b | https://www.icddrb.org | identity, health research, Dhaka |
+| ASA | https://asa.org.bd | identity, microfinance, Dhaka |
+| Meta | https://about.meta.com | identity, technology, Menlo Park headquarters |
+| Apple | https://www.apple.com | identity, technology, Cupertino headquarters |
+| SAP | https://www.sap.com | identity, enterprise software, Walldorf headquarters |
+| Salesforce | https://www.salesforce.com | identity, enterprise software, San Francisco headquarters |
+| Accenture | https://www.accenture.com | identity, professional services, Dublin headquarters |
+| Infosys | https://www.infosys.com | identity, IT services, Bengaluru headquarters |
+| Tata Consultancy Services | https://www.tcs.com | identity, IT services, Mumbai headquarters |
+| NVIDIA | https://www.nvidia.com | identity, semiconductors, Santa Clara headquarters |
+| Intel | https://www.intel.com | identity, semiconductors, Santa Clara headquarters |
+| Cisco | https://www.cisco.com | identity, networking technology, San Jose headquarters |
+| EY | https://www.ey.com | identity, professional services, London headquarters |
+| KPMG | https://kpmg.com | identity, professional services, London headquarters |
+| Boston Consulting Group | https://www.bcg.com | identity, management consulting, Boston headquarters |
+| Standard Chartered | https://www.sc.com | identity, banking, London headquarters |
+| Citi | https://www.citigroup.com | identity, banking, New York headquarters |
+| JPMorgan Chase | https://www.jpmorganchase.com | identity, financial services, New York headquarters |
+| Procter & Gamble | https://us.pg.com | identity, consumer goods, Cincinnati headquarters |
+| The Coca-Cola Company | https://www.coca-colacompany.com | identity, beverages, Atlanta headquarters |
+| PepsiCo | https://www.pepsico.com | identity, food and beverage, Purchase (New York) headquarters |
+| Novartis | https://www.novartis.com | identity, pharmaceuticals, Basel headquarters |
+| GSK | https://www.gsk.com | identity, pharmaceuticals, London headquarters |
+| AstraZeneca | https://www.astrazeneca.com | identity, pharmaceuticals, Cambridge headquarters |
+| BMW Group | https://www.bmwgroup.com | identity, automotive manufacturing, Munich headquarters |
+| Volkswagen Group | https://www.volkswagen-group.com | identity, automotive manufacturing, Wolfsburg headquarters |
+| Sony | https://www.sony.com | identity, electronics, Tokyo headquarters |
+| LG Electronics | https://www.lg.com | identity, electronics manufacturing, Seoul headquarters |
+
 These links are documentation references, not runtime dependencies. Future maintainers should recheck metadata before materially changing a record; exact employee counts and other volatile facts intentionally are not stored.

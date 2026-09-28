@@ -8,6 +8,10 @@ A brand-new installation does **not** need them: `01_final_schema_postgres.sql`
 already creates the final state. Both paths end at the same schema, which
 `backend/tests/postgres-migration.test.js` verifies file-by-file.
 
+`../04_bulk_demo_data_postgres.sql` and `../05_remove_bulk_demo_data.sql` are
+**not** migrations. They are an optional demo-data population script and its
+cleanup; see `docs/supabase_setup.md`. Never add them to this folder.
+
 ## Order
 
 Run exactly once, in this order, in the Supabase SQL editor or `psql`:

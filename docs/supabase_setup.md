@@ -24,6 +24,30 @@ The third file is read-only validation. The first two target a fresh project; do
 > following that folder's README, and rehearse on a backup first. The final
 > schema has 26 tables and 5 views.
 
+### Optional: bulk demonstration data
+
+`database/postgres/04_bulk_demo_data_postgres.sql` is an **optional** population
+script for demos. It is not part of the schema, not a migration, and must never
+be copied into `migrations/`. Run it only after the schema (or migrations
+001–008) and `02_final_demo_data_postgres.sql`, and only with at least one
+ACTIVE administrator account.
+
+It adds about 59 real companies (public metadata only, sources in
+`database/company_seed_sources.md`), 8 job roles, 9 benefits, and **synthetic
+academic demo data**: 130 fictional accounts with profiles, about 570 salary
+submissions, 260 reviews, 250 interview experiences, 130 job postings and 220
+applications. None of it is a real submission from, or claim about, any
+company. It only adds rows, uses no fixed IDs, and running it twice adds
+nothing the second time. Rehearse on a copy first; the read-only queries at the
+end of the file show what it added.
+
+`database/postgres/05_remove_bulk_demo_data.sql` removes exactly what file 04
+created. The fictional accounts carry an unusable placeholder password hash,
+which is how the cleanup finds them. If any real account has interacted with
+that data (for example, applied to one of its jobs or reported one of its
+reviews), the cleanup stops without changing anything. The companies, roles,
+benefits and skills that 04 added are reference data and stay.
+
 ## 3. Configure the backend
 
 From `backend/`, copy `.env.example` to `.env`. Preserve any existing local SMTP values and set:
