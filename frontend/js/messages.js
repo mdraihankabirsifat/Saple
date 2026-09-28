@@ -1,10 +1,10 @@
 import { apiRequest } from './api.js';
 import { getStoredUser, isAuthenticated } from './auth.js';
 import { el } from './ui.js';
+import { mountAssistant, openSharedView, registerMessagesView } from './assistant.js';
 
 let root;
 let panel;
-let launcher;
 let badge;
 let body;
 let title;
@@ -21,31 +21,22 @@ let editing = null;
 let busy = false;
 let lastPoll = 0;
 let hasMore = false;
+let searchInput;
+let searchTimer;
+let searchSequence = 0;
+let mounting = null;
 
 function open() {
   if (!root) return;
-  window.dispatchEvent(new CustomEvent('saple:floating-panel-open', { detail: { panel: 'messages' } }));
-  panel.hidden = false;
-  root.classList.add('is-open');
-  document.body.classList.add('messages-panel-open');
-  launcher.setAttribute('aria-expanded', 'true');
-  refresh().catch(showError);
-  if (peer) input.focus(); else back.focus();
-}
-function close() {
-  if (!root) return;
-  panel.hidden = true;
-  root.classList.remove('is-open');
-  document.body.classList.remove('messages-panel-open');
-  launcher.setAttribute('aria-expanded', 'false');
-  launcher.focus();
+  openSharedView('messages');
+  if (peer) input.focus(); else searchInput.focus();
 }
 function showError(error) {
   if (error?.status === 503) {
     input.disabled = true; sendButton.disabled = true;
     body?.querySelector('.messages-availability')?.remove();
     body?.prepend(el('p', { className: 'state-message error messages-availability', text: 'Messaging requires the online database.' }));
-  } else if (body && !body.childElementCount) body.append(el('p', { className: 'state-message error', text: error.message || 'Messages are unavailable.' }));
+  } else if (body) body.replaceChildren(el('p', { className: 'state-message error', text: error.message || 'Messages are unavailable.' }));
 }
 function initials(name) { return (name || 'S').trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase(); }
 function avatar(user) {
@@ -59,8 +50,9 @@ function avatar(user) {
 }
 function renderList(items) {
   title.textContent = 'Messages'; headerAvatar.hidden = true; back.hidden = true; form.hidden = true;
+  searchInput.parentElement.hidden = false;
   body.replaceChildren();
-  if (!items.length) { body.append(el('p', { className: 'messages-empty', text: 'No conversations yet. Open a person’s profile or contact a company representative to start one.' })); return; }
+  if (!items.length) { body.append(el('p', { className: 'messages-empty', text: 'No conversations yet. Search people above to start one.' })); return; }
   for (const item of items) {
     const button = el('button', { className: 'messages-contact', attrs: { type: 'button' } }, [
       avatar(item),
@@ -81,6 +73,7 @@ function renderHistory() {
   if (!peer) return;
   title.textContent = peer.fullName; headerAvatar.hidden = false;
   headerAvatar.replaceChildren(avatar(peer)); back.hidden = false; form.hidden = false;
+  searchInput.parentElement.hidden = true;
   const nearBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 80;
   body.replaceChildren();
   if (messages.length && hasMore) {
@@ -118,7 +111,9 @@ function renderHistory() {
 }
 async function refreshHistory() {
   if (!peer) return;
-  const data = await apiRequest(`/api/messages/with/${peer.userId}`, { auth: true });
+  const peerId = peer.userId;
+  const data = await apiRequest(`/api/messages/with/${peerId}`, { auth: true });
+  if (!peer || peer.userId !== peerId) return;
   peer = data.user;
   if (messages.length <= 40) hasMore = data.hasMore;
   const previous = new Map(messages.map((item) => [item.messageId, item]));
@@ -133,39 +128,93 @@ async function refreshUnread() {
   badge.textContent = data.count > 99 ? '99+' : String(data.count);
   badge.hidden = !data.count;
 }
+async function refreshList() {
+  const data = await apiRequest('/api/messages/conversations', { auth: true });
+  if (!peer && !searchInput.value.trim()) renderList(data.conversations);
+  await refreshUnread();
+}
 async function refresh() {
   if (busy || !isAuthenticated() || document.hidden) return;
   busy = true;
   try {
     if (peer) await refreshHistory();
-    else if (!panel.hidden) {
-      const data = await apiRequest('/api/messages/conversations', { auth: true });
-      renderList(data.conversations);
-      await refreshUnread();
-    } else await refreshUnread();
+    else if (!panel.hidden && !searchInput.value.trim()) await refreshList();
+    else await refreshUnread();
     lastPoll = Date.now();
   } finally { busy = false; }
 }
 export async function openConversation(userId) {
-  if (!root || !isAuthenticated()) return;
+  if (!isAuthenticated()) return;
+  await mountMessages();
+  if (!root) return;
   const id = Number(userId);
   if (!Number.isSafeInteger(id) || id < 1 || id === getStoredUser()?.userId) return;
   peer = { userId: id, fullName: 'Loading…' };
   messages = []; hasMore = false;
   open();
+  try { await refreshHistory(); } catch (error) { showError(error); }
 }
 function backToList() {
   peer = null; messages = []; editing = null; input.value = ''; form.hidden = true;
-  refresh().catch(showError);
+  searchInput.value = '';
+  ++searchSequence;
+  title.textContent = 'Messages'; headerAvatar.hidden = true; back.hidden = true;
+  searchInput.parentElement.hidden = false;
+  body.replaceChildren(el('p', { className: 'messages-empty', text: 'Loading conversations…' }));
+  refreshList().catch(showError);
 }
+function renderPeople(items) {
+  body.replaceChildren();
+  if (!items.length) {
+    body.append(el('p', { className: 'messages-empty', text: 'No people found.' }));
+    return;
+  }
+  for (const person of items) {
+    const button = el('button', { className: 'messages-contact', attrs: { type: 'button' } }, [
+      avatar(person),
+      el('span', { className: 'messages-contact-copy' }, [
+        el('strong', { text: person.fullName }),
+        el('span', { text: person.displayLabel || 'Saple member' })
+      ])
+    ]);
+    button.addEventListener('click', () => openConversation(person.userId));
+    body.append(button);
+  }
+}
+
+async function searchPeople() {
+  const query = searchInput.value.trim();
+  const sequence = ++searchSequence;
+  if (query.length < 2) { refreshList().catch(showError); return; }
+  try {
+    const data = await apiRequest(`/api/users/search?q=${encodeURIComponent(query)}`, { auth: true });
+    if (sequence === searchSequence && !peer) renderPeople(data.users);
+  } catch (error) { if (sequence === searchSequence) showError(error); }
+}
+
 export function mountMessages() {
-  if (root || !isAuthenticated()) return;
+  if (mounting) return mounting;
+  if (!isAuthenticated()) return Promise.resolve();
+  mounting = (async () => {
+  root = await mountAssistant();
+  if (!root) root = await mountAssistant({ allowUnavailable: true });
+  if (!root) return;
   title = el('h2', { className: 'guide-heading', text: 'Messages' });
   headerAvatar = el('span', { className: 'messages-header-avatar' }); headerAvatar.hidden = true;
   back = el('button', { className: 'guide-close', text: '←', attrs: { type: 'button', 'aria-label': 'Back to conversations' } });
   back.hidden = true; back.addEventListener('click', backToList);
-  const closeButton = el('button', { className: 'guide-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close messages' } });
-  closeButton.addEventListener('click', close);
+  searchInput = el('input', { className: 'input messages-search', attrs: {
+    type: 'search', placeholder: 'Search people', 'aria-label': 'Search people', maxlength: '80'
+  } });
+  searchInput.addEventListener('input', () => {
+    ++searchSequence;
+    clearTimeout(searchTimer);
+    if (searchInput.value.trim().length < 2) {
+      refreshList().catch(showError);
+      return;
+    }
+    searchTimer = setTimeout(searchPeople, 280);
+  });
   body = el('div', { className: 'messages-body', attrs: { role: 'region', 'aria-label': 'Conversations and messages' } });
   input = el('textarea', { className: 'input', attrs: { rows: '2', maxlength: '2000', placeholder: 'Write a message', 'aria-label': 'Message text' } });
   sendButton = el('button', { className: 'button button-primary button-small', text: 'Send', attrs: { type: 'submit' } });
@@ -194,23 +243,22 @@ export function mountMessages() {
     } catch (error) { window.alert(error.message); }
     finally { sendButton.disabled = false; }
   });
-  panel = el('section', { className: 'guide-panel messages-panel', attrs: { role: 'dialog', 'aria-label': 'Messages', id: 'saple-messages-panel', hidden: true } }, [
-    el('div', { className: 'guide-head' }, [back, headerAvatar, title, closeButton]), body, form
+  panel = el('section', { className: 'shared-view messages-view', attrs: {
+    role: 'tabpanel', id: 'saple-messages-view', 'aria-labelledby': 'saple-messages-tab', hidden: true
+  } }, [
+    el('div', { className: 'messages-view-head' }, [back, headerAvatar, title]),
+    el('div', { className: 'messages-search-wrap' }, [searchInput]), body, form
   ]);
-  badge = el('span', { className: 'messages-launcher-badge', attrs: { 'aria-label': 'Unread messages' } }); badge.hidden = true;
-  launcher = el('button', { className: 'guide-launcher', attrs: { type: 'button', 'aria-expanded': 'false', 'aria-controls': 'saple-messages-panel' } }, [
-    el('span', { text: 'Messages' }), badge
-  ]);
-  launcher.addEventListener('click', () => panel.hidden ? open() : close());
-  root = el('div', { className: 'guide-root messages-root', dataset: { sapleMessages: '' } }, [panel, launcher]);
-  document.body.append(root);
+  badge = el('span', { className: 'messages-launcher-badge', attrs: { 'aria-label': 'Unread messages' } });
+  badge.hidden = true;
+  registerMessagesView(panel, badge, () => refresh().catch(showError));
   window.addEventListener('saple:open-message', (event) => openConversation(event.detail?.userId));
-  window.addEventListener('saple:floating-panel-open', (event) => { if (event.detail?.panel !== 'messages' && !panel.hidden) close(); });
-  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !panel.hidden) close(); });
   setInterval(() => {
     if (!isAuthenticated() || document.hidden) return;
     const delay = panel.hidden ? 20000 : peer ? 4000 : 9000;
     if (Date.now() - lastPoll >= delay) refresh().catch(showError);
   }, 4000);
   refreshUnread().catch(() => {});
+  })();
+  return mounting;
 }

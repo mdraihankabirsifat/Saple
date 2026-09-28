@@ -17,7 +17,8 @@ function body(value) {
 function safeProfile(user) {
   return { userId: user.userId, fullName: user.fullName,
     displayLabel: user.accountRole === 'COMPANY_REPRESENTATIVE' ? 'Company representative' : 'Saple member',
-    avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt || user.avatarUpdatedAt) };
+    avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt || user.avatarUpdatedAt),
+    linkedinUrl: user.linkedinUrl || null };
 }
 async function userProfile(value) {
   const user = await repository.profile(id(value));

@@ -21,8 +21,9 @@ Run exactly once, in this order, in the Supabase SQL editor or `psql`:
 | 5 | `005_cse216_final_database_features.sql` | `saple_set_updated_at()` and seven `trg_*_set_updated_at` triggers, `saple_company_insight_summary()`, `saple_apply_application_decision()` |
 | 6 | `006_profile_and_company_images.sql` | nullable Storage object paths for account pictures and company logos |
 | 7 | `007_direct_messages.sql` | private direct messages, unread state and supporting indexes |
+| 8 | `008_public_profiles_and_search.sql` | optional public LinkedIn profile URL |
 
-The fresh schema already includes all seven migrations' tables, columns,
+The fresh schema already includes all eight migrations' tables, columns,
 views and routines. Run only the migrations that an existing database has not
 yet received.
 
@@ -49,12 +50,12 @@ Each file is a single transaction. If one fails, nothing in it is applied.
 ## Before running on the live project
 
 1. Take a Supabase backup, or restore a copy into a scratch project first.
-2. Apply all seven files to the scratch project, in order.
+2. Apply all eight files to the scratch project, in order.
 3. Run `03_schema_and_data_demo_postgres.sql` there and confirm section 1
    reports **22 base tables and 5 views**, and that its last two sections list
    the three `saple_*` routines and the seven `trg_*_set_updated_at` triggers.
-4. Only then apply the same seven files to the live project. If migrations 001–005
-   have already been applied, run only 006 and 007 in that order.
+4. Only then apply the same eight files to the live project. If migrations 001–007
+   have already been applied, run only 008.
 
 ### Verifying migration 005
 

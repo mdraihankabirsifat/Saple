@@ -11,7 +11,8 @@ async function findUserByEmail(email) {
       u.password_hash AS "passwordHash", u.user_type AS "userType",
       u.account_role AS "accountRole", u.account_status AS "accountStatus",
       u.token_version AS "tokenVersion", e.employment_status AS "employmentStatus",
-      u.avatar_path AS "avatarPath", u.updated_at AS "updatedAt"
+      u.avatar_path AS "avatarPath", to_jsonb(u)->>'linkedin_url' AS "linkedinUrl",
+      u.updated_at AS "updatedAt"
     FROM users u
     LEFT JOIN employees e ON e.user_id = u.user_id
     WHERE LOWER(u.email) = $1
@@ -32,7 +33,8 @@ async function findSafeUserById(userId) {
     SELECT u.user_id AS "userId", u.full_name AS "fullName", u.email,
       u.user_type AS "userType", u.account_role AS "accountRole",
       u.account_status AS "accountStatus", e.employment_status AS "employmentStatus",
-      u.created_at AS "createdAt", u.avatar_path AS "avatarPath", u.updated_at AS "updatedAt"
+      u.created_at AS "createdAt", u.avatar_path AS "avatarPath",
+      to_jsonb(u)->>'linkedin_url' AS "linkedinUrl", u.updated_at AS "updatedAt"
     FROM users u
     LEFT JOIN employees e ON e.user_id = u.user_id
     WHERE u.user_id = $1
@@ -73,6 +75,26 @@ async function updateFullName(userId, fullName) {
     WHERE user_id = $2 AND account_status = 'ACTIVE'
   `, [fullName, userId]));
   return result.rowCount === 1;
+}
+
+async function updatePublicProfile(userId, fullName, linkedinUrl) {
+  const result = await database.withTransaction((client) => client.query(`
+    UPDATE users SET full_name = $1, linkedin_url = $2, updated_at = CURRENT_TIMESTAMP
+    WHERE user_id = $3 AND account_status = 'ACTIVE'
+  `, [fullName, linkedinUrl, userId]));
+  return result.rowCount === 1;
+}
+
+async function searchActiveUsers(query, excludedUserId, limit = 8) {
+  const result = await database.query(`
+    SELECT user_id AS "userId", full_name AS "fullName", account_role AS "accountRole",
+      avatar_path AS "avatarPath", updated_at AS "updatedAt"
+    FROM users
+    WHERE account_status = 'ACTIVE' AND user_id <> $2
+      AND full_name ILIKE $1 ESCAPE '\\'
+    ORDER BY full_name, user_id LIMIT $3
+  `, [query, excludedUserId, limit]);
+  return result.rows;
 }
 
 // A password hash is written in exactly one place: the reset flow in
@@ -159,7 +181,7 @@ async function findPrivateSubmissionById(submissionId) {
 
 module.exports = {
   findUserByEmail, findUserForPasswordResetByEmail, findSafeUserById, findAuthorizationById,
-  findActiveVerifiedScopesByUserId, updateFullName,
+  findActiveVerifiedScopesByUserId, updateFullName, updatePublicProfile, searchActiveUsers,
   incrementTokenVersion, createUserWithOptionalEmployee, findSubmissionsByOwner,
   findPrivateSubmissionById
 };

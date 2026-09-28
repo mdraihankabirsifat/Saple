@@ -45,7 +45,8 @@ test('migrations are numbered, ordered and each runs in one transaction', () => 
     '004_public_job_views_and_grants.sql',
     '005_cse216_final_database_features.sql',
     '006_profile_and_company_images.sql',
-    '007_direct_messages.sql'
+    '007_direct_messages.sql',
+    '008_public_profiles_and_search.sql'
   ]);
 
   for (const file of files) {

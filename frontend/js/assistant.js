@@ -21,6 +21,12 @@ let input = null;
 let sendButton = null;
 let root = null;
 let statusPill = null;
+let guideView = null;
+let messagesView = null;
+let guideTab = null;
+let messagesTab = null;
+let onMessagesOpen = null;
+let mounting = null;
 
 // What each answer actually came from. The guide never presents built-in help
 // as if a model had written it, and never hides that the provider failed.
@@ -162,14 +168,45 @@ function closePanel() {
   launcher.focus();
 }
 
-function openPanel() {
-  window.dispatchEvent(new CustomEvent('saple:floating-panel-open', { detail: { panel: 'guide' } }));
+function selectView(view) {
+  const messages = view === 'messages' && messagesView;
+  guideView.hidden = Boolean(messages);
+  if (messagesView) messagesView.hidden = !messages;
+  guideTab.setAttribute('aria-selected', String(!messages));
+  if (messagesTab) messagesTab.setAttribute('aria-selected', String(Boolean(messages)));
+  panel.setAttribute('aria-label', messages ? 'Messages and Saple Guide: Messages' : 'Messages and Saple Guide: Saple Guide');
+  if (messages) onMessagesOpen?.();
+}
+
+function openPanel(view = 'guide') {
+  const wasClosed = panel.hidden;
+  window.dispatchEvent(new CustomEvent('saple:floating-panel-open', { detail: { panel: 'shared' } }));
+  selectView(view);
   panel.hidden = false;
   root.classList.add('is-open');
   document.body.classList.add('guide-panel-open');
   launcher.setAttribute('aria-expanded', 'true');
-  releaseFocus = trapFocus(panel, { onEscape: closePanel });
-  input.focus();
+  if (wasClosed) releaseFocus = trapFocus(panel, { onEscape: closePanel });
+  if (view === 'guide') input.focus();
+  else messagesView?.querySelector('input, button')?.focus();
+}
+
+export function openSharedView(view = 'guide') {
+  if (panel) openPanel(view);
+}
+
+export function registerMessagesView(view, unreadBadge, onOpen) {
+  if (!panel || messagesView) return;
+  messagesView = view;
+  messagesView.hidden = true;
+  panel.append(messagesView);
+  onMessagesOpen = onOpen;
+  messagesTab = el('button', { className: 'shared-tab', text: 'Messages', attrs: {
+    type: 'button', role: 'tab', id: 'saple-messages-tab', 'aria-selected': 'false', 'aria-controls': 'saple-messages-view'
+  } });
+  messagesTab.addEventListener('click', () => openPanel('messages'));
+  guideTab.before(messagesTab);
+  launcher.append(unreadBadge);
 }
 
 function buildPanel() {
@@ -221,45 +258,49 @@ function buildPanel() {
 
   const close = el('button', {
     className: 'guide-close',
-    attrs: { type: 'button', 'aria-label': 'Close the Saple Guide' }
+    attrs: { type: 'button', 'aria-label': 'Close Messages and Saple Guide' }
   }, [el('span', { attrs: { 'aria-hidden': 'true' }, text: '×' })]);
   close.addEventListener('click', closePanel);
+
+  guideView = el('div', { className: 'shared-view guide-view', attrs: {
+    id: 'saple-guide-view', role: 'tabpanel', 'aria-labelledby': 'saple-guide-tab'
+  } }, [
+    el('div', { className: 'guide-view-heading guide-heading-row' }, [
+      el('h2', { className: 'guide-heading', text: 'Saple Guide' }), statusPill
+    ]),
+    transcript,
+    form,
+    el('div', { className: 'guide-foot' }, [
+      el('p', { className: 'guide-disclosure', text: 'AI-assisted. Do not enter passwords, reset links or personal details.' }),
+      el('div', { className: 'guide-foot-actions' }, [
+        el('details', { className: 'guide-privacy-details' }, [
+          el('summary', { text: 'Privacy' }),
+          el('p', { className: 'guide-privacy', text: status?.privacyNotice || '' })
+        ]), clearButton
+      ])
+    ])
+  ]);
+  guideTab = el('button', { className: 'shared-tab', text: 'Saple Guide', attrs: {
+    type: 'button', role: 'tab', id: 'saple-guide-tab', 'aria-selected': 'true', 'aria-controls': 'saple-guide-view'
+  } });
+  guideTab.addEventListener('click', () => openPanel('guide'));
 
   panel = el('div', {
     className: 'guide-panel',
     attrs: {
       role: 'dialog',
-      'aria-label': 'Saple Guide',
+      'aria-label': 'Messages and Saple Guide: Saple Guide',
       'aria-modal': 'false',
       tabindex: '-1',
       hidden: true,
       id: 'saple-guide-panel'
     }
   }, [
-    el('div', { className: 'guide-head' }, [
-      el('div', {}, [
-        el('div', { className: 'guide-heading-row' }, [
-          el('h2', { className: 'guide-heading', text: 'Saple Guide' }),
-          statusPill
-        ]),
-      ]),
+    el('div', { className: 'guide-head shared-head' }, [
+      el('div', { className: 'shared-tabs', attrs: { role: 'tablist', 'aria-label': 'Communication views' } }, [guideTab]),
       close
     ]),
-    transcript,
-    form,
-    el('div', { className: 'guide-foot' }, [
-      el('p', {
-        className: 'guide-disclosure',
-        text: 'AI-assisted. Do not enter passwords, reset links or personal details.'
-      }),
-      el('div', { className: 'guide-foot-actions' }, [
-        el('details', { className: 'guide-privacy-details' }, [
-          el('summary', { text: 'Privacy' }),
-          el('p', { className: 'guide-privacy', text: status?.privacyNotice || '' })
-        ]),
-        clearButton
-      ])
-    ])
+    guideView
   ]);
 
   renderIntro();
@@ -271,15 +312,18 @@ function renderIntro() {
   if (suggestions) transcript.append(el('li', { className: 'guide-message guide-suggestions-row' }, [suggestions]));
 }
 
-export async function mountAssistant() {
-  if (document.querySelector('[data-saple-guide]')) return;
+export function mountAssistant({ allowUnavailable = false } = {}) {
+  if (mounting) return mounting;
+  mounting = (async () => {
+  if (document.querySelector('[data-saple-guide]')) return root;
 
   try {
     status = await fetchApi('/api/assistant/status');
   } catch (error) {
-    // Without the status endpoint the guide would have nothing honest to say
-    // about what it can do, so it stays out of the way entirely.
-    return;
+    // Keep the original public guide behavior, but allow signed-in Messages
+    // to mount the shared panel when the status endpoint is unavailable.
+    if (!allowUnavailable) return;
+    status = { aiEnabled: false, suggestedQuestions: [] };
   }
 
   const container = el('div', { className: 'guide-root', dataset: { sapleGuide: '' } });
@@ -290,9 +334,9 @@ export async function mountAssistant() {
       type: 'button',
       'aria-expanded': 'false',
       'aria-controls': 'saple-guide-panel',
-      'aria-label': 'Open the Saple Guide'
+      'aria-label': 'Open Messages and Saple Guide'
     }
-  }, [el('span', { className: 'guide-launcher-label', text: 'Saple Guide' })]);
+  }, [el('span', { className: 'guide-launcher-label', text: 'Messages & Guide' })]);
   launcher.addEventListener('click', () => (panel.hidden ? openPanel() : closePanel()));
 
   // The panel comes first so it opens above the launcher, which stays in the
@@ -303,6 +347,12 @@ export async function mountAssistant() {
   // scroll clear of the floating launcher.
   document.body.classList.add('has-saple-guide');
   window.addEventListener('saple:floating-panel-open', (event) => {
-    if (event.detail?.panel !== 'guide' && panel && !panel.hidden) closePanel();
+    if (event.detail?.panel !== 'shared' && panel && !panel.hidden) closePanel();
   });
+  return root;
+  })().then((result) => {
+    if (!result) mounting = null;
+    return result;
+  }, (error) => { mounting = null; throw error; });
+  return mounting;
 }

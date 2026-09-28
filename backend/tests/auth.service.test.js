@@ -12,6 +12,7 @@ const originalMethods = {
   findActiveVerifiedScopesByUserId: userRepository.findActiveVerifiedScopesByUserId,
   createUserWithOptionalEmployee: userRepository.createUserWithOptionalEmployee,
   updateFullName: userRepository.updateFullName,
+  updatePublicProfile: userRepository.updatePublicProfile,
   incrementTokenVersion: userRepository.incrementTokenVersion,
   findSubmissionsByOwner: userRepository.findSubmissionsByOwner,
   findPrivateSubmissionById: userRepository.findPrivateSubmissionById
@@ -196,6 +197,24 @@ test('profile update permits only a normalized full name', async () => {
     authService.updateProfile(8, { fullName: 'Safe Name', accountRole: 'ADMIN' }),
     (error) => error.statusCode === 400 && /cannot be changed/.test(error.message)
   );
+});
+
+test('LinkedIn updates accept only HTTPS profile URLs and empty removes the link', async () => {
+  const writes = [];
+  userRepository.updatePublicProfile = async (...args) => { writes.push(args); return true; };
+  userRepository.findSafeUserById = async () => ({ userId: 8, fullName: 'Safe Name',
+    userType: 'NORMAL', accountRole: 'USER', accountStatus: 'ACTIVE', linkedinUrl: writes.at(-1)?.[2] });
+
+  await authService.updateProfile(8, { fullName: 'Safe Name', linkedinUrl: 'https://www.linkedin.com/in/example' });
+  assert.deepEqual(writes.at(-1), [8, 'Safe Name', 'https://www.linkedin.com/in/example']);
+  await authService.updateProfile(8, { fullName: 'Safe Name', linkedinUrl: '' });
+  assert.deepEqual(writes.at(-1), [8, 'Safe Name', null]);
+  for (const url of ['http://linkedin.com/in/example', 'https://linkedin.com.evil.test/in/example',
+    'https://linkedin.com/jobs', 'javascript:alert(1)', 'https://linkedin.com:444/in/example']) {
+    await assert.rejects(authService.updateProfile(8, { fullName: 'Safe Name', linkedinUrl: url }),
+      (error) => error.statusCode === 400, url);
+  }
+  assert.equal(writes.length, 2);
 });
 
 test('there is no signed-in password change anywhere in the backend', () => {

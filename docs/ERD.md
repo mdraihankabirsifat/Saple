@@ -53,6 +53,7 @@ erDiagram
         varchar account_status
         integer token_version
         varchar avatar_path
+        varchar linkedin_url
         timestamptz created_at
         timestamptz updated_at
     }

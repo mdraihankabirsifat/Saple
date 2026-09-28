@@ -23,8 +23,12 @@ else apiRequest(`/api/users/${raw}/profile`, { auth: true }).then(({ user }) => 
     : el('button', { className: 'button button-primary', text: 'Message', attrs: { type: 'button' } });
   if (!own) action.addEventListener('click', async () => {
     const { mountMessages, openConversation } = await import('./messages.js');
-    mountMessages(); openConversation(user.userId);
+    await mountMessages();
+    await openConversation(user.userId);
   });
+  const linkedin = user.linkedinUrl ? el('a', { text: 'LinkedIn profile', attrs: {
+    href: user.linkedinUrl, target: '_blank', rel: 'noopener noreferrer'
+  } }) : null;
   content.append(avatar, el('h2', { text: user.fullName }),
-    el('p', { text: user.displayLabel || 'Saple member' }), action);
+    el('p', { text: user.displayLabel || 'Saple member' }), linkedin, action);
 }).catch((error) => { status.textContent = error.message; });

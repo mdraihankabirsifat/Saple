@@ -1,7 +1,10 @@
 const express = require('express');
 const authenticate = require('../middleware/authenticate');
 const controller = require('../controllers/message.controller');
+const searchController = require('../controllers/search.controller');
+const { limit: searchLimit } = require('./search.routes');
 const router = express.Router();
 router.use(authenticate);
+router.get('/search', searchLimit, searchController.people);
 router.get('/:userId/profile', controller.profile);
 module.exports = router;

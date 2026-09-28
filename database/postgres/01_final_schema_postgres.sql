@@ -20,6 +20,7 @@ CREATE TABLE users (
     account_status VARCHAR(15) DEFAULT 'ACTIVE' NOT NULL,
     token_version  INTEGER DEFAULT 0 NOT NULL,
     avatar_path    VARCHAR(500),
+    linkedin_url   VARCHAR(500),
     created_at     TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL, --more precision than DATE
     updated_at     TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT pk_users PRIMARY KEY (user_id),

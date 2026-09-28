@@ -285,7 +285,8 @@ PostgreSQL implementation.
 ## 14. Images and direct messages
 
 `users.avatar_path` and `companies.logo_path` hold optional Supabase Storage
-object paths. Image bytes are not kept in PostgreSQL. `direct_messages` has one
+object paths. `users.linkedin_url` holds an optional validated public profile
+link. Image bytes are not kept in PostgreSQL. `direct_messages` has one
 sender and one recipient from `users`, a text body (up to 2000 characters),
 creation, edit, deletion and read timestamps. Sender and recipient must differ.
 A live message cannot have an empty body. Deletion clears the body and keeps

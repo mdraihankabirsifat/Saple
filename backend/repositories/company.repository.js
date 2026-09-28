@@ -175,6 +175,15 @@ async function findCompanyById(companyId) {
   return rows[0] || null;
 }
 
+async function searchCompanies(query, limit = 8) {
+  return executeQuery(`
+    SELECT company_id AS "companyId", company_name AS "companyName", industry,
+      logo_path AS "logoPath", updated_at AS "updatedAt"
+    FROM companies WHERE company_name ILIKE $1 ESCAPE '\\'
+    ORDER BY company_name, company_id LIMIT $2
+  `, [query, limit]);
+}
+
 // The public figures for one company come from the database function, so the
 // same aggregate rules apply wherever they are read from.
 //   SELECT * FROM saple_company_insight_summary($1);
@@ -231,7 +240,7 @@ const findCommunitySalarySummary = (companyId) =>
   findSalarySummary('COMMUNITY', companyId);
 
 module.exports = {
-  findAllCompanies, findCompanyFilterOptions, findCompanyById, findCompanyInsightSummary,
+  findAllCompanies, findCompanyFilterOptions, findCompanyById, findCompanyInsightSummary, searchCompanies,
   findBenefitsByCompanyId,
   findVerifiedSalarySummary, findCommunitySalarySummary
 };

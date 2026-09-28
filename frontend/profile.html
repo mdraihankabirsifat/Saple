@@ -69,7 +69,10 @@
                 required></div>
             <div class="form-group"><label for="profile-email">Email</label><input id="profile-email" type="email"
                 readonly aria-readonly="true"></div>
-            <div class="form-actions"><button class="button button-primary" type="submit">Save name</button></div>
+            <div class="form-group"><label for="profile-linkedin">LinkedIn profile (optional)</label><input id="profile-linkedin" type="url"
+                maxlength="500" placeholder="LinkedIn profile URL" title="Use an HTTPS linkedin.com/in/ profile URL" autocomplete="url">
+              <p class="profile-note">Your name, picture and LinkedIn link are visible to signed-in Saple members.</p></div>
+            <div class="form-actions"><button class="button button-primary" type="submit">Save profile</button></div>
           </form>
           <p id="profile-status" class="state-message form-status" role="status" hidden></p>
         </section>

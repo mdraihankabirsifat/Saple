@@ -58,6 +58,7 @@ function toSafeUser(user, verifiedScopes = []) {
     accountStatus: user.accountStatus,
     employmentStatus: user.employmentStatus || null,
     avatarPath: user.avatarPath || null,
+    linkedinUrl: user.linkedinUrl || null,
     avatarUrl: storage.publicUrl('avatar', user.avatarPath, user.updatedAt),
     verifiedScopes,
     ...(user.createdAt ? { createdAt: user.createdAt } : {})
@@ -297,7 +298,7 @@ async function getCurrentUser(userId) {
 }
 
 async function updateProfile(userId, input = {}) {
-  const allowedFields = new Set(['fullName']);
+  const allowedFields = new Set(['fullName', 'linkedinUrl']);
   const unexpected = Object.keys(input).filter((key) => !allowedFields.has(key));
   if (unexpected.length > 0) {
     throw createHttpError(400, `Profile field cannot be changed: ${unexpected[0]}`);
@@ -308,7 +309,26 @@ async function updateProfile(userId, input = {}) {
   if (fullName.length < 2 || fullName.length > 120) {
     throw createHttpError(400, 'Full name must be between 2 and 120 characters');
   }
-  if (!await userRepository.updateFullName(userId, fullName)) {
+  let linkedinUrl;
+  if (Object.hasOwn(input, 'linkedinUrl')) {
+    if (input.linkedinUrl !== null && typeof input.linkedinUrl !== 'string') {
+      throw createHttpError(400, 'LinkedIn profile must be a URL');
+    }
+    linkedinUrl = input.linkedinUrl?.trim() || null;
+    if (linkedinUrl) {
+      if (linkedinUrl.length > 500) throw createHttpError(400, 'LinkedIn profile must not exceed 500 characters');
+      let parsed;
+      try { parsed = new URL(linkedinUrl); } catch { throw createHttpError(400, 'Enter a valid LinkedIn URL'); }
+      if (parsed.protocol !== 'https:' || !['linkedin.com', 'www.linkedin.com'].includes(parsed.hostname.toLowerCase())
+        || parsed.username || parsed.password || parsed.port || !parsed.pathname.startsWith('/in/')) {
+        throw createHttpError(400, 'Use an HTTPS linkedin.com/in/ profile URL');
+      }
+    }
+  }
+  const updated = linkedinUrl === undefined
+    ? await userRepository.updateFullName(userId, fullName)
+    : await userRepository.updatePublicProfile(userId, fullName, linkedinUrl);
+  if (!updated) {
     throw createHttpError(401, 'Authenticated account is unavailable');
   }
   return getCurrentUser(userId);

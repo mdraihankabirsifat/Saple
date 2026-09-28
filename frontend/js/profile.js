@@ -35,6 +35,7 @@ function render(user) {
   currentUser = user;
   renderAvatar(user);
   document.querySelector('#profile-name').value = user.fullName || '';
+  document.querySelector('#profile-linkedin').value = user.linkedinUrl || '';
   document.querySelector('#profile-email').value = user.email || '';
   document.querySelector('#profile-user-type').textContent = user.userType || 'Unknown';
   document.querySelector('#profile-employment-status').textContent = user.employmentStatus || 'Not applicable';
@@ -111,7 +112,10 @@ profileForm.addEventListener('submit', async (event) => {
   const button = profileForm.querySelector('button'); button.disabled = true;
   try {
     const data = await apiRequest('/api/auth/me', {
-      method: 'PATCH', auth: true, body: { fullName: document.querySelector('#profile-name').value }
+      method: 'PATCH', auth: true, body: {
+        fullName: document.querySelector('#profile-name').value,
+        linkedinUrl: document.querySelector('#profile-linkedin').value
+      }
     });
     setStoredUser(data.user); render(data.user); show(profileStatus, 'Profile updated successfully.', 'success');
   } catch (error) { show(profileStatus, error.message, 'error'); }

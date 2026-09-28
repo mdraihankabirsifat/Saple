@@ -38,7 +38,7 @@
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2680 1661" role="img" aria-labelledby="erd-title erd-desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2680 1680" role="img" aria-labelledby="erd-title erd-desc">
 <title id="erd-title">Saple PostgreSQL entity-relationship diagram</title>
 <desc id="erd-desc">22 tables and 5 views of the active Saple PostgreSQL schema, grouped by domain, with primary, foreign and unique keys and crow's-foot cardinalities.</desc>
 <defs>
@@ -47,7 +47,7 @@
   <marker id="parent-one" viewBox="0 0 20 20" refX="19" refY="10" markerWidth="16" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse"><path d="M 6 2 L 6 18 M 12 2 L 12 18" class="mk"/></marker>
   <marker id="parent-zero-one" viewBox="0 0 28 20" refX="27" refY="10" markerWidth="22" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse"><circle cx="8" cy="10" r="4" class="mk-open"/><path d="M 20 2 L 20 18" class="mk"/></marker>
 </defs>
-<rect class="canvas" x="0" y="0" width="2680" height="1661"/>
+<rect class="canvas" x="0" y="0" width="2680" height="1680"/>
 <text class="title" x="50" y="70">Saple — PostgreSQL entity-relationship diagram</text>
 <text class="subtitle" x="50" y="104">Active schema: database/postgres/01_final_schema_postgres.sql · 22 tables · 5 views · generated from the schema file by docs/tools/build-erd.js</text>
 <text class="subtitle" x="50" y="130">Saple is an independent BUET CSE academic project. The Oracle 19c milestone diagram is preserved in docs/archive/.</text>
@@ -63,11 +63,11 @@
 <text class="domain domain-audit" x="1850" y="172">MODERATION AND ANNOUNCEMENTS</text>
 <text class="domain domain-jobs" x="2300" y="172">JOBS AND APPLICATIONS</text>
 <g class="rels">
-<path class="rel" d="M 50 563.5 C 6 563.5, 6 209, 50 209" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>employees.user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 733.5 C 6 733.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>password_reset_tokens.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 582.5 C 6 582.5, 6 209, 50 209" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>employees.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 752.5 C 6 752.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>password_reset_tokens.user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 950 884.5 C 906 884.5, 906 209, 950 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>company_benefits.company_id → companies (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 950 903.5 C 906 903.5, 906 682, 950 682" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>company_benefits.benefit_id → benefits (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 500 260.5 C 440 260.5, 440 512, 380 512" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>employment_verifications.employee_id → employees (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 500 260.5 C 440 260.5, 440 531, 380 531" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>employment_verifications.employee_id → employees (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 830 279.5 C 890 279.5, 890 209, 950 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>employment_verifications.company_id → companies (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 830 298.5 C 890 298.5, 890 512, 950 512" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>employment_verifications.role_id → job_roles (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 1400 260.5 C 941 260.5, 839 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>submissions.user_id → users (ON DELETE NO ACTION)</title></path>
@@ -90,12 +90,12 @@
 <path class="rel rel-restrict" d="M 2300 753.5 C 2256 753.5, 2256 209, 2300 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_applications.job_id → job_postings (ON DELETE RESTRICT)</title></path>
 <path class="rel" d="M 2300 772.5 C 1436 772.5, 1244 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_applications.applicant_user_id → users (ON DELETE NO ACTION)</title></path>
 <path class="rel rel-restrict" d="M 2300 1018.5 C 2256 1018.5, 2256 702, 2300 702" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_application_status_history.application_id → job_applications (ON DELETE RESTRICT)</title></path>
-<path class="rel" d="M 50 960.5 C 6 960.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>notifications.user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 1225.5 C 6 1225.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.sender_user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 1244.5 C 6 1244.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.recipient_user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 979.5 C 6 979.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>notifications.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 1244.5 C 6 1244.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.sender_user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 1263.5 C 6 1263.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.recipient_user_id → users (ON DELETE CASCADE)</title></path>
 </g>
 <g class="entity entity-account" id="entity-users">
-<rect class="box" x="50" y="190" width="330" height="257" rx="10"/>
+<rect class="box" x="50" y="190" width="330" height="276" rx="10"/>
 <rect class="head" x="50" y="190" width="330" height="38" rx="10"/>
 <rect class="head" x="50" y="216" width="330" height="12"/>
 <text class="entity-name" x="64" y="215">USERS</text>
@@ -127,56 +127,59 @@
 <text class="col" x="118" y="396">avatar_path</text>
 <text class="type" x="368" y="396" text-anchor="end">VARCHAR(500)</text>
 <text class="flag" x="62" y="415"></text>
-<text class="col" x="118" y="415">created_at *</text>
-<text class="type" x="368" y="415" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="415">linkedin_url</text>
+<text class="type" x="368" y="415" text-anchor="end">VARCHAR(500)</text>
 <text class="flag" x="62" y="434"></text>
-<text class="col" x="118" y="434">updated_at *</text>
+<text class="col" x="118" y="434">created_at *</text>
 <text class="type" x="368" y="434" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="453"></text>
+<text class="col" x="118" y="453">updated_at *</text>
+<text class="type" x="368" y="453" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-employees">
-<rect class="box" x="50" y="493" width="330" height="124" rx="10"/>
-<rect class="head" x="50" y="493" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="519" width="330" height="12"/>
-<text class="entity-name" x="64" y="518">EMPLOYEES</text>
-<text class="flag" x="62" y="547">PK</text>
-<text class="col col-pk" x="118" y="547">employee_id *</text>
-<text class="type" x="368" y="547" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="566">FK UK</text>
-<text class="col" x="118" y="566">user_id *</text>
+<rect class="box" x="50" y="512" width="330" height="124" rx="10"/>
+<rect class="head" x="50" y="512" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="538" width="330" height="12"/>
+<text class="entity-name" x="64" y="537">EMPLOYEES</text>
+<text class="flag" x="62" y="566">PK</text>
+<text class="col col-pk" x="118" y="566">employee_id *</text>
 <text class="type" x="368" y="566" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="585"></text>
-<text class="col" x="118" y="585">employment_status *</text>
-<text class="type" x="368" y="585" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="62" y="585">FK UK</text>
+<text class="col" x="118" y="585">user_id *</text>
+<text class="type" x="368" y="585" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="604"></text>
-<text class="col" x="118" y="604">created_at *</text>
-<text class="type" x="368" y="604" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="604">employment_status *</text>
+<text class="type" x="368" y="604" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="62" y="623"></text>
+<text class="col" x="118" y="623">created_at *</text>
+<text class="type" x="368" y="623" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-password_reset_tokens">
-<rect class="box" x="50" y="663" width="330" height="181" rx="10"/>
-<rect class="head" x="50" y="663" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="689" width="330" height="12"/>
-<text class="entity-name" x="64" y="688">PASSWORD_RESET_TOKENS</text>
-<text class="flag" x="62" y="717">PK</text>
-<text class="col col-pk" x="118" y="717">reset_token_id *</text>
-<text class="type" x="368" y="717" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="736">FK</text>
-<text class="col" x="118" y="736">user_id *</text>
+<rect class="box" x="50" y="682" width="330" height="181" rx="10"/>
+<rect class="head" x="50" y="682" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="708" width="330" height="12"/>
+<text class="entity-name" x="64" y="707">PASSWORD_RESET_TOKENS</text>
+<text class="flag" x="62" y="736">PK</text>
+<text class="col col-pk" x="118" y="736">reset_token_id *</text>
 <text class="type" x="368" y="736" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="755">UK</text>
-<text class="col" x="118" y="755">token_hash *</text>
-<text class="type" x="368" y="755" text-anchor="end">VARCHAR(64)</text>
-<text class="flag" x="62" y="774"></text>
-<text class="col" x="118" y="774">expires_at *</text>
-<text class="type" x="368" y="774" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="755">FK</text>
+<text class="col" x="118" y="755">user_id *</text>
+<text class="type" x="368" y="755" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="774">UK</text>
+<text class="col" x="118" y="774">token_hash *</text>
+<text class="type" x="368" y="774" text-anchor="end">VARCHAR(64)</text>
 <text class="flag" x="62" y="793"></text>
-<text class="col" x="118" y="793">used_at</text>
+<text class="col" x="118" y="793">expires_at *</text>
 <text class="type" x="368" y="793" text-anchor="end">TIMESTAMPTZ</text>
 <text class="flag" x="62" y="812"></text>
-<text class="col" x="118" y="812">revoked_at</text>
+<text class="col" x="118" y="812">used_at</text>
 <text class="type" x="368" y="812" text-anchor="end">TIMESTAMPTZ</text>
 <text class="flag" x="62" y="831"></text>
-<text class="col" x="118" y="831">created_at *</text>
+<text class="col" x="118" y="831">revoked_at</text>
 <text class="type" x="368" y="831" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="850"></text>
+<text class="col" x="118" y="850">created_at *</text>
+<text class="type" x="368" y="850" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-reference" id="entity-companies">
 <rect class="box" x="950" y="190" width="330" height="257" rx="10"/>
@@ -785,76 +788,76 @@
 <text class="type" x="2168" y="964" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-notifications">
-<rect class="box" x="50" y="890" width="330" height="219" rx="10"/>
-<rect class="head" x="50" y="890" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="916" width="330" height="12"/>
-<text class="entity-name" x="64" y="915">NOTIFICATIONS</text>
-<text class="flag" x="62" y="944">PK</text>
-<text class="col col-pk" x="118" y="944">notification_id *</text>
-<text class="type" x="368" y="944" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="963">FK</text>
-<text class="col" x="118" y="963">user_id *</text>
+<rect class="box" x="50" y="909" width="330" height="219" rx="10"/>
+<rect class="head" x="50" y="909" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="935" width="330" height="12"/>
+<text class="entity-name" x="64" y="934">NOTIFICATIONS</text>
+<text class="flag" x="62" y="963">PK</text>
+<text class="col col-pk" x="118" y="963">notification_id *</text>
 <text class="type" x="368" y="963" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="982"></text>
-<text class="col" x="118" y="982">notification_type *</text>
-<text class="type" x="368" y="982" text-anchor="end">VARCHAR(30)</text>
+<text class="flag" x="62" y="982">FK</text>
+<text class="col" x="118" y="982">user_id *</text>
+<text class="type" x="368" y="982" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="1001"></text>
-<text class="col" x="118" y="1001">title *</text>
-<text class="type" x="368" y="1001" text-anchor="end">VARCHAR(160)</text>
+<text class="col" x="118" y="1001">notification_type *</text>
+<text class="type" x="368" y="1001" text-anchor="end">VARCHAR(30)</text>
 <text class="flag" x="62" y="1020"></text>
-<text class="col" x="118" y="1020">message *</text>
-<text class="type" x="368" y="1020" text-anchor="end">VARCHAR(600)</text>
+<text class="col" x="118" y="1020">title *</text>
+<text class="type" x="368" y="1020" text-anchor="end">VARCHAR(160)</text>
 <text class="flag" x="62" y="1039"></text>
-<text class="col" x="118" y="1039">related_entity_type</text>
-<text class="type" x="368" y="1039" text-anchor="end">VARCHAR(30)</text>
+<text class="col" x="118" y="1039">message *</text>
+<text class="type" x="368" y="1039" text-anchor="end">VARCHAR(600)</text>
 <text class="flag" x="62" y="1058"></text>
-<text class="col" x="118" y="1058">related_entity_id</text>
-<text class="type" x="368" y="1058" text-anchor="end">BIGINT</text>
+<text class="col" x="118" y="1058">related_entity_type</text>
+<text class="type" x="368" y="1058" text-anchor="end">VARCHAR(30)</text>
 <text class="flag" x="62" y="1077"></text>
-<text class="col" x="118" y="1077">read_at</text>
-<text class="type" x="368" y="1077" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="1077">related_entity_id</text>
+<text class="type" x="368" y="1077" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="1096"></text>
-<text class="col" x="118" y="1096">created_at *</text>
+<text class="col" x="118" y="1096">read_at</text>
 <text class="type" x="368" y="1096" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="1115"></text>
+<text class="col" x="118" y="1115">created_at *</text>
+<text class="type" x="368" y="1115" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-direct_messages">
-<rect class="box" x="50" y="1155" width="330" height="200" rx="10"/>
-<rect class="head" x="50" y="1155" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="1181" width="330" height="12"/>
-<text class="entity-name" x="64" y="1180">DIRECT_MESSAGES</text>
-<text class="flag" x="62" y="1209">PK</text>
-<text class="col col-pk" x="118" y="1209">message_id *</text>
-<text class="type" x="368" y="1209" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1228">FK</text>
-<text class="col" x="118" y="1228">sender_user_id *</text>
+<rect class="box" x="50" y="1174" width="330" height="200" rx="10"/>
+<rect class="head" x="50" y="1174" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="1200" width="330" height="12"/>
+<text class="entity-name" x="64" y="1199">DIRECT_MESSAGES</text>
+<text class="flag" x="62" y="1228">PK</text>
+<text class="col col-pk" x="118" y="1228">message_id *</text>
 <text class="type" x="368" y="1228" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="1247">FK</text>
-<text class="col" x="118" y="1247">recipient_user_id *</text>
+<text class="col" x="118" y="1247">sender_user_id *</text>
 <text class="type" x="368" y="1247" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1266"></text>
-<text class="col" x="118" y="1266">message_body</text>
-<text class="type" x="368" y="1266" text-anchor="end">VARCHAR(2000)</text>
+<text class="flag" x="62" y="1266">FK</text>
+<text class="col" x="118" y="1266">recipient_user_id *</text>
+<text class="type" x="368" y="1266" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="1285"></text>
-<text class="col" x="118" y="1285">created_at *</text>
-<text class="type" x="368" y="1285" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="1285">message_body</text>
+<text class="type" x="368" y="1285" text-anchor="end">VARCHAR(2000)</text>
 <text class="flag" x="62" y="1304"></text>
-<text class="col" x="118" y="1304">edited_at</text>
+<text class="col" x="118" y="1304">created_at *</text>
 <text class="type" x="368" y="1304" text-anchor="end">TIMESTAMPTZ</text>
 <text class="flag" x="62" y="1323"></text>
-<text class="col" x="118" y="1323">deleted_at</text>
+<text class="col" x="118" y="1323">edited_at</text>
 <text class="type" x="368" y="1323" text-anchor="end">TIMESTAMPTZ</text>
 <text class="flag" x="62" y="1342"></text>
-<text class="col" x="118" y="1342">read_at</text>
+<text class="col" x="118" y="1342">deleted_at</text>
 <text class="type" x="368" y="1342" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="1361"></text>
+<text class="col" x="118" y="1361">read_at</text>
+<text class="type" x="368" y="1361" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="views">
-  <rect class="views-box" x="50" y="1411" width="2580" height="200" rx="12"/>
-  <text class="views-title" x="70" y="1443">VIEWS — derived, never stored; public views expose no account identity or private evidence</text>
-  <text class="view-name" x="70" y="1473">vw_public_companies</text><text class="view-src" x="380" y="1473">reads companies</text>
-<text class="view-name" x="70" y="1499">vw_public_approved_reviews</text><text class="view-src" x="380" y="1499">reads submissions, company_reviews, companies, job_roles</text>
-<text class="view-name" x="70" y="1525">vw_verified_salary_summary</text><text class="view-src" x="380" y="1525">reads submissions, salary_submissions, companies, job_roles</text>
-<text class="view-name" x="70" y="1551">vw_community_salary_summary</text><text class="view-src" x="380" y="1551">reads submissions, salary_submissions, companies, job_roles</text>
-<text class="view-name" x="70" y="1577">vw_public_open_jobs</text><text class="view-src" x="380" y="1577">reads job_postings, companies, job_roles</text>
+  <rect class="views-box" x="50" y="1430" width="2580" height="200" rx="12"/>
+  <text class="views-title" x="70" y="1462">VIEWS — derived, never stored; public views expose no account identity or private evidence</text>
+  <text class="view-name" x="70" y="1492">vw_public_companies</text><text class="view-src" x="380" y="1492">reads companies</text>
+<text class="view-name" x="70" y="1518">vw_public_approved_reviews</text><text class="view-src" x="380" y="1518">reads submissions, company_reviews, companies, job_roles</text>
+<text class="view-name" x="70" y="1544">vw_verified_salary_summary</text><text class="view-src" x="380" y="1544">reads submissions, salary_submissions, companies, job_roles</text>
+<text class="view-name" x="70" y="1570">vw_community_salary_summary</text><text class="view-src" x="380" y="1570">reads submissions, salary_submissions, companies, job_roles</text>
+<text class="view-name" x="70" y="1596">vw_public_open_jobs</text><text class="view-src" x="380" y="1596">reads job_postings, companies, job_roles</text>
 </g>
 </svg>
 </body>
