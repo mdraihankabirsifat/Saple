@@ -164,7 +164,7 @@ Names only; values go in the dashboard.
 `CORS_ORIGINS` (empty for same-origin), `SECURITY_CONTACT`,
 `SMTP_HOST`/`SMTP_PORT`/`SMTP_SECURE`/`SMTP_USER`/`SMTP_PASS` (the new App
 Password)/`SMTP_FROM`, and the `AI_*` group from
-[`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md).
+[`docs/ai-assistant-setup.md`](ai-assistant-setup.md).
 
 ### B7. Smoke-test the live service
 
@@ -194,7 +194,7 @@ review is slower to recover from than a delayed one.
 
 - The exact reason for the Safe Browsing flag. Section B4 is how you find out.
 - Whether the new SMTP credential delivers mail: that needs a real send, from
-  [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md).
+  [`docs/email-setup-and-test.md`](email-setup-and-test.md).
 - Whether Groq accepts your key and still serves the configured model.
 
 None of these can be answered from the repository, and none of them is claimed

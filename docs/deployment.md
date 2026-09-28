@@ -1,10 +1,13 @@
 # Render and Supabase Deployment
 
-> **Current status: not deployed.** The previous Render service was flagged by
-> Google Web Risk, suspended and deleted. Read
-> [security-and-safe-deployment.md](security-and-safe-deployment.md) first: it
-> covers what was fixed, why the old service must not be reused, and the Google
-> Search Console steps. This page covers the mechanics of Supabase and Render.
+> **Current status:** Saple is deployed on Cloudflare Workers; see
+> [cloudflare-deployment.md](cloudflare-deployment.md). Render remains a
+> supported alternative host. The previous Render service was flagged by Google
+> Web Risk, suspended and deleted, so read
+> [security-and-safe-deployment.md](security-and-safe-deployment.md) before
+> creating a new one: it covers what was fixed, why the old service must not be
+> reused, and the Google Search Console steps. This page covers the mechanics of
+> Supabase and Render.
 
 Saple runs as one Render Node web service. Express serves both the existing static frontend and every `/api` endpoint, while the server connects privately to the existing Supabase PostgreSQL database through `pg`.
 
@@ -24,10 +27,11 @@ The browser does not use Supabase Auth, an anon key, a secret key, or a database
 
 ## 1. Prepare Supabase
 
-**Existing project (the usual case).** Apply the seven additive migrations in
+**Existing project (the usual case).** Apply the eight additive migrations in
 `database/postgres/migrations/`, in order, following that folder's README.
-Rehearse on a backup or scratch project first. They add eight tables, one
-view and two nullable image path columns without changing any existing row.
+Rehearse on a backup or scratch project first. They add twelve tables, one
+view, the database routines, two nullable image path columns and the profile
+headline and about columns without changing any existing row.
 
 **Brand-new project.** Do not run schema or seed files against an existing
 populated project. For a confirmed fresh project, open the Supabase SQL editor

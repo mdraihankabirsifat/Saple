@@ -34,14 +34,28 @@ npx wrangler hyperdrive create saple-supabase --connection-string="postgres://${
 ```
 
 Use the exact host, port, database and URL-encoded password supplied by
-Supabase. The command prints a Hyperdrive ID. Replace the all-zero placeholder
-in `wrangler.jsonc` with that ID. The ID is a binding identifier and is safe to
+Supabase. The command prints a Hyperdrive ID. Put that ID in the `hyperdrive`
+binding of `wrangler.jsonc`. The ID is a binding identifier and is safe to
 commit; the source connection string is not.
 
 The same operation is available in the Cloudflare Dashboard under **Storage &
 Databases → Hyperdrive → Create configuration**. Select PostgreSQL, enter the
 existing Supabase connection details, and copy the resulting configuration ID
 to `wrangler.jsonc`.
+
+Then turn off Hyperdrive's query caching for this configuration:
+
+```powershell
+npx wrangler hyperdrive update <hyperdrive-id> --caching-disabled
+```
+
+Saple often reads a row straight after writing it (register, then sign in), and
+a cached read can briefly miss the new row. The live configuration runs with
+caching disabled.
+
+`wrangler.jsonc` holds this deployment's settings. To deploy a separate copy,
+start from [`wrangler.example.jsonc`](../wrangler.example.jsonc), which has the
+same bindings with placeholder values.
 
 ## 2. Install and configure the Worker
 
@@ -93,7 +107,7 @@ attempts localhost or the local fallback.
 
 ## 3. Deploy
 
-After replacing the Hyperdrive ID:
+After setting the Hyperdrive ID:
 
 ```powershell
 npm run cf:deploy

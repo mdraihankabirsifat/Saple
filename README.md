@@ -79,6 +79,8 @@ More captures, including interview experiences, are in [`assets/screenshots/`](a
 - **Reports and moderation**: any signed-in user can report a contribution; administrators triage reports and record every decision.
 - **Notifications and announcements** for decisions, application updates and site-wide notices.
 - **Profile pictures and company logos** in Supabase Storage, with initials when no image is available.
+- **Member profiles** with a headline, an about section, experience, education and skills, readable by any visitor; email and account data are never shown.
+- **Search** for members and companies from the navigation bar, and live company suggestions in the homepage search.
 - **Private direct messages** between signed-in members, including recruiter and applicant contact actions.
 - **Optional local PostgreSQL failover** for demos when Supabase is unreachable; see [backend setup](backend/README.md#demo-day-offline-database-fallback).
 - **Saple Guide** (AI): questions about using Saple go through Saple's own backend to an OpenAI-compatible provider. When no provider is configured, or it times out or rate-limits, the panel answers from a built-in knowledge base and labels that answer "Built-in Saple help (not AI)" rather than passing it off as the model.
@@ -121,12 +123,13 @@ Express API  (routes → controllers → services → repositories)
 Supabase PostgreSQL
 ```
 
-The same Express app also has an optional Cloudflare Workers target. Wrangler
+The live deployment runs this same Express app on Cloudflare Workers. Wrangler
 serves `frontend/` as Worker Static Assets and invokes the thin
 [`cloudflare/worker.mjs`](cloudflare/worker.mjs) adapter for `/api/*` and the
-generated crawler/security files. The adapter configures the existing database
-module with a Hyperdrive connection to the same Supabase PostgreSQL database;
-it does not create a second schema or a second application implementation.
+generated crawler/security files. The adapter connects the existing database
+module to Supabase PostgreSQL through Cloudflare Hyperdrive; there is no second
+schema or second application. The Node server (`backend/server.js`) still runs
+locally, in Docker and on Render from `render.yaml`.
 
 Supabase is used only as hosted PostgreSQL. The browser never connects to it directly and never receives database credentials, and authentication is handled by the Express backend, not Supabase Auth.
 
@@ -146,7 +149,7 @@ Security highlights:
 - A password is entered on three pages only: sign in, register, and the reset page reached through an emailed single-use link. No signed-in page asks for a password, and `PATCH /api/auth/me/password` no longer exists.
 - Account, contribution and workspace pages are `noindex, nofollow` in both the HTML and the `X-Robots-Tag` header; the public directory stays indexable.
 
-Details are in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md), and the current remediation status is in [`SECURITY_REMEDIATION_CHECKLIST.md`](SECURITY_REMEDIATION_CHECKLIST.md).
+Details are in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md), and the remediation status is in [`docs/security-remediation-checklist.md`](docs/security-remediation-checklist.md).
 
 ## Quick Start
 
@@ -195,20 +198,23 @@ The two integration commands run against the database in `DATABASE_URL`, so poin
 ## Documentation
 
 - [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md): entity-relationship diagram, generated from the schema
-- [`SECURITY_REMEDIATION_CHECKLIST.md`](SECURITY_REMEDIATION_CHECKLIST.md): what the code now enforces, and the manual steps only the owner can take
 - [`docs/cse216-final-compliance.md`](docs/cse216-final-compliance.md): the CSE216 checklist mapped to code, database objects, tests and a demonstration
+- [`docs/requirement_analysis.md`](docs/requirement_analysis.md): requirements and scope
 - [`docs/relational_schema.md`](docs/relational_schema.md): tables, constraints and status transitions
 - [`docs/supabase_setup.md`](docs/supabase_setup.md): database setup and migrations
-- [`docs/deployment.md`](docs/deployment.md): Supabase connection and Render hosting
 - [`docs/cloudflare-deployment.md`](docs/cloudflare-deployment.md): Hyperdrive, Worker secrets and deployment
+- [`docs/deployment.md`](docs/deployment.md): Supabase connection and Render hosting
 - [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md): security controls and a safe deployment checklist
+- [`docs/security-remediation-checklist.md`](docs/security-remediation-checklist.md): what the code now enforces, and the manual steps only the owner can take
 - [`docs/ai-assistant-setup.md`](docs/ai-assistant-setup.md): Saple Guide provider configuration
 - [`docs/email-setup-and-test.md`](docs/email-setup-and-test.md): SMTP setup for password recovery
+- [`docs/UI_IMAGE_GUIDE.md`](docs/UI_IMAGE_GUIDE.md): where the page images live and how to replace them
 - [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md): API contracts and frontend structure
+- [`docs/archive/`](docs/archive/): earlier milestone documents, including the Oracle 19c ERD
 
 ## Project Status
 
-The application, schema, migrations, tests and documentation are complete for this project phase. Saple is **not currently deployed**. Hosting, email delivery and the AI provider each depend on private configuration supplied by the owner.
+The application, schema, eight migrations, tests and documentation are complete. Saple is deployed on Cloudflare Workers with Hyperdrive and Supabase PostgreSQL; profile pictures and company logos are stored in Supabase Storage. Email delivery and the AI provider depend on private configuration supplied by the owner.
 
 ## License / Academic Notice
 

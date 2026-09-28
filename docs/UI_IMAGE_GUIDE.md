@@ -1,64 +1,64 @@
 # UI image guide
 
-**Written for:** whoever adds photographs or illustrations to Saple later.
-
-Every area below already looks finished without an image: each has a layered
-background, a grid texture and, where it helps, a small original SVG. An image
-is an optional upgrade, never a missing piece.
+**Written for:** whoever replaces or adds images in Saple.
 
 ## Rules for any image
 
-- **Local files only.** Put the file in the folder listed below and reference
-  it with a relative path. The Content-Security-Policy allows images from the
+- **Local files only.** Put the file under `frontend/assets/` and reference it
+  with a relative path. The Content-Security-Policy allows images from the
   site itself (`img-src 'self'`), so a hotlinked image would simply not load.
-- **WebP, compressed.** Aim for under 200 KB per image.
+- **Compressed.** Aim for under 300 KB per image; WebP for new files.
 - **Rights you actually have.** Your own photo, a generated illustration, or a
   licence that allows reuse. No logos or brand imagery of the companies Saple
   lists, and nothing copied from another site.
 - **No people's faces from the web**, and nothing that suggests Saple is an
   official service of any company.
-- Always add `decoding="async"`; add `loading="lazy"` to anything below the
-  first screen.
 
-## Where images can go
+## Images in use
 
-| Page / section | Image type | Aspect ratio | Suggested size | File to create | Optional |
-|---|---|---|---|---|---|
-| Homepage background (`index.html`, `.home-hero-background`) | Editorial illustration or photo: a workspace, a growing plant, an abstract data-and-leaf composition | 16:9 | 1672 × 941 | `frontend/assets/hero/homepage.png` | Optional — the four-edge fade keeps the hero usable without it |
-| Sign in (`login.html`, `.auth-scene`) | Calm botanical desk scene | 4:3 | 1000 × 750 | `frontend/assets/auth/login.webp` | Yes — an original SVG desk scene is there now; replace the `<svg>` inside `.auth-scene` with an `<img>` to use a file |
-| Register (`register.html`, `.auth-visual-slot`) | Illustration about contributing or joining | 5:3 | 1000 × 600 | `frontend/assets/auth/register.webp` | Yes |
-| Forgot / reset password (`.auth-visual-slot`) | Quiet illustration: a key, a leaf, an envelope | 5:3 | 1000 × 600 | `frontend/assets/auth/recovery.webp` | Yes |
-| Editorial or feature cards (future) | Photo or illustration per topic | 16:9 | 1280 × 720 | `frontend/assets/ui/<topic>.webp` | Yes |
+Every page image is a CSS background in `frontend/css/premium.css`, drawn
+behind a colour wash so text stays readable in both themes.
 
-### Adding the homepage hero image
+| Where | File | Set in `premium.css` by |
+|-------|------|-------------------------|
+| Homepage hero | `frontend/assets/hero/homepage.png` | `.home-hero-background` |
+| Sign in | `frontend/assets/hero/login.png` | `.auth-main.login-main::before` |
+| Create account | `frontend/assets/hero/singup.png` | `.auth-main.register-main::before` |
+| Companies header | `frontend/assets/hero/companies.png` | `.page-art-companies` |
+| Salaries header | `frontend/assets/hero/salaries.png` | `.page-art-salaries` |
+| Reviews header | `frontend/assets/hero/Reviews.png` | `.page-art-reviews` |
+| Interviews header | `frontend/assets/hero/Interviews.png` | `.page-art-interviews` |
+| Jobs header | `frontend/assets/hero/job.png` | `.page-art-jobs` |
+| FAQ, About and Contact headers | `frontend/assets/hero/FAQ.png` | `.page-art-faq` |
 
-The supplied `frontend/assets/hero/homepage.png` is already used as the
-homepage hero background. CSS fades all four edges into Saple's page surface,
-and the artwork is intentionally low-contrast so the search and calls to
-action remain readable. Replace that file with another local 16:9 image if
-you want a different background.
+To replace one, keep the file name and overwrite the file. File names are
+case-sensitive on the Cloudflare and Render hosts, so match them exactly
+(including `singup.png`).
 
-### Adding an auth image
+These files are also listed in the service worker's offline shell
+(`ASSETS` in `frontend/sw.js`). Adding, renaming or removing an image means
+updating that list and bumping `SHELL_CACHE`; overwriting an existing file
+needs neither.
 
-Add as the first child of `<div class="auth-visual-slot">` on the page:
+## Optional slots
+
+The forgot-password and reset-password pages each have an
+`.auth-visual-slot` holding a small original SVG. To use a picture instead,
+add this as the slot's first child (recommended 5:3, 1000 × 600):
 
 ```html
-<img class="auth-visual-image" src="assets/auth/register.webp" alt=""
+<img class="auth-visual-image" src="assets/auth/recovery.webp" alt=""
   decoding="async" loading="lazy">
 ```
 
 The slot is hidden below 900 px wide, where the form comes first.
+`frontend/assets/auth/` and `frontend/assets/ui/` (for future feature-card
+images, 16:9) are kept empty for these.
 
-## Company logos: deliberately not images
+## Company logos
 
-Company marks are generated from the company name (initials on a fixed colour)
-by `frontend/js/company-logo.js`. That is intentional: fetching logos from a
-third-party service let database content choose which external host a
-visitor's browser contacted, and removing it was part of the Safe Browsing
-remediation. Showing real company logos would also suggest an affiliation
-Saple does not have. **Keep the generated marks.**
-
-## Nothing here needs an image to be correct
-
-No page has a blank box, a placeholder label or a broken-image icon waiting
-for a file. Add images when you have good ones, not to fill space.
+Company marks come from the logo a company representative uploads to Supabase
+Storage, or are generated from the company name (initials on a fixed colour)
+by `frontend/js/company-logo.js`. Logos are never fetched from third-party
+services: letting database content choose which external host a visitor's
+browser contacted was removed as part of the Safe Browsing remediation.
