@@ -49,6 +49,11 @@ test('the desktop navigation never wraps; it switches to the menu button instead
   assert.match(nav, /function fitNavigation\(\)/);
   assert.match(nav, /links\.scrollWidth \+ actions\.scrollWidth \+ gap/);
   assert.match(nav, /root\.classList\.toggle\('nav-compact', !fits\)/);
+  // A crowded signed-in row is tried condensed before falling back to the menu button.
+  assert.match(nav, /root\.classList\.add\('nav-condensed'\);\n\s*fits = rowFits\(\);\n\s*if \(!fits\) root\.classList\.remove\('nav-condensed'\);/);
+  const premium = read('css/premium.css');
+  assert.match(premium, /\.nav-condensed \.nav-search \{ flex: 0 0 40px;/);
+  assert.match(premium, /\.nav-condensed \.nav-search:focus-within \.nav-search-input \{[\s\S]*?max-width: none;/);
   assert.match(nav, /new MutationObserver\(requestNavigationFit\)/);
   assert.match(theme, /classList\.add\('nav-compact'\)/);
   assert.match(css, /\.nav-compact \.nav-toggle \{\n  display: grid;/);

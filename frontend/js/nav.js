@@ -393,11 +393,19 @@ function fitNavigation() {
   // Measure the full row in its desktop form. Class changes inside one task
   // are not painted, so this never flickers.
   const wasCompact = root.classList.contains('nav-compact');
-  root.classList.remove('nav-compact');
-  const menuStyle = getComputedStyle(navigationMenu);
-  const gap = parseFloat(menuStyle.columnGap) || 0;
-  const needed = links.scrollWidth + actions.scrollWidth + gap;
-  const fits = needed <= navigationMenu.clientWidth + 1;
+  root.classList.remove('nav-compact', 'nav-condensed');
+  const rowFits = () => {
+    const gap = parseFloat(getComputedStyle(navigationMenu).columnGap) || 0;
+    return links.scrollWidth + actions.scrollWidth + gap <= navigationMenu.clientWidth + 1;
+  };
+  let fits = rowFits();
+  if (!fits) {
+    // A signed-in row carries more controls. Before giving up the desktop
+    // row, try it condensed: the search becomes a button that opens in place.
+    root.classList.add('nav-condensed');
+    fits = rowFits();
+    if (!fits) root.classList.remove('nav-condensed');
+  }
   root.classList.toggle('nav-compact', !fits);
   if (fits && wasCompact) closeNavigation();
 }
