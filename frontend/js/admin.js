@@ -8,6 +8,8 @@ const adminStatus = document.querySelector('#admin-status');
 const pendingCount = document.querySelector('#pending-count');
 const pendingList = document.querySelector('#pending-list');
 const refreshButton = document.querySelector('#refresh-queue');
+const queueSort = document.querySelector('#queue-sort');
+let queueItems = [];
 const reviewPlaceholder = document.querySelector('#review-placeholder');
 const reviewContent = document.querySelector('#review-content');
 const reviewTitle = document.querySelector('#review-title');
@@ -67,6 +69,25 @@ function createDefinitionList(entries) {
   return list;
 }
 
+function roleOf(submission) {
+  return submission.salary?.roleName || submission.review?.roleName || submission.interview?.roleName || '';
+}
+
+// The queue is sorted in the browser; the server always returns it oldest first.
+const QUEUE_ORDER = {
+  oldest: (a, b) => new Date(a.submittedAt) - new Date(b.submittedAt),
+  newest: (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
+  'company-asc': (a, b) => a.companyName.localeCompare(b.companyName),
+  'company-desc': (a, b) => b.companyName.localeCompare(a.companyName),
+  type: (a, b) => a.submissionType.localeCompare(b.submissionType) || QUEUE_ORDER.oldest(a, b),
+  // Submissions without a role go last.
+  role: (a, b) => (!roleOf(a) - !roleOf(b)) || roleOf(a).localeCompare(roleOf(b)) || QUEUE_ORDER.oldest(a, b)
+};
+
+function sortedQueue() {
+  return [...queueItems].sort(QUEUE_ORDER[queueSort?.value] || QUEUE_ORDER.oldest);
+}
+
 function renderQueue(submissions) {
   pendingList.replaceChildren();
   pendingCount.textContent = String(submissions.length);
@@ -91,10 +112,7 @@ function renderQueue(submissions) {
     title.textContent = submission.companyName;
     meta.className = 'pending-card-meta';
     meta.textContent = `#${submission.submissionId} · ${submission.submissionType} · ${submission.verificationStatus} · ${formatDate(submission.submittedAt)}`;
-    role.textContent = submission.salary?.roleName
-      || submission.review?.roleName
-      || submission.interview?.roleName
-      || 'No job role supplied';
+    role.textContent = roleOf(submission) || 'No job role supplied';
     button.className = 'button button-secondary button-small';
     button.type = 'button';
     button.textContent = 'Review';
@@ -109,8 +127,8 @@ async function loadQueue() {
   refreshButton.disabled = true;
 
   try {
-    const submissions = await apiRequest('/api/admin/submissions/pending', { auth: true });
-    renderQueue(submissions);
+    queueItems = await apiRequest('/api/admin/submissions/pending', { auth: true });
+    renderQueue(sortedQueue());
   } catch (error) {
     pendingList.setAttribute('aria-busy', 'false');
     showStatus(error.message, 'error');
@@ -352,6 +370,7 @@ decisionButtons.forEach((button) => {
   button.addEventListener('click', () => requestDecision(button.dataset.decision));
 });
 refreshButton.addEventListener('click', loadQueue);
+queueSort?.addEventListener('change', () => renderQueue(sortedQueue()));
 document.querySelector('#refresh-verifications').addEventListener('click', loadVerifications);
 document.querySelector('#refresh-reports').addEventListener('click', loadReports);
 confirmDecisionButton.addEventListener('click', confirmDecision);

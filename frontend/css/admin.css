@@ -228,3 +228,6 @@
     flex: 1 1 100%;
   }
 }
+
+/* Review queue sort control */
+.queue-sort { max-width: 20rem; margin: 0 0 1rem; }

@@ -66,7 +66,7 @@
           <div class="card summary-card">
             <p class="eyebrow">Current queue</p>
             <h2 id="queue-summary-heading"><span id="pending-count">0</span> pending</h2>
-            <p>Oldest submissions appear first.</p>
+            <p>Oldest first by default; sort the queue below.</p>
           </div>
           <div class="trust-note"><strong>Atomic decisions</strong><span>Status changes and audit records commit
               together or roll back together.</span></div>
@@ -82,6 +82,17 @@
                 <h2 id="pending-heading">Pending submissions</h2>
               </div><button id="refresh-queue" class="button button-secondary button-small"
                 type="button">Refresh</button>
+            </div>
+            <div class="queue-sort form-group">
+              <label for="queue-sort">Sort by</label>
+              <select id="queue-sort">
+                <option value="oldest">Date submitted (oldest first)</option>
+                <option value="newest">Date submitted (newest first)</option>
+                <option value="company-asc">Company name (A–Z)</option>
+                <option value="company-desc">Company name (Z–A)</option>
+                <option value="type">Submission type</option>
+                <option value="role">Job role (A–Z)</option>
+              </select>
             </div>
             <div id="pending-list" class="pending-list" aria-live="polite" aria-busy="true"></div>
           </section>
