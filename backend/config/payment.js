@@ -2,7 +2,14 @@
 // (backend/.env locally, Cloudflare secrets in production) and are never
 // returned, logged or included in an error message.
 
-const DEFAULT_SSLCOMMERZ_BASE_URL = 'https://sandbox.sslcommerz.com';
+// SSLCommerz API v4 uses two hosts. Sandbox checkout sessions are created on
+// sandbox-gw.sslcommerz.com and transactions are validated on
+// sandbox.sslcommerz.com; live uses securepay.sslcommerz.com for both.
+// SSLCOMMERZ_SESSION_BASE_URL and SSLCOMMERZ_VALIDATION_BASE_URL set each
+// host; SSLCOMMERZ_BASE_URL, if set, is the fallback for either.
+const DEFAULT_SSLCOMMERZ_SESSION_BASE_URL = 'https://sandbox-gw.sslcommerz.com';
+const DEFAULT_SSLCOMMERZ_VALIDATION_BASE_URL = 'https://sandbox.sslcommerz.com';
+const DEFAULT_SSLCOMMERZ_BASE_URL = DEFAULT_SSLCOMMERZ_VALIDATION_BASE_URL;
 
 function httpsOrigin(rawValue, name) {
   let url;
@@ -29,13 +36,24 @@ function getSslcommerzConfig() {
   const storePassword = process.env.SSLCOMMERZ_STORE_PASSWORD?.trim();
   const publicOrigin = process.env.PUBLIC_API_ORIGIN?.trim();
   if (!storeId || !storePassword || !publicOrigin) return null;
-  const baseUrl = httpsOrigin(process.env.SSLCOMMERZ_BASE_URL?.trim() || DEFAULT_SSLCOMMERZ_BASE_URL, 'SSLCOMMERZ_BASE_URL');
+  const shared = process.env.SSLCOMMERZ_BASE_URL?.trim();
+  const sessionBaseUrl = httpsOrigin(
+    process.env.SSLCOMMERZ_SESSION_BASE_URL?.trim() || shared || DEFAULT_SSLCOMMERZ_SESSION_BASE_URL,
+    'SSLCOMMERZ_SESSION_BASE_URL'
+  );
+  const validationBaseUrl = httpsOrigin(
+    process.env.SSLCOMMERZ_VALIDATION_BASE_URL?.trim() || shared || DEFAULT_SSLCOMMERZ_VALIDATION_BASE_URL,
+    'SSLCOMMERZ_VALIDATION_BASE_URL'
+  );
+  const isSandbox = (origin) => /^sandbox[.-]/.test(new URL(origin).hostname);
   return {
     storeId,
     storePassword,
-    baseUrl,
+    sessionBaseUrl,
+    validationBaseUrl,
     publicOrigin: httpsOrigin(publicOrigin, 'PUBLIC_API_ORIGIN'),
-    sandbox: new URL(baseUrl).hostname.startsWith('sandbox.')
+    // Only when both hosts are sandbox hosts; a mix is treated as live.
+    sandbox: isSandbox(sessionBaseUrl) && isSandbox(validationBaseUrl)
   };
 }
 
@@ -63,6 +81,8 @@ function getPremiumAiLimits() {
 
 module.exports = {
   DEFAULT_SSLCOMMERZ_BASE_URL,
+  DEFAULT_SSLCOMMERZ_SESSION_BASE_URL,
+  DEFAULT_SSLCOMMERZ_VALIDATION_BASE_URL,
   gatewayName,
   getSslcommerzConfig,
   getPublicPaymentStatus,

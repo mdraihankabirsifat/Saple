@@ -51,6 +51,13 @@
     "SMTP_SECURE": "false",
     "SMTP_USER": "www.raihankabireusc@gmail.com",
     "SMTP_FROM": "Saple <www.raihankabireusc@gmail.com>",
-    "SECURITY_CONTACT": "mailto:www.raihankabireusc@gmail.com"
+    "SECURITY_CONTACT": "mailto:www.raihankabireusc@gmail.com",
+    "PAYMENT_GATEWAY": "sslcommerz",
+    "SSLCOMMERZ_SESSION_BASE_URL": "https://sandbox-gw.sslcommerz.com",
+    "SSLCOMMERZ_VALIDATION_BASE_URL": "https://sandbox.sslcommerz.com",
+    "PUBLIC_API_ORIGIN": "https://saple.www-raihankabireusc.workers.dev",
+    "PREMIUM_AI_MODEL": "openai/gpt-oss-120b",
+    "PREMIUM_AI_DAILY_CHAT_LIMIT": "30",
+    "PREMIUM_RESUME_DAILY_LIMIT": "5"
   }
 }

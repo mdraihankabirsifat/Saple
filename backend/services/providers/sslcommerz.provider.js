@@ -65,7 +65,7 @@ async function createSession(config, {
     product_profile: 'general'
   });
 
-  const data = await fetchJson(`${config.baseUrl}${SESSION_PATH}`, {
+  const data = await fetchJson(`${config.sessionBaseUrl}${SESSION_PATH}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body
@@ -89,7 +89,7 @@ async function validateTransaction(config, valId) {
     store_passwd: config.storePassword,
     format: 'json'
   });
-  const data = await fetchJson(`${config.baseUrl}${VALIDATION_PATH}?${query}`, {
+  const data = await fetchJson(`${config.validationBaseUrl}${VALIDATION_PATH}?${query}`, {
     method: 'GET',
     headers: { Accept: 'application/json' }
   });

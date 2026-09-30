@@ -20,9 +20,12 @@ const applicationService = require('../services/application.service');
 // badge, profile views, Discover Talent and Premium AI.
 
 const ROOT = path.resolve(__dirname, '../..');
+// SSLCommerz v4 sandbox: sessions on sandbox-gw, validation on sandbox.
+const GATEWAY_SESSION = 'https://sandbox-gw.sslcommerz.com';
 const GATEWAY = 'https://sandbox.sslcommerz.com';
 const AI_BASE = 'https://ai.example.test/v1';
-const ENV_KEYS = ['JWT_SECRET', 'PAYMENT_GATEWAY', 'SSLCOMMERZ_BASE_URL', 'SSLCOMMERZ_STORE_ID',
+const ENV_KEYS = ['JWT_SECRET', 'PAYMENT_GATEWAY', 'SSLCOMMERZ_BASE_URL', 'SSLCOMMERZ_SESSION_BASE_URL',
+  'SSLCOMMERZ_VALIDATION_BASE_URL', 'SSLCOMMERZ_STORE_ID',
   'SSLCOMMERZ_STORE_PASSWORD', 'PUBLIC_API_ORIGIN', 'PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT'];
 const savedEnv = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
 const savedDatabase = {};
@@ -46,7 +49,7 @@ function jsonResponse(body, status = 200) {
 
 global.fetch = async (url, options = {}) => {
   const href = String(url);
-  if (href.startsWith(`${GATEWAY}/gwprocess/`)) {
+  if (href.startsWith(`${GATEWAY_SESSION}/gwprocess/`)) {
     const body = new URLSearchParams(String(options.body));
     gateway.sessions.push(body);
     if (gateway.sessionFails) return jsonResponse({ status: 'FAILED', failedreason: 'Store is not active' });
@@ -104,13 +107,13 @@ test.before(async () => {
   Object.assign(process.env, {
     JWT_SECRET: 'premium-test-secret-with-sufficient-local-entropy-only',
     PAYMENT_GATEWAY: 'sslcommerz',
-    SSLCOMMERZ_BASE_URL: GATEWAY,
     SSLCOMMERZ_STORE_ID: 'saple-test-store',
     SSLCOMMERZ_STORE_PASSWORD: 'test-only-store-password',
     PUBLIC_API_ORIGIN: 'https://saple.example.test'
   });
-  delete process.env.PREMIUM_AI_MODEL;
-  delete process.env.PREMIUM_RESUME_DAILY_LIMIT;
+  // The documented sandbox hosts are the defaults, so none is set here.
+  for (const key of ['SSLCOMMERZ_BASE_URL', 'SSLCOMMERZ_SESSION_BASE_URL', 'SSLCOMMERZ_VALIDATION_BASE_URL',
+    'PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT']) delete process.env[key];
 
   const { PGlite } = await import('@electric-sql/pglite');
   pg = new PGlite();
@@ -239,15 +242,35 @@ test('payment configuration is null without credentials and refuses insecure gat
   } finally {
     process.env.SSLCOMMERZ_STORE_PASSWORD = saved;
   }
-  const savedBase = process.env.SSLCOMMERZ_BASE_URL;
-  process.env.SSLCOMMERZ_BASE_URL = 'http://sandbox.sslcommerz.com';
+  process.env.SSLCOMMERZ_SESSION_BASE_URL = 'http://sandbox-gw.sslcommerz.com';
   try {
     assert.throws(() => paymentConfig.getSslcommerzConfig(), /HTTPS/);
   } finally {
-    process.env.SSLCOMMERZ_BASE_URL = savedBase;
+    delete process.env.SSLCOMMERZ_SESSION_BASE_URL;
   }
   // The public status says whether checkout works; it never includes credentials.
   assert.doesNotMatch(JSON.stringify(paymentConfig.getPublicPaymentStatus()), /saple-test-store|test-only-store-password/);
+});
+
+test('sessions and validation use their own SSLCommerz hosts, and live needs both hosts set', () => {
+  const sandbox = paymentConfig.getSslcommerzConfig();
+  assert.deepEqual([sandbox.sessionBaseUrl, sandbox.validationBaseUrl, sandbox.sandbox],
+    ['https://sandbox-gw.sslcommerz.com', 'https://sandbox.sslcommerz.com', true]);
+
+  // One shared base still works, and the specific settings win over it.
+  process.env.SSLCOMMERZ_BASE_URL = 'https://securepay.sslcommerz.com';
+  try {
+    const live = paymentConfig.getSslcommerzConfig();
+    assert.deepEqual([live.sessionBaseUrl, live.validationBaseUrl, live.sandbox],
+      ['https://securepay.sslcommerz.com', 'https://securepay.sslcommerz.com', false]);
+    process.env.SSLCOMMERZ_SESSION_BASE_URL = 'https://sandbox-gw.sslcommerz.com';
+    const mixed = paymentConfig.getSslcommerzConfig();
+    assert.equal(mixed.sessionBaseUrl, 'https://sandbox-gw.sslcommerz.com');
+    assert.equal(mixed.sandbox, false);
+  } finally {
+    delete process.env.SSLCOMMERZ_BASE_URL;
+    delete process.env.SSLCOMMERZ_SESSION_BASE_URL;
+  }
 });
 
 test('the SSLCommerz adapter sends the required session fields and parses validation strictly', async () => {

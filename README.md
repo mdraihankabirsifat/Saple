@@ -94,7 +94,7 @@ Prepaid access · no automatic renewal. Buying again adds the new days after the
 
 1. Run `database/postgres/migrations/009_premium_subscriptions.sql` in the Supabase SQL Editor before deploying the Premium backend. It is additive and re-runnable, and existing vacancies stay free.
 2. Optionally, run `database/postgres/06_premium_demo_content.sql` after migration 009 to mark about a third of the synthetic bulk demo vacancies as Premium. It never selects a real vacancy.
-3. Set the sandbox variables listed in `backend/.env.example` (`PAYMENT_GATEWAY`, `SSLCOMMERZ_BASE_URL`, `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `PUBLIC_API_ORIGIN`, and `PREMIUM_AI_MODEL` for the Premium AI tools). Without them the pricing page still works and checkout says online payment is not available yet.
+3. The non-secret settings (`PAYMENT_GATEWAY`, the SSLCommerz sandbox session and validation hosts, `PUBLIC_API_ORIGIN`, `PREMIUM_AI_MODEL` and the daily limits) are in `wrangler.jsonc`, and listed in `backend/.env.example` for local runs. The store credentials are Cloudflare secrets: `npx wrangler secret put SSLCOMMERZ_STORE_ID` and `npx wrangler secret put SSLCOMMERZ_STORE_PASSWORD`. Without them the pricing page still works and checkout says online payment is not available yet.
 
 ## Screenshots
 
