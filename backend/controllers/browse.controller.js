@@ -1,4 +1,5 @@
 const browseService = require('../services/browse.service');
+const premiumService = require('../services/premium.service');
 const { sendSuccess } = require('../utils/apiResponse');
 
 async function getSalaries(request, response, next) {
@@ -18,7 +19,7 @@ async function getReviews(request, response, next) {
 async function getInterviews(request, response, next) {
   try {
     return sendSuccess(response, 200, 'Approved interview experiences retrieved successfully',
-      await browseService.getPublicInterviews(request.query));
+      await premiumService.gateInterviews(await browseService.getPublicInterviews(request.query), request.user?.userId));
   } catch (error) { return next(error); }
 }
 

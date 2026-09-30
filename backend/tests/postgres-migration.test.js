@@ -6,9 +6,9 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-test('PostgreSQL schema declares 26 tables, five views, and token-version revocation', () => {
+test('PostgreSQL schema declares 34 tables, five views, and token-version revocation', () => {
   const schema = read('database/postgres/01_final_schema_postgres.sql');
-  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 26);
+  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 34);
   assert.equal((schema.match(/^CREATE OR REPLACE VIEW /gm) || []).length, 5);
   assert.match(schema, /token_version\s+INTEGER DEFAULT 0 NOT NULL/i);
   assert.match(schema, /ck_users_token_version CHECK \(token_version >= 0\)/i);

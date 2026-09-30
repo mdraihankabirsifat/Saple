@@ -24,12 +24,14 @@ const FAILURE = Object.freeze({
 });
 
 class SapleApiError extends Error {
-  constructor(kind, message, { status = null, retryable = false } = {}) {
+  constructor(kind, message, { status = null, retryable = false, code = null } = {}) {
     super(message);
     this.name = 'SapleApiError';
     this.kind = kind;
     this.status = status;
     this.retryable = retryable;
+    // A short machine-readable reason from the server, such as PREMIUM_REQUIRED.
+    this.code = code;
   }
 }
 
@@ -85,6 +87,13 @@ const API_BASE_URL = resolveApiBaseUrl();
 const IS_LOCAL_DEVELOPMENT = isLocalHostname(window.location.hostname);
 
 function classifyHttpFailure(status, body) {
+  const error = classifyHttpStatus(status, body);
+  const code = body?.detail?.code;
+  if (typeof code === 'string' && /^[A-Z_]{3,40}$/.test(code)) error.code = code;
+  return error;
+}
+
+function classifyHttpStatus(status, body) {
   if (status === 401) return new SapleApiError('AUTH', body?.message || FAILURE.AUTH, { status });
   if (status === 403) return new SapleApiError('FORBIDDEN', body?.message || FAILURE.FORBIDDEN, { status });
   if (status === 404) return new SapleApiError('NOT_FOUND', body?.message || FAILURE.NOT_FOUND, { status });
@@ -108,6 +117,19 @@ function classifyHttpFailure(status, body) {
 }
 
 async function apiRequest(path, options = {}) {
+  // Optional sign-in: a public read that shows more to a signed-in member.
+  // The token is sent when there is one; if it has expired the same read is
+  // repeated anonymously, so a stale session never hides public content.
+  if (options.auth === 'optional') {
+    if (!getToken()) return apiRequest(path, { ...options, auth: false });
+    try {
+      return await apiRequest(path, { ...options, auth: true });
+    } catch (error) {
+      if (error.status === 401) return apiRequest(path, { ...options, auth: false });
+      throw error;
+    }
+  }
+
   const {
     method = 'GET',
     body,

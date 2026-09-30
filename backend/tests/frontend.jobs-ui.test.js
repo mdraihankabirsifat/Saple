@@ -75,8 +75,9 @@ test('the representative workspace uses a real tab pattern', () => {
   const script = read('js/representative.js');
 
   assert.match(html, /role="tablist"/);
-  assert.equal((html.match(/role="tab"/g) || []).length, 3);
-  assert.equal((html.match(/role="tabpanel"/g) || []).length, 3);
+  assert.equal((html.match(/role="tab"/g) || []).length, 4);
+  assert.equal((html.match(/role="tabpanel"/g) || []).length, 4);
+  assert.match(html, /aria-controls="panel-talent"/);
   assert.match(html, /aria-controls="panel-verifications"/);
   assert.match(html, /aria-labelledby="tab-verifications"/);
 

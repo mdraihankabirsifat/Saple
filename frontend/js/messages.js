@@ -1,6 +1,7 @@
 import { apiRequest } from './api.js';
 import { getStoredUser, isAuthenticated } from './auth.js';
 import { el } from './ui.js';
+import { premiumBadge } from './premium-ui.js';
 import { mountAssistant, openSharedView, registerMessagesView } from './assistant.js';
 
 let root;
@@ -57,7 +58,7 @@ function renderList(items) {
     const button = el('button', { className: 'messages-contact', attrs: { type: 'button' } }, [
       avatar(item),
       el('span', { className: 'messages-contact-copy' }, [
-        el('strong', { text: item.fullName }),
+        el('strong', {}, [item.fullName, item.premiumBadge ? ' ' : null, premiumBadge(item.premiumBadge)]),
         el('span', { text: item.lastMessagePreview || 'Message deleted' })
       ]),
       el('span', { className: 'messages-contact-meta' }, [
@@ -173,7 +174,7 @@ function renderPeople(items) {
     const button = el('button', { className: 'messages-contact', attrs: { type: 'button' } }, [
       avatar(person),
       el('span', { className: 'messages-contact-copy' }, [
-        el('strong', { text: person.fullName }),
+        el('strong', {}, [person.fullName, person.premiumBadge ? ' ' : null, premiumBadge(person.premiumBadge)]),
         el('span', { text: person.displayLabel || 'Saple member' })
       ])
     ]);

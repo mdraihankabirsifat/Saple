@@ -4,7 +4,7 @@
 --
 -- What this is
 --   An OPTIONAL academic/demo population script. It enlarges an already
---   prepared Saple database (schema from 01 or migrations 001-008, plus the
+--   prepared Saple database (schema from 01 or migrations 001-009, plus the
 --   demo data from 02) so the site looks like it has been used by many people.
 --
 -- What this is NOT
@@ -1229,7 +1229,7 @@ WHERE NOT (SELECT has_jobs FROM bulk_state);
 
 INSERT INTO job_postings (job_id, company_id, created_by_user_id, created_by_assignment_id, role_id, title,
   description, requirements, location, employment_type, work_mode, salary_min, salary_max, salary_currency,
-  salary_period, application_deadline, job_status, published_at, closed_at, created_at, updated_at)
+  salary_period, application_deadline, job_status, published_at, closed_at, created_at, updated_at, access_level)
 SELECT j.jid, j.company_id, j.creator_id, j.assignment_id, j.role_id, j.title,
   pg_temp.bulk_pick(ARRAY[
       j.company_name || ' is growing its team and is hiring for the ' || j.title || ' role.',
@@ -1302,7 +1302,10 @@ SELECT j.jid, j.company_id, j.creator_id, j.assignment_id, j.role_id, j.title,
   CASE WHEN j.job_status = 'DRAFT' THEN NULL ELSE j.published_at END,
   CASE WHEN j.job_status = 'CLOSED' THEN LEAST(j.deadline + INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 hour') END,
   j.published_at - ((1 + FLOOR(pg_temp.bulk_rand('job-created:' || j.job_key) * 4)) || ' days')::INTERVAL,
-  CASE WHEN j.job_status = 'CLOSED' THEN LEAST(j.deadline + INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 hour') ELSE j.published_at END
+  CASE WHEN j.job_status = 'CLOSED' THEN LEAST(j.deadline + INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 hour') ELSE j.published_at END,
+  -- About a third of the synthetic vacancies are Premium-only, so the Premium
+  -- job gate can be demonstrated. Real vacancies are never touched here.
+  CASE WHEN pg_temp.bulk_rand('job-access:' || j.job_key) < 0.35 THEN 'PREMIUM' ELSE 'FREE' END
 FROM (
   -- Jobs at international employers are for their Bangladesh office, in BDT.
   SELECT bjp.jid, bjp.job_key, bjp.creator_id, bjp.assignment_id, bjp.company_id, bjp.company_name, bjp.city, bjp.category,

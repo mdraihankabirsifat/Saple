@@ -2,6 +2,7 @@ import { apiRequest, fetchApi } from './api.js';
 import { getToken } from './auth.js';
 import { createCompanyLogo } from './company-logo.js';
 import { mountRepresentativeContacts } from './representative-contacts.js';
+import { lockedQuestions } from './premium-ui.js';
 
 const statusMessage = document.querySelector('#details-status');
 const companyContent = document.querySelector('#company-content');
@@ -192,7 +193,7 @@ function renderInterviews(interviews) {
     const card = document.createElement('article'); card.className = 'experience-card card';
     appendTextElement(card, 'h3', item.roleName); appendTextElement(card, 'p', `${item.difficultyLevel} · ${item.roundsCount} rounds · ${item.interviewMode} · ${item.resultStatus}`, 'experience-meta');
     const body = document.createElement('div'); body.className = 'experience-body';
-    appendTextElement(body, 'p', item.processDescription); if (item.questionsSummary) appendTextElement(body, 'p', `Topics: ${item.questionsSummary}`);
+    appendTextElement(body, 'p', item.processDescription); if (item.questionsLocked) body.append(lockedQuestions(item.questionsPreview)); else if (item.questionsSummary) appendTextElement(body, 'p', `Topics: ${item.questionsSummary}`);
     appendTextElement(body, 'p', `${item.durationDays} days · ${item.verificationStatus} · ${item.authorName || 'Anonymous contributor'}`, 'experience-meta');
     card.append(body, reportButton(item.submissionId)); interviewsList.append(card);
   });
@@ -221,7 +222,7 @@ async function loadCompanyDetails() {
       fetchApi(`/api/companies/${companyId}/benefits`),
       fetchApi(`/api/companies/${companyId}/salary-summary`),
       fetchApi(`/api/companies/${companyId}/reviews`),
-      fetchApi(`/api/companies/${companyId}/interviews`)
+      apiRequest(`/api/companies/${companyId}/interviews`, { auth: 'optional' })
     ]);
 
     renderCompany(company);

@@ -1,7 +1,7 @@
 -- SAPLE SUPABASE POSTGRESQL READ-ONLY DEMONSTRATION QUERIES
 -- Run after the PostgreSQL schema and demonstration data scripts.
 
--- 1. Expected project shape: 26 base tables and 5 views.
+-- 1. Expected project shape: 34 base tables and 5 views.
 SELECT
   COUNT(*) FILTER (WHERE table_type = 'BASE TABLE') AS base_table_count,
   COUNT(*) FILTER (WHERE table_type = 'VIEW') AS view_count
@@ -15,6 +15,9 @@ WHERE table_schema = 'public'
     'representative_assignment_actions', 'job_postings', 'job_applications',
     'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
     'user_education', 'user_experience', 'skills', 'user_skills',
+    'premium_plans', 'premium_trial_claims', 'premium_promo_codes',
+    'premium_payments', 'premium_access_periods', 'premium_promo_redemptions',
+    'profile_views', 'premium_ai_usage',
     'vw_public_companies', 'vw_public_approved_reviews',
     'vw_verified_salary_summary', 'vw_community_salary_summary',
     'vw_public_open_jobs'
@@ -31,7 +34,10 @@ WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
     'reports', 'moderation_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
     'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
-    'user_education', 'user_experience', 'skills', 'user_skills'
+    'user_education', 'user_experience', 'skills', 'user_skills',
+    'premium_plans', 'premium_trial_claims', 'premium_promo_codes',
+    'premium_payments', 'premium_access_periods', 'premium_promo_redemptions',
+    'profile_views', 'premium_ai_usage'
   )
 ORDER BY table_name;
 
@@ -46,8 +52,11 @@ WHERE table_schema = 'public'
     'salary_submissions', 'company_reviews', 'interview_experiences',
     'reports', 'moderation_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
-    'job_application_status_history', 'announcements', 'notifications',
-    'user_education', 'user_experience', 'skills', 'user_skills'
+    'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
+    'user_education', 'user_experience', 'skills', 'user_skills',
+    'premium_plans', 'premium_trial_claims', 'premium_promo_codes',
+    'premium_payments', 'premium_access_periods', 'premium_promo_redemptions',
+    'profile_views', 'premium_ai_usage'
   )
 ORDER BY table_name, ordinal_position;
 
@@ -297,3 +306,26 @@ ORDER BY c.relname, t.tgname;
 
 -- 28. The statistical function on the lowest company id present.
 SELECT * FROM saple_company_insight_summary((SELECT MIN(company_id) FROM companies));
+
+-- 29. Premium plans (migration 009): exactly PREMIUM_1M (30 days, 120.00 BDT)
+--     and PREMIUM_3M (90 days, 300.00 BDT).
+SELECT plan_code, duration_days, price_bdt, is_active
+FROM premium_plans
+ORDER BY duration_days;
+
+-- 30. Premium access right now, by database time. A paid period and the
+--     one-day trial are counted separately.
+SELECT
+  (SELECT COUNT(DISTINCT user_id) FROM premium_access_periods
+    WHERE starts_at <= CURRENT_TIMESTAMP AND ends_at > CURRENT_TIMESTAMP) AS active_paid_members,
+  (SELECT COUNT(*) FROM premium_trial_claims
+    WHERE starts_at <= CURRENT_TIMESTAMP AND ends_at > CURRENT_TIMESTAMP) AS active_trials,
+  (SELECT COUNT(*) FROM premium_trial_claims) AS trials_ever_claimed,
+  (SELECT COUNT(*) FROM job_postings WHERE access_level = 'PREMIUM') AS premium_vacancies;
+
+-- 31. Every succeeded payment has exactly one access period. This must
+--     always return no rows.
+SELECT pp.payment_id, pp.status
+FROM premium_payments pp
+LEFT JOIN premium_access_periods ap ON ap.payment_id = pp.payment_id
+WHERE (pp.status = 'SUCCEEDED') <> (ap.access_id IS NOT NULL);

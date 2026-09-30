@@ -113,7 +113,7 @@ test('profile sections are owned, constrained, deduplicated and capped in Postgr
     // The member-facing profile carries the sections and nothing private.
     const profile = await messages.userProfile(1, { includeSections: true });
     assert.deepEqual(Object.keys(profile).sort(), ['avatarUrl', 'bio', 'displayLabel', 'education',
-      'experience', 'fullName', 'headline', 'skills', 'userId']);
+      'experience', 'fullName', 'headline', 'premiumBadge', 'skills', 'userId']);
     assert.equal(profile.headline, 'Engineer');
     assert.deepEqual(profile.skills.map((skill) => skill.name), ['Data modelling', 'Go']);
     assert.equal(profile.education[0].institution, 'BUET');
@@ -154,7 +154,7 @@ test('every section route is signed-in only and writes are rate limited', () => 
   assert.doesNotMatch(controller, /req\.(params|body)\.userId/);
   // Profiles are public and read-only; people search for messaging stays signed-in.
   assert.match(read('backend/routes/user.routes.js'),
-    /'\/:userId\/profile', searchLimit[\s\S]*router\.use\(authenticate\);[\s\S]*'\/search'/);
+    /'\/:userId\/profile', optionalAuthenticate, searchLimit[\s\S]*router\.use\(authenticate\);[\s\S]*'\/search'/);
 });
 
 test('the migration adds the sections without a LinkedIn field', () => {

@@ -1,4 +1,5 @@
-import { fetchApi } from './api.js';
+import { apiRequest } from './api.js';
+import { lockedQuestions } from './premium-ui.js';
 import { clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination } from './ui.js';
 import { buildQuery, companyDetailsLink, createMeta, loadCompanyAndRoleOptions } from './browse-shared.js';
 import { createBrowseController, paginateList, describeRange } from './browse-controls.js';
@@ -27,7 +28,10 @@ function interviewCard(item) {
   const grid = document.createElement('div');
   card.className = 'content-card card'; heading.textContent = `${item.companyName} · ${item.roleName}`;
   grid.className = 'content-grid';
-  grid.append(textBlock('Process', item.processDescription), textBlock('Questions or topics', item.questionsSummary));
+  const questions = textBlock('Questions or topics', item.questionsSummary);
+  // Without Premium the API sends only a short preview, never the full text.
+  if (item.questionsLocked) questions.querySelector('p').replaceWith(lockedQuestions(item.questionsPreview));
+  grid.append(textBlock('Process', item.processDescription), questions);
   card.append(
     heading,
     createMeta([
@@ -62,7 +66,7 @@ async function load(state, controller) {
   if (cached.query !== query) renderSkeletons(results, 3, 'card');
 
   try {
-    if (cached.query !== query) cached = { query, items: await fetchApi(`/api/interviews${query}`) };
+    if (cached.query !== query) cached = { query, items: await apiRequest(`/api/interviews${query}`, { auth: 'optional' }) };
     const sorted = [...cached.items].sort(SORTS[filters.sort] || SORTS['newest']);
     const { items, pagination } = paginateList(sorted, state.page, PAGE_SIZE);
     status.textContent = describeRange(pagination, NOUN);

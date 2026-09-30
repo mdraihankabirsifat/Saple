@@ -1,6 +1,7 @@
 import { apiRequest } from './api.js';
 import { getCurrentUser, isAuthenticated, setStoredUser } from './auth.js';
 import { mountProfessionalProfile } from './professional-profile.js';
+import { mountProfilePremium } from './profile-premium.js';
 
 const loadStatus = document.querySelector('#profile-load-status');
 const content = document.querySelector('#profile-content');
@@ -132,6 +133,8 @@ profileForm.addEventListener('submit', async (event) => {
   }
   try {
     render(await getCurrentUser());
+    // The Premium card loads alongside; it never holds up the profile itself.
+    mountProfilePremium().catch(() => {});
     await mountProfessionalProfile();
     const data = await apiRequest('/api/auth/me/submissions', { auth: true });
     renderContributions(data.submissions);

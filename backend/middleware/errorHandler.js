@@ -26,7 +26,11 @@ function errorHandler(error, request, response, next) {
 
   if (isControlled) {
     console.warn(`${request.method} ${request.originalUrl} failed with ${statusCode}: ${error.message}`);
-    return sendFailure(response, statusCode, error.message);
+    // A short machine-readable code (for example PREMIUM_REQUIRED) when the
+    // service provided one; never anything internal.
+    const detail = typeof error.sapleCode === 'string' && /^[A-Z_]{3,40}$/.test(error.sapleCode)
+      ? { code: error.sapleCode } : undefined;
+    return sendFailure(response, statusCode, error.message, detail);
   }
 
   // Unexpected failures are logged in full on the server and reported to the

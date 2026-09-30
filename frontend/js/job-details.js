@@ -1,10 +1,11 @@
-import { apiRequest, fetchApi } from './api.js';
+import { apiRequest } from './api.js';
 import { getStoredUser, isAuthenticated } from './auth.js';
 import {
   el, clear, renderErrorState, formatDate, formatSalaryRange, humanizeEnum, showToast
 } from './ui.js';
 import { createCompanyLogo } from './company-logo.js';
 import { mountRepresentativeContacts } from './representative-contacts.js';
+import { premiumJobNote } from './premium-ui.js';
 
 const container = document.querySelector('#job-detail');
 const applyHost = document.querySelector('#job-apply');
@@ -23,7 +24,43 @@ function paragraphs(text) {
     .map((block) => el('p', { text: block }));
 }
 
+function premiumTitleBadge(job) {
+  return job.accessLevel === 'PREMIUM'
+    ? el('span', { className: 'premium-badge job-premium-badge', text: 'Premium opportunity' })
+    : null;
+}
+
+// A Premium vacancy for a visitor without Premium: the API sent only what the
+// vacancy is, so that is all this shows.
+function renderLockedJob(job) {
+  clear(container);
+  document.title = `${job.title} | Jobs | Saple`;
+  container.append(
+    el('div', { className: 'job-detail-head' }, [
+      createCompanyLogo(job.companyName, null, document, job.logoUrl),
+      el('div', {}, [
+        el('p', { className: 'eyebrow', text: job.companyName }),
+        el('h1', { className: 'job-detail-title' }, [job.title, ' ', premiumTitleBadge(job)]),
+        el('p', { className: 'job-detail-location', text: `${job.location} · ${humanizeEnum(job.workMode)}` })
+      ])
+    ]),
+    el('dl', { className: 'job-detail-facts' }, [
+      el('div', { className: 'job-fact' }, [
+        el('dt', { text: 'Employment type' }), el('dd', { text: humanizeEnum(job.employmentType) })
+      ]),
+      el('div', { className: 'job-fact' }, [
+        el('dt', { text: 'Published' }), el('dd', { text: formatDate(job.publishedAt) })
+      ])
+    ]),
+    premiumJobNote()
+  );
+}
+
 function renderJob(job) {
+  if (job.locked) {
+    renderLockedJob(job);
+    return;
+  }
   clear(container);
   document.title = `${job.title} | Jobs | Saple`;
 
@@ -32,7 +69,7 @@ function renderJob(job) {
       createCompanyLogo(job.companyName, null, document, job.logoUrl),
       el('div', {}, [
         el('p', { className: 'eyebrow', text: job.companyName }),
-        el('h1', { className: 'job-detail-title', text: job.title }),
+        el('h1', { className: 'job-detail-title' }, [job.title, ' ', premiumTitleBadge(job)]),
         el('p', { className: 'job-detail-location', text: `${job.location} · ${humanizeEnum(job.workMode)}` })
       ])
     ]),
@@ -88,6 +125,23 @@ function renderRoleNotice(message) {
   applyHost.append(el('div', { className: 'apply-panel card' }, [
     el('h2', { className: 'apply-heading', text: 'Apply through Saple' }),
     el('p', { className: 'state-panel-hint', text: message })
+  ]));
+}
+
+function renderPremiumRequired(job) {
+  clear(applyHost);
+  const signedIn = isAuthenticated();
+  applyHost.append(el('div', { className: 'apply-panel card' }, [
+    el('h2', { className: 'apply-heading', text: 'A Premium opportunity' }),
+    el('p', { text: 'Applying to this vacancy is open to Saple Premium members, including during the free one-day trial.' }),
+    el('div', { className: 'apply-actions' }, [
+      el('a', { className: 'button button-primary', text: 'See Premium', attrs: { href: 'premium.html' } }),
+      signedIn ? null : el('a', {
+        className: 'button button-secondary',
+        text: 'Sign in',
+        attrs: { href: `login.html?returnTo=${encodeURIComponent(`job-details.html?id=${job.jobId}`)}` }
+      })
+    ])
   ]));
 }
 
@@ -156,6 +210,7 @@ function renderApplyForm(job) {
         ? error.message
         : `${error.message} You can try again in a moment.`;
       if (error.kind === 'AUTH') renderSignedOutApply(job);
+      if (error.code === 'PREMIUM_REQUIRED') renderPremiumRequired(job);
     }
   });
 
@@ -167,6 +222,16 @@ function renderApplyForm(job) {
 }
 
 function renderApplySection(job) {
+  if (job.locked) {
+    const role = getStoredUser()?.accountRole;
+    if (isAuthenticated() && role && role !== 'USER') {
+      renderRoleNotice('Only job-seeker accounts apply to vacancies.');
+      return;
+    }
+    renderPremiumRequired(job);
+    return;
+  }
+
   if (!isAuthenticated()) {
     renderSignedOutApply(job);
     return;
@@ -199,7 +264,7 @@ async function load() {
   statusMessage.textContent = 'Loading this job…';
 
   try {
-    const job = await fetchApi(`/api/jobs/${encodeURIComponent(jobId)}`);
+    const job = await apiRequest(`/api/jobs/${encodeURIComponent(jobId)}`, { auth: 'optional' });
     statusMessage.textContent = '';
     renderJob(job);
     renderApplySection(job);

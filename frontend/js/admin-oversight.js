@@ -1,5 +1,6 @@
 import { apiRequest } from './api.js';
 import { requireSession } from './require-session.js';
+import { loadPremiumAdmin } from './admin-premium.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination,
   formatDate, formatDateTime, humanizeEnum, showToast, trapFocus
@@ -14,7 +15,8 @@ const tabList = document.querySelector('#oversight-tabs');
 const panels = {
   representatives: document.querySelector('#panel-representatives'),
   announcements: document.querySelector('#panel-announcements'),
-  jobs: document.querySelector('#panel-jobs-oversight')
+  jobs: document.querySelector('#panel-jobs-oversight'),
+  premium: document.querySelector('#panel-premium')
 };
 
 // ---------------------------------------------------------------------------
@@ -489,7 +491,8 @@ async function loadJobsOversight(page = 1) {
 const LOADERS = {
   representatives: loadAssignments,
   announcements: loadAnnouncements,
-  jobs: loadJobsOversight
+  jobs: loadJobsOversight,
+  premium: () => loadPremiumAdmin(panels.premium)
 };
 const loaded = new Set();
 

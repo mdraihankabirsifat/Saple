@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/admin.css">
   <link rel="stylesheet" href="css/workspace.css">
   <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/premium-subscription.css">
 </head>
 
 <body>
@@ -175,6 +176,8 @@
                 aria-controls="panel-announcements" id="tab-announcements">Announcements</button>
               <button class="tab" type="button" role="tab" data-tab="jobs" aria-selected="false" tabindex="-1"
                 aria-controls="panel-jobs-oversight" id="tab-jobs-oversight">Job postings</button>
+              <button class="tab" type="button" role="tab" data-tab="premium" aria-selected="false" tabindex="-1"
+                aria-controls="panel-premium" id="tab-premium">Premium</button>
             </div>
 
             <section id="panel-representatives" class="tab-panel" role="tabpanel"
@@ -236,6 +239,14 @@
               <p class="state-message" role="status" aria-live="polite" data-status></p>
               <div class="queue-list" data-queue></div>
               <div class="pagination-host" data-pagination></div>
+            </section>
+
+            <section id="panel-premium" class="tab-panel" role="tabpanel" aria-labelledby="tab-premium" hidden>
+              <p class="state-message" role="status" aria-live="polite" data-status></p>
+              <div data-premium-overview></div>
+              <h3>Promo and referral codes</h3>
+              <div data-promo-form></div>
+              <div class="queue-list" data-promo-list></div>
             </section>
           </div>
         </section>

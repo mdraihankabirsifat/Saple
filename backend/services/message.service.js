@@ -2,6 +2,7 @@ const repository = require('../repositories/message.repository');
 const storage = require('../config/supabase-storage');
 const createHttpError = require('../utils/httpError');
 const professionalProfiles = require('../repositories/professional-profile.repository');
+const premium = require('./premium.service');
 
 function id(value, label = 'User ID') {
   if (!/^\d+$/.test(String(value))) throw createHttpError(400, `Invalid ${label}`);
@@ -24,14 +25,15 @@ function safeProfile(user) {
 async function userProfile(value, { includeSections = false } = {}) {
   const user = await repository.profile(id(value));
   if (!user) throw createHttpError(404, 'User not found');
+  const [profile] = await premium.withBadges([safeProfile(user)]);
   return includeSections
-    ? { ...safeProfile(user), ...await professionalProfiles.listSections(user.userId) }
-    : safeProfile(user);
+    ? { ...profile, ...await professionalProfiles.listSections(user.userId) }
+    : profile;
 }
 async function listConversations(userId) {
-  return (await repository.conversations(userId)).map((item) => ({ ...safeProfile(item),
+  return premium.withBadges((await repository.conversations(userId)).map((item) => ({ ...safeProfile(item),
     lastMessagePreview: item.lastMessagePreview, lastMessageAt: item.lastMessageAt,
-    lastMessageSenderUserId: item.lastMessageSenderUserId, unreadCount: item.unreadCount }));
+    lastMessageSenderUserId: item.lastMessageSenderUserId, unreadCount: item.unreadCount })));
 }
 async function history(userId, peerValue, beforeValue) {
   const peerId = id(peerValue);

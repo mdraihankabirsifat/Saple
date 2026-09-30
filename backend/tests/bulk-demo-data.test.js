@@ -87,6 +87,28 @@ test('bulk demo data loads cleanly, is re-runnable, and the cleanup removes only
       (SELECT COUNT(DISTINCT overall_rating)::int FROM company_reviews) AS rating_levels`);
     assert.ok(shape.verified_pairs > 50 && shape.open_jobs > 80 && shape.rating_levels >= 7, JSON.stringify(shape));
 
+    // About a third of the synthetic vacancies are Premium-only; no real one is.
+    const premiumShare = () => db.query(`SELECT u.password_hash = '${MARKER}' AS synthetic, COUNT(*)::int AS jobs,
+      COUNT(*) FILTER (WHERE j.access_level = 'PREMIUM')::int AS premium
+      FROM job_postings j JOIN users u ON u.user_id = j.created_by_user_id GROUP BY 1 ORDER BY 1`).then((result) => result.rows);
+    const share = await premiumShare();
+    const synthetic = share.find((row) => row.synthetic);
+    assert.equal(share.find((row) => !row.synthetic).premium, 0);
+    assert.ok(synthetic.premium / synthetic.jobs >= 0.25 && synthetic.premium / synthetic.jobs <= 0.45, JSON.stringify(synthetic));
+
+    // The optional Premium script does nothing when 04 already chose, and on
+    // an all-free database it marks synthetic vacancies only.
+    const premiumDemo = read('06_premium_demo_content.sql');
+    await db.exec(premiumDemo);
+    assert.deepEqual(await premiumShare(), share);
+    await db.exec(`UPDATE job_postings SET access_level = 'FREE'`);
+    await db.exec(premiumDemo);
+    const marked = await premiumShare();
+    assert.equal(marked.find((row) => !row.synthetic).premium, 0);
+    assert.ok(marked.find((row) => row.synthetic).premium > 20);
+    await db.exec(premiumDemo);
+    assert.deepEqual(await premiumShare(), marked);
+
     // A second run adds nothing.
     await db.exec(bulk);
     assert.deepEqual(await counts(), loaded);

@@ -3,6 +3,7 @@ const storage = require('../config/supabase-storage');
 function withLogo(job) { return { ...job, logoUrl: storage.publicUrl('logo', job.logoPath, job.logoUpdatedAt) }; }
 const createHttpError = require('../utils/httpError');
 const validate = require('../utils/validation');
+const premiumService = require('./premium.service');
 const { assertCompanyScope, isAdmin } = require('../utils/authorization');
 
 const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN'];
@@ -12,6 +13,7 @@ const WORK_MODES = ['ONSITE', 'HYBRID', 'REMOTE'];
 const PUBLIC_JOB_SORTS = ['NEWEST', 'DEADLINE', 'COMPANY'];
 const JOB_STATUSES = ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'];
 const SALARY_PERIODS = ['MONTHLY', 'YEARLY'];
+const ACCESS_LEVELS = ['FREE', 'PREMIUM'];
 const CURRENCY_PATTERN = /^[A-Z]{3}$/;
 
 // Lifecycle rules live in one place so the route, the service and the
@@ -49,7 +51,40 @@ function parseJobFilters(query = {}) {
   };
 }
 
-async function listPublicJobs(query = {}) {
+// Who may see a Premium vacancy in full: Premium members (paid or trial),
+// administrators, and representatives of the company that owns it.
+function premiumJobAccess(viewer) {
+  let premium;
+  return async (job) => {
+    if (job.accessLevel !== 'PREMIUM') return true;
+    if (!viewer) return false;
+    if (viewer.role === 'ADMIN') return true;
+    if ((viewer.representativeCompanyIds || []).map(Number).includes(Number(job.companyId))) return true;
+    if (premium === undefined) premium = await premiumService.hasPremium(viewer.userId);
+    return premium;
+  };
+}
+
+// What a free or anonymous visitor sees of a Premium vacancy: enough to know
+// it exists, nothing of its content or pay.
+function premiumTeaser(job) {
+  return {
+    jobId: job.jobId,
+    companyId: job.companyId,
+    companyName: job.companyName,
+    industry: job.industry,
+    title: job.title,
+    location: job.location,
+    workMode: job.workMode,
+    employmentType: job.employmentType,
+    publishedAt: job.publishedAt,
+    logoUrl: job.logoUrl,
+    accessLevel: 'PREMIUM',
+    locked: true
+  };
+}
+
+async function listPublicJobs(query = {}, viewer = null) {
   const filters = parseJobFilters(query);
   const page = validate.pagination(query);
   const sort = validate.enumValue(query.sort, PUBLIC_JOB_SORTS, 'Sort', { required: false }) || 'NEWEST';
@@ -58,16 +93,22 @@ async function listPublicJobs(query = {}) {
     jobRepository.findPublicJobs(filters, { ...page, sort }),
     jobRepository.countPublicJobs(filters)
   ]);
-  return validate.paged(items.map(withLogo), total, page);
+  const canSee = premiumJobAccess(viewer);
+  const visible = [];
+  for (const job of items.map(withLogo)) {
+    visible.push(await canSee(job) ? { ...job, locked: false } : premiumTeaser(job));
+  }
+  return validate.paged(visible, total, page);
 }
 
-async function getPublicJob(jobIdValue) {
+async function getPublicJob(jobIdValue, viewer = null) {
   const jobId = validate.positiveId(jobIdValue, 'job ID');
   const job = await jobRepository.findPublicJobById(jobId);
   // A draft, closed, archived or expired vacancy is indistinguishable from a
   // vacancy that never existed, which is exactly what a public caller should see.
   if (!job) throw createHttpError(404, 'Job posting not found');
-  return withLogo(job);
+  const full = withLogo(job);
+  return await premiumJobAccess(viewer)(full) ? { ...full, locked: false } : premiumTeaser(full);
 }
 
 async function getPublicJobFilterOptions() {
@@ -117,7 +158,9 @@ function parseJobInput(input = {}) {
     salaryPeriod,
     applicationDeadline: validate.isoDate(input.applicationDeadline, 'Application deadline', {
       allowPast: false
-    })
+    }),
+    // FREE unless the representative chooses a Premium-only vacancy.
+    accessLevel: validate.enumValue(input.accessLevel || 'FREE', ACCESS_LEVELS, 'Access level')
   };
 }
 
@@ -186,6 +229,11 @@ async function listManagedJobs(user, query = {}) {
 async function updateJob(user, jobIdValue, input = {}) {
   const { jobId } = await loadScopedJob(user, jobIdValue);
   const parsed = parseJobInput(input);
+  if (input.accessLevel === undefined || input.accessLevel === null || input.accessLevel === '') {
+    // An edit that does not mention access keeps the vacancy's current level.
+    const current = await jobRepository.findManagedJobById(jobId);
+    parsed.accessLevel = current?.accessLevel || 'FREE';
+  }
 
   try {
     return await jobRepository.updateJob(jobId, parsed);

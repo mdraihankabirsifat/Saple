@@ -24,12 +24,17 @@ const REPOSITORY_ERRORS = Object.freeze({
   ACCOUNT_UNAVAILABLE: 403,
   DUPLICATE_APPLICATION: 409,
   APPLICATION_NOT_FOUND: 404,
-  INVALID_TRANSITION: 409
+  INVALID_TRANSITION: 409,
+  PREMIUM_REQUIRED: 403
 });
 
 function rethrow(error) {
   const status = REPOSITORY_ERRORS[error.sapleCode];
-  if (status) throw createHttpError(status, error.message);
+  if (status) {
+    const httpError = createHttpError(status, error.message);
+    if (error.sapleCode === 'PREMIUM_REQUIRED') httpError.sapleCode = 'PREMIUM_REQUIRED';
+    throw httpError;
+  }
   throw error;
 }
 
@@ -78,6 +83,8 @@ async function applyToJob(user, jobIdValue, input = {}) {
     max: 4000
   });
 
+  // A Premium vacancy's access check runs inside the application transaction
+  // (application.repository.createApplication), where the job row is locked.
   try {
     return await applicationRepository.createApplication({
       jobId,

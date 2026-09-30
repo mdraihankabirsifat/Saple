@@ -1,0 +1,70 @@
+// Payment gateway configuration. Credentials come only from the environment
+// (backend/.env locally, Cloudflare secrets in production) and are never
+// returned, logged or included in an error message.
+
+const DEFAULT_SSLCOMMERZ_BASE_URL = 'https://sandbox.sslcommerz.com';
+
+function httpsOrigin(rawValue, name) {
+  let url;
+  try {
+    url = new URL(rawValue);
+  } catch (error) {
+    throw new Error(`${name} must be a valid URL`);
+  }
+  const local = ['localhost', '127.0.0.1'].includes(url.hostname);
+  if ((url.protocol !== 'https:' && !(local && url.protocol === 'http:')) || url.username || url.password) {
+    throw new Error(`${name} must be an HTTPS URL without credentials`);
+  }
+  return url.origin;
+}
+
+function gatewayName() {
+  return (process.env.PAYMENT_GATEWAY || 'sslcommerz').trim().toLowerCase();
+}
+
+// Null when payments are simply not configured yet, so the rest of Saple (and
+// the free trial) keeps working without gateway credentials.
+function getSslcommerzConfig() {
+  const storeId = process.env.SSLCOMMERZ_STORE_ID?.trim();
+  const storePassword = process.env.SSLCOMMERZ_STORE_PASSWORD?.trim();
+  const publicOrigin = process.env.PUBLIC_API_ORIGIN?.trim();
+  if (!storeId || !storePassword || !publicOrigin) return null;
+  const baseUrl = httpsOrigin(process.env.SSLCOMMERZ_BASE_URL?.trim() || DEFAULT_SSLCOMMERZ_BASE_URL, 'SSLCOMMERZ_BASE_URL');
+  return {
+    storeId,
+    storePassword,
+    baseUrl,
+    publicOrigin: httpsOrigin(publicOrigin, 'PUBLIC_API_ORIGIN'),
+    sandbox: new URL(baseUrl).hostname.startsWith('sandbox.')
+  };
+}
+
+// Safe to show anyone: whether checkout can run, and whether it is sandbox.
+function getPublicPaymentStatus() {
+  try {
+    const config = gatewayName() === 'sslcommerz' ? getSslcommerzConfig() : null;
+    return { paymentsEnabled: Boolean(config), gateway: 'SSLCOMMERZ', sandbox: config ? config.sandbox : null };
+  } catch (error) {
+    return { paymentsEnabled: false, gateway: 'SSLCOMMERZ', sandbox: null };
+  }
+}
+
+function readLimit(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isInteger(value) && value > 0 && value <= 1000 ? value : fallback;
+}
+
+function getPremiumAiLimits() {
+  return {
+    chatPerDay: readLimit('PREMIUM_AI_DAILY_CHAT_LIMIT', 30),
+    resumePerDay: readLimit('PREMIUM_RESUME_DAILY_LIMIT', 5)
+  };
+}
+
+module.exports = {
+  DEFAULT_SSLCOMMERZ_BASE_URL,
+  gatewayName,
+  getSslcommerzConfig,
+  getPublicPaymentStatus,
+  getPremiumAiLimits
+};

@@ -5,6 +5,8 @@ const representativeController = require('../controllers/representative.controll
 const authenticate = require('../middleware/authenticate');
 const imageController = require('../controllers/image.controller');
 const professionalProfile = require('../controllers/professional-profile.controller');
+const premiumController = require('../controllers/premium.controller');
+const requirePremium = require('../middleware/requirePremium');
 const { imageUpload } = require('../middleware/imageUpload');
 const { createRateLimit, accountOrAddressKey } = require('../middleware/rateLimit');
 
@@ -28,6 +30,10 @@ router.delete('/avatar', imageController.deleteAvatar);
 const profileWriteLimit = createRateLimit({ limit: 60, windowMs: 60000,
   keyFor: accountOrAddressKey, message: 'Too many profile changes. Please wait a minute.' });
 router.get('/professional-profile', professionalProfile.own);
+
+// Who viewed my profile: the count is for everyone, identities are Premium.
+router.get('/profile-view-summary', premiumController.viewSummary);
+router.get('/profile-viewers', requirePremium, premiumController.viewers);
 router.post('/education', profileWriteLimit, professionalProfile.addEducation);
 router.patch('/education/:recordId', profileWriteLimit, professionalProfile.editEducation);
 router.delete('/education/:recordId', profileWriteLimit, professionalProfile.removeEducation);

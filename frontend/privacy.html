@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/common.css">
   <link rel="stylesheet" href="css/info-pages.css">
   <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/premium-subscription.css">
 </head>
 
 <body>
@@ -104,6 +105,26 @@
           <p>Identifiers that look like email addresses, phone numbers or tokens are stripped from your message before it leaves the server. Even so, do not type passwords, reset links, verification codes or personal details into it.</p>
           <p>Saple Guide conversations are held in browser memory for the visit. Direct messages between signed-in members are stored in cloud PostgreSQL. Deleting one clears its body but keeps its timestamp in the conversation.</p>
 
+        </article>
+        <article class="info-card info-card-wide card">
+          <h2>Saple Premium and payments</h2>
+          <p>Premium payments are processed by SSLCommerz, a Bangladeshi payment gateway. Saple sends it your name, your email address, the plan and the amount, and receives back the transaction and validation identifiers it needs to confirm the payment. Your card number, mobile-wallet account and PIN are entered on SSLCommerz’s pages and never reach Saple.</p>
+          <p>Saple stores each payment’s plan, amount, discount, status and gateway identifiers, your Premium access periods, whether you used the one-day trial, and which promo code you applied. Payments on this academic project currently run in SSLCommerz’s sandbox test mode only.</p>
+        </article>
+        <article class="info-card card">
+          <h2>Profile views</h2>
+          <p>When a signed-in member opens another member’s public profile, Saple records one view per viewer per day: who viewed, whose profile, and when. Views by visitors who are not signed in are not recorded in any identifiable way, and viewing your own profile is never counted.</p>
+          <p>Every member can see how many signed-in members viewed their profile in the last 30 days. Only Premium members can see who those viewers were.</p>
+        </article>
+        <article class="info-card card">
+          <h2>Premium AI and the resume generator</h2>
+          <p>Resume text is sent to the configured AI provider to generate the result. Saple does not store the text you paste or the resume it returns; it keeps only a count of Premium AI requests per day, used to enforce the daily limit.</p>
+          <p>The generator is told to use only the facts you supply, and names, dates, employers, skills and institutions that do not appear in your text are removed from the result. Check every line before you use it.</p>
+        </article>
+        <article class="info-card card">
+          <h2>Premium badge and recruiter visibility</h2>
+          <p>While Premium or the trial is active, a Premium badge appears next to your name on your public profile, in search and in messages, and your public profile is listed first in the Discover Talent list that approved company representatives use. The badge never shows when your Premium ends.</p>
+          <p>Discover Talent shows only public profile fields: your name, picture, headline, a short part of your about text and your skills. It never shows your email, applications, contributions or verification evidence.</p>
         </article>
         <article class="info-card card">
           <h2>Browser storage</h2>

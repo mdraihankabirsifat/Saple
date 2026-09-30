@@ -26,6 +26,10 @@
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
 /representative
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/payment-result.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+/payment-result
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
 /my-applications.html
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
 /my-applications

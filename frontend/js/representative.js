@@ -13,7 +13,8 @@ const tabList = document.querySelector('#representative-tabs');
 const panels = {
   verifications: document.querySelector('#panel-verifications'),
   jobs: document.querySelector('#panel-jobs'),
-  applications: document.querySelector('#panel-applications')
+  applications: document.querySelector('#panel-applications'),
+  talent: document.querySelector('#panel-talent')
 };
 
 let scopes = [];
@@ -280,6 +281,7 @@ function jobRow(job, reload) {
     el('dl', { className: 'queue-facts' }, [
       el('div', {}, [el('dt', { text: 'Salary' }), el('dd', { text: formatSalaryRange(job) })]),
       el('div', {}, [el('dt', { text: 'Deadline' }), el('dd', { text: formatDate(job.applicationDeadline) })]),
+      el('div', {}, [el('dt', { text: 'Access' }), el('dd', { text: job.accessLevel === 'PREMIUM' ? 'Premium members' : 'Everyone' })]),
       el('div', {}, [el('dt', { text: 'Applications' }), el('dd', { text: String(job.applicationCount) })]),
       el('div', {}, [el('dt', { text: 'Updated' }), el('dd', { text: formatDate(job.updatedAt) })])
     ]),
@@ -376,6 +378,9 @@ function openJobDialog(onCreated) {
     { value: 'MONTHLY', label: 'Per month' }, { value: 'YEARLY', label: 'Per year' }
   ]);
   const deadline = el('input', { className: 'input', attrs: { id: 'job-deadline', name: 'applicationDeadline', type: 'date', required: true } });
+  const accessLevel = select('job-access-level', 'accessLevel', [
+    { value: 'FREE', label: 'Everyone' }, { value: 'PREMIUM', label: 'Premium members only' }
+  ]);
   const jobStatus = select('job-initial-status', 'jobStatus', [
     { value: 'DRAFT', label: 'Save as draft' }, { value: 'PUBLISHED', label: 'Publish immediately' }
   ]);
@@ -397,6 +402,7 @@ function openJobDialog(onCreated) {
     field('Maximum salary', salaryMax),
     field('Salary period', salaryPeriod),
     field('Application deadline', deadline, 'Must be today or later.'),
+    field('Who can view and apply', accessLevel, 'Premium vacancies show only a short teaser to members without Premium.'),
     field('Publication', jobStatus),
     el('div', { className: 'dialog-actions' }, [submit, cancel]),
     feedback
@@ -434,6 +440,7 @@ function openJobDialog(onCreated) {
       employmentType: employmentType.value,
       workMode: workMode.value,
       applicationDeadline: deadline.value,
+      accessLevel: accessLevel.value,
       jobStatus: jobStatus.value
     };
     if (salaryMin.value.trim() || salaryMax.value.trim()) {
@@ -586,10 +593,85 @@ async function loadApplications(page = 1) {
 // Tabs and startup
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Discover Talent
+// ---------------------------------------------------------------------------
+
+// Public profile fields only. The order is the server's: Premium members
+// first as promoted profiles, then profile completeness, then recent updates.
+// Nothing here scores or ranks a person.
+function talentCard(person) {
+  const initial = (person.fullName || '?').trim().charAt(0).toUpperCase();
+  const avatar = person.avatarUrl
+    ? el('img', { className: 'talent-avatar', attrs: { src: person.avatarUrl, alt: '', loading: 'lazy' } })
+    : el('span', { className: 'talent-avatar talent-avatar-initial', text: initial, attrs: { 'aria-hidden': 'true' } });
+  const message = el('button', {
+    className: 'button button-secondary button-small',
+    text: 'Message',
+    attrs: { type: 'button', 'data-message-user': person.userId }
+  });
+  return el('li', { className: `talent-card${person.promoted ? ' is-promoted' : ''}` }, [
+    avatar,
+    el('div', { className: 'talent-body' }, [
+      el('p', { className: 'talent-name' }, [
+        el('a', { text: person.fullName, attrs: { href: `user-profile.html?id=${encodeURIComponent(person.userId)}` } }),
+        person.promoted ? el('span', { className: 'premium-badge', text: 'Promoted profile', attrs: { title: person.premiumBadge?.label || 'Premium Saple member' } }) : null
+      ]),
+      person.headline ? el('p', { className: 'talent-meta', text: person.headline }) : null,
+      person.bioExcerpt ? el('p', { text: person.bioExcerpt }) : null,
+      person.skills?.length
+        ? el('ul', { className: 'talent-skills', attrs: { 'aria-label': 'Skills' } }, person.skills.map((skill) => el('li', { text: skill })))
+        : null,
+      el('p', { className: 'talent-meta', text: `Profile ${person.profileCompleteness}% complete` }),
+      message
+    ])
+  ]);
+}
+
+async function loadTalent(page = 1) {
+  const panel = panels.talent;
+  const host = panel.querySelector('[data-queue]');
+  const paginationHost = panel.querySelector('[data-pagination]');
+  const status = panel.querySelector('[data-status]');
+  const query = panel.querySelector('#talent-query')?.value.trim() || '';
+
+  status.textContent = 'Loading member profiles…';
+  renderSkeletons(host, 3, 'row');
+  clear(paginationHost);
+
+  const params = new URLSearchParams({ page: String(page), pageSize: '20' });
+  if (query.length >= 2) params.set('q', query);
+
+  try {
+    const data = await apiRequest(`/api/representative/talent?${params}`, { auth: true });
+    host.removeAttribute('aria-busy');
+    if (!data.items.length) {
+      status.textContent = 'No member profiles match this search.';
+      clear(host);
+      return;
+    }
+    status.textContent = `${data.total} member profile${data.total === 1 ? '' : 's'}.`;
+    host.replaceChildren(...data.items.map(talentCard));
+    renderPagination(paginationHost, {
+      page: data.page, pageSize: data.pageSize, total: data.total,
+      totalPages: Math.max(1, Math.ceil(data.total / data.pageSize))
+    }, loadTalent);
+  } catch (error) {
+    status.textContent = 'Member profiles could not be loaded.';
+    renderErrorState(host, error, () => loadTalent(page));
+  }
+}
+
+panels.talent?.querySelector('[data-talent-search]')?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  loadTalent(1);
+});
+
 const LOADERS = {
   verifications: loadVerifications,
   jobs: loadJobs,
-  applications: loadApplications
+  applications: loadApplications,
+  talent: loadTalent
 };
 const loaded = new Set();
 

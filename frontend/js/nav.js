@@ -233,7 +233,8 @@ const footerExplore = [
   { label: 'Salaries', destination: 'salaries.html' },
   { label: 'Reviews', destination: 'reviews.html' },
   { label: 'Interviews', destination: 'interviews.html' },
-  { label: 'Jobs', destination: 'jobs.html' }
+  { label: 'Jobs', destination: 'jobs.html' },
+  { label: 'Premium', destination: 'premium.html' }
 ];
 
 const footerAccount = [

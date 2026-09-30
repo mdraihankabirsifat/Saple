@@ -1,0 +1,557 @@
+/* ==========================================================================
+   Saple Premium subscription
+   --------------------------------------------------------------------------
+   The Premium page, the payment result page, and the small shared pieces
+   other pages use: the member badge, locked interview previews, Premium job
+   teasers, profile viewers, Discover Talent and the admin Premium panel.
+   Built only on the design tokens from premium.css, so dark mode follows.
+   ========================================================================== */
+
+/* 1. Shared pieces ----------------------------------------------------------- */
+
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--saple-gold) 55%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--saple-gold-soft);
+  color: var(--saple-gold-ink);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.premium-badge::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--saple-gold);
+  content: "";
+}
+
+.lock-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Locked interview questions: a short preview that fades out, then the lock. */
+.questions-locked { margin-top: 0.5rem; }
+
+.questions-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  color: var(--text-secondary);
+}
+
+.questions-lock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0;
+  color: var(--saple-gold-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.questions-lock a { color: inherit; text-decoration: underline; text-underline-offset: 0.18em; }
+
+/* Premium job teaser */
+.job-premium-badge { margin-left: 0.35rem; }
+
+.job-locked-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed color-mix(in srgb, var(--saple-gold) 60%, transparent);
+  border-radius: var(--radius-sm);
+  background: var(--saple-gold-soft);
+  color: var(--text-primary);
+}
+
+.job-locked-note a { font-weight: 700; }
+
+/* Profile viewers (own profile) */
+.profile-views-card .profile-views-count {
+  margin: 0.25rem 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--text-primary);
+}
+
+.viewer-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.viewer-item,
+.talent-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.viewer-avatar,
+.talent-avatar {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--surface-muted);
+  object-fit: cover;
+}
+
+.viewer-avatar-initial,
+.talent-avatar-initial {
+  display: grid;
+  place-items: center;
+  color: var(--brand-solid);
+  font-weight: 700;
+}
+
+.viewer-body,
+.talent-body { min-width: 0; }
+
+.viewer-body p,
+.talent-body p { margin: 0; overflow-wrap: anywhere; }
+
+.viewer-meta,
+.talent-meta { color: var(--text-secondary); font-size: 0.88rem; }
+
+/* Discover Talent */
+.talent-list {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.talent-card {
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.talent-card.is-promoted { border-color: color-mix(in srgb, var(--saple-gold) 55%, var(--border)); }
+
+.talent-name { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-weight: 700; }
+
+.talent-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.talent-skills li {
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  font-size: 0.8rem;
+}
+
+.talent-search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.talent-search .input { flex: 1 1 14rem; min-width: 0; }
+
+/* Admin Premium panel */
+.premium-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.premium-stat {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.premium-stat dt { color: var(--text-secondary); font-size: 0.85rem; }
+.premium-stat dd { margin: 0.2rem 0 0; font-family: var(--font-display); font-size: 1.5rem; }
+
+.promo-admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1.25rem;
+}
+
+.promo-admin-form .form-group { margin: 0; }
+.promo-admin-form .input { width: 100%; min-width: 0; }
+#panel-premium h3 { margin: 1.5rem 0 0.75rem; }
+#panel-premium .field-help { margin: 0.25rem 0; }
+
+/* 2. Premium page ---------------------------------------------------------- */
+
+.premium-page { padding-bottom: var(--section-space); }
+
+.premium-page section + section { margin-top: clamp(1.75rem, 4vw, 2.75rem); }
+
+.premium-hero { max-width: 46rem; }
+
+.premium-hero h1 { margin: 0.25rem 0 0.75rem; }
+
+.premium-lead { margin: 0; color: var(--text-secondary); font-size: 1.08rem; }
+
+.premium-renewal {
+  display: inline-block;
+  margin: 1rem 0 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.premium-status {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.premium-status.is-active {
+  border-color: color-mix(in srgb, var(--saple-gold) 55%, var(--border));
+  background: linear-gradient(135deg, var(--saple-gold-soft), transparent 70%), var(--surface);
+}
+
+.premium-status p { margin: 0; }
+.premium-status p + p { margin-top: 0.25rem; color: var(--text-secondary); }
+.premium-status-title { font-weight: 700; }
+
+.premium-trial {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  border-radius: var(--radius-lg);
+  background: var(--saple-forest);
+  color: var(--saple-cream);
+}
+
+:root[data-theme="dark"] .premium-trial { background: var(--surface-muted); color: var(--text-primary); }
+
+.premium-trial h2 { margin: 0; color: inherit; font-size: clamp(1.2rem, 2.6vw, 1.5rem); }
+
+.premium-trial-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0.45rem 0 0;
+  opacity: 0.85;
+}
+
+.premium-trial-notes span::before { margin-right: 0.35rem; color: var(--saple-gold); content: "✓"; }
+
+.premium-trial-state { margin: 0; font-weight: 700; }
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.plan-card h3 { margin: 0; }
+
+.plan-card-featured { border-color: color-mix(in srgb, var(--saple-gold) 60%, var(--border)); }
+
+.plan-card.is-selected { outline: 2px solid var(--brand-solid); outline-offset: 2px; }
+
+.plan-saving {
+  align-self: flex-start;
+  margin: 0 0 0.25rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--saple-gold);
+  color: #1b1405;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.plan-price { margin: 0.25rem 0 0; }
+
+.plan-amount {
+  font-family: var(--font-display);
+  font-size: 2.3rem;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.plan-meta,
+.plan-renewal { margin: 0; color: var(--text-secondary); }
+
+.plan-renewal { font-size: 0.88rem; }
+
+.plan-points {
+  flex: 1 1 auto;
+  margin: 0.6rem 0 1rem;
+  padding-left: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.plan-card .button { align-self: stretch; text-align: center; }
+
+.premium-checkout {
+  max-width: 34rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  scroll-margin-top: 6rem;
+}
+
+.premium-checkout h2 { margin-top: 0; }
+
+.promo-form label { display: block; margin-bottom: 0.35rem; font-weight: 600; }
+
+.promo-row { display: flex; gap: 0.5rem; }
+.promo-row .input { flex: 1 1 auto; min-width: 0; text-transform: uppercase; }
+.promo-row .button { flex: 0 0 auto; white-space: nowrap; }
+
+.quote-lines {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem 1rem;
+  margin: 1.1rem 0;
+}
+
+.quote-lines:empty { display: none; }
+.quote-lines dt, .quote-lines dd { margin: 0; }
+.quote-lines dd { text-align: right; font-variant-numeric: tabular-nums; }
+
+.quote-lines .quote-total {
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--border);
+  font-weight: 800;
+}
+
+.checkout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.premium-fineprint { margin: 0.4rem 0 0; color: var(--text-secondary); font-size: 0.86rem; }
+
+.premium-sandbox { color: var(--saple-gold-ink); font-weight: 600; }
+
+.compare-table { width: 100%; border-collapse: collapse; }
+
+.compare-table th,
+.compare-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.compare-table thead th { color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.compare-table tbody th {
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.compare-table td { width: 6.5rem; text-align: center; }
+.compare-table thead th:not(:first-child) { text-align: center; }
+.compare-table td:last-child { color: var(--brand-solid); font-weight: 600; }
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.tool-card h3 { margin: 0; }
+.tool-intro { margin: 0; color: var(--text-secondary); }
+
+.ai-transcript {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.ai-transcript:empty { display: none; }
+
+.ai-turn { padding: 0.65rem 0.8rem; border-radius: var(--radius-md); overflow-wrap: anywhere; }
+.ai-turn p { margin: 0; }
+.ai-turn p + p { margin-top: 0.5rem; }
+.ai-turn-user { background: var(--surface-muted); }
+.ai-turn-assistant { border: 1px solid var(--border); }
+.ai-turn-label { color: var(--text-tertiary); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; }
+
+.ai-form,
+.resume-form { display: grid; gap: 0.6rem; }
+
+.ai-form .button,
+.resume-form .button { justify-self: start; }
+
+.resume-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.6rem;
+}
+
+.resume-options .form-group { margin: 0; }
+
+.resume-output { margin-top: 1.5rem; }
+
+.resume-output-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.resume-output-bar h3 { margin: 0; }
+.resume-output-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.resume-preview {
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: #fffefb;
+  color: #17201c;
+  overflow-wrap: anywhere;
+}
+
+.resume-name { margin: 0; color: #0f2a21; font-size: 1.8rem; }
+.resume-headline { margin: 0.2rem 0 0; color: #5b6862; }
+.resume-section { margin-top: 1.25rem; }
+
+.resume-section h3 {
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #d9d2bf;
+  color: #1f6b4f;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.resume-section p { margin: 0 0 0.35rem; }
+.resume-entry + .resume-entry { margin-top: 0.75rem; }
+.resume-entry-title { font-weight: 700; }
+.resume-entry-meta { color: #5b6862; font-size: 0.9rem; }
+.resume-entry ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+
+.premium-dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.premium-dialog::backdrop { background: rgba(15, 42, 33, 0.45); }
+.premium-dialog h2 { margin-top: 0; }
+.dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem; }
+
+/* 3. Payment result ------------------------------------------------------- */
+
+.payment-result {
+  max-width: 36rem;
+  margin: clamp(1rem, 5vw, 3rem) auto 0;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.payment-result h1 { margin: 0.25rem 0 0.6rem; font-size: clamp(1.5rem, 4vw, 2rem); }
+.payment-result[data-state="success"] { border-color: color-mix(in srgb, var(--saple-gold) 55%, var(--border)); }
+.payment-result[data-state="success"] h1 { color: var(--brand-solid); }
+.payment-result[data-state="failed"] h1 { color: #a2402f; }
+:root[data-theme="dark"] .payment-result[data-state="failed"] h1 { color: #e59a8a; }
+
+/* 4. Printing a generated resume -------------------------------------------- */
+
+@media print {
+  html.printing-resume body > *:not(main),
+  html.printing-resume main > .container > *:not(#premium-tools),
+  html.printing-resume #premium-tools > *:not(#resume-output),
+  html.printing-resume .resume-output-bar,
+  html.printing-resume #resume-output > .premium-fineprint,
+  html.printing-resume dialog { display: none !important; }
+
+  html.printing-resume body,
+  html.printing-resume .premium-page { padding: 0; margin: 0; background: #fff; }
+
+  html.printing-resume .resume-preview { border: 0; padding: 0; }
+}
+
+@media (max-width: 480px) {
+  .promo-row { flex-direction: column; }
+  .compare-table th, .compare-table td { padding: 0.5rem 0.4rem; font-size: 0.9rem; }
+}

@@ -1,4 +1,4 @@
-import { fetchApi } from './api.js';
+import { apiRequest, fetchApi } from './api.js';
 import {
   el, renderSkeletons, animateCount, prefersReducedMotion,
   formatSalaryRange, formatDate, humanizeEnum
@@ -106,7 +106,7 @@ async function loadLatestJobs() {
   renderSkeletons(container, 4, 'card');
 
   try {
-    const data = await fetchApi(`/api/jobs?pageSize=${RAIL_LIMIT}`);
+    const data = await apiRequest(`/api/jobs?pageSize=${RAIL_LIMIT}`, { auth: 'optional' });
     container.removeAttribute('aria-busy');
     if (!data.items.length) {
       railEmpty(container, 'No vacancies are open right now. Company representatives publish them here.');
@@ -118,7 +118,11 @@ async function loadLatestJobs() {
       kicker: job.companyName,
       title: job.title,
       meta: `${job.location} · ${humanizeEnum(job.workMode)} · ${humanizeEnum(job.employmentType)}`,
-      foot: [
+      // A Premium teaser carries no salary or deadline, so it says what it is.
+      foot: job.locked ? [
+        el('span', { className: 'premium-badge', text: 'Premium opportunity' })
+      ] : [
+        job.accessLevel === 'PREMIUM' ? el('span', { className: 'premium-badge', text: 'Premium' }) : null,
         el('span', { className: 'insight-chip', text: formatSalaryRange(job) }),
         el('span', { className: 'rail-card-meta', text: `Apply by ${formatDate(job.applicationDeadline)}` })
       ]

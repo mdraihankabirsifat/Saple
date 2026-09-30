@@ -1,6 +1,7 @@
 import { apiRequest } from './api.js';
 import { getStoredUser, isAuthenticated } from './auth.js';
 import { el } from './ui.js';
+import { premiumBadge } from './premium-ui.js';
 
 const status = document.querySelector('#user-profile-status');
 const content = document.querySelector('#user-profile-content');
@@ -61,7 +62,7 @@ else apiRequest(`/api/users/${raw}/profile`, { auth: signedIn }).then(({ user })
       el('li', { className: 'professional-skill', text: skill.name })))
   ]) : null;
   content.append(...[el('div', { className: 'public-profile-header' }, [avatar,
-    el('div', {}, [el('h2', { text: user.fullName }),
+    el('div', {}, [el('h2', {}, [user.fullName, ' ', premiumBadge(user.premiumBadge)]),
       user.headline ? el('p', { className: 'public-profile-headline', text: user.headline }) : null,
       el('p', { className: 'professional-meta', text: user.displayLabel || 'Saple member' })]), action]),
   user.bio ? el('section', { className: 'public-profile-section' }, [

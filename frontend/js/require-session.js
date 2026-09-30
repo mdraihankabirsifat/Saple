@@ -23,6 +23,8 @@ const RETURN_PAGES = new Set([
   'submit-review.html',
   'interview-experience.html',
   'job-details.html',
+  'premium.html',
+  'payment-result.html',
   'index.html'
 ]);
 

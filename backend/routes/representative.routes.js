@@ -3,6 +3,7 @@ const jobController = require('../controllers/job.controller');
 const applicationController = require('../controllers/application.controller');
 const verificationController = require('../controllers/verification.controller');
 const representativeController = require('../controllers/representative.controller');
+const premiumController = require('../controllers/premium.controller');
 const authenticate = require('../middleware/authenticate');
 const requireCompanyRepresentative = require('../middleware/requireCompanyRepresentative');
 const imageController = require('../controllers/image.controller');
@@ -17,6 +18,8 @@ const router = express.Router();
 router.use(authenticate, requireCompanyRepresentative);
 
 router.get('/workspace', representativeController.getWorkspace);
+// Discover Talent: public profile fields only; Premium members are listed first.
+router.get('/talent', premiumController.talent);
 router.put('/companies/:companyId/logo', (request, response, next) => { try { imageController.companyIdFrom(request); next(); } catch (error) { next(error); } }, imageUpload('logo', 1024 * 1024), imageController.putLogo);
 router.delete('/companies/:companyId/logo', imageController.deleteLogo);
 

@@ -1,4 +1,4 @@
-import { fetchApi } from './api.js';
+import { apiRequest, fetchApi } from './api.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState,
   renderPagination, formatDate, formatSalaryRange, humanizeEnum
@@ -15,7 +15,10 @@ const countLabel = document.querySelector('#job-count');
 const FILTER_FIELDS = ['search', 'companyId', 'roleId', 'location', 'workMode', 'employmentType', 'sort'];
 
 function jobCard(job) {
-  const deadline = el('span', {
+  // A Premium vacancy reaches a visitor without access as a teaser only: the
+  // API leaves out its salary, deadline and description.
+  const locked = job.locked === true;
+  const deadline = locked ? null : el('span', {
     className: 'job-deadline',
     text: `Apply by ${formatDate(job.applicationDeadline)}`
   });
@@ -31,19 +34,22 @@ function jobCard(job) {
       createCompanyLogo(job.companyName, null, document, job.logoUrl),
       el('div', { className: 'job-card-identity' }, [
         el('h2', { className: 'job-card-title' }, [
-          el('a', { className: 'job-card-link', text: job.title, attrs: { href: `job-details.html?id=${encodeURIComponent(job.jobId)}` } })
+          el('a', { className: 'job-card-link', text: job.title, attrs: { href: `job-details.html?id=${encodeURIComponent(job.jobId)}` } }),
+          job.accessLevel === 'PREMIUM'
+            ? el('span', { className: 'premium-badge job-premium-badge', text: 'Premium opportunity' })
+            : null
         ]),
         el('p', { className: 'job-card-company', text: job.companyName }),
         el('p', { className: 'job-card-location', text: job.location })
       ])
     ]),
-    el('p', { className: 'job-card-salary', text: formatSalaryRange(job) }),
+    el('p', { className: 'job-card-salary', text: locked ? 'Full details for Premium members' : formatSalaryRange(job) }),
     tags,
     el('div', { className: 'job-card-foot' }, [
       deadline,
       el('a', {
         className: 'button button-secondary button-small',
-        text: 'View details',
+        text: locked ? 'Preview' : 'View details',
         attrs: { href: `job-details.html?id=${encodeURIComponent(job.jobId)}` }
       })
     ])
@@ -92,7 +98,7 @@ async function loadJobs(state, controller) {
   const params = new URLSearchParams({ ...state.filters, page: String(state.page) });
 
   try {
-    const data = await fetchApi(`/api/jobs?${params.toString()}`);
+    const data = await apiRequest(`/api/jobs?${params.toString()}`, { auth: 'optional' });
     results.removeAttribute('aria-busy');
 
     if (countLabel) {

@@ -154,7 +154,8 @@ const DOMAINS = [
   { title: 'Company reference', tone: 'reference', tables: ['companies', 'job_roles', 'benefits', 'company_benefits'] },
   { title: 'Contributions', tone: 'content', tables: ['submissions', 'salary_submissions', 'company_reviews', 'interview_experiences'] },
   { title: 'Moderation and announcements', tone: 'audit', tables: ['reports', 'moderation_actions', 'announcements'] },
-  { title: 'Jobs and applications', tone: 'jobs', tables: ['job_postings', 'job_applications', 'job_application_status_history'] }
+  { title: 'Jobs and applications', tone: 'jobs', tables: ['job_postings', 'job_applications', 'job_application_status_history'] },
+  { title: 'Premium', tone: 'premium', tables: ['premium_plans', 'premium_payments', 'premium_access_periods', 'premium_trial_claims', 'premium_promo_codes', 'premium_promo_redemptions', 'profile_views', 'premium_ai_usage'] }
 ];
 
 const BOX_WIDTH = 330;
@@ -342,6 +343,7 @@ function renderHtml(svg) {
   .entity-content .head { fill: #8a5a1f; }   .domain-content { fill: #8a5a1f; }
   .entity-audit .head { fill: #8a3a3a; }     .domain-audit { fill: #8a3a3a; }
   .entity-jobs .head { fill: #235e6b; }      .domain-jobs { fill: #235e6b; }
+  .entity-premium .head { fill: #8a6d1f; }   .domain-premium { fill: #8a6d1f; }
   .rel { fill: none; stroke: #6d8479; stroke-width: 1.6; stroke-opacity: 0.8; }
   .rel-restrict { stroke: #4a5f55; stroke-width: 2.6; }
   .mk { fill: none; stroke: #4a5f55; stroke-width: 2; }

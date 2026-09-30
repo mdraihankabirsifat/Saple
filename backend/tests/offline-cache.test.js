@@ -90,14 +90,15 @@ test('the service worker never caches a private page, script or stylesheet', () 
   for (const file of [
     'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
     'employee-verification.html', 'js/notifications.js', 'js/admin.js',
-    'js/representative.js', 'js/profile.js', 'js/professional-profile.js', 'js/messages.js', 'js/user-profile.js'
+    'js/representative.js', 'js/profile.js', 'js/professional-profile.js', 'js/messages.js', 'js/user-profile.js',
+    'payment-result.html', 'js/payment-result.js', 'js/profile-premium.js', 'js/admin-premium.js'
   ]) {
     assert.equal(assets.includes(`'${file}'`), false, `${file} must not be cached`);
     assert.equal(privatePaths.includes(`'${file}'`), true, `${file} must be purged`);
   }
 
   // The cache name is versioned and older versions are deleted on activation.
-  assert.match(source, /const SHELL_CACHE = 'saple-shell-v12'/);
+  assert.match(source, /const SHELL_CACHE = 'saple-shell-v13'/);
   assert.match(source, /caches\.delete\(key\)/);
   assert.match(source, /cache\.delete\(href\)/);
 });

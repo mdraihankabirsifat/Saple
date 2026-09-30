@@ -20,16 +20,16 @@ Open the Supabase SQL editor and execute these files in order:
 The third file is read-only validation. The first two target a fresh project; do not rerun them against a populated database unless you intend to rebuild it.
 
 > **Already have a Saple project on Supabase?** Do not run the files above on it.
-> Apply the eight additive migrations in `database/postgres/migrations/` instead,
+> Apply the nine additive migrations in `database/postgres/migrations/` instead,
 > following that folder's README, and rehearse on a backup first. The final
-> schema has 26 tables and 5 views.
+> schema has 34 tables and 5 views.
 
 ### Optional: bulk demonstration data
 
 `database/postgres/04_bulk_demo_data_postgres.sql` is an **optional** population
 script for demos. It is not part of the schema, not a migration, and must never
 be copied into `migrations/`. Run it only after the schema (or migrations
-001–008) and `02_final_demo_data_postgres.sql`, and only with at least one
+001–009) and `02_final_demo_data_postgres.sql`, and only with at least one
 ACTIVE administrator account.
 
 It adds about 59 real companies (public metadata only, sources in
@@ -47,6 +47,15 @@ which is how the cleanup finds them. If any real account has interacted with
 that data (for example, applied to one of its jobs or reported one of its
 reviews), the cleanup stops without changing anything. The companies, roles,
 benefits and skills that 04 added are reference data and stay.
+
+### Optional: Premium demonstration content
+
+File 04 marks about a third of its synthetic vacancies as Premium-only. A
+database that loaded the bulk data before Premium existed can get the same
+result with `database/postgres/06_premium_demo_content.sql`, run after
+migration 009. It selects synthetic vacancies by the bulk accounts'
+placeholder password hash only, so no real vacancy can ever be changed, and it
+does nothing if synthetic Premium vacancies already exist.
 
 ## 3. Configure the backend
 

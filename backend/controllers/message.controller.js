@@ -1,4 +1,5 @@
 const service = require('../services/message.service');
+const premium = require('../services/premium.service');
 const repository = require('../repositories/message.repository');
 const database = require('../config/database');
 const createHttpError = require('../utils/httpError');
@@ -22,6 +23,11 @@ const unreadCount = handle(async (req, res) => sendSuccess(res, 200, 'Unread cou
   { count: await repository.unreadCount(req.user.userId) }));
 const contacts = handle(async (req, res) => sendSuccess(res, 200, 'Company contacts retrieved',
   { contacts: await service.companyContacts(req.params.companyId) }));
-const profile = handle(async (req, res) => sendSuccess(res, 200, 'User profile retrieved',
-  { user: await service.userProfile(req.params.userId, { includeSections: true }) }));
+// A signed-in visitor's view of someone else's profile is counted once per
+// day for its owner; anonymous visits are not recorded at all.
+const profile = handle(async (req, res) => {
+  const user = await service.userProfile(req.params.userId, { includeSections: true });
+  if (req.user && req.user.userId !== user.userId) await premium.recordProfileView(user.userId, req.user.userId);
+  return sendSuccess(res, 200, 'User profile retrieved', { user });
+});
 module.exports = { conversations, history, send, edit, remove, unreadCount, contacts, profile };

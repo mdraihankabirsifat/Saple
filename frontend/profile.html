@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/forms.css">
   <link rel="stylesheet" href="css/profile.css">
   <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/premium-subscription.css">
 </head>
 
 <body>
@@ -77,6 +78,14 @@
             <div class="form-actions"><button class="button button-primary" type="submit">Save profile</button></div>
           </form>
           <p id="profile-status" class="state-message form-status" role="status" hidden></p>
+        </section>
+        <section id="profile-premium" class="profile-card card profile-views-card">
+          <h2>Premium and profile views</h2>
+          <p id="profile-premium-state" class="professional-meta">Checking your Premium status&hellip;</p>
+          <p id="profile-views-count" class="profile-views-count" hidden></p>
+          <p id="profile-views-caption" class="professional-meta" hidden></p>
+          <ul id="profile-viewers" class="viewer-list" hidden></ul>
+          <p id="profile-viewers-action"></p>
         </section>
         <section class="profile-card card profile-card-full">
           <h2>Experience</h2>

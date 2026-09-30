@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="The result of your Saple Premium payment.">
+  <title>Payment result | Saple</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/premium-subscription.css">
+</head>
+
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="site-header">
+    <nav class="navbar container" aria-label="Main navigation">
+      <a class="brand" href="index.html" aria-label="Saple home">
+        <span class="brand-mark" aria-hidden="true">S</span><span>Saple</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-menu"
+        aria-label="Toggle navigation" data-nav-toggle><span class="nav-toggle-lines" aria-hidden="true"></span></button>
+      <div id="main-menu" class="nav-menu" data-nav-menu>
+        <ul class="nav-links">
+          <li><a href="jobs.html">Jobs</a></li>
+        </ul>
+        <div class="nav-actions">
+          <a class="nav-text-link" href="login.html">Sign in</a>
+          <a class="button button-secondary button-small" href="register.html">Create account</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content" class="page-main premium-page">
+    <div class="container">
+      <section id="payment-result" class="payment-result" data-state="checking" aria-live="polite">
+        <p class="eyebrow">Saple Premium</p>
+        <h1 id="result-title">Checking your payment&hellip;</h1>
+        <p id="result-text">We are confirming the payment with SSLCommerz. This usually takes a few seconds.</p>
+        <dl id="result-details" class="quote-lines" hidden></dl>
+        <div id="result-actions" class="checkout-actions">
+          <a class="button button-secondary" href="premium.html">Back to Premium</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
+    <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>
+  </footer>
+  <script src="js/nav.js" defer></script>
+  <script type="module" src="js/payment-result.js"></script>
+</body>
+
+</html>

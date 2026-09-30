@@ -23,7 +23,15 @@ const NEW_TABLES = [
   'user_education',
   'user_experience',
   'skills',
-  'user_skills'
+  'user_skills',
+  'premium_plans',
+  'premium_trial_claims',
+  'premium_promo_codes',
+  'premium_payments',
+  'premium_access_periods',
+  'premium_promo_redemptions',
+  'profile_views',
+  'premium_ai_usage'
 ];
 
 function migrations() {
@@ -50,7 +58,8 @@ test('migrations are numbered, ordered and each runs in one transaction', () => 
     '005_cse216_final_database_features.sql',
     '006_profile_and_company_images.sql',
     '007_direct_messages.sql',
-    '008_public_profiles_and_search.sql'
+    '008_public_profiles_and_search.sql',
+    '009_premium_subscriptions.sql'
   ]);
 
   for (const file of files) {
@@ -74,7 +83,7 @@ test('no migration destroys existing data', () => {
 
   const alters = source.match(/ALTER TABLE \w+/g) || [];
   for (const alter of alters) {
-    assert.match(alter, /ALTER TABLE (users|companies)/, `${alter} touches an unexpected table`);
+    assert.match(alter, /ALTER TABLE (users|companies|job_postings|notifications)/, `${alter} touches an unexpected table`);
   }
 });
 
@@ -142,7 +151,7 @@ test('audit and application rows are never cascade-deleted', () => {
   for (const cascade of cascades) {
     assert.match(
       cascade,
-      /fk_(company_rep_user|notifications_user|direct_messages_\w+|employees_user|password_reset_user|emp_verify_\w+|company_benefits_\w+|salary_submission|review_submission|interview_submission|reports_submission|mod_actions_submission)/,
+      /fk_(company_rep_user|notifications_user|direct_messages_\w+|employees_user|password_reset_user|emp_verify_\w+|company_benefits_\w+|salary_submission|review_submission|interview_submission|reports_submission|mod_actions_submission|profile_views_\w+|premium_ai_usage_user)/,
       cascade.slice(0, 90)
     );
   }
@@ -174,7 +183,7 @@ test('a fresh install and a migrated install declare the same new tables', () =>
     assert.match(migrationSql, new RegExp(`CREATE TABLE IF NOT EXISTS ${table} \\(`), `${table} in migrations`);
   }
 
-  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 26);
+  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 34);
   assert.equal((schema.match(/^CREATE OR REPLACE VIEW /gm) || []).length, 5);
   assert.match(schema, /CREATE OR REPLACE VIEW vw_public_open_jobs/);
   assert.match(migrationSql, /CREATE OR REPLACE VIEW vw_public_open_jobs/);
@@ -359,7 +368,7 @@ test('the demonstration data shows the rules rather than only the happy path', (
 });
 
 test('the read-only validation script checks the final shape and the new rules', () => {
-  assert.match(validation, /26 base tables and 5 views/);
+  assert.match(validation, /34 base tables and 5 views/);
   for (const table of NEW_TABLES) {
     assert.ok(validation.includes(`'${table}'`), table);
   }
@@ -382,6 +391,6 @@ test('the migration guide tells the owner to rehearse before touching live data'
   assert.match(guide, /001_account_roles_and_company_representatives\.sql/);
   assert.match(guide, /004_public_job_views_and_grants\.sql/);
   assert.match(guide, /backup/i);
-  assert.match(guide, /26 base tables and 5 views/);
+  assert.match(guide, /34 base tables and 5 views/);
   assert.match(guide, /ON DELETE RESTRICT/);
 });

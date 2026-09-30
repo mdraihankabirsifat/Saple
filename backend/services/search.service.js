@@ -2,6 +2,7 @@ const users = require('../repositories/user.repository');
 const companies = require('../repositories/company.repository');
 const storage = require('../config/supabase-storage');
 const createHttpError = require('../utils/httpError');
+const premium = require('./premium.service');
 
 function normalizeQuery(value) {
   if (typeof value !== 'string') throw createHttpError(400, 'Search must be text');
@@ -22,7 +23,7 @@ function safeUser(user) {
 
 async function people(value, currentUserId) {
   const pattern = `%${normalizeQuery(value)}%`;
-  return (await users.searchActiveUsers(pattern, currentUserId)).map(safeUser);
+  return premium.withBadges((await users.searchActiveUsers(pattern, currentUserId)).map(safeUser));
 }
 
 // scope 'companies' is the homepage search: companies only, matched by name,
@@ -38,7 +39,7 @@ async function all(value, currentUserId = null, { scope } = {}) {
     companies.searchCompanies(pattern, 8, { broad: companiesOnly })
   ]);
   return {
-    users: userRows.map(safeUser),
+    users: await premium.withBadges(userRows.map(safeUser)),
     companies: companyRows.map((company) => ({
       companyId: company.companyId,
       companyName: company.companyName,

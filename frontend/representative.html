@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/jobs.css">
   <link rel="stylesheet" href="css/workspace.css">
   <link rel="stylesheet" href="css/premium.css">
+  <link rel="stylesheet" href="css/premium-subscription.css">
 </head>
 
 <body>
@@ -60,6 +61,8 @@
               aria-controls="panel-jobs" id="tab-jobs">Vacancies</button>
             <button class="tab" type="button" role="tab" data-tab="applications" aria-selected="false" tabindex="-1"
               aria-controls="panel-applications" id="tab-applications">Applications</button>
+            <button class="tab" type="button" role="tab" data-tab="talent" aria-selected="false" tabindex="-1"
+              aria-controls="panel-talent" id="tab-talent">Discover Talent</button>
           </div>
 
           <section id="panel-verifications" class="tab-panel" role="tabpanel" aria-labelledby="tab-verifications">
@@ -129,6 +132,19 @@
             </div>
             <p class="state-message" role="status" aria-live="polite" data-status></p>
             <div class="queue-list" data-queue></div>
+            <div class="pagination-host" data-pagination></div>
+          </section>
+
+          <section id="panel-talent" class="tab-panel" role="tabpanel" aria-labelledby="tab-talent" hidden>
+            <p class="panel-intro">Members with public Saple profiles. Premium members appear first as promoted
+              profiles, then more complete profiles. Saple does not score, rank or judge candidates.</p>
+            <form class="talent-search" role="search" data-talent-search>
+              <label class="sr-only" for="talent-query">Search by name or headline</label>
+              <input class="input" id="talent-query" type="search" maxlength="80" placeholder="Search by name or headline">
+              <button class="button button-secondary" type="submit">Search</button>
+            </form>
+            <p class="state-message" role="status" aria-live="polite" data-status></p>
+            <ul class="talent-list" data-queue></ul>
             <div class="pagination-host" data-pagination></div>
           </section>
         </div>

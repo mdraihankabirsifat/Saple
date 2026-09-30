@@ -1,6 +1,7 @@
 import { apiRequest } from './api.js';
 import { isAuthenticated } from './auth.js';
 import { el } from './ui.js';
+import { premiumBadge } from './premium-ui.js';
 
 const MIN_LENGTH = 2;
 const MAX_LENGTH = 80;
@@ -18,7 +19,7 @@ function imageOrInitial(url, name) {
 
 function userEntry(user) {
   return { href: `user-profile.html?id=${encodeURIComponent(user.userId)}`, name: user.fullName,
-    detail: user.headline || user.displayLabel || '', imageUrl: user.avatarUrl };
+    detail: user.headline || user.displayLabel || '', imageUrl: user.avatarUrl, badge: user.premiumBadge };
 }
 
 function companyEntry(company) {
@@ -76,7 +77,7 @@ function attachDropdown({ host, input, results, idPrefix, load, emptyText, clipT
       } }, [
         imageOrInitial(entry.imageUrl, entry.name),
         el('span', { className: 'nav-search-copy' }, [
-          el('strong', { text: entry.name }),
+          el('strong', {}, [entry.name, entry.badge ? ' ' : null, premiumBadge(entry.badge)]),
           entry.detail ? el('small', { text: entry.detail }) : null
         ])
       ]);

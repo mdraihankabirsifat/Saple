@@ -129,7 +129,8 @@ async function createApplication({ jobId, applicantUserId, coverLetter }) {
     const jobResult = await client.query(`
       SELECT jp.job_id AS "jobId", jp.job_status AS "jobStatus", jp.title,
         jp.company_id AS "companyId", c.company_name AS "companyName",
-        (jp.application_deadline < CURRENT_DATE) AS "isExpired"
+        (jp.application_deadline < CURRENT_DATE) AS "isExpired",
+        COALESCE(to_jsonb(jp)->>'access_level', 'FREE') AS "accessLevel"
       FROM job_postings jp
       JOIN companies c ON c.company_id = jp.company_id
       WHERE jp.job_id = $1
@@ -151,6 +152,20 @@ async function createApplication({ jobId, applicantUserId, coverLetter }) {
     const account = accountResult.rows[0];
     if (!account || account.accountStatus !== 'ACTIVE') {
       throw repositoryError('ACCOUNT_UNAVAILABLE', 'This account cannot apply to vacancies');
+    }
+
+    // A Premium vacancy takes applications only from accounts with active
+    // Premium right now (a paid period or the one-day trial), by DB time.
+    if (job.accessLevel === 'PREMIUM') {
+      const accessResult = await client.query(`
+        SELECT (EXISTS (SELECT 1 FROM premium_access_periods ap WHERE ap.user_id = $1
+                  AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP)
+             OR EXISTS (SELECT 1 FROM premium_trial_claims t WHERE t.user_id = $1
+                  AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP)) AS "hasPremium"
+      `, [applicantUserId]);
+      if (!accessResult.rows[0]?.hasPremium) {
+        throw repositoryError('PREMIUM_REQUIRED', 'This vacancy is open to Saple Premium members.');
+      }
     }
 
     let applicationId;

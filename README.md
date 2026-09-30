@@ -23,7 +23,7 @@ Job seekers usually piece together company information from scattered, unverifia
 
 Anyone can browse companies, salaries, reviews, interviews and jobs. Employees can contribute, but only for the exact company and role they have been verified for, and nothing becomes public until an administrator approves it. Salaries are shown as two separate ranges: a **Verified** range from verified contributors, and a wider **Community** range from all approved submissions, each with its contribution count.
 
-Around that core, Saple has professional profiles, member and company search, direct messaging, notifications, job applications, company representatives and an AI helper, the Saple Guide.
+Around that core, Saple has professional profiles, member and company search, direct messaging, notifications, job applications, company representatives and an AI helper, the Saple Guide. An optional prepaid **Saple Premium** plan adds career tools on top; the free site stays complete without it.
 
 ## Features
 
@@ -70,6 +70,31 @@ Around that core, Saple has professional profiles, member and company search, di
 </td>
 </tr>
 </table>
+
+## Saple Premium
+
+Saple Premium is an optional, prepaid plan. Everything that was free stays free.
+
+| Plan | Price | Access |
+|---|---|---|
+| Free | ৳0 | Always |
+| Premium 1 Month | ৳120 | 30 days |
+| Premium 3 Months | ৳300 (save ৳60) | 90 days |
+| Free trial | ৳0 | 24 hours, once per account, no card required |
+
+Prepaid access · no automatic renewal. Buying again adds the new days after the current Premium ends.
+
+**What Premium adds:** an advanced Saple AI chat and a resume generator that uses only the facts the member writes, full interview questions (free visitors see a short preview), Premium-only job openings (free visitors see a teaser and cannot apply), a boosted place in the representatives' Discover Talent list, a Premium badge, and the names of members who viewed your profile (the count is free).
+
+**How payment works.** Checkout records the payment first, then opens an SSLCommerz session. The browser's return from SSLCommerz is only a redirect: Premium is granted after Saple validates the transaction with SSLCommerz's validation API (`val_id`), checks the transaction id and amount, and settles it once under a row lock. A repeated return or IPN never adds days twice. Promo and referral codes are checked and priced on the server; the browser never decides a price.
+
+> **Payments are in SSLCommerz sandbox mode only.** No production merchant account is configured and no real money is processed. Production payments are not live.
+
+**Setting it up**
+
+1. Run `database/postgres/migrations/009_premium_subscriptions.sql` in the Supabase SQL Editor before deploying the Premium backend. It is additive and re-runnable, and existing vacancies stay free.
+2. Optionally, run `database/postgres/06_premium_demo_content.sql` after migration 009 to mark about a third of the synthetic bulk demo vacancies as Premium. It never selects a real vacancy.
+3. Set the sandbox variables listed in `backend/.env.example` (`PAYMENT_GATEWAY`, `SSLCOMMERZ_BASE_URL`, `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `PUBLIC_API_ORIGIN`, and `PREMIUM_AI_MODEL` for the Premium AI tools). Without them the pricing page still works and checkout says online payment is not available yet.
 
 ## Screenshots
 
@@ -136,11 +161,11 @@ The database is the heart of the project. It runs on **PostgreSQL**, hosted by *
 
 | | |
 |---|---|
-| Tables | **26**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, and jobs and applications |
+| Tables | **34**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, jobs and applications, and Premium subscriptions |
 | Views | **5** public read models, for example approved reviews and salary summaries |
-| Keys and constraints | 44 foreign keys, 100 named `CHECK` constraints, unique and partial-unique keys |
-| Indexes | 44, including partial and case-insensitive unique indexes |
-| Migrations | **8** additive, re-runnable migrations from the original 14-table schema |
+| Keys and constraints | 59 foreign keys, 127 named `CHECK` constraints, unique and partial-unique keys |
+| Indexes | 52, including partial and case-insensitive unique indexes |
+| Migrations | **9** additive, re-runnable migrations from the original 14-table schema |
 | ERD | [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md), generated from the schema file |
 
 Some design choices worth pointing out:
@@ -255,6 +280,7 @@ See [`docs/cloudflare-deployment.md`](docs/cloudflare-deployment.md), and [`docs
 - All SQL is parameterized; authorization is checked on the server for every request.
 - Pages load no third-party code and run under a strict Content-Security-Policy with security headers; dynamic text is rendered as text, never as HTML.
 - Secrets live in environment variables and Cloudflare secrets, never in the frontend or the repository.
+- Premium is granted only after server-side SSLCommerz validation, with the amount and transaction checked and settled once; card and mobile-wallet details never reach Saple.
 
 More in [`docs/security-and-safe-deployment.md`](docs/security-and-safe-deployment.md).
 

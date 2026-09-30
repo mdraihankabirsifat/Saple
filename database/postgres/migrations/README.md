@@ -1,7 +1,7 @@
 # Saple PostgreSQL migrations
 
 These migrations upgrade an **existing** Supabase PostgreSQL project from the
-14-table Saple schema to the current 26-table schema without touching a single
+14-table Saple schema to the current 34-table schema without touching a single
 existing row.
 
 A brand-new installation does **not** need them: `01_final_schema_postgres.sql`
@@ -26,8 +26,9 @@ Run exactly once, in this order, in the Supabase SQL editor or `psql`:
 | 6 | `006_profile_and_company_images.sql` | nullable Storage object paths for account pictures and company logos |
 | 7 | `007_direct_messages.sql` | private direct messages, unread state and supporting indexes |
 | 8 | `008_public_profiles_and_search.sql` | `users.headline` and `users.bio`; professional-profile sections `user_education`, `user_experience`, `skills` and `user_skills` |
+| 9 | `009_premium_subscriptions.sql` | Saple Premium: `premium_plans` (seeded 1-month and 3-month plans), `premium_trial_claims`, `premium_promo_codes`, `premium_payments`, `premium_access_periods`, `premium_promo_redemptions`, `profile_views`, `premium_ai_usage`; `job_postings.access_level` (existing vacancies stay `FREE`); two Premium notification types; `vw_public_open_jobs` gains `access_level` |
 
-The fresh schema already includes all eight migrations' tables, columns,
+The fresh schema already includes all nine migrations' tables, columns,
 views and routines. Run only the migrations that an existing database has not
 yet received.
 
@@ -42,24 +43,30 @@ Each file is a single transaction. If one fails, nothing in it is applied.
   lines in it remove only those objects before recreating them, which is what
   makes the file re-runnable.
   Migration 001 widens `users.account_role` and its check. Migration 006 adds
-  nullable image paths to `users` and `companies`. Existing rows stay valid.
+  nullable image paths to `users` and `companies`. Migration 009 adds
+  `job_postings.access_level` with a `FREE` default and widens the notification
+  type check. Existing rows stay valid.
 - **Re-runnable.** Every new object uses `IF NOT EXISTS` or
   `CREATE OR REPLACE`, so a partial re-run is harmless.
 - **Audit-preserving.** History tables and applications use
   `ON DELETE RESTRICT`, never `CASCADE`, so closing or archiving a job cannot
   destroy its applications or decision trail. `ON DELETE CASCADE` appears only
   where a row is genuinely private to one account (`notifications.user_id`,
-  `company_representatives.user_id`).
+  `company_representatives.user_id`, and the two per-account Premium usage
+  tables `profile_views` and `premium_ai_usage`). Payments, access periods,
+  trial claims and promo redemptions are never cascade-deleted.
 
 ## Before running on the live project
 
 1. Take a Supabase backup, or restore a copy into a scratch project first.
-2. Apply all eight files to the scratch project, in order.
+2. Apply all nine files to the scratch project, in order.
 3. Run `03_schema_and_data_demo_postgres.sql` there and confirm section 1
-   reports **26 base tables and 5 views**, and that its last two sections list
+   reports **34 base tables and 5 views**, and that its last two sections list
    the three `saple_*` routines and the seven `trg_*_set_updated_at` triggers.
-4. Only then apply the same eight files to the live project. If migrations 001–007
-   have already been applied, run only 008.
+4. Only then apply the same nine files to the live project. If migrations 001–008
+   have already been applied, run only 009. Migration 009 is never applied
+   automatically: run it yourself in the Supabase SQL Editor before deploying
+   the Premium backend.
 
 ### Verifying migration 005
 

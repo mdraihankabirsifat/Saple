@@ -27,7 +27,7 @@ test('search and public profiles expose only active, public records', async () =
 
     const people = await search.people('search', 1);
     assert.deepEqual(people.map((user) => user.fullName), ['Alan Search']);
-    assert.deepEqual(Object.keys(people[0]).sort(), ['avatarUrl', 'displayLabel', 'fullName', 'headline', 'userId']);
+    assert.deepEqual(Object.keys(people[0]).sort(), ['avatarUrl', 'displayLabel', 'fullName', 'headline', 'premiumBadge', 'userId']);
     const combined = await search.all('search', 1);
     assert.equal(combined.users.length, 1);
     assert.equal(combined.companies[0].companyName, 'Search Labs');
@@ -42,7 +42,7 @@ test('search and public profiles expose only active, public records', async () =
     assert.deepEqual(anonymous.users.map((user) => user.fullName), ['Ada Search', 'Alan Search']);
     assert.equal(anonymous.users[0].headline, 'Analyst');
     for (const user of anonymous.users) {
-      assert.deepEqual(Object.keys(user).sort(), ['avatarUrl', 'displayLabel', 'fullName', 'headline', 'userId']);
+      assert.deepEqual(Object.keys(user).sort(), ['avatarUrl', 'displayLabel', 'fullName', 'headline', 'premiumBadge', 'userId']);
     }
     assert.doesNotMatch(JSON.stringify(anonymous), /example\.invalid|x{60}|SUSPENDED|Hidden/);
 

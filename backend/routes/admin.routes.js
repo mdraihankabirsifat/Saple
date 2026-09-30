@@ -6,6 +6,7 @@ const representativeController = require('../controllers/representative.controll
 const announcementController = require('../controllers/announcement.controller');
 const jobController = require('../controllers/job.controller');
 const applicationController = require('../controllers/application.controller');
+const premiumController = require('../controllers/premium.controller');
 
 const router = express.Router();
 
@@ -47,5 +48,12 @@ router.get('/jobs/:jobId', jobController.getManaged);
 router.patch('/jobs/:jobId/status', jobController.updateStatus);
 router.get('/applications', applicationController.listScoped);
 router.get('/applications/:applicationId', applicationController.getScoped);
+
+// Premium: overview, promo codes and the talent list.
+router.get('/premium/overview', premiumController.adminOverview);
+router.get('/premium/promo-codes', premiumController.adminPromoCodes);
+router.post('/premium/promo-codes', premiumController.adminCreatePromoCode);
+router.patch('/premium/promo-codes/:promoCodeId/active', premiumController.adminSetPromoActive);
+router.get('/talent', premiumController.talent);
 
 module.exports = router;

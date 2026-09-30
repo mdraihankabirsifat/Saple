@@ -17,6 +17,7 @@ const PUBLIC_JOB_COLUMNS = `
   salary_min AS "salaryMin", salary_max AS "salaryMax",
   salary_currency AS "salaryCurrency", salary_period AS "salaryPeriod",
   application_deadline AS "applicationDeadline", published_at AS "publishedAt",
+  COALESCE(to_jsonb(v)->>'access_level', 'FREE') AS "accessLevel",
   (SELECT logo_path FROM companies c WHERE c.company_id = v.company_id) AS "logoPath",
   (SELECT updated_at FROM companies c WHERE c.company_id = v.company_id) AS "logoUpdatedAt"
 `;
@@ -117,6 +118,7 @@ const MANAGED_JOB_SELECT = `
     jp.salary_period AS "salaryPeriod",
     jp.application_deadline AS "applicationDeadline",
     jp.job_status AS "jobStatus", jp.published_at AS "publishedAt",
+    COALESCE(to_jsonb(jp)->>'access_level', 'FREE') AS "accessLevel",
     jp.closed_at AS "closedAt", jp.created_at AS "createdAt",
     jp.updated_at AS "updatedAt", jp.created_by_user_id AS "createdByUserId",
     creator.full_name AS "createdByName",
@@ -201,17 +203,18 @@ async function createJob(input) {
         company_id, created_by_user_id, created_by_assignment_id, role_id,
         title, description, requirements, location, employment_type, work_mode,
         salary_min, salary_max, salary_currency, salary_period,
-        application_deadline, job_status, published_at
+        application_deadline, job_status, published_at, access_level
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::varchar,
-        CASE WHEN $16::varchar = 'PUBLISHED' THEN CURRENT_TIMESTAMP ELSE NULL END
+        CASE WHEN $16::varchar = 'PUBLISHED' THEN CURRENT_TIMESTAMP ELSE NULL END, $17
       )
       RETURNING job_id AS "jobId", job_status AS "jobStatus"
     `, [
       input.companyId, input.createdByUserId, input.assignmentId, input.roleId,
       input.title, input.description, input.requirements, input.location,
       input.employmentType, input.workMode, input.salaryMin, input.salaryMax,
-      input.salaryCurrency, input.salaryPeriod, input.applicationDeadline, input.jobStatus
+      input.salaryCurrency, input.salaryPeriod, input.applicationDeadline, input.jobStatus,
+      input.accessLevel || 'FREE'
     ]);
 
     await client.query('COMMIT');
@@ -255,13 +258,14 @@ async function updateJob(jobId, input) {
         location = $5, employment_type = $6, work_mode = $7,
         salary_min = $8, salary_max = $9, salary_currency = $10,
         salary_period = $11, application_deadline = $12,
+        access_level = $14,
         updated_at = CURRENT_TIMESTAMP
       WHERE job_id = $13
     `, [
       input.roleId, input.title, input.description, input.requirements,
       input.location, input.employmentType, input.workMode,
       input.salaryMin, input.salaryMax, input.salaryCurrency,
-      input.salaryPeriod, input.applicationDeadline, jobId
+      input.salaryPeriod, input.applicationDeadline, jobId, input.accessLevel || 'FREE'
     ]);
 
     await client.query('COMMIT');

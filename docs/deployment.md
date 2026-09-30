@@ -27,11 +27,13 @@ The browser does not use Supabase Auth, an anon key, a secret key, or a database
 
 ## 1. Prepare Supabase
 
-**Existing project (the usual case).** Apply the eight additive migrations in
+**Existing project (the usual case).** Apply the nine additive migrations in
 `database/postgres/migrations/`, in order, following that folder's README.
-Rehearse on a backup or scratch project first. They add twelve tables, one
-view, the database routines, two nullable image path columns and the profile
-headline and about columns without changing any existing row.
+Rehearse on a backup or scratch project first. They add twenty tables, one
+view, the database routines, two nullable image path columns, the profile
+headline and about columns and the Premium subscription tables without
+changing any existing row. Run migration 009 in the Supabase SQL Editor
+before deploying the Premium backend; it is never applied automatically.
 
 **Brand-new project.** Do not run schema or seed files against an existing
 populated project. For a confirmed fresh project, open the Supabase SQL editor

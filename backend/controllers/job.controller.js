@@ -3,7 +3,7 @@ const { sendSuccess } = require('../utils/apiResponse');
 
 async function listPublic(request, response, next) {
   try {
-    const result = await jobService.listPublicJobs(request.query);
+    const result = await jobService.listPublicJobs(request.query, request.user || null);
     return sendSuccess(response, 200, 'Open jobs retrieved successfully', result);
   } catch (error) { return next(error); }
 }
@@ -17,7 +17,7 @@ async function getFilterOptions(request, response, next) {
 
 async function getPublic(request, response, next) {
   try {
-    const job = await jobService.getPublicJob(request.params.jobId);
+    const job = await jobService.getPublicJob(request.params.jobId, request.user || null);
     return sendSuccess(response, 200, 'Job posting retrieved successfully', job);
   } catch (error) { return next(error); }
 }
