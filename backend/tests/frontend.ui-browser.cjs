@@ -153,7 +153,13 @@ async function fixture(context, role) {
         assert.equal(await nav.locator('[data-theme-toggle]').getAttribute('aria-pressed'), 'true');
         if (width <= 1050) await nav.locator('[data-nav-toggle]').click();
         assert.equal(await nav.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-        assert.equal(await nav.locator('.contribute-menu').isVisible(), ['verified', 'admin'].includes(role));
+        // Contributing moved into the account menu; it is offered to verified accounts only.
+        assert.equal(await nav.locator('.contribute-menu').count(), 0);
+        if (role !== 'anonymous') {
+          await nav.locator('.account-menu-button').click();
+          assert.equal(await nav.locator('.account-menu-toggle').isVisible(), ['verified', 'admin'].includes(role));
+          await nav.keyboard.press('Escape');
+        }
         await nav.evaluate(() => localStorage.setItem('saple.theme', 'light'));
       }
       await state.close();

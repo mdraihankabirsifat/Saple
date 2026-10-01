@@ -1,6 +1,5 @@
 const navigationToggle = document.querySelector('[data-nav-toggle]');
 const navigationMenu = document.querySelector('[data-nav-menu]');
-const contributionMenu = document.querySelector('.contribute-menu');
 const moduleBase = document.currentScript.src;
 const authModuleUrl = new URL('./auth.js', moduleBase);
 const offlineModuleUrl = new URL('./offline-cache.js', moduleBase);
@@ -359,9 +358,10 @@ import(revealModuleUrl.href)
   .then((reveal) => reveal.mountReveal())
   .catch(() => {});
 
+// Page elements meant only for verified contributors. The header's Contribute
+// entry lives in the account menu, which applies the same rule.
 function updateContributionVisibility(user) {
   const verified = Array.isArray(user?.verifiedScopes) && user.verifiedScopes.length > 0;
-  contributionMenu?.classList.toggle('is-available', verified);
   document.querySelectorAll('[data-verified-contributor]').forEach((element) => {
     element.hidden = !verified;
   });
@@ -535,12 +535,6 @@ if (navigationToggle && navigationMenu) {
   fitNavigation();
 }
 
-document.addEventListener('click', (event) => {
-  if (contributionMenu?.open && !contributionMenu.contains(event.target)) {
-    contributionMenu.open = false;
-  }
-});
-
 // --- Disclosures ---------------------------------------------------------------
 // [data-disclosure] wraps a toggle button and a panel. The panel animates open
 // with grid-template-rows (premium.css), and aria-expanded is the only state:
@@ -572,19 +566,276 @@ document.addEventListener('keydown', (event) => {
   }
 
   closeNavigation({ restoreFocus: navigationMenu?.classList.contains('is-open') });
-
-  if (contributionMenu?.open) {
-    contributionMenu.open = false;
-    contributionMenu.querySelector('summary')?.focus();
-  }
 });
 
 // Workspace links are driven by the role the server reports for the current
 // token, never by anything the browser stores on its own.
 const WORKSPACE_LINKS = {
-  ADMIN: { href: 'admin.html', label: 'Admin' },
+  ADMIN: { href: 'admin.html', label: 'Admin workspace' },
   COMPANY_REPRESENTATIVE: { href: 'representative.html', label: 'Company workspace' }
 };
+
+// --- Account menu ---------------------------------------------------------------
+// Everything personal to the signed-in account sits under the avatar: profile,
+// Premium, applications, contributing, verification, the role workspace and
+// signing out. Which items appear follows the account the server reported; the
+// backend still decides what every page and request may actually do.
+const apiModuleUrl = new URL('./api.js', moduleBase);
+const CONTRIBUTE_LINKS = [
+  { href: 'submit-salary.html', label: 'Submit salary' },
+  { href: 'submit-review.html', label: 'Write a review' },
+  { href: 'interview-experience.html', label: 'Share interview experience' }
+];
+let premiumMenuState = null;
+let premiumMenuRequest = null;
+
+function accountInitial(user) {
+  return user?.fullName?.trim()?.[0]?.toUpperCase() || 'S';
+}
+
+// The profile photo when there is one, the first letter otherwise, and the
+// letter again if the photo fails to load: never a broken image.
+function accountAvatar(user, className) {
+  const avatar = document.createElement('span');
+  avatar.className = className;
+  avatar.setAttribute('aria-hidden', 'true');
+  const showInitial = () => {
+    avatar.replaceChildren(document.createTextNode(accountInitial(user)));
+    avatar.classList.add('is-initial');
+  };
+  if (user?.avatarUrl) {
+    const image = document.createElement('img');
+    image.alt = '';
+    image.decoding = 'async';
+    image.addEventListener('error', showInitial, { once: true });
+    image.src = user.avatarUrl;
+    avatar.append(image);
+  } else {
+    showInitial();
+  }
+  return avatar;
+}
+
+function menuLink(href, label, extraClass = '') {
+  const link = document.createElement('a');
+  link.href = href;
+  link.className = `account-menu-item ${extraClass}`.trim();
+  link.setAttribute('role', 'menuitem');
+  link.textContent = label;
+  if (href === currentPageName()) link.setAttribute('aria-current', 'page');
+  return link;
+}
+
+function menuSeparator() {
+  const separator = document.createElement('div');
+  separator.className = 'account-menu-separator';
+  separator.setAttribute('role', 'separator');
+  return separator;
+}
+
+// Premium state is fetched once, the first time the menu opens, and reused.
+function applyPremiumMenuState(menu) {
+  if (!premiumMenuState) return;
+  menu.querySelectorAll('[data-premium-menu-badge]').forEach((badge) => {
+    badge.textContent = premiumMenuState.label;
+    badge.dataset.state = premiumMenuState.state;
+    badge.hidden = false;
+  });
+  const headerBadge = menu.querySelector('[data-premium-header-badge]');
+  if (headerBadge) {
+    headerBadge.hidden = !premiumMenuState.active;
+    headerBadge.textContent = premiumMenuState.state === 'trial' ? 'Premium trial' : 'Premium';
+  }
+}
+
+function loadPremiumMenuState(menu) {
+  if (premiumMenuState) {
+    applyPremiumMenuState(menu);
+    return;
+  }
+  premiumMenuRequest ||= import(apiModuleUrl.href)
+    .then(({ apiRequest }) => apiRequest('/api/premium/status', { auth: true }))
+    .then((access) => {
+      const state = access.hasPremium ? (access.source === 'TRIAL' ? 'trial' : 'premium') : 'upgrade';
+      premiumMenuState = { state, active: Boolean(access.hasPremium), label: { trial: 'Trial', premium: 'Premium', upgrade: 'Upgrade' }[state] };
+    })
+    .catch(() => { premiumMenuRequest = null; });
+  premiumMenuRequest.then(() => applyPremiumMenuState(document.querySelector('[data-account-menu]')));
+}
+
+function accountMenuItems(menu) {
+  return [...menu.querySelectorAll('.account-dropdown [role="menuitem"]')]
+    .filter((item) => !item.closest('[hidden]'));
+}
+
+function setAccountMenuOpen(menu, open, { focus = null } = {}) {
+  const button = menu.querySelector('.account-menu-button');
+  const dropdown = menu.querySelector('.account-dropdown');
+  if (!button || !dropdown) return;
+  button.setAttribute('aria-expanded', String(open));
+  dropdown.hidden = !open;
+  menu.classList.toggle('is-open', open);
+  if (open) {
+    loadPremiumMenuState(menu);
+    if (focus === 'first') accountMenuItems(menu)[0]?.focus();
+  } else if (focus === 'button') {
+    button.focus();
+  }
+}
+
+// Builds the avatar button and its dropdown into one container that is reused
+// on every render, so refreshing the account from /api/auth/me never adds a
+// second menu.
+function renderAccountMenu(navigationActions, currentUser, { auth, workspace, canContribute }) {
+  let menu = navigationActions.querySelector('[data-account-menu]');
+  if (!menu) {
+    menu = document.createElement('div');
+    menu.className = 'account-menu';
+    menu.dataset.accountMenu = '';
+    navigationActions.append(menu);
+  }
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'account-menu-button';
+  button.setAttribute('aria-label', 'Open account menu');
+  button.setAttribute('aria-haspopup', 'menu');
+  button.setAttribute('aria-expanded', 'false');
+  button.setAttribute('aria-controls', 'account-dropdown');
+  button.title = currentUser?.fullName || 'Your account';
+  // The first name shows beside the avatar only inside the mobile drawer.
+  const buttonName = document.createElement('span');
+  buttonName.className = 'account-menu-name';
+  buttonName.textContent = currentUser?.fullName?.trim().split(/\s+/)[0] || 'Account';
+  button.append(accountAvatar(currentUser, 'account-avatar'), buttonName);
+
+  const dropdown = document.createElement('div');
+  dropdown.id = 'account-dropdown';
+  dropdown.className = 'account-dropdown';
+  dropdown.setAttribute('role', 'menu');
+  dropdown.setAttribute('aria-label', 'Account');
+  dropdown.hidden = true;
+
+  // Summary: photo, name (to the profile page) and email.
+  const name = document.createElement('a');
+  name.className = 'account-summary-name';
+  name.href = 'profile.html';
+  name.setAttribute('role', 'menuitem');
+  name.textContent = currentUser?.fullName || 'Your account';
+  const email = document.createElement('span');
+  email.className = 'account-summary-email';
+  email.textContent = currentUser?.email || '';
+  const headerBadge = document.createElement('span');
+  headerBadge.className = 'premium-badge account-summary-badge';
+  headerBadge.dataset.premiumHeaderBadge = '';
+  headerBadge.hidden = true;
+  const summaryText = document.createElement('div');
+  summaryText.className = 'account-summary-text';
+  summaryText.append(name, email, headerBadge);
+  const summary = document.createElement('div');
+  summary.className = 'account-summary';
+  summary.append(accountAvatar(currentUser, 'account-avatar account-avatar-large'), summaryText);
+
+  const items = [];
+  if (workspace) items.push(menuLink(workspace.href, workspace.label, 'account-menu-workspace'));
+  items.push(menuLink('profile.html', 'Profile'));
+  const premium = menuLink('premium.html', 'Premium');
+  const premiumBadge = document.createElement('span');
+  premiumBadge.className = 'account-menu-badge';
+  premiumBadge.dataset.premiumMenuBadge = '';
+  premiumBadge.hidden = true;
+  premium.append(premiumBadge);
+  items.push(premium);
+  // Only job-seeker accounts apply to vacancies; workspaces replace this.
+  if (!workspace) items.push(menuLink('my-applications.html', 'My applications'));
+
+  if (canContribute) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'account-menu-item account-menu-toggle';
+    toggle.setAttribute('role', 'menuitem');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', 'account-contribute');
+    toggle.textContent = 'Contribute';
+    const group = document.createElement('div');
+    group.id = 'account-contribute';
+    group.className = 'account-submenu';
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Contribute');
+    group.hidden = true;
+    group.append(...CONTRIBUTE_LINKS.map((link) => menuLink(link.href, link.label, 'account-submenu-item')));
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      group.hidden = !open;
+      if (open) group.querySelector('a')?.focus();
+    });
+    items.push(toggle, group);
+  }
+  if (currentUser?.userType === 'EMPLOYEE') items.push(menuLink('employee-verification.html', 'Verification'));
+
+  const signOutButton = document.createElement('button');
+  signOutButton.type = 'button';
+  signOutButton.className = 'account-menu-item account-sign-out';
+  signOutButton.setAttribute('role', 'menuitem');
+  signOutButton.textContent = 'Sign out';
+  signOutButton.addEventListener('click', async () => {
+    if (signOutButton.disabled) return;
+    signOutButton.disabled = true;
+    signOutButton.textContent = 'Signing out…';
+    try {
+      await auth.logout();
+    } catch (error) {
+      console.warn('Server-side token revocation could not be confirmed.');
+    } finally {
+      window.location.assign('index.html');
+    }
+  });
+
+  dropdown.append(summary, menuSeparator(), ...items, menuSeparator(), signOutButton);
+  menu.replaceChildren(button, dropdown);
+  applyPremiumMenuState(menu);
+
+  button.addEventListener('click', (event) => {
+    const open = button.getAttribute('aria-expanded') !== 'true';
+    // A keyboard press arrives as a click with no pointer detail.
+    setAccountMenuOpen(menu, open, { focus: open && event.detail === 0 ? 'first' : null });
+  });
+  button.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setAccountMenuOpen(menu, true, { focus: 'first' });
+    }
+  });
+  dropdown.addEventListener('keydown', (event) => {
+    const entries = accountMenuItems(menu);
+    const index = entries.indexOf(document.activeElement);
+    if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) && entries.length) {
+      event.preventDefault();
+      const next = event.key === 'Home' ? 0
+        : event.key === 'End' ? entries.length - 1
+          : (index + (event.key === 'ArrowDown' ? 1 : -1) + entries.length) % entries.length;
+      entries[next].focus();
+    } else if (event.key === 'Tab') {
+      setAccountMenuOpen(menu, false);
+    }
+  });
+  dropdown.addEventListener('click', (event) => {
+    if (event.target.closest('a')) setAccountMenuOpen(menu, false);
+  });
+  return menu;
+}
+
+document.addEventListener('click', (event) => {
+  const menu = document.querySelector('[data-account-menu].is-open');
+  if (menu && !menu.contains(event.target)) setAccountMenuOpen(menu, false);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  const menu = document.querySelector('[data-account-menu].is-open');
+  if (menu) setAccountMenuOpen(menu, false, { focus: 'button' });
+});
 
 async function updateAuthenticationNavigation() {
   const navigationActions = document.querySelector('.nav-actions');
@@ -607,79 +858,25 @@ async function updateAuthenticationNavigation() {
   let user = auth.getStoredUser();
 
   const renderAuthenticatedState = (currentUser, verificationRefreshed = false) => {
-    const contribution = navigationActions.querySelector('.contribute-menu');
-    const accountName = document.createElement('a');
-    const signOutButton = document.createElement('button');
-    const firstName = currentUser?.fullName?.trim().split(/\s+/)[0] || 'Account';
     const workspace = WORKSPACE_LINKS[currentUser?.accountRole] || null;
-
-    accountName.className = 'nav-account-name';
-    accountName.textContent = firstName;
-    accountName.title = currentUser?.email || 'Signed-in account';
-    accountName.href = 'profile.html';
-    accountName.setAttribute('aria-label', `${firstName} profile`);
-
-    signOutButton.className = 'nav-text-link nav-sign-out';
-    signOutButton.type = 'button';
-    signOutButton.textContent = 'Sign out';
-    signOutButton.addEventListener('click', async () => {
-      signOutButton.disabled = true;
-      signOutButton.textContent = 'Signing out…';
-      try {
-        await auth.logout();
-      } catch (error) {
-        console.warn('Server-side token revocation could not be confirmed.');
-      } finally {
-        window.location.assign('index.html');
-      }
-    });
-
-    let verificationLink = navigationActions.querySelector('[data-verification-link]');
-    if (currentUser?.userType === 'EMPLOYEE' && !verificationLink) {
-      verificationLink = document.createElement('a');
-      verificationLink.href = 'employee-verification.html';
-      verificationLink.textContent = 'Verification';
-      verificationLink.className = 'nav-text-link';
-      verificationLink.dataset.verificationLink = '';
-      navigationActions.insertBefore(verificationLink, contribution || null);
-    }
+    // Contributing follows the verified scopes the server just confirmed;
+    // the submission endpoints enforce the same rule on every request.
+    const canContribute = verificationRefreshed
+      && Array.isArray(currentUser?.verifiedScopes) && currentUser.verifiedScopes.length > 0;
 
     navigationActions.querySelector('a[href="login.html"]')?.remove();
     navigationActions.querySelector('a[href="register.html"]')?.remove();
-    navigationActions.querySelector('.nav-account-name')?.remove();
-    navigationActions.querySelector('.nav-sign-out')?.remove();
-    navigationActions.querySelector('[data-workspace-link]')?.remove();
-    navigationActions.querySelector('[data-applications-link]')?.remove();
 
-    if (workspace) {
-      const workspaceLink = document.createElement('a');
-      workspaceLink.href = workspace.href;
-      workspaceLink.textContent = workspace.label;
-      workspaceLink.className = 'nav-text-link';
-      workspaceLink.dataset.workspaceLink = '';
-      navigationActions.insertBefore(workspaceLink, contribution || null);
-    } else {
-      const applicationsLink = document.createElement('a');
-      applicationsLink.href = 'my-applications.html';
-      applicationsLink.textContent = 'My applications';
-      applicationsLink.className = 'nav-text-link';
-      applicationsLink.dataset.applicationsLink = '';
-      navigationActions.insertBefore(applicationsLink, contribution || null);
-    }
-
-    navigationActions.insertBefore(accountName, contribution || null);
-    navigationActions.insertBefore(signOutButton, contribution || null);
-
-    if (currentUser?.userType !== 'EMPLOYEE') verificationLink?.remove();
+    const accountMenu = renderAccountMenu(navigationActions, currentUser, { auth, workspace, canContribute });
     updateContributionVisibility(verificationRefreshed ? currentUser : null);
     updateFooterAccountLinks(currentUser);
 
-    import(notificationsModuleUrl.href)
-      .then((notifications) => notifications.mountNotificationBell(navigationActions, accountName))
-      .catch(() => {});
-    import(globalSearchModuleUrl.href)
-      .then((search) => search.mountGlobalSearch(navigationActions, accountName))
-      .catch(() => {});
+    // Search, then notifications, then the avatar, whichever module loads first.
+    Promise.allSettled([import(globalSearchModuleUrl.href), import(notificationsModuleUrl.href)])
+      .then(([search, notifications]) => {
+        if (search.status === 'fulfilled') search.value.mountGlobalSearch(navigationActions, accountMenu);
+        if (notifications.status === 'fulfilled') notifications.value.mountNotificationBell(navigationActions, accountMenu);
+      });
     import(messagesModuleUrl.href).then((messages) => messages.mountMessages()).catch(() => {});
   };
 

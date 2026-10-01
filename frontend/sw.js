@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v13';
+const SHELL_CACHE = 'saple-shell-v14';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -23,7 +23,7 @@ const ASSETS = [
   'js/announcements.js', 'js/assistant.js', 'js/global-search.js', 'js/reveal.js', 'js/companies.js', 'js/company-directory.js',
   'js/company-logo.js', 'js/salary-range.js', 'js/company-details.js', 'js/representative-contacts.js', 'js/browse-shared.js', 'js/browse-controls.js',
   'js/contribution-access.js', 'js/salaries.js', 'js/reviews.js', 'js/interviews.js',
-  'js/home.js', 'js/jobs.js', 'js/job-details.js', 'js/premium.js', 'js/premium-ui.js',
+  'js/home.js', 'js/jobs.js', 'js/job-details.js', 'js/premium.js', 'js/premium-ui.js', 'js/home-hero.js',
   'js/login.js', 'js/register.js', 'js/forgot-password.js', 'js/reset-password.js'
 ].map((file) => new URL(file, self.registration.scope).href);
 const allowed = new Set(ASSETS);

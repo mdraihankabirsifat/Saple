@@ -2303,3 +2303,358 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
     transition: none !important;
   }
 }
+
+/* 22. Account menu --------------------------------------------------------- */
+
+/* Signed-in account actions live under the avatar. The dropdown is right
+   aligned under it on desktop and becomes an inline panel inside the mobile
+   drawer. */
+.account-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.account-menu-button {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--control);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.account-menu-button:hover,
+.account-menu.is-open .account-menu-button { border-color: var(--saple-gold); }
+.account-menu-button:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--saple-green-100);
+  color: var(--saple-green-800);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.account-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.account-avatar-large { width: 2.75rem; height: 2.75rem; font-size: 1.1rem; }
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  z-index: 70;
+  width: min(290px, calc(100vw - 24px));
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.account-dropdown[hidden] { display: none; }
+
+.account-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.6rem 0.65rem;
+}
+
+.account-summary-text { display: grid; gap: 0.1rem; min-width: 0; }
+
+.account-summary-name {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-summary-name:hover { text-decoration: underline; }
+
+.account-summary-email {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-summary-badge { justify-self: start; margin-top: 0.2rem; }
+
+.account-menu-separator { height: 1px; margin: 0.3rem 0.2rem; background: var(--border); }
+
+.account-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.93rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-menu-item:hover,
+.account-menu-item:focus-visible,
+.account-summary-name:focus-visible {
+  outline: none;
+  background: var(--surface-muted);
+}
+
+.account-menu-item[aria-current="page"] { font-weight: 700; }
+.account-menu-workspace { color: var(--brand-solid); font-weight: 700; }
+.account-sign-out { color: var(--text-secondary); }
+.account-sign-out:disabled { cursor: progress; opacity: 0.7; }
+
+.account-menu-toggle::after {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--motion-fast) var(--ease-out);
+  content: "";
+}
+
+.account-menu-toggle[aria-expanded="true"]::after { transform: rotate(45deg); }
+
+.account-submenu { display: grid; margin: 0 0 0.2rem 0.75rem; padding-left: 0.4rem; border-left: 2px solid var(--border); }
+.account-submenu[hidden] { display: none; }
+.account-submenu-item { font-size: 0.88rem; }
+
+.account-menu-badge {
+  padding: 0.05rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.account-menu-badge[data-state="upgrade"] { background: var(--saple-gold-soft); color: var(--saple-gold-ink); }
+.account-menu-badge[data-state="trial"],
+.account-menu-badge[data-state="premium"] { background: var(--saple-gold); color: #1b1405; }
+
+.account-menu-name { display: none; }
+
+/* Inside the mobile drawer the menu is part of the drawer, not a popover. */
+.nav-compact .account-menu { width: 100%; }
+.nav-compact .account-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  height: auto;
+  padding: 0.35rem;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 700;
+}
+.nav-compact .account-menu-name { display: inline; }
+.nav-compact .account-dropdown { position: static; width: 100%; margin-top: 0.5rem; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .account-menu-button,
+  .account-menu-toggle::after { transition: none; }
+}
+
+/* 23. Homepage hero: live data layer ---------------------------------------- */
+
+/* Translucent cards drawn from real Saple data and a faint line of cumulative
+   approved insights, floating in the right half of the hero over the artwork.
+   js/home-hero.js reveals the layer only once its data has arrived. */
+.hero-intel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: calc(50% + 11rem);
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms var(--ease-out);
+}
+
+.hero-intel[hidden],
+.hero-graph[hidden],
+.hero-intel-compact[hidden] { display: none; }
+
+.hero-intel.is-ready { opacity: 1; }
+
+.hero-graph {
+  position: absolute;
+  right: 0;
+  bottom: 4%;
+  left: -12%;
+  width: 112%;
+  height: 58%;
+  overflow: visible;
+  opacity: 0.16;
+  animation: hero-graph-breathe 14s ease-in-out infinite alternate, hero-graph-drift 26s ease-in-out infinite alternate;
+}
+
+.hero-graph-grid line { stroke: var(--saple-green-600); stroke-width: 1; opacity: 0.35; vector-effect: non-scaling-stroke; }
+.hero-graph-area { fill: var(--saple-green-500); opacity: 0.35; }
+
+.hero-graph-line {
+  fill: none;
+  stroke: var(--saple-green-700);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--line-length, 1200);
+  stroke-dashoffset: var(--line-length, 1200);
+  vector-effect: non-scaling-stroke;
+  transition: stroke-dashoffset 2.4s var(--ease-out);
+}
+
+.hero-graph.is-drawn .hero-graph-line { stroke-dashoffset: 0; }
+
+.hero-graph-points circle {
+  fill: var(--saple-gold);
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out) var(--dot-delay, 1.2s);
+}
+
+.hero-graph.is-drawn .hero-graph-points circle { opacity: 1; }
+
+@keyframes hero-graph-breathe { from { opacity: 0.11; } to { opacity: 0.18; } }
+@keyframes hero-graph-drift { from { translate: -6px 0; } to { translate: 6px 0; } }
+
+.hero-intel-cards {
+  position: absolute;
+  inset: 6% 3% 8% 0;
+  perspective: 1100px;
+}
+
+.intel-card {
+  display: grid;
+  gap: 0.15rem;
+  width: min(250px, 58%);
+  padding: 0.8rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--saple-green-600) 22%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+  box-shadow: 0 10px 30px rgba(15, 42, 33, 0.08);
+  color: var(--text-primary);
+  text-decoration: none;
+  opacity: 0.58;
+  pointer-events: auto;
+  transition: opacity 450ms var(--ease-out), box-shadow var(--motion-base) var(--ease-out), border-color var(--motion-base) var(--ease-out);
+}
+
+.hero-intel-cards .intel-card {
+  position: absolute;
+  transform: rotateY(-7deg) rotateX(2deg);
+}
+
+.intel-card:hover,
+.intel-card:focus-visible {
+  outline: none;
+  opacity: 0.97;
+  border-color: color-mix(in srgb, var(--saple-gold) 60%, transparent);
+  box-shadow: 0 14px 36px rgba(15, 42, 33, 0.14);
+}
+
+.intel-card:focus-visible { box-shadow: var(--ring), 0 14px 36px rgba(15, 42, 33, 0.14); }
+.intel-card.is-swapping { opacity: 0; }
+
+.intel-card-1 { top: 2%; left: 4%; animation: intel-drift-y 12s ease-in-out infinite alternate; }
+.intel-card-2 { top: 24%; right: 0; animation: intel-drift-x 16s ease-in-out infinite alternate; }
+.intel-card-3 { top: 50%; left: 0; animation: intel-drift-y 20s ease-in-out infinite alternate-reverse; }
+.intel-card-4 { top: 70%; right: 6%; animation: intel-drift-x 14s ease-in-out infinite alternate-reverse; }
+
+@keyframes intel-drift-y { from { translate: 0 -7px; } to { translate: 0 8px; } }
+@keyframes intel-drift-x { from { translate: -8px 0; } to { translate: 7px 4px; } }
+
+.hero-intel:hover .intel-card,
+.hero-intel:focus-within .intel-card { animation-play-state: paused; }
+
+.intel-card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--saple-gold-ink);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.intel-card-tag {
+  padding: 0 0.4rem;
+  border-radius: var(--radius-pill);
+  background: var(--saple-gold-soft);
+  letter-spacing: 0.02em;
+}
+
+.intel-card-title {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intel-card-line {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .intel-card { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+
+/* One compact, static card under the hero actions where the layer is off. */
+.hero-intel-compact { display: none; margin-top: 1.1rem; }
+.hero-intel-compact .intel-card { width: min(100%, 340px); opacity: 0.92; }
+
+/* Desktop: keep the hero text clear of the layer. */
+@media (min-width: 1101px) {
+  .home-hero.has-intel .hero-content { max-width: 44rem; }
+}
+
+/* Smaller desktops show three cards; tablets and phones hide the floating
+   layer and graph and show the single compact card instead. */
+@media (max-width: 1300px) {
+  .intel-card-4 { display: none; }
+}
+
+@media (max-width: 1100px) {
+  .hero-intel { display: none; }
+  .hero-intel-compact:not([hidden]) { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-intel,
+  .intel-card { transition: none; }
+  .hero-graph,
+  .intel-card { animation: none !important; }
+  .hero-graph-line { stroke-dashoffset: 0; transition: none; }
+  .hero-graph-points circle { opacity: 1; transition: none; }
+}

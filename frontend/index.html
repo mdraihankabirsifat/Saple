@@ -36,14 +36,6 @@
         <div class="nav-actions">
           <a class="nav-text-link" href="login.html">Sign in</a>
           <a class="button button-secondary button-small" href="register.html">Create account</a>
-          <details class="contribute-menu">
-            <summary class="button button-primary button-small">Contribute</summary>
-            <ul class="contribute-options">
-              <li><a href="submit-salary.html">Submit salary</a></li>
-              <li><a href="submit-review.html">Write a review</a></li>
-              <li><a href="interview-experience.html">Share interview experience</a></li>
-            </ul>
-          </details>
         </div>
       </div>
     </nav>
@@ -54,6 +46,13 @@
     <!-- 1. Hero ------------------------------------------------------------>
     <section class="home-hero" aria-labelledby="hero-heading">
       <div class="home-hero-background" aria-hidden="true"></div>
+      <!-- Live layer (js/home-hero.js): translucent cards from real Saple data and
+           a faint line of cumulative approved insights. Hidden until data arrives. -->
+      <div class="hero-intel" data-hero-intel hidden>
+        <svg class="hero-graph" data-hero-graph viewBox="0 0 600 260" preserveAspectRatio="none"
+          aria-hidden="true" focusable="false" hidden></svg>
+        <div class="hero-intel-cards" data-hero-cards role="region" aria-label="Highlights from Saple data"></div>
+      </div>
       <div class="hero-grid container">
         <div class="hero-content">
           <h1 id="hero-heading">Know the company <span class="hero-highlight">before you join.</span></h1>
@@ -81,6 +80,7 @@
             <a class="button button-primary" href="companies.html">Explore companies</a>
             <a class="button button-secondary" href="jobs.html">Browse jobs</a>
           </div>
+          <div class="hero-intel-compact" data-hero-compact hidden></div>
           <p class="hero-secondary">
             <a class="text-link" href="#how-it-works">Learn how verification works</a>
           </p>
@@ -375,6 +375,7 @@
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/home.js"></script>
+  <script type="module" src="js/home-hero.js"></script>
 </body>
 
 </html>

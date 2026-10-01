@@ -10,8 +10,9 @@ test('the navbar search is mounted for signed-out visitors too', () => {
   const nav = read('js/nav.js');
   const signedOut = nav.slice(nav.indexOf('if (!auth.isAuthenticated()) {'), nav.indexOf('let user = auth.getStoredUser();'));
   assert.match(signedOut, /search\.mountGlobalSearch\(navigationActions,\s*navigationActions\.querySelector\('a\[href="login\.html"\]'\)\)/);
-  // Signed-in visitors keep it where it was, before their account name.
-  assert.match(nav, /search\.mountGlobalSearch\(navigationActions, accountName\)/);
+  // Signed-in visitors get it before the notification bell and the avatar.
+  assert.match(nav, /search\.value\.mountGlobalSearch\(navigationActions, accountMenu\)/);
+  assert.match(nav, /notifications\.value\.mountNotificationBell\(navigationActions, accountMenu\)/);
 });
 
 test('one search module serves the navbar and the homepage, safely', () => {
@@ -77,7 +78,9 @@ test('motion is centralized, runs once and respects reduced motion', () => {
   assert.doesNotMatch(read('js/home.js'), /mountSectionReveal|dataset\.reveal/);
 
   // Only opacity and transform move, briefly, and never on a loop.
-  const motion = css.slice(css.indexOf('/* 21. Motion'));
+  // Entrance motion only: the homepage hero's slow ambient layer (section 23)
+  // has its own reduced-motion rules, checked in frontend.account-hero.test.js.
+  const motion = css.slice(css.indexOf('/* 21. Motion'), css.indexOf('/* 22. Account menu'));
   assert.match(motion, /@keyframes saple-enter \{\n  from \{ opacity: 0; transform: translateY\(12px\); \}/);
   assert.doesNotMatch(motion, /infinite|scale\(/);
   const reduced = motion.slice(motion.indexOf('@media (prefers-reduced-motion: reduce)'));
