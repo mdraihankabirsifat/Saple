@@ -84,7 +84,9 @@ Saple Premium is an optional, prepaid plan. Everything that was free stays free.
 
 Prepaid access · no automatic renewal. Buying again adds the new days after the current Premium ends.
 
-**What Premium adds:** an advanced Saple AI chat and a resume generator that uses only the facts the member writes, full interview questions (free visitors see a short preview), Premium-only job openings (free visitors see a teaser and cannot apply), a boosted place in the representatives' Discover Talent list, a Premium badge, and the names of members who viewed your profile (the count is free).
+**What Premium adds:** advanced Saple Guide answers, PDF export from the Resume Generator, full interview questions (free visitors see a short preview), Premium-only job openings (free visitors see a teaser and cannot apply), a boosted place in the representatives' Discover Talent list, a Premium badge, and the names of members who viewed your profile (the count is free). Every signed-in member can use the Resume Generator to draft text from facts they provide.
+
+Job applications may include an optional PDF resume, up to 2 MB. The PDF is stored privately in PostgreSQL with the application. The applicant and active representatives of the hiring company can view or download it; ordinary application lists return file metadata only. Run `database/postgres/migrations/010_job_application_resumes.sql` in Supabase SQL Editor before deploying this feature. The optional `database/postgres/07_balance_demo_salary_ranges.sql` adds only synthetic community salary observations to existing bulk demo data; review it before running it.
 
 **How payment works.** Checkout records the payment first, then opens an SSLCommerz session. The browser's return from SSLCommerz is only a redirect: Premium is granted after Saple validates the transaction with SSLCommerz's validation API (`val_id`), checks the transaction id and amount, and settles it once under a row lock. A repeated return or IPN never adds days twice. Promo and referral codes are checked and priced on the server; the browser never decides a price.
 
@@ -95,6 +97,8 @@ Prepaid access · no automatic renewal. Buying again adds the new days after the
 1. Run `database/postgres/migrations/009_premium_subscriptions.sql` in the Supabase SQL Editor before deploying the Premium backend. It is additive and re-runnable, and existing vacancies stay free.
 2. Optionally, run `database/postgres/06_premium_demo_content.sql` after migration 009 to mark about a third of the synthetic bulk demo vacancies as Premium. It never selects a real vacancy.
 3. The non-secret settings (`PAYMENT_GATEWAY`, the SSLCommerz sandbox session and validation hosts, `PUBLIC_API_ORIGIN`, `PREMIUM_AI_MODEL` and the daily limits) are in `wrangler.jsonc`, and listed in `backend/.env.example` for local runs. The store credentials are Cloudflare secrets: `npx wrangler secret put SSLCOMMERZ_STORE_ID` and `npx wrangler secret put SSLCOMMERZ_STORE_PASSWORD`. Without them the pricing page still works and checkout says online payment is not available yet.
+
+4. Run `database/postgres/migrations/011_ml_moderation.sql` manually after 010 if you want ML screening. It is additive and is never run by deploy scripts. ML starts disabled and in shadow mode; set `ML_SERVICE_URL` and the private `ML_SERVICE_TOKEN` only after deploying the separate Python service and reviewing the read-only training audit.
 
 ## Screenshots
 
@@ -161,11 +165,11 @@ The database is the heart of the project. It runs on **PostgreSQL**, hosted by *
 
 | | |
 |---|---|
-| Tables | **34**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, jobs and applications, and Premium subscriptions |
-| Views | **5** public read models, for example approved reviews and salary summaries |
+| Tables | **38**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, jobs and private application resumes, Premium subscriptions and ML screening audit |
+| Views | **7** public and training read models, including approved salary summaries and provisional visibility |
 | Keys and constraints | 59 foreign keys, 127 named `CHECK` constraints, unique and partial-unique keys |
 | Indexes | 52, including partial and case-insensitive unique indexes |
-| Migrations | **9** additive, re-runnable migrations from the original 14-table schema |
+| Migrations | **11** additive migrations from the original 14-table schema |
 | ERD | [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md), generated from the schema file |
 
 Some design choices worth pointing out:
@@ -222,7 +226,7 @@ The backend is written in layers. Routes only map URLs, controllers handle HTTP,
 | Email | Nodemailer with Gmail SMTP |
 | AI | Groq (OpenAI-compatible API) |
 
-The [`ml/`](ml/) folder is a separate Python prototype that estimates moderation risk for salary submissions. It is not wired into the app.
+The [`ml/`](ml/) folder contains the separately deployed moderation-risk service and read-only training workflow. Worker screening starts disabled and in shadow mode; human moderation remains final, and private messages, verification evidence and applicant resumes are excluded.
 
 ## Project structure
 
@@ -240,7 +244,7 @@ Saple/
 ├── database/postgres/  schema, demo data, validation queries, migrations/
 ├── docs/               setup, deployment, schema and compliance documents
 ├── frontend/           pages, css/, js/, assets/, service worker
-├── ml/                 optional ML prototype
+├── ml/                 moderation service, training audit and candidate models
 ├── assets/screenshots/
 ├── ERD.pdf
 ├── render.yaml

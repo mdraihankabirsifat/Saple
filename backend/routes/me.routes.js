@@ -45,6 +45,7 @@ router.delete('/skills/:skillId', profileWriteLimit, professionalProfile.removeS
 
 router.get('/applications', applicationController.listOwn);
 router.get('/applications/:applicationId', applicationController.getOwn);
+router.get('/applications/:applicationId/resume', applicationController.getOwnResume);
 router.patch('/applications/:applicationId/withdraw', applicationController.withdrawOwn);
 
 router.get('/notifications', notificationController.list);

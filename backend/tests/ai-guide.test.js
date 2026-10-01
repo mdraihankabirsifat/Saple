@@ -81,7 +81,7 @@ test('no AI key, provider URL or model appears anywhere the browser can read', (
   // The browser only ever talks to Saple's own endpoint.
   const client = read('frontend/js/assistant.js');
   assert.match(client, /apiRequest\('\/api\/assistant\/messages'/);
-  assert.match(client, /fetchApi\('\/api\/assistant\/status'\)/);
+  assert.match(client, /apiRequest\('\/api\/assistant\/status', \{ auth: 'optional' \}\)/);
 });
 
 test('the public status endpoint reveals whether the guide works, not how', async () => {
@@ -114,9 +114,11 @@ test('the provider URL comes only from configuration and must be credential-free
   }
 
   // The request path is a fixed literal, so no caller can redirect the call.
-  const source = read('backend/services/ai.service.js');
+  // Every AI feature goes through the one shared provider module.
+  const source = read('backend/services/ai-provider.js');
   assert.match(source, /`\$\{config\.baseUrl\}\/chat\/completions`/);
   assert.equal((source.match(/fetch\(/g) || []).length, 1, 'exactly one outbound call exists');
+  assert.equal((read('backend/services/ai.service.js').match(/fetch\(/g) || []).length, 0);
 });
 
 test('an incomplete AI configuration names the missing variables and never their values', () => {

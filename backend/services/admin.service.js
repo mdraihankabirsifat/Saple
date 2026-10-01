@@ -96,6 +96,11 @@ async function getPendingSubmissions() {
   return rows.map((row) => toSubmission(row, { includeSubmitter: false }));
 }
 
+async function getMlHealth() {
+  try { return await adminRepository.findMlHealth(); }
+  catch (error) { if (error.code === '42P01') return { available: false, screeningEnabled: false }; throw error; }
+}
+
 async function getSubmission(submissionIdValue) {
   const submissionId = validateSubmissionId(submissionIdValue);
   const row = await adminRepository.findSubmissionById(submissionId);
@@ -157,6 +162,7 @@ async function moderateSubmission(moderatorUserId, submissionIdValue, input = {}
 
 module.exports = {
   getPendingSubmissions,
+  getMlHealth,
   getSubmission,
   getModerationHistory,
   moderateSubmission,

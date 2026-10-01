@@ -150,6 +150,12 @@ LANGUAGE sql IMMUTABLE AS $$
     WHEN 'India' THEN 10000 WHEN 'Denmark' THEN 5000 ELSE 1000 END::NUMERIC
 $$;
 
+CREATE OR REPLACE FUNCTION pg_temp.bulk_currency_unit(currency TEXT) RETURNS NUMERIC
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE currency WHEN 'BDT' THEN 500 WHEN 'JPY' THEN 10000 WHEN 'KRW' THEN 100000
+    WHEN 'INR' THEN 10000 WHEN 'DKK' THEN 5000 ELSE 1000 END::NUMERIC
+$$;
+
 CREATE OR REPLACE FUNCTION pg_temp.bulk_category_factor(category TEXT) RETURNS NUMERIC
 LANGUAGE sql IMMUTABLE AS $$
   SELECT CASE category
@@ -762,7 +768,9 @@ FROM (
       * pg_temp.bulk_role_factor(sh.role_category, sh.role_name)
       * pg_temp.bulk_level_factor(ROUND(sh.years::NUMERIC, 1), sh.role_category,
           sh.years < 0.8 AND sh.role_category <> 'Early Career' AND sh.contract_roll < 0.5)
-      * sh.pay_factor * (0.86 + 0.28 * sh.noise)
+      -- Verified observations sit closer to the modelled pay (about +/-10%);
+      -- unverified ones vary a little more (about +/-16%).
+      * sh.pay_factor * CASE WHEN sh.verification IN ('VERIFIED', 'EXPIRED') THEN 0.90 + 0.20 * sh.noise ELSE 0.84 + 0.32 * sh.noise END
       * CASE WHEN sh.contract_roll > 0.925 AND sh.contract_roll <= 0.95 THEN 0.55 ELSE 1 END AS pay_estimate
   FROM shaped sh
 ) x
@@ -799,6 +807,113 @@ SELECT sid, role_id, base_salary,
        ELSE pg_temp.bulk_pick(ARRAY['ONSITE', 'ONSITE', 'ONSITE', 'ONSITE', 'ONSITE', 'ONSITE', 'ONSITE', 'HYBRID', 'HYBRID', 'REMOTE'], 'mode:' || row_key) END,
   EXTRACT(YEAR FROM submitted_at)::INT
 FROM bulk_salary_plan;
+
+-- ---------------------------------------------------------------------------
+-- 9b. Community-only salary observations. Verified salaries come only from
+--     contributors with a verified employment scope, so on their own many
+--     popular pairs would show identical Verified and Community ranges. Here,
+--     synthetic accounts WITHOUT a verified scope for the pair add approved
+--     UNVERIFIED observations until verified rows are roughly 40-60% of each
+--     popular group. Nothing is marked verified. The same step, with the same
+--     seeds, is 07_balance_demo_salary_ranges.sql for older demo loads; on a
+--     database loaded by this script that file adds nothing.
+-- ---------------------------------------------------------------------------
+
+-- Synthetic approved salaries grouped exactly as the salary pages group them.
+CREATE TEMP TABLE bulk_balance_group ON COMMIT DROP AS
+WITH grouped AS (
+  SELECT s.company_id, ss.role_id, ss.currency, ss.pay_period,
+    COUNT(*)::INT AS community_count,
+    COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED')::INT AS verified_count,
+    -- Observed salaries, verified ones preferred, used as anchors so new
+    -- values follow the group's real spread across experience levels.
+    COALESCE(
+      ARRAY_AGG(ss.base_salary ORDER BY ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED'),
+      ARRAY_AGG(ss.base_salary ORDER BY ss.base_salary)) AS anchors,
+    AVG(ss.years_of_experience) AS avg_years,
+    MODE() WITHIN GROUP (ORDER BY ss.work_mode) AS work_mode
+  FROM submissions s
+  JOIN salary_submissions ss ON ss.submission_id = s.submission_id
+  JOIN users u ON u.user_id = s.user_id
+  WHERE u.password_hash = pg_temp.bulk_marker()
+    AND s.submission_type = 'SALARY' AND s.submission_status = 'APPROVED'
+  GROUP BY s.company_id, ss.role_id, ss.currency, ss.pay_period
+),
+targets AS (
+  SELECT g.*,
+    g.company_id || ':' || g.role_id || ':' || g.currency || ':' || g.pay_period AS group_key,
+    -- Each popular group aims for its own verified share between 40% and 60%.
+    0.40 + 0.20 * pg_temp.bulk_rand('balance-share:' || g.company_id || ':' || g.role_id || ':' || g.currency || ':' || g.pay_period) AS share
+  FROM grouped g
+)
+SELECT t.*,
+  GREATEST(0, CASE
+    -- Already healthy: more community than verified, verified at most ~65%.
+    WHEN t.community_count > t.verified_count AND t.verified_count <= 0.65 * t.community_count THEN 0
+    -- Popular groups: at least 8 community observations, verified near the
+    -- group's share, and never more than 12 rows added to one group.
+    WHEN t.verified_count >= 4
+      THEN LEAST(12, GREATEST(8, CEIL(t.verified_count / t.share)::INT) - t.community_count)
+    -- Small all-verified groups: one or two community-only observations.
+    WHEN t.verified_count >= 1 AND t.community_count = t.verified_count
+      THEN 1 + FLOOR(pg_temp.bulk_rand('balance-small:' || t.group_key) * 2)::INT
+    ELSE 0 END) AS needed
+FROM targets t;
+
+-- Authors: synthetic accounts with no VERIFIED employment record for this
+-- company and role, and no salary at this company yet, in a stable order.
+CREATE TEMP TABLE bulk_balance_plan ON COMMIT DROP AS
+SELECT NEXTVAL(pg_get_serial_sequence('submissions', 'submission_id')) AS sid, p.*,
+  -- A community-only value: one observed salary from the group, varied by up
+  -- to about 17% either way, so it can sit a little beyond the verified range.
+  GREATEST(pg_temp.bulk_currency_unit(p.currency),
+    ROUND(p.anchors[1 + FLOOR(pg_temp.bulk_rand('balance-anchor:' || p.row_key) * CARDINALITY(p.anchors))::INT]
+      * (0.83 + 0.34 * pg_temp.bulk_rand('balance-pay:' || p.row_key)) / pg_temp.bulk_currency_unit(p.currency))
+      * pg_temp.bulk_currency_unit(p.currency)) AS base_salary,
+  GREATEST(p.created_at + INTERVAL '1 day',
+    CURRENT_TIMESTAMP - ((5 + FLOOR(pg_temp.bulk_rand('balance-when:' || p.row_key) * 540)) || ' days')::INTERVAL)
+    - ((FLOOR(pg_temp.bulk_rand('balance-hour:' || p.row_key) * 600)) || ' minutes')::INTERVAL AS submitted_at
+FROM (
+  SELECT g.*, c.user_id, c.created_at, g.group_key || ':' || c.user_id AS row_key
+  FROM bulk_balance_group g
+  CROSS JOIN LATERAL (
+    SELECT u.user_id, u.created_at,
+      ROW_NUMBER() OVER (ORDER BY MD5(g.group_key || ':author:' || u.user_id)) AS rn
+    FROM users u
+    WHERE u.password_hash = pg_temp.bulk_marker()
+      AND u.account_status = 'ACTIVE'
+      AND u.created_at < CURRENT_TIMESTAMP - INTERVAL '10 days'
+      AND NOT EXISTS (
+        SELECT 1 FROM employment_verifications ev
+        JOIN employees e ON e.employee_id = ev.employee_id
+        WHERE e.user_id = u.user_id AND ev.company_id = g.company_id AND ev.role_id = g.role_id
+          AND ev.verification_status = 'VERIFIED')
+      AND NOT EXISTS (
+        SELECT 1 FROM submissions s2
+        WHERE s2.user_id = u.user_id AND s2.company_id = g.company_id AND s2.submission_type = 'SALARY')
+  ) c
+  WHERE g.needed > 0 AND c.rn <= g.needed
+) p;
+
+INSERT INTO submissions (submission_id, user_id, company_id, submission_type, is_anonymous,
+  submission_status, verification_status, submitted_at, approved_at, updated_at)
+SELECT sid, user_id, company_id, 'SALARY', 1, 'APPROVED', 'UNVERIFIED', submitted_at, approved, approved
+FROM (
+  SELECT bp.*, LEAST(bp.submitted_at + ((6 + FLOOR(pg_temp.bulk_rand('balance-approved:' || bp.row_key) * 120)) || ' hours')::INTERVAL,
+    CURRENT_TIMESTAMP - INTERVAL '30 minutes') AS approved
+  FROM bulk_balance_plan bp
+) planned;
+
+INSERT INTO salary_submissions (submission_id, role_id, base_salary, additional_compensation, currency,
+  pay_period, years_of_experience, employment_type, work_mode, salary_year)
+SELECT sid, role_id, base_salary,
+  CASE WHEN pg_temp.bulk_rand('balance-bonus:' || row_key) < 0.6 THEN NULL
+       ELSE NULLIF(ROUND(base_salary * 0.08 / pg_temp.bulk_currency_unit(currency)) * pg_temp.bulk_currency_unit(currency), 0) END,
+  currency, pay_period,
+  LEAST(60, GREATEST(0, ROUND((COALESCE(avg_years, 3) + (pg_temp.bulk_rand('balance-years:' || row_key) - 0.5) * 3)::NUMERIC, 1))),
+  'FULL_TIME', COALESCE(work_mode, 'ONSITE'),
+  EXTRACT(YEAR FROM submitted_at)::INT
+FROM bulk_balance_plan;
 
 -- ---------------------------------------------------------------------------
 -- 10. Company reviews: varied ratings (a per-company tendency plus

@@ -18,10 +18,13 @@ const APPLICATION_SELECT = `
     jp.company_id AS "companyId", c.company_name AS "companyName",
     jp.title AS "jobTitle", jp.location, jp.job_status AS "jobStatus",
     jp.application_deadline AS "applicationDeadline",
-    jp.employment_type AS "employmentType", jp.work_mode AS "workMode"
+    jp.employment_type AS "employmentType", jp.work_mode AS "workMode",
+    (resume.application_id IS NOT NULL) AS "resumeAttached",
+    resume.original_file_name AS "resumeFileName", resume.file_size_bytes AS "resumeFileSizeBytes"
   FROM job_applications ja
   JOIN job_postings jp ON jp.job_id = ja.job_id
   JOIN companies c ON c.company_id = jp.company_id
+  LEFT JOIN job_application_resumes resume ON resume.application_id = ja.application_id
 `;
 
 async function findApplicationScope(applicationId) {
@@ -71,11 +74,14 @@ const SCOPED_APPLICATION_SELECT = `
     ja.submitted_at AS "submittedAt", ja.updated_at AS "updatedAt",
     ja.reviewed_at AS "reviewedAt", jp.company_id AS "companyId",
     c.company_name AS "companyName", jp.title AS "jobTitle",
-    jp.job_status AS "jobStatus"
+    jp.job_status AS "jobStatus",
+    (resume.application_id IS NOT NULL) AS "resumeAttached",
+    resume.original_file_name AS "resumeFileName", resume.file_size_bytes AS "resumeFileSizeBytes"
   FROM job_applications ja
   JOIN job_postings jp ON jp.job_id = ja.job_id
   JOIN companies c ON c.company_id = jp.company_id
   JOIN users applicant ON applicant.user_id = ja.applicant_user_id
+  LEFT JOIN job_application_resumes resume ON resume.application_id = ja.application_id
 `;
 
 const SCOPED_APPLICATION_FILTER = `
@@ -106,6 +112,17 @@ async function countApplicationsForScope({ companyIds = null, jobId = null, stat
   return result.rows[0].total;
 }
 
+// The PDF bytes, read only for an authorised resume request. List queries
+// never select pdf_data.
+async function findResume(applicationId) {
+  const result = await database.query(`
+    SELECT original_file_name AS "fileName", file_size_bytes AS "size", pdf_data AS "data"
+    FROM job_application_resumes WHERE application_id = $1
+  `, [applicationId]);
+  const row = result.rows[0];
+  return row ? { fileName: row.fileName, size: row.size, data: Buffer.from(row.data) } : null;
+}
+
 async function findApplicationHistory(applicationId) {
   const result = await database.query(`
     SELECT h.history_id AS "historyId", h.previous_status AS "previousStatus",
@@ -121,7 +138,7 @@ async function findApplicationHistory(applicationId) {
 
 // Eligibility is re-checked inside the transaction: the vacancy must still be
 // published and inside its deadline at the moment the row is written.
-async function createApplication({ jobId, applicantUserId, coverLetter }) {
+async function createApplication({ jobId, applicantUserId, coverLetter, resume = null }) {
   const client = await database.getClient();
 
   try {
@@ -183,6 +200,16 @@ async function createApplication({ jobId, applicantUserId, coverLetter }) {
       throw error;
     }
 
+    // The optional resume belongs to this transaction: if it cannot be stored,
+    // the application is rolled back too, so no orphan or half-filed row stays.
+    if (resume) {
+      await client.query(`
+        INSERT INTO job_application_resumes (
+          application_id, original_file_name, mime_type, file_size_bytes, sha256_hex, pdf_data
+        ) VALUES ($1, $2, $3, $4, $5, $6)
+      `, [applicationId, resume.fileName, resume.mimeType, resume.size, resume.sha256, resume.buffer]);
+    }
+
     await client.query(`
       INSERT INTO job_application_status_history (
         application_id, actor_user_id, previous_status, new_status, action_note
@@ -221,7 +248,7 @@ async function createApplication({ jobId, applicantUserId, coverLetter }) {
     }
 
     await client.query('COMMIT');
-    return { applicationId, applicationStatus: 'SUBMITTED', jobId, companyId: job.companyId };
+    return { applicationId, applicationStatus: 'SUBMITTED', jobId, companyId: job.companyId, resumeAttached: Boolean(resume) };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -300,6 +327,7 @@ module.exports = {
   findApplicationsForScope,
   countApplicationsForScope,
   findApplicationHistory,
+  findResume,
   createApplication,
   changeApplicationStatus
 };

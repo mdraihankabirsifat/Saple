@@ -11,7 +11,7 @@ const aiConfig = require('../config/ai');
 const paymentConfig = require('../config/payment');
 const sslcommerz = require('../services/providers/sslcommerz.provider');
 const premiumService = require('../services/premium.service');
-const premiumAi = require('../services/premium-ai.service');
+const resumeService = require('../services/resume.service');
 const applicationService = require('../services/application.service');
 
 // Saple Premium, end to end on an in-process PostgreSQL (PGlite) loaded with
@@ -26,7 +26,7 @@ const GATEWAY = 'https://sandbox.sslcommerz.com';
 const AI_BASE = 'https://ai.example.test/v1';
 const ENV_KEYS = ['JWT_SECRET', 'PAYMENT_GATEWAY', 'SSLCOMMERZ_BASE_URL', 'SSLCOMMERZ_SESSION_BASE_URL',
   'SSLCOMMERZ_VALIDATION_BASE_URL', 'SSLCOMMERZ_STORE_ID',
-  'SSLCOMMERZ_STORE_PASSWORD', 'PUBLIC_API_ORIGIN', 'PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT'];
+  'SSLCOMMERZ_STORE_PASSWORD', 'PUBLIC_API_ORIGIN', 'PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT', 'RESUME_FREE_DAILY_LIMIT'];
 const savedEnv = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
 const savedDatabase = {};
 const realFetch = global.fetch;
@@ -42,6 +42,9 @@ const tokens = {};
 // the HTTP tests below still reach the local test server.
 const gateway = { sessionFails: false, validations: new Map(), sessions: [] };
 let aiReply = null;
+// Every AI request body the code sends, and a model that should fail.
+const aiRequests = [];
+let aiFailModel = null;
 
 function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
@@ -60,6 +63,9 @@ global.fetch = async (url, options = {}) => {
     return jsonResponse(gateway.validations.get(valId) || { status: 'INVALID_TRANSACTION' });
   }
   if (href.startsWith(AI_BASE)) {
+    const body = JSON.parse(String(options.body));
+    aiRequests.push(body);
+    if (aiFailModel && body.model === aiFailModel) return jsonResponse({ error: 'down' }, 500);
     return jsonResponse({ choices: [{ message: { content: aiReply } }], usage: { prompt_tokens: 50, completion_tokens: 80 } });
   }
   return realFetch(url, options);
@@ -113,7 +119,7 @@ test.before(async () => {
   });
   // The documented sandbox hosts are the defaults, so none is set here.
   for (const key of ['SSLCOMMERZ_BASE_URL', 'SSLCOMMERZ_SESSION_BASE_URL', 'SSLCOMMERZ_VALIDATION_BASE_URL',
-    'PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT']) delete process.env[key];
+    'PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT', 'RESUME_FREE_DAILY_LIMIT']) delete process.env[key];
 
   const { PGlite } = await import('@electric-sql/pglite');
   pg = new PGlite();
@@ -581,65 +587,181 @@ test('Discover Talent lists Premium members first, with public fields only, for 
   assert.equal(items.some((item) => item.userId === ids.suspended), false);
 });
 
-// ---- Premium AI ----------------------------------------------------------------
+// ---- Saple Guide tiers and the resume generator -----------------------------------
 
-test('Premium AI is unavailable without a model and never breaks the free guide', async () => {
-  const response = await api('/api/premium/resume/generate', { method: 'POST', token: tokens.carol, body: { text: 'x'.repeat(60) } });
-  assert.equal(response.status, 503);
-  assert.equal(response.json.detail.code, 'PREMIUM_AI_UNAVAILABLE');
-  assert.equal((await api('/api/premium/ai/chat', { method: 'POST', token: tokens.dave, body: { message: 'Hello' } })).status, 403);
-  assert.equal((await api('/api/premium/plans')).json.data.premiumAiAvailable, false);
+const GUIDE_CONFIG = () => ({ apiKey: 'test-key', baseUrl: AI_BASE, model: 'guide-model', timeoutMs: 5000, maxOutputTokens: 400 });
+const RESUME_TEXT = 'Carol Rahman. Product designer at Pathao from 2022 to 2025 in Dhaka. Skills: Figma, user research. BSc in CSE from BUET.';
+const RESUME_REPLY = '```json\n' + JSON.stringify({
+  name: 'Carol Rahman', headline: 'Product designer', summary: 'Designer focused on research.',
+  skills: ['Figma', 'User research', 'Kubernetes'],
+  experience: [
+    { title: 'Product designer', organization: 'Pathao', location: 'Dhaka', start: '2022', end: '2025', highlights: ['Designed flows'] },
+    { title: 'Head of Design', organization: 'Google', start: '2019', end: '2021', highlights: [] }
+  ],
+  education: [{ institution: 'BUET', degree: 'BSc', field: 'CSE', start: null, end: null, details: null }],
+  projects: [{ name: 'Invented Project', description: 'Not real', highlights: [] }]
+}) + '\n```';
+
+async function withAi(work, env = {}) {
+  const saved = Object.fromEntries(['PREMIUM_AI_MODEL', 'PREMIUM_RESUME_DAILY_LIMIT', 'RESUME_FREE_DAILY_LIMIT']
+    .map((key) => [key, process.env[key]]));
+  Object.assign(process.env, { PREMIUM_AI_MODEL: 'test-premium-model', ...env });
+  aiConfig.getAiConfig = GUIDE_CONFIG;
+  aiRequests.length = 0;
+  try {
+    await work();
+  } finally {
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+    aiConfig.getAiConfig = realGetAiConfig;
+    aiFailModel = null;
+  }
+}
+
+async function ask(token, question = 'How do I negotiate my salary?') {
+  return api('/api/assistant/messages', { method: 'POST', token, body: { messages: [{ role: 'user', content: question }] } });
+}
+
+test('the one Saple Guide answers free members with the standard model and Premium or trial members with the Premium model', async () => {
+  await withAi(async () => {
+    aiReply = 'Bring approved salary ranges to the conversation.';
+    const free = await ask(tokens.dave);
+    assert.equal(free.status, 200);
+    assert.deepEqual([free.json.data.tier, free.json.data.premiumMember], ['STANDARD', false]);
+    assert.equal(aiRequests.at(-1).model, 'guide-model');
+
+    const paid = await ask(tokens.carol);
+    assert.deepEqual([paid.json.data.tier, paid.json.data.premiumMember], ['PREMIUM', true]);
+    assert.equal(aiRequests.at(-1).model, 'test-premium-model');
+    assert.match(aiRequests.at(-1).messages[0].content, /Premium mode/);
+
+    const trial = await ask(tokens.bob);
+    assert.equal(trial.json.data.tier, 'PREMIUM');
+    assert.equal(aiRequests.at(-1).model, 'test-premium-model');
+
+    // An expired trial is back on the standard guide with no sign-in change.
+    const expired = await ask(tokens.alice);
+    assert.equal(expired.json.data.tier, 'STANDARD');
+    assert.equal(aiRequests.at(-1).model, 'guide-model');
+
+    // Signed out, and a client claiming Premium, both get the standard guide.
+    const anonymous = await api('/api/assistant/messages', { method: 'POST', body: { tier: 'PREMIUM', messages: [{ role: 'user', content: 'Hi' }] } });
+    assert.equal(anonymous.json.data.tier, 'STANDARD');
+
+    // Usage metadata only: the conversation itself is never stored.
+    const usage = (await pg.query(`SELECT * FROM premium_ai_usage WHERE feature_type = 'ADVANCED_CHAT'`)).rows;
+    assert.ok(usage.length >= 2);
+    assert.doesNotMatch(JSON.stringify(usage), /negotiate|salary ranges/i);
+
+    const status = await api('/api/assistant/status', { token: tokens.carol });
+    assert.equal(status.json.data.tier, 'PREMIUM');
+    assert.equal((await api('/api/assistant/status')).json.data.tier, 'STANDARD');
+  });
 });
 
-test('the resume generator keeps only facts found in the member text, stores no text, and is rate limited', async () => {
-  process.env.PREMIUM_AI_MODEL = 'test-premium-model';
-  process.env.PREMIUM_RESUME_DAILY_LIMIT = '1';
-  aiConfig.getAiConfig = () => ({ apiKey: 'test-key', baseUrl: AI_BASE, model: 'guide-model', timeoutMs: 5000, maxOutputTokens: 600 });
-  try {
-    const text = 'Carol Rahman. Product designer at Pathao from 2022 to 2025 in Dhaka. Skills: Figma, user research. BSc in CSE from BUET.';
-    aiReply = '```json\n' + JSON.stringify({
-      name: 'Carol Rahman', headline: 'Product designer', summary: 'Designer focused on research.',
-      skills: ['Figma', 'User research', 'Kubernetes'],
-      experience: [
-        { title: 'Product designer', organization: 'Pathao', location: 'Dhaka', start: '2022', end: '2025', highlights: ['Designed flows'] },
-        { title: 'Head of Design', organization: 'Google', start: '2019', end: '2021', highlights: [] }
-      ],
-      education: [{ institution: 'BUET', degree: 'BSc', field: 'CSE', start: null, end: null, details: null }],
-      projects: [{ name: 'Invented Project', description: 'Not real', highlights: [] }]
-    }) + '\n```';
-    const response = await api('/api/premium/resume/generate', { method: 'POST', token: tokens.carol, body: { text, style: 'concise' } });
+test('a failing or missing Premium model falls back to the standard guide', async () => {
+  await withAi(async () => {
+    aiReply = 'Here is a standard answer.';
+    aiFailModel = 'test-premium-model';
+    const response = await ask(tokens.carol);
     assert.equal(response.status, 200);
-    const { resume } = response.json.data;
+    assert.deepEqual([response.json.data.tier, response.json.data.source, response.json.data.answer],
+      ['STANDARD', 'AI', 'Here is a standard answer.']);
+    assert.deepEqual(aiRequests.slice(-2).map((request) => request.model), ['test-premium-model', 'guide-model']);
+  });
+  await withAi(async () => {
+    delete process.env.PREMIUM_AI_MODEL;
+    aiReply = 'Standard.';
+    const response = await ask(tokens.carol);
+    assert.deepEqual([response.json.data.tier, response.json.data.premiumMember], ['STANDARD', true]);
+    assert.equal(aiRequests.at(-1).model, 'guide-model');
+  }, { PREMIUM_AI_MODEL: '' });
+});
+
+test('the old Premium-only AI routes are gone', async () => {
+  assert.equal((await api('/api/premium/ai/chat', { method: 'POST', token: tokens.carol, body: { message: 'Hi' } })).status, 404);
+  assert.equal((await api('/api/premium/resume/generate', { method: 'POST', token: tokens.carol, body: { text: 'x'.repeat(60) } })).status, 404);
+});
+
+test('every signed-in member can generate a full resume, without invented facts and without storing the text', async () => {
+  assert.equal((await api('/api/resume/generate', { method: 'POST', body: { text: RESUME_TEXT } })).status, 401);
+  await withAi(async () => {
+    aiReply = RESUME_REPLY;
+    const status = await api('/api/resume/status', { token: tokens.dave });
+    assert.deepEqual([status.json.data.premium, status.json.data.pdfAvailable, status.json.data.dailyLimit], [false, false, 3]);
+
+    const response = await api('/api/resume/generate', { method: 'POST', token: tokens.dave, body: { text: RESUME_TEXT, style: 'concise' } });
+    assert.equal(response.status, 200);
+    const { resume, pdfAvailable, remaining } = response.json.data;
+    assert.deepEqual([pdfAvailable, remaining], [false, 2]);
     assert.equal(resume.name, 'Carol Rahman');
+    assert.equal(resume.summary, 'Designer focused on research.');
     assert.deepEqual(resume.skills, ['Figma', 'User research']);
     assert.deepEqual(resume.experience.map((item) => item.organization), ['Pathao']);
     assert.deepEqual(resume.projects, []);
     assert.equal(resume.education[0].institution, 'BUET');
 
-    const usage = (await pg.query('SELECT * FROM premium_ai_usage WHERE user_id = $1', [ids.carol])).rows;
+    const usage = (await pg.query(`SELECT * FROM premium_ai_usage WHERE user_id = $1 AND feature_type = 'RESUME_GENERATION'`, [ids.dave])).rows;
     assert.equal(usage.length, 1);
-    assert.doesNotMatch(JSON.stringify(usage), /Pathao|Carol Rahman/);
-
-    const limited = await api('/api/premium/resume/generate', { method: 'POST', token: tokens.carol, body: { text } });
-    assert.equal(limited.status, 429);
-    assert.equal(limited.json.detail.code, 'PREMIUM_AI_LIMIT');
-
-    aiReply = 'Negotiate with data: bring approved salary ranges.';
-    const chat = await api('/api/premium/ai/chat', { method: 'POST', token: tokens.carol, body: { messages: [{ role: 'user', content: 'How do I negotiate?' }] } });
-    assert.equal(chat.status, 200);
-    assert.equal(chat.json.data.answer, 'Negotiate with data: bring approved salary ranges.');
-    assert.equal(premiumAi.isAvailable(), true);
-  } finally {
-    delete process.env.PREMIUM_AI_MODEL;
-    delete process.env.PREMIUM_RESUME_DAILY_LIMIT;
-    aiConfig.getAiConfig = realGetAiConfig;
-  }
+    assert.doesNotMatch(JSON.stringify(usage), /Pathao|Carol Rahman|Figma/);
+  });
+  assert.match(resumeService.RESUME_SYSTEM_PROMPT, /Use ONLY facts/);
+  assert.match(resumeService.RESUME_SYSTEM_PROMPT, /Never invent/);
+  assert.match(resumeService.RESUME_SYSTEM_PROMPT, /omit it/);
+  assert.equal(resumeService.parseResumeJson('not json'), null);
 });
 
-test('the resume and chat prompts forbid invention and private data', () => {
-  assert.match(premiumAi.RESUME_SYSTEM_PROMPT, /Use ONLY facts/);
-  assert.match(premiumAi.RESUME_SYSTEM_PROMPT, /Never invent/);
-  assert.match(premiumAi.RESUME_SYSTEM_PROMPT, /omit it/);
-  assert.match(premiumAi.CHAT_SYSTEM_PROMPT, /do not have access to the member's account/);
-  assert.equal(premiumAi.parseResumeJson('not json'), null);
+test('daily resume allowances are enforced on the server: 3 free, 10 Premium by default', async () => {
+  await withAi(async () => {
+    aiReply = RESUME_REPLY;
+    // Dave already used one today; with a free limit of 2 he has one more.
+    assert.equal((await api('/api/resume/generate', { method: 'POST', token: tokens.dave, body: { text: RESUME_TEXT } })).status, 200);
+    const limited = await api('/api/resume/generate', { method: 'POST', token: tokens.dave, body: { text: RESUME_TEXT } });
+    assert.equal(limited.status, 429);
+    assert.equal(limited.json.detail.code, 'RESUME_DAILY_LIMIT');
+
+    assert.equal((await api('/api/resume/status', { token: tokens.carol })).json.data.dailyLimit, 1);
+    assert.equal((await api('/api/resume/generate', { method: 'POST', token: tokens.carol, body: { text: RESUME_TEXT } })).status, 200);
+    const premiumLimited = await api('/api/resume/generate', { method: 'POST', token: tokens.carol, body: { text: RESUME_TEXT } });
+    assert.equal(premiumLimited.json.detail.code, 'RESUME_DAILY_LIMIT');
+  }, { RESUME_FREE_DAILY_LIMIT: '2', PREMIUM_RESUME_DAILY_LIMIT: '1' });
+  const limits = require('../config/payment').getPremiumAiLimits();
+  assert.deepEqual([limits.freeResumePerDay, limits.resumePerDay], [3, 10]);
+});
+
+test('the official PDF export is Premium and trial only, and returns a real PDF', async () => {
+  const resume = {
+    name: 'Carol Rahman', headline: 'Product designer',
+    experience: [{ title: 'Product designer', organization: 'Pathao', start: '2022', end: '2025', highlights: ['Designed (core) flows \\ checkout'] }],
+    skills: ['Figma']
+  };
+  const download = (token) => realFetch(`${baseUrl}/api/resume/pdf`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ resume })
+  });
+  assert.equal((await download(null)).status, 401);
+  const free = await download(tokens.dave);
+  assert.equal(free.status, 403);
+  assert.equal((await free.json()).detail.code, 'PREMIUM_REQUIRED');
+  assert.equal((await download(tokens.alice)).status, 403, 'an expired trial is locked again');
+
+  for (const token of [tokens.carol, tokens.bob]) {
+    const response = await download(token);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'application/pdf');
+    assert.equal(response.headers.get('content-disposition'), 'attachment; filename="Saple_Resume_Carol.pdf"');
+    assert.match(response.headers.get('cache-control'), /no-store/);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.equal(bytes.subarray(0, 5).toString('latin1'), '%PDF-');
+    const text = bytes.toString('latin1');
+    assert.match(text, /\(Carol Rahman\) Tj/);
+    assert.match(text, /Designed \\\(core\\\) flows \\\\ checkout/);
+    assert.match(text, /%%EOF\n$/);
+  }
+  const empty = await realFetch(`${baseUrl}/api/resume/pdf`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokens.carol}` }, body: JSON.stringify({ resume: {} })
+  });
+  assert.equal(empty.status, 400);
 });

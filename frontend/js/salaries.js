@@ -2,6 +2,7 @@ import { fetchApi } from './api.js';
 import { clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination } from './ui.js';
 import { buildQuery, companyDetailsLink, loadCompanyAndRoleOptions } from './browse-shared.js';
 import { createBrowseController, paginateList, describeRange } from './browse-controls.js';
+import { comparePopularSalaries } from './popularity.js';
 
 const form = document.querySelector('#salary-filters');
 const company = document.querySelector('#salary-company-filter');
@@ -52,6 +53,12 @@ function salaryCard(item) {
   card.className = 'insight-card card';
   headingRow.className = 'card-heading-row';
   heading.textContent = item.companyName;
+  if (item.awaitingModeratorReview) {
+    const pending = document.createElement('span');
+    pending.className = 'badge moderation-pending';
+    pending.textContent = 'Awaiting moderator review';
+    heading.append(' ', pending);
+  }
   subtitle.textContent = `${item.roleName} · ${[item.headquartersCity, item.country].filter(Boolean).join(', ')}`;
   period.className = 'badge';
   period.textContent = `${item.currency} / ${item.payPeriod.toLowerCase()}`;
@@ -67,7 +74,9 @@ const PAGE_SIZE = 10;
 const NOUN = {"singular":"salary insight","plural":"salary insights"};
 // Sorting happens in the browser over the approved set the API returned; the
 // server keeps its own stable order and receives only the filters it accepts.
+// Popular is the default order: contribution counts, then recency (popularity.js).
 const SORTS = {
+  popular: comparePopularSalaries,
   company: (a, b) => a.companyName.localeCompare(b.companyName) || a.roleName.localeCompare(b.roleName),
   'salary-desc': (a, b) => (b.communityMaximumSalary ?? -1) - (a.communityMaximumSalary ?? -1),
   'salary-asc': (a, b) => (a.communityMinimumSalary ?? Infinity) - (b.communityMinimumSalary ?? Infinity),
@@ -85,7 +94,7 @@ async function load(state, controller) {
 
   try {
     if (cached.query !== query) cached = { query, items: await fetchApi(`/api/salaries${query}`) };
-    const sorted = [...cached.items].sort(SORTS[filters.sort] || SORTS['company']);
+    const sorted = [...cached.items].sort(SORTS[filters.sort] || SORTS.popular);
     const { items, pagination } = paginateList(sorted, state.page, PAGE_SIZE);
     status.textContent = describeRange(pagination, NOUN);
     results.removeAttribute('aria-busy');
@@ -115,7 +124,7 @@ const browse = createBrowseController({
   form,
   toggle: document.querySelector('[data-filter-toggle]'),
   fields: ['companyId', 'roleId', 'location', 'salarySource', 'minSalary', 'maxSalary', 'sort'],
-  defaults: { salarySource: 'COMMUNITY', sort: 'company' },
+  defaults: { salarySource: 'COMMUNITY', sort: 'popular' },
   load
 });
 

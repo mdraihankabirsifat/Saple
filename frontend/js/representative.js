@@ -1,6 +1,7 @@
 import { apiRequest } from './api.js';
 import { createCompanyLogo } from './company-logo.js';
 import { requireSession } from './require-session.js';
+import { resumeSection } from './resume-file.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination,
   formatDate, formatDateTime, formatSalaryRange, humanizeEnum, showToast, trapFocus
@@ -545,6 +546,7 @@ function applicationCard(application, reload) {
       el('summary', { text: 'Application statement' }),
       el('p', { className: 'application-cover-letter', text: application.coverLetter })
     ]),
+    resumeSection(application, `/api/representative/applications/${application.applicationId}/resume`, (error) => showToast(error.message, 'error')),
     el('button', { className: 'button button-secondary button-small', text: 'Message applicant', attrs: { type: 'button', 'data-message-user': application.applicantUserId } }),
     isOpen ? el('div', { className: 'decision-row' }, [decision, note, save]) : null,
     isOpen ? feedback : null

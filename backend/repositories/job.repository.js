@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { recordJobScreening } = require('./ml-screening.repository');
 const { insertNotification } = require('./notification.repository');
 
 function repositoryError(code, message) {
@@ -45,15 +46,34 @@ function publicFilterValues(filters) {
   ];
 }
 
+// Popular jobs: applications are the real engagement signal. Each counts
+// once and those from the last 30 days count twice more; one is added so a
+// brand-new vacancy still has a score. The total is divided by the vacancy's
+// age in three-week steps, so old jobs cannot stay on top forever. Counts are
+// used only to order the list and are never returned. With a search, a title
+// or company that matches the words exactly, or starts with them, comes first.
+const POPULAR_JOB_ORDER = `
+  (CASE WHEN $6::varchar IS NULL THEN 0
+        WHEN LOWER(title) = LOWER($6) OR LOWER(company_name) = LOWER($6) THEN 3
+        WHEN LOWER(title) LIKE LOWER($6) || '%' OR LOWER(company_name) LIKE LOWER($6) || '%' THEN 2
+        ELSE 1 END) DESC,
+  ((SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = v.job_id)
+    + 2 * (SELECT COUNT(*) FROM job_applications ja WHERE ja.job_id = v.job_id
+            AND ja.submitted_at > CURRENT_TIMESTAMP - INTERVAL '30 days')
+    + 1)
+  / (1 + GREATEST(0, EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - published_at) / 86400.0) / 21.0) DESC,
+  published_at DESC, job_id DESC`;
+
 // Fixed orderings for the public job list, chosen by a validated name.
 const PUBLIC_JOB_ORDER = Object.freeze({
+  POPULAR: POPULAR_JOB_ORDER,
   NEWEST: 'published_at DESC, job_id DESC',
   DEADLINE: 'application_deadline ASC, job_id DESC',
   COMPANY: 'company_name ASC, published_at DESC, job_id DESC'
 });
 
-async function findPublicJobs(filters, { limit, offset, sort = 'NEWEST' }) {
-  const orderBy = PUBLIC_JOB_ORDER[sort] || PUBLIC_JOB_ORDER.NEWEST;
+async function findPublicJobs(filters, { limit, offset, sort = 'POPULAR' }) {
+  const orderBy = PUBLIC_JOB_ORDER[sort] || PUBLIC_JOB_ORDER.POPULAR;
   const result = await database.query(`
     SELECT ${PUBLIC_JOB_COLUMNS}
     FROM vw_public_open_jobs v
@@ -217,6 +237,8 @@ async function createJob(input) {
       input.accessLevel || 'FREE'
     ]);
 
+    await recordJobScreening(client, { jobId: result.rows[0].jobId, userId: input.createdByUserId, screening: input.screening });
+
     await client.query('COMMIT');
     return result.rows[0];
   } catch (error) {
@@ -298,6 +320,17 @@ async function changeJobStatus({ jobId, actorUserId, newStatus, allowedPreviousS
     if (!allowedPreviousStatuses.includes(current.jobStatus)) {
       throw repositoryError('INVALID_TRANSITION', 'This vacancy cannot make that transition');
     }
+    if (newStatus === 'PUBLISHED' && process.env.ML_SCREENING_ENABLED === 'true') {
+      const screening = await client.query(`SELECT manual_review_status AS status
+        FROM content_screenings WHERE entity_type = 'JOB' AND entity_id = $1
+        ORDER BY revision_no DESC LIMIT 1`, [jobId]);
+      if (screening.rows[0]?.status === 'PENDING') {
+        throw repositoryError('INVALID_TRANSITION', 'This posting is waiting for moderator review');
+      }
+      if (screening.rows[0]?.status === 'REJECTED') {
+        throw repositoryError('INVALID_TRANSITION', 'This posting was declined by a moderator');
+      }
+    }
 
     await client.query(`
       UPDATE job_postings SET
@@ -334,6 +367,17 @@ async function changeJobStatus({ jobId, actorUserId, newStatus, allowedPreviousS
         });
         notifiedCount += 1;
       }
+    }
+
+    // Publishing a screened draft is the authorized human final decision for
+    // that job. It cannot be undone by a later ML response.
+    if (newStatus === 'PUBLISHED' && process.env.ML_SCREENING_ENABLED === 'true') {
+      await client.query(`UPDATE content_screenings SET
+        publication_state = 'CONFIRMED', manual_review_status = 'APPROVED',
+        reviewed_at = CURRENT_TIMESTAMP, reviewed_by = $2,
+        human_decision_note = 'Published by an authorized moderator', updated_at = CURRENT_TIMESTAMP
+        WHERE entity_type = 'JOB' AND entity_id = $1 AND manual_review_status = 'PENDING'`,
+      [jobId, actorUserId]);
     }
 
     await client.query('COMMIT');

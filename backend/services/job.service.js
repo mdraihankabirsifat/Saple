@@ -2,6 +2,7 @@ const jobRepository = require('../repositories/job.repository');
 const storage = require('../config/supabase-storage');
 function withLogo(job) { return { ...job, logoUrl: storage.publicUrl('logo', job.logoPath, job.logoUpdatedAt) }; }
 const createHttpError = require('../utils/httpError');
+const mlScreening = require('./ml-screening.service');
 const validate = require('../utils/validation');
 const premiumService = require('./premium.service');
 const { assertCompanyScope, isAdmin } = require('../utils/authorization');
@@ -10,7 +11,7 @@ const EMPLOYMENT_TYPES = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN'];
 const WORK_MODES = ['ONSITE', 'HYBRID', 'REMOTE'];
 // Public list orderings. Each name maps to a fixed ORDER BY in the repository;
 // the value from the query string is never placed into SQL.
-const PUBLIC_JOB_SORTS = ['NEWEST', 'DEADLINE', 'COMPANY'];
+const PUBLIC_JOB_SORTS = ['POPULAR', 'NEWEST', 'DEADLINE', 'COMPANY'];
 const JOB_STATUSES = ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED'];
 const SALARY_PERIODS = ['MONTHLY', 'YEARLY'];
 const ACCESS_LEVELS = ['FREE', 'PREMIUM'];
@@ -87,7 +88,7 @@ function premiumTeaser(job) {
 async function listPublicJobs(query = {}, viewer = null) {
   const filters = parseJobFilters(query);
   const page = validate.pagination(query);
-  const sort = validate.enumValue(query.sort, PUBLIC_JOB_SORTS, 'Sort', { required: false }) || 'NEWEST';
+  const sort = validate.enumValue(query.sort, PUBLIC_JOB_SORTS, 'Sort', { required: false }) || 'POPULAR';
 
   const [items, total] = await Promise.all([
     jobRepository.findPublicJobs(filters, { ...page, sort }),
@@ -174,6 +175,16 @@ async function createJob(user, companyIdValue, input = {}) {
     input.jobStatus || 'DRAFT', ['DRAFT', 'PUBLISHED'], 'Job status'
   );
   const assignment = user.representativeScopes?.find((scope) => scope.companyId === companyId);
+  const screening = mlScreening.enabled() ? await mlScreening.screen('JOB', {
+    title: parsed.title, description: parsed.description, requirements: parsed.requirements,
+    location: parsed.location, employmentType: parsed.employmentType, workMode: parsed.workMode,
+    salaryMin: parsed.salaryMin, salaryMax: parsed.salaryMax, accessLevel: parsed.accessLevel
+  }) : null;
+  // A held or unavailable screening must never make a newly requested
+  // publication public. It remains a draft until an authorized human
+  // publishes it. Shadow mode also stays held by design.
+  const effectiveJobStatus = screening && screening.publicationState !== 'PROVISIONAL'
+    ? 'DRAFT' : jobStatus;
 
   try {
     return await jobRepository.createJob({
@@ -181,7 +192,7 @@ async function createJob(user, companyIdValue, input = {}) {
       companyId,
       createdByUserId: user.userId,
       assignmentId: assignment?.assignmentId ?? null,
-      jobStatus
+      jobStatus: effectiveJobStatus, screening
     });
   } catch (error) {
     return rethrow(error);

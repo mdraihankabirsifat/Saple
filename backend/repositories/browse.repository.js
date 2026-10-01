@@ -27,19 +27,19 @@ function addSharedFilters(filters, conditions, values, aliases) {
 }
 
 async function findPublicSalaryInsights(filters) {
-  const conditions = ["s.submission_status = 'APPROVED'"];
+  const conditions = ["s.submission_type = 'SALARY'"];
   const having = [];
   const values = [];
   const bind = addSharedFilters(filters, conditions, values, { company: 'c', detail: 'ss' });
   const selectedMinimum = filters.salarySource === 'VERIFIED'
-    ? "MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')"
+    ? "MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED')"
     : 'MIN(ss.base_salary)';
   const selectedMaximum = filters.salarySource === 'VERIFIED'
-    ? "MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')"
+    ? "MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED')"
     : 'MAX(ss.base_salary)';
 
   if (filters.salarySource === 'VERIFIED') {
-    having.push("COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED') > 0");
+    having.push("COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED') > 0");
   }
   if (filters.minSalary !== null) having.push(`${selectedMaximum} >= ${bind(filters.minSalary)}`);
   if (filters.maxSalary !== null) having.push(`${selectedMinimum} <= ${bind(filters.maxSalary)}`);
@@ -53,15 +53,16 @@ async function findPublicSalaryInsights(filters) {
       MAX(ss.base_salary) AS "communityMaximumSalary",
       ROUND(AVG(ss.base_salary), 2) AS "communityAverageSalary",
       COUNT(*)::INTEGER AS "communityContributionCount",
-      MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')
+      MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED')
         AS "verifiedMinimumSalary",
-      MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')
+      MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED')
         AS "verifiedMaximumSalary",
-      ROUND(AVG(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED'), 2)
+      ROUND(AVG(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED'), 2)
         AS "verifiedAverageSalary",
-      COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED')::INTEGER
-        AS "verifiedContributionCount"
-    FROM submissions s
+      COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED' AND s.submission_status = 'APPROVED')::INTEGER
+        AS "verifiedContributionCount",
+      MAX(COALESCE(s.approved_at, s.submitted_at)) AS "latestApprovedAt"
+    FROM vw_public_visible_submissions s
     JOIN salary_submissions ss ON ss.submission_id = s.submission_id
     JOIN companies c ON c.company_id = s.company_id
     JOIN job_roles jr ON jr.role_id = ss.role_id
@@ -74,7 +75,7 @@ async function findPublicSalaryInsights(filters) {
 }
 
 async function findPublicReviews(filters) {
-  const conditions = ["s.submission_type = 'REVIEW'", "s.submission_status = 'APPROVED'"];
+  const conditions = ["s.submission_type = 'REVIEW'"];
   const values = [];
   const bind = addSharedFilters(filters, conditions, values, { company: 'c', detail: 'cr' });
   if (filters.minRating !== null) {
@@ -90,9 +91,10 @@ async function findPublicReviews(filters) {
       cr.management_rating AS "managementRating", cr.culture_rating AS "cultureRating",
       cr.pros, cr.cons, cr.advice_to_management AS "adviceToManagement",
       cr.employment_status AS "employmentStatus", cr.review_date AS "reviewDate",
-      s.verification_status AS "verificationStatus", s.approved_at AS "approvedAt",
+      s.verification_status AS "verificationStatus", COALESCE(s.approved_at, s.submitted_at) AS "approvedAt",
+      s.awaiting_moderator_review AS "awaitingModeratorReview",
       CASE WHEN s.is_anonymous = 0 THEN u.full_name ELSE NULL END AS "authorName"
-    FROM submissions s
+    FROM vw_public_visible_submissions s
     JOIN company_reviews cr ON cr.submission_id = s.submission_id
     JOIN companies c ON c.company_id = s.company_id
     LEFT JOIN job_roles jr ON jr.role_id = cr.role_id
@@ -103,7 +105,7 @@ async function findPublicReviews(filters) {
 }
 
 async function findPublicInterviews(filters) {
-  const conditions = ["s.submission_type = 'INTERVIEW'", "s.submission_status = 'APPROVED'"];
+  const conditions = ["s.submission_type = 'INTERVIEW'"];
   const values = [];
   const bind = addSharedFilters(filters, conditions, values, { company: 'c', detail: 'ie' });
   if (filters.difficultyLevel) {
@@ -120,9 +122,10 @@ async function findPublicInterviews(filters) {
       ie.rounds_count AS "roundsCount", ie.interview_mode AS "interviewMode",
       ie.result_status AS "resultStatus", ie.duration_days AS "durationDays",
       ie.process_description AS "processDescription", ie.questions_summary AS "questionsSummary",
-      s.verification_status AS "verificationStatus", s.approved_at AS "approvedAt",
+      s.verification_status AS "verificationStatus", COALESCE(s.approved_at, s.submitted_at) AS "approvedAt",
+      s.awaiting_moderator_review AS "awaitingModeratorReview",
       CASE WHEN s.is_anonymous = 0 THEN u.full_name ELSE NULL END AS "authorName"
-    FROM submissions s
+    FROM vw_public_visible_submissions s
     JOIN interview_experiences ie ON ie.submission_id = s.submission_id
     JOIN companies c ON c.company_id = s.company_id
     JOIN job_roles jr ON jr.role_id = ie.role_id

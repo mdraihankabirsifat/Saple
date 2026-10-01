@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { recordSubmission } = require('./ml-screening.repository');
 
 function createRepositoryError(code, message) {
   const error = new Error(message);
@@ -9,7 +10,7 @@ function createRepositoryError(code, message) {
 async function createSalarySubmission(input) {
   const {
     userId, companyId, roleId, baseSalary, additionalCompensation, currency,
-    payPeriod, yearsOfExperience, employmentType, workMode, salaryYear, isAnonymous
+    payPeriod, yearsOfExperience, employmentType, workMode, salaryYear, isAnonymous, screening
   } = input;
   const client = await database.getClient();
 
@@ -70,8 +71,10 @@ async function createSalarySubmission(input) {
       payPeriod, yearsOfExperience, employmentType, workMode, salaryYear
     ]);
 
+    const publicationState = await recordSubmission(client, { type: 'SALARY', submissionId, userId, screening });
     await client.query('COMMIT');
-    return { submissionId, submissionStatus: 'PENDING', verificationStatus };
+    return { submissionId, submissionStatus: 'PENDING', verificationStatus,
+      publicationState: publicationState || 'HELD' };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

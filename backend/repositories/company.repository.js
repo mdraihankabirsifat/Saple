@@ -114,6 +114,21 @@ async function findAllCompanies(filters) {
       JOIN salary_submissions ss ON ss.submission_id = s.submission_id
       WHERE s.submission_status = 'APPROVED'
       GROUP BY s.company_id
+    ),
+    -- Popularity inputs (the directory's default order): approved activity in
+    -- the last 90 days, the latest approval, and open vacancies. All real.
+    activity_stats AS (
+      SELECT s.company_id,
+        COUNT(*) FILTER (WHERE s.approved_at > CURRENT_TIMESTAMP - INTERVAL '90 days')::INTEGER AS recent_activity_count,
+        MAX(s.approved_at) AS latest_activity_at
+      FROM submissions s
+      WHERE s.submission_status = 'APPROVED'
+      GROUP BY s.company_id
+    ),
+    job_stats AS (
+      SELECT company_id, COUNT(*)::INTEGER AS open_job_count
+      FROM vw_public_open_jobs
+      GROUP BY company_id
     )
     SELECT c.company_id AS "companyId", c.company_name AS "companyName",
       c.industry, c.headquarters_city AS "headquartersCity", c.country,
@@ -128,11 +143,16 @@ async function findAllCompanies(filters) {
       salary_stats.community_max_salary AS "communityMaximumSalary",
       COALESCE(salary_stats.verified_salary_count, 0) AS "verifiedSalaryCount",
       salary_stats.verified_min_salary AS "verifiedMinimumSalary",
-      salary_stats.verified_max_salary AS "verifiedMaximumSalary"
+      salary_stats.verified_max_salary AS "verifiedMaximumSalary",
+      COALESCE(activity_stats.recent_activity_count, 0) AS "recentActivityCount",
+      activity_stats.latest_activity_at AS "latestActivityAt",
+      COALESCE(job_stats.open_job_count, 0) AS "openJobCount"
     FROM companies c
     LEFT JOIN review_stats ON review_stats.company_id = c.company_id
     LEFT JOIN interview_stats ON interview_stats.company_id = c.company_id
     LEFT JOIN salary_stats ON salary_stats.company_id = c.company_id
+    LEFT JOIN activity_stats ON activity_stats.company_id = c.company_id
+    LEFT JOIN job_stats ON job_stats.company_id = c.company_id
     ${conditions.length ? `WHERE ${conditions.join('\n      AND ')}` : ''}
     ORDER BY c.company_name
   `, values);

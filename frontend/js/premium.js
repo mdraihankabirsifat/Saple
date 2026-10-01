@@ -1,24 +1,22 @@
 import { apiRequest } from './api.js';
 import { isAuthenticated } from './auth.js';
-import { el, clear, formatDateTime, showToast } from './ui.js';
+import { el, formatDateTime, showToast } from './ui.js';
 
 // Saple Premium page.
 //
 // Prices, discounts and access are always the server's answer. This page only
 // shows them: the quote is recalculated at checkout, and Premium is granted
 // only after the payment gateway's own validation, never by anything here.
-
-const MAX_CHAT_TURNS = 12;
+// The Premium tools themselves are not embedded here: the Saple Guide switches
+// to Premium automatically, and the resume generator has its own page.
 
 const state = {
   signedIn: isAuthenticated(),
   plans: [],
   payments: { paymentsEnabled: false, sandbox: null },
-  aiAvailable: false,
   access: null,
   selectedPlan: null,
-  quote: null,
-  chat: []
+  quote: null
 };
 
 const nodes = {
@@ -35,20 +33,8 @@ const nodes = {
   checkoutButton: document.getElementById('checkout-button'),
   checkoutCancel: document.getElementById('checkout-cancel'),
   sandboxNote: document.getElementById('sandbox-note'),
-  tools: document.getElementById('premium-tools'),
-  toolsMessage: document.getElementById('tools-message'),
-  aiForm: document.getElementById('ai-form'),
-  aiInput: document.getElementById('ai-input'),
-  aiTranscript: document.getElementById('ai-transcript'),
-  resumeForm: document.getElementById('resume-form'),
-  resumeText: document.getElementById('resume-text'),
-  resumeCount: document.getElementById('resume-count'),
-  resumeRole: document.getElementById('resume-role'),
-  resumeStyle: document.getElementById('resume-style'),
-  resumeOutput: document.getElementById('resume-output'),
-  resumePreview: document.getElementById('resume-preview'),
-  resumeCopy: document.getElementById('resume-copy'),
-  resumePrint: document.getElementById('resume-print')
+  shortcuts: document.getElementById('premium-shortcuts'),
+  openGuide: document.getElementById('open-guide')
 };
 
 function taka(value) {
@@ -173,7 +159,7 @@ function renderPlans() {
       el('p', { className: 'plan-renewal', text: 'Prepaid · no automatic renewal' }),
       el('ul', { className: 'plan-points' }, [
         el('li', { text: 'Every Premium feature' }),
-        el('li', { text: 'Advanced AI and resume generator' }),
+        el('li', { text: 'Advanced Saple Guide and PDF resume export' }),
         el('li', { text: 'Premium jobs and full interview questions' })
       ]),
       action
@@ -186,7 +172,6 @@ async function loadPlans() {
     const data = await apiRequest('/api/premium/plans');
     state.plans = data.plans || [];
     state.payments = data.payments || state.payments;
-    state.aiAvailable = Boolean(data.premiumAiAvailable);
     setMessage(nodes.planMessage, state.plans.length ? '' : 'Premium plans are not available yet.');
   } catch (error) {
     setMessage(nodes.planMessage, `Plans could not be loaded. ${error.message}`, 'error');
@@ -289,162 +274,16 @@ nodes.checkoutCancel.addEventListener('click', () => {
   nodes.planGrid.querySelectorAll('.plan-card-paid').forEach((card) => card.classList.remove('is-selected'));
 });
 
-// ---- Premium tools ---------------------------------------------------------
+// ---- Shortcuts for active members --------------------------------------------
 
-function setToolsEnabled(enabled) {
-  for (const form of [nodes.aiForm, nodes.resumeForm]) {
-    form.querySelectorAll('textarea, input, select, button').forEach((control) => { control.disabled = !enabled; });
-  }
+// Premium works where the features live; this page only links to them.
+function renderShortcuts() {
+  nodes.shortcuts.hidden = !(state.signedIn && state.access?.hasPremium);
 }
 
-function renderTools() {
-  if (!state.signedIn || !state.access) {
-    nodes.tools.hidden = true;
-    return;
-  }
-  nodes.tools.hidden = false;
-  if (!state.access.hasPremium) {
-    setMessage(nodes.toolsMessage, 'These tools unlock with Premium or the free one-day trial.');
-    setToolsEnabled(false);
-  } else if (!state.aiAvailable) {
-    setMessage(nodes.toolsMessage, 'Premium AI is temporarily unavailable. The free Saple Guide still works.');
-    setToolsEnabled(false);
-  } else {
-    setMessage(nodes.toolsMessage, '');
-    setToolsEnabled(true);
-  }
-}
-
-function renderTranscript() {
-  clear(nodes.aiTranscript);
-  for (const turn of state.chat) {
-    nodes.aiTranscript.append(el('div', { className: `ai-turn ai-turn-${turn.role}` }, [
-      el('p', { className: 'ai-turn-label', text: turn.role === 'user' ? 'You' : 'Saple AI' }),
-      ...String(turn.content).split(/\n{2,}/).map((paragraph) => el('p', { text: paragraph }))
-    ]));
-  }
-  nodes.aiTranscript.scrollTop = nodes.aiTranscript.scrollHeight;
-}
-
-nodes.aiForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const message = nodes.aiInput.value.trim();
-  if (!message) return;
-  const submit = nodes.aiForm.querySelector('button[type="submit"]');
-  state.chat.push({ role: 'user', content: message });
-  nodes.aiInput.value = '';
-  renderTranscript();
-  submit.disabled = true;
-  submit.textContent = 'Thinking…';
-  try {
-    const data = await apiRequest('/api/premium/ai/chat', {
-      method: 'POST',
-      auth: true,
-      body: { messages: state.chat.slice(-MAX_CHAT_TURNS) }
-    });
-    state.chat.push({ role: 'assistant', content: data.answer || 'No answer this time. Please try again.' });
-  } catch (error) {
-    state.chat.pop();
-    nodes.aiInput.value = message;
-    showToast(error.message, 'error');
-  } finally {
-    submit.disabled = false;
-    submit.textContent = 'Ask';
-  }
-  renderTranscript();
-});
-
-nodes.resumeText.addEventListener('input', () => {
-  nodes.resumeCount.textContent = nodes.resumeText.value.length.toLocaleString('en-US');
-});
-
-function dateRange(item) {
-  return [item.start, item.end].filter(Boolean).join(' – ');
-}
-
-function resumeSection(title, children) {
-  if (!children.length) return null;
-  return el('section', { className: 'resume-section' }, [el('h3', { text: title }), ...children]);
-}
-
-function highlightList(items) {
-  return items?.length ? el('ul', {}, items.map((item) => el('li', { text: item }))) : null;
-}
-
-function renderResume(resume) {
-  const entries = (items, heading, sub) => items.map((item) => el('div', { className: 'resume-entry' }, [
-    el('p', { className: 'resume-entry-title', text: heading(item) }),
-    sub(item) ? el('p', { className: 'resume-entry-meta', text: sub(item) }) : null,
-    item.details ? el('p', { text: item.details }) : null,
-    item.description ? el('p', { text: item.description }) : null,
-    highlightList(item.highlights)
-  ]));
-
-  nodes.resumePreview.replaceChildren(...[
-    resume.name ? el('h2', { className: 'resume-name', text: resume.name }) : null,
-    resume.headline ? el('p', { className: 'resume-headline', text: resume.headline }) : null,
-    resume.summary ? resumeSection('Summary', [el('p', { text: resume.summary })]) : null,
-    resumeSection('Experience', entries(resume.experience || [],
-      (item) => [item.title, item.organization].filter(Boolean).join(' · '),
-      (item) => [item.location, dateRange(item)].filter(Boolean).join(' · '))),
-    resumeSection('Education', entries(resume.education || [],
-      (item) => [item.degree, item.field].filter(Boolean).join(', ') || item.institution,
-      (item) => [item.degree || item.field ? item.institution : null, dateRange(item)].filter(Boolean).join(' · '))),
-    resumeSection('Projects', entries(resume.projects || [], (item) => item.name, () => '')),
-    resume.skills?.length ? resumeSection('Skills', [el('p', { text: resume.skills.join(' · ') })]) : null
-  ].filter(Boolean));
-  nodes.resumeOutput.hidden = false;
-  nodes.resumeOutput.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function resumeAsText() {
-  const lines = [];
-  for (const node of nodes.resumePreview.querySelectorAll('h2, h3, p, li')) {
-    if (node.tagName === 'H3') lines.push('', node.textContent.toUpperCase());
-    else if (node.tagName === 'LI') lines.push(`• ${node.textContent}`);
-    else lines.push(node.textContent);
-  }
-  return lines.join('\n').trim();
-}
-
-nodes.resumeForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const text = nodes.resumeText.value.trim();
-  if (text.length < 40) {
-    showToast('Paste at least 40 characters about your experience, education and skills.', 'error');
-    return;
-  }
-  const submit = nodes.resumeForm.querySelector('button[type="submit"]');
-  submit.disabled = true;
-  submit.textContent = 'Generating…';
-  try {
-    const data = await apiRequest('/api/premium/resume/generate', {
-      method: 'POST',
-      auth: true,
-      body: { text, targetRole: nodes.resumeRole.value.trim() || undefined, style: nodes.resumeStyle.value }
-    });
-    renderResume(data.resume);
-  } catch (error) {
-    showToast(error.message, 'error');
-  } finally {
-    submit.disabled = false;
-    submit.textContent = 'Generate resume';
-  }
-});
-
-nodes.resumeCopy.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(resumeAsText());
-    showToast('Resume copied.', 'success');
-  } catch {
-    showToast('Copy is not available in this browser. Select the text instead.', 'error');
-  }
-});
-
-nodes.resumePrint.addEventListener('click', () => {
-  document.documentElement.classList.add('printing-resume');
-  window.addEventListener('afterprint', () => document.documentElement.classList.remove('printing-resume'), { once: true });
-  window.print();
+nodes.openGuide?.addEventListener('click', async () => {
+  const assistant = await import('./assistant.js');
+  assistant.openSharedView('guide');
 });
 
 // ---- Start -------------------------------------------------------------------
@@ -453,7 +292,7 @@ function renderAll() {
   renderStatus();
   renderTrial();
   renderPlans();
-  renderTools();
+  renderShortcuts();
 }
 
 async function init() {

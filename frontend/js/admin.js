@@ -26,9 +26,34 @@ const verificationList = document.querySelector('#verification-list');
 const verificationCount = document.querySelector('#verification-count');
 const reportList = document.querySelector('#report-list');
 const reportCount = document.querySelector('#report-count');
+const mlHealthStatus = document.querySelector('#ml-health-status');
+const mlHealthValues = document.querySelector('#ml-health-values');
+const refreshMlHealth = document.querySelector('#refresh-ml-health');
 
 let selectedSubmissionId = null;
 let pendingDecision = null;
+
+async function loadMlHealth() {
+  if (!mlHealthStatus) return;
+  try {
+    const health = await apiRequest('/api/admin/ml/health', { auth: true });
+    if (health.available === false) {
+      mlHealthStatus.textContent = 'Migration 011 is not installed; manual moderation remains active.';
+      return;
+    }
+    mlHealthStatus.textContent = health.shadowMode
+      ? 'Shadow mode: scores are recorded, and content stays held.'
+      : 'Auto-publish is controlled per model and can be disabled immediately.';
+    mlHealthValues.hidden = false;
+    mlHealthValues.replaceChildren();
+    for (const [label, value] of [['Active models', health.activeModels], ['Provisional live', health.provisionalItems], ['Held', health.heldItems], ['Unavailable', health.unavailableCount], ['Manual overturn rate', health.manualOverturnRate === null ? 'Not enough reviewed items' : `${(health.manualOverturnRate * 100).toFixed(1)}%`]]) {
+      const key = document.createElement('dt'); const data = document.createElement('dd');
+      key.textContent = label; data.textContent = String(value); mlHealthValues.append(key, data);
+    }
+  } catch { mlHealthStatus.textContent = 'Moderation health is temporarily unavailable; the normal review queue is still available.'; }
+}
+
+refreshMlHealth?.addEventListener('click', loadMlHealth);
 
 function showStatus(message, type = '') {
   adminStatus.textContent = message;
@@ -394,7 +419,7 @@ async function initializeAdmin() {
 
     loadingMessage.hidden = true;
     dashboard.hidden = false;
-    await Promise.all([loadQueue(), loadVerifications(), loadReports()]);
+    await Promise.all([loadQueue(), loadVerifications(), loadReports(), loadMlHealth()]);
   } catch (error) {
     if (error.status === 401) {
       window.location.replace('login.html?returnTo=admin.html');

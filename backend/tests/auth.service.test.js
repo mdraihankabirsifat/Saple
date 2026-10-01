@@ -217,7 +217,7 @@ test('headline and about are trimmed, bounded, clearable and kept when omitted',
   assert.deepEqual(writes.at(-1), [8, 'Safe Name', null, 'Builds pipelines.\nLikes maps.']);
 
   for (const input of [{ headline: 'x'.repeat(161) }, { bio: 'x'.repeat(2001) }, { headline: 7 },
-    { bio: ['about'] }, { linkedinUrl: 'https://www.linkedin.com/in/example' }]) {
+    { bio: ['about'] }]) {
     await assert.rejects(authService.updateProfile(8, { fullName: 'Safe Name', ...input }),
       (error) => error.statusCode === 400, JSON.stringify(input));
   }

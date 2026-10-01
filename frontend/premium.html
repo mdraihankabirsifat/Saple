@@ -40,8 +40,8 @@
       <section class="premium-hero" aria-labelledby="premium-title">
         <p class="eyebrow">Saple Premium</p>
         <h1 id="premium-title">More room to grow your career.</h1>
-        <p class="premium-lead">Advanced career AI, a resume generator that only uses your own facts, full
-          interview questions, Premium job openings and more visibility to recruiters.</p>
+        <p class="premium-lead">Premium unlocks advanced Saple Guide responses, full interview insights, Premium
+          opportunities, recruiter visibility, PDF resume export and profile viewer details.</p>
         <p class="premium-renewal">Prepaid access · no automatic renewal</p>
       </section>
 
@@ -107,83 +107,46 @@
               <tr><th scope="col">Feature</th><th scope="col">Free</th><th scope="col">Premium</th></tr>
             </thead>
             <tbody>
-              <tr><th scope="row">Standard Saple Guide</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
-              <tr><th scope="row">Advanced Saple AI</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
-              <tr><th scope="row">Resume generator</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Saple Guide</th><td>Standard</td><td>Advanced</td></tr>
+              <tr><th scope="row">Resume generation</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Copy generated resume</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Official PDF resume download</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
               <tr><th scope="row">Interview question preview</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
               <tr><th scope="row">Full interview questions</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
               <tr><th scope="row">Free jobs</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
-              <tr><th scope="row">All Premium jobs</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
-              <tr><th scope="row">Normal profile discovery</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Premium jobs</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Normal profile visibility</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
               <tr><th scope="row">Recruiter profile boost</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
               <tr><th scope="row">Standard profile</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
-              <tr><th scope="row">Premium profile badge</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Premium badge</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
               <tr><th scope="row">Profile view count</th><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
-              <tr><th scope="row">Who viewed your profile</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
+              <tr><th scope="row">Viewer identities</th><td><span aria-hidden="true">—</span><span class="sr-only">Not included</span></td><td><span aria-hidden="true">✓</span><span class="sr-only">Included</span></td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <section id="premium-tools" class="premium-tools" aria-labelledby="tools-title" hidden>
-        <h2 id="tools-title">Premium tools</h2>
-        <p id="tools-message" class="state-message" role="status" aria-live="polite"></p>
-
-        <div class="tools-grid">
-          <article class="tool-card" aria-labelledby="ai-title">
-            <h3 id="ai-title">Advanced Saple AI</h3>
-            <p class="tool-intro">Longer, more detailed career answers. The free Saple Guide stays available to
-              everyone.</p>
-            <div id="ai-transcript" class="ai-transcript" aria-live="polite"></div>
-            <form id="ai-form" class="ai-form" novalidate>
-              <label class="sr-only" for="ai-input">Your question</label>
-              <textarea class="input" id="ai-input" rows="3" maxlength="2000"
-                placeholder="Ask about interviews, salary negotiation, career moves&hellip;"></textarea>
-              <button class="button button-primary" type="submit">Ask</button>
-            </form>
-          </article>
-
-          <article class="tool-card" aria-labelledby="resume-title">
-            <h3 id="resume-title">Resume generator</h3>
-            <p class="tool-intro">Paste your experience, education, skills and projects. The resume uses only what
-              you write here and never adds facts.</p>
-            <form id="resume-form" class="resume-form" novalidate>
-              <label for="resume-text">Your details</label>
-              <textarea class="input" id="resume-text" rows="8" maxlength="10000" required></textarea>
-              <p class="field-hint"><span id="resume-count">0</span> / 10,000 characters</p>
-              <div class="resume-options">
-                <div class="form-group">
-                  <label for="resume-role">Target role (optional)</label>
-                  <input class="input" id="resume-role" type="text" maxlength="120">
-                </div>
-                <div class="form-group">
-                  <label for="resume-style">Style</label>
-                  <select class="input" id="resume-style">
-                    <option value="standard">Standard</option>
-                    <option value="concise">Concise</option>
-                  </select>
-                </div>
-              </div>
-              <p class="premium-fineprint">Resume text is sent to the configured AI provider to generate the result.
-                Saple does not store the text you paste.</p>
-              <button class="button button-primary" type="submit">Generate resume</button>
-            </form>
-          </article>
+      <section id="premium-shortcuts" class="premium-shortcuts" aria-labelledby="shortcuts-title" hidden>
+        <h2 id="shortcuts-title">Your Premium</h2>
+        <p class="premium-fineprint">Premium works across Saple. Jump straight to the features it unlocks.</p>
+        <div class="shortcut-grid">
+          <button id="open-guide" class="shortcut-card" type="button">
+            <span class="shortcut-title">Open Saple Guide</span>
+            <span class="shortcut-text">Advanced answers switch on automatically.</span>
+          </button>
+          <a class="shortcut-card" href="resume-generator.html">
+            <span class="shortcut-title">Generate a resume</span>
+            <span class="shortcut-text">Including the official PDF download.</span>
+          </a>
+          <a class="shortcut-card" href="jobs.html">
+            <span class="shortcut-title">Browse Premium jobs</span>
+            <span class="shortcut-text">Full details and applying are open to you.</span>
+          </a>
+          <a class="shortcut-card" href="profile.html">
+            <span class="shortcut-title">View profile viewers</span>
+            <span class="shortcut-text">See who looked at your profile.</span>
+          </a>
         </div>
-
-        <section id="resume-output" class="resume-output" aria-labelledby="resume-output-title" hidden>
-          <div class="resume-output-bar">
-            <h3 id="resume-output-title">Your resume</h3>
-            <div class="resume-output-actions">
-              <button id="resume-copy" class="button button-secondary button-small" type="button">Copy</button>
-              <button id="resume-print" class="button button-secondary button-small" type="button">Print / Save as
-                PDF</button>
-            </div>
-          </div>
-          <article id="resume-preview" class="resume-preview"></article>
-          <p class="premium-fineprint">Check every line before you use it. Anything missing from your details was
-            left out rather than guessed.</p>
-        </section>
       </section>
     </div>
 

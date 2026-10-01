@@ -26,6 +26,7 @@ async function createDatabase({ migrate = false } = {}) {
     await database.exec(withoutObjects);
     await database.exec(readSql('02_final_demo_data_postgres.sql'));
     await database.exec(readSql(MIGRATION));
+    await database.exec(readSql('migrations/011_ml_moderation.sql'));
   } else {
     await database.exec(schema);
     await database.exec(readSql('02_final_demo_data_postgres.sql'));
@@ -61,7 +62,7 @@ const database = async () => {
 // Installation: a fresh database and an upgraded one agree
 // ---------------------------------------------------------------------------
 
-test('a fresh install and migration 005 produce the same objects, 34 tables and 5 views', async () => {
+test('a fresh install and migrations produce the same objects, 38 tables and 7 views', async () => {
   const fresh = await database();
   const migrated = await createDatabase({ migrate: true });
 
@@ -84,7 +85,7 @@ test('a fresh install and migration 005 produce the same objects, 34 tables and 
           WHERE table_schema = 'public' AND table_type = 'BASE TABLE') AS tables,
         (SELECT COUNT(*)::int FROM information_schema.views WHERE table_schema = 'public') AS views
     `);
-    assert.deepEqual(counts.rows[0], { tables: 34, views: 5 });
+    assert.deepEqual(counts.rows[0], { tables: 38, views: 7 });
   }
   await migrated.close();
 });

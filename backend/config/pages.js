@@ -35,6 +35,7 @@ const PRIVATE_PAGES = Object.freeze([
   '/user-profile.html',
   '/my-applications.html',
   '/payment-result.html',
+  '/resume-generator.html',
   '/employee-verification.html',
   '/submit-salary.html',
   '/submit-review.html',

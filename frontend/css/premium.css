@@ -211,21 +211,23 @@ p { text-wrap: pretty; }
   content: "";
 }
 
+/* Standalone text links: green, bold and a touch larger, with a soft tint on
+   hover instead of an underline. */
 .text-link {
   position: relative;
   color: var(--saple-green-700);
+  font-size: 1.02em;
   font-weight: 700;
   text-decoration: none;
-  background-image: linear-gradient(currentColor, currentColor);
-  background-position: 0 100%;
-  background-repeat: no-repeat;
-  background-size: 0% 1px;
-  transition: background-size var(--motion-base) var(--ease-out), color var(--motion-fast) var(--ease-out);
+  border-radius: var(--radius-xs);
+  transition: color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
 }
 
-.text-link:hover,
-.text-link:focus-visible {
-  background-size: 100% 1px;
+.text-link:hover {
+  color: var(--saple-green-900);
+  background-color: var(--saple-green-50);
+  box-shadow: 0 0 0 3px var(--saple-green-50);
 }
 
 /* 3. Buttons --------------------------------------------------------------- */
@@ -736,7 +738,8 @@ dialog[open]::backdrop {
   font-weight: 800;
 }
 
-/* Nav links: a gold-and-green underline indicator that grows in. */
+/* Nav links: a short gold-and-green tab marker under the current page only;
+   hover is a soft tint, never a line under the text. */
 .nav-links a {
   position: relative;
   border-radius: var(--radius-sm);
@@ -752,25 +755,22 @@ dialog[open]::backdrop {
 
 .nav-links a::after {
   position: absolute;
-  left: 0.55rem;
-  right: 0.55rem;
-  bottom: 0.3rem;
-  height: 2px;
-  border-radius: 2px;
+  left: 50%;
+  bottom: 0.28rem;
+  width: 1.25rem;
+  height: 3px;
+  border-radius: 3px;
   background: linear-gradient(90deg, var(--saple-green-600), var(--saple-gold));
-  transform: scaleX(0);
-  transform-origin: left;
+  transform: translateX(-50%) scaleX(0);
   transition: transform var(--motion-base) var(--ease-out);
   content: "";
 }
 
-.nav-links a:hover::after,
-.nav-links a.active::after,
-.nav-links a:focus-visible::after {
-  transform: scaleX(1);
+.nav-links a.active::after {
+  transform: translateX(-50%) scaleX(1);
 }
 
-.nav-links a:hover { background: transparent; color: var(--saple-green-900); }
+.nav-links a:hover { background: var(--surface-muted); color: var(--saple-green-900); }
 
 .theme-toggle {
   border-color: var(--border-strong);
@@ -2381,7 +2381,7 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
   white-space: nowrap;
 }
 
-.account-summary-name:hover { text-decoration: underline; }
+.account-summary-name:hover { text-decoration: none; }
 
 .account-summary-email {
   overflow: hidden;
@@ -2657,4 +2657,56 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
   .intel-card { animation: none !important; }
   .hero-graph-line { stroke-dashoffset: 0; transition: none; }
   .hero-graph-points circle { opacity: 1; transition: none; }
+}
+
+/* 24. Links without underlines ---------------------------------------------- */
+
+/* Saple draws no underlines. A text link is the brand green in a stronger
+   weight; hover adds a soft tint; keyboard focus keeps the global focus ring.
+   Buttons, cards and the navigation keep their own styles. */
+
+/* Inline links inside running text, which have no class of their own. */
+:where(main, .guide-panel, .notification-panel) :where(p, li, dd, td, small, label, figcaption) > a:not([class]),
+.state-action-link,
+.questions-lock a {
+  color: var(--saple-green-700);
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  transition: color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+:where(main, .guide-panel, .notification-panel) :where(p, li, dd, td, small, label, figcaption) > a:not([class]):hover,
+.state-action-link:hover,
+.questions-lock a:hover,
+.breadcrumb a:hover,
+.back-link:hover,
+.card-link:hover {
+  color: var(--saple-green-900);
+  background-color: var(--saple-green-50);
+  box-shadow: 0 0 0 3px var(--saple-green-50);
+}
+
+/* Title links inside cards: a colour shift on hover. */
+.application-title a:hover,
+a.notification-title:hover,
+.account-summary-name:hover {
+  color: var(--saple-green-700);
+}
+
+/* Small text actions (mark read, message actions, link-style buttons). */
+.notification-read:hover,
+.messages-actions button:hover,
+.link-button:hover {
+  color: var(--saple-green-900);
+  background-color: var(--saple-green-50);
+  border-radius: var(--radius-xs);
+}
+
+.messages-actions button { font-weight: 700; color: var(--saple-green-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  .text-link,
+  .state-action-link,
+  .questions-lock a { transition: none; }
 }

@@ -10,6 +10,11 @@ async function getPendingSubmissions(request, response, next) {
   }
 }
 
+async function getMlHealth(request, response, next) {
+  try { return sendSuccess(response, 200, 'ML moderation health retrieved successfully', await adminService.getMlHealth()); }
+  catch (error) { return next(error); }
+}
+
 async function getSubmission(request, response, next) {
   try {
     const submission = await adminService.getSubmission(request.params.submissionId);
@@ -42,7 +47,7 @@ async function getModerationHistory(request, response, next) {
 }
 
 module.exports = {
-  getPendingSubmissions,
+  getPendingSubmissions, getMlHealth,
   getSubmission,
   updateSubmissionStatus,
   getModerationHistory

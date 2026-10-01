@@ -1,7 +1,12 @@
-export const PAGE_SIZE = 20;
-export const SORT_OPTIONS = ['name-asc', 'name-desc', 'rating-desc', 'rating-asc', 'salary-desc', 'salary-asc'];
+import { comparePopularCompanies } from './popularity.js';
 
-export function sortCompanies(companies, sort = 'name-asc', source = 'COMMUNITY') {
+export const PAGE_SIZE = 20;
+export const SORT_OPTIONS = ['popular', 'name-asc', 'name-desc', 'rating-desc', 'rating-asc', 'salary-desc', 'salary-asc'];
+export const DEFAULT_SORT = 'popular';
+
+export function sortCompanies(companies, sort = DEFAULT_SORT, source = 'COMMUNITY', search = '') {
+  // Popular (the default) uses real activity; see popularity.js.
+  if (!SORT_OPTIONS.includes(sort) || sort === 'popular') return [...companies].sort(comparePopularCompanies(search));
   const byName = (a, b) => (a.companyName || '').localeCompare(b.companyName || '', 'en', { sensitivity: 'base', numeric: true })
     || String(a.companyId).localeCompare(String(b.companyId), 'en', { numeric: true });
   const descending = sort.endsWith('-desc');
@@ -13,7 +18,7 @@ export function sortCompanies(companies, sort = 'name-asc', source = 'COMMUNITY'
     return Number(count) > 0 && value !== null && value !== undefined && Number.isFinite(Number(value)) ? Number(value) : null;
   }
   return [...companies].sort((a, b) => {
-    if (!SORT_OPTIONS.includes(sort) || sort.startsWith('name')) return byName(a, b) * (sort === 'name-desc' ? -1 : 1);
+    if (sort.startsWith('name')) return byName(a, b) * (sort === 'name-desc' ? -1 : 1);
     const left = metric(a); const right = metric(b);
     if (left === null || right === null) return left === right ? byName(a, b) : left === null ? 1 : -1;
     return (left - right) * (descending ? -1 : 1) || byName(a, b);

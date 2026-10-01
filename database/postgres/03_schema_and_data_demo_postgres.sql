@@ -1,7 +1,7 @@
 -- SAPLE SUPABASE POSTGRESQL READ-ONLY DEMONSTRATION QUERIES
 -- Run after the PostgreSQL schema and demonstration data scripts.
 
--- 1. Expected project shape: 34 base tables and 5 views.
+-- 1. Expected project shape: 38 base tables and 7 views.
 SELECT
   COUNT(*) FILTER (WHERE table_type = 'BASE TABLE') AS base_table_count,
   COUNT(*) FILTER (WHERE table_type = 'VIEW') AS view_count
@@ -17,10 +17,12 @@ WHERE table_schema = 'public'
     'user_education', 'user_experience', 'skills', 'user_skills',
     'premium_plans', 'premium_trial_claims', 'premium_promo_codes',
     'premium_payments', 'premium_access_periods', 'premium_promo_redemptions',
-    'profile_views', 'premium_ai_usage',
+    'profile_views', 'premium_ai_usage', 'job_application_resumes',
+    'ml_model_registry', 'content_screenings', 'professional_profile_revisions',
     'vw_public_companies', 'vw_public_approved_reviews',
     'vw_verified_salary_summary', 'vw_community_salary_summary',
-    'vw_public_open_jobs'
+    'vw_public_open_jobs', 'vw_public_visible_submissions',
+    'vw_ml_human_reviewed_real_submissions'
   );
 
 -- 2. Saple base tables.
@@ -37,7 +39,8 @@ WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
     'user_education', 'user_experience', 'skills', 'user_skills',
     'premium_plans', 'premium_trial_claims', 'premium_promo_codes',
     'premium_payments', 'premium_access_periods', 'premium_promo_redemptions',
-    'profile_views', 'premium_ai_usage'
+    'profile_views', 'premium_ai_usage', 'job_application_resumes',
+    'ml_model_registry', 'content_screenings', 'professional_profile_revisions'
   )
 ORDER BY table_name;
 
@@ -56,7 +59,8 @@ WHERE table_schema = 'public'
     'user_education', 'user_experience', 'skills', 'user_skills',
     'premium_plans', 'premium_trial_claims', 'premium_promo_codes',
     'premium_payments', 'premium_access_periods', 'premium_promo_redemptions',
-    'profile_views', 'premium_ai_usage'
+    'profile_views', 'premium_ai_usage', 'job_application_resumes',
+    'ml_model_registry', 'content_screenings', 'professional_profile_revisions'
   )
 ORDER BY table_name, ordinal_position;
 

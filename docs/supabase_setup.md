@@ -20,9 +20,9 @@ Open the Supabase SQL editor and execute these files in order:
 The third file is read-only validation. The first two target a fresh project; do not rerun them against a populated database unless you intend to rebuild it.
 
 > **Already have a Saple project on Supabase?** Do not run the files above on it.
-> Apply the nine additive migrations in `database/postgres/migrations/` instead,
+> Apply the ten additive migrations in `database/postgres/migrations/` instead,
 > following that folder's README, and rehearse on a backup first. The final
-> schema has 34 tables and 5 views.
+> schema has 38 tables and 7 views.
 
 ### Optional: bulk demonstration data
 
@@ -47,6 +47,19 @@ which is how the cleanup finds them. If any real account has interacted with
 that data (for example, applied to one of its jobs or reported one of its
 reviews), the cleanup stops without changing anything. The companies, roles,
 benefits and skills that 04 added are reference data and stay.
+
+For an existing bulk demo, `database/postgres/07_balance_demo_salary_ranges.sql`
+can optionally add community-only salary observations where verified demo data
+otherwise dominates. It identifies synthetic contributors by the bulk demo
+password-hash marker, does not change real accounts or verified salaries, and
+can be reversed through the normal bulk-demo cleanup script. Rehearse on a
+copy and review the read-only summary before using it.
+
+Before enabling PDF attachments on job applications, run the additive
+`database/postgres/migrations/010_job_application_resumes.sql` in Supabase SQL
+Editor. Application PDFs are private BYTEA records, limited to 2 MB; existing
+applications continue to work without an attachment. Do not run this migration
+automatically against a live database.
 
 ### Optional: Premium demonstration content
 

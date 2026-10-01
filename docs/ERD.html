@@ -40,18 +40,18 @@
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3580 2646" role="img" aria-labelledby="erd-title erd-desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3580 2698" role="img" aria-labelledby="erd-title erd-desc">
 <title id="erd-title">Saple PostgreSQL entity-relationship diagram</title>
-<desc id="erd-desc">34 tables and 5 views of the active Saple PostgreSQL schema, grouped by domain, with primary, foreign and unique keys and crow's-foot cardinalities.</desc>
+<desc id="erd-desc">38 tables and 7 views of the active Saple PostgreSQL schema, grouped by domain, with primary, foreign and unique keys and crow's-foot cardinalities.</desc>
 <defs>
   <marker id="child-zero-many" viewBox="0 0 28 20" refX="1" refY="10" markerWidth="22" markerHeight="16" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 16 10 L 2 2 M 16 10 L 2 18 M 16 10 L 2 10" class="mk"/><circle cx="22" cy="10" r="4" class="mk-open"/></marker>
   <marker id="child-zero-one" viewBox="0 0 28 20" refX="1" refY="10" markerWidth="22" markerHeight="16" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 8 2 L 8 18" class="mk"/><circle cx="20" cy="10" r="4" class="mk-open"/></marker>
   <marker id="parent-one" viewBox="0 0 20 20" refX="19" refY="10" markerWidth="16" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse"><path d="M 6 2 L 6 18 M 12 2 L 12 18" class="mk"/></marker>
   <marker id="parent-zero-one" viewBox="0 0 28 20" refX="27" refY="10" markerWidth="22" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse"><circle cx="8" cy="10" r="4" class="mk-open"/><path d="M 20 2 L 20 18" class="mk"/></marker>
 </defs>
-<rect class="canvas" x="0" y="0" width="3580" height="2646"/>
+<rect class="canvas" x="0" y="0" width="3580" height="2698"/>
 <text class="title" x="50" y="70">Saple — PostgreSQL entity-relationship diagram</text>
-<text class="subtitle" x="50" y="104">Active schema: database/postgres/01_final_schema_postgres.sql · 34 tables · 5 views · generated from the schema file by docs/tools/build-erd.js</text>
+<text class="subtitle" x="50" y="104">Active schema: database/postgres/01_final_schema_postgres.sql · 38 tables · 7 views · generated from the schema file by docs/tools/build-erd.js</text>
 <text class="subtitle" x="50" y="130">Saple is an independent BUET CSE216 academic project.</text>
 <g class="legend">
   <text x="2820" y="62">PK primary key · FK foreign key · UK unique key · UK* partial unique (open scope only) · * NOT NULL</text>
@@ -98,6 +98,7 @@
 <path class="rel rel-restrict" d="M 2750 772.5 C 2706 772.5, 2706 209, 2750 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_applications.job_id → job_postings (ON DELETE RESTRICT)</title></path>
 <path class="rel" d="M 2750 791.5 C 1683.5 791.5, 1446.5 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_applications.applicant_user_id → users (ON DELETE NO ACTION)</title></path>
 <path class="rel rel-restrict" d="M 2750 1037.5 C 2706 1037.5, 2706 721, 2750 721" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_application_status_history.application_id → job_applications (ON DELETE RESTRICT)</title></path>
+<path class="rel" d="M 2750 1245.5 C 2706 1245.5, 2706 721, 2750 721" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>job_application_resumes.application_id → job_applications (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 50 998.5 C 6 998.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>notifications.user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 50 1263.5 C 6 1263.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.sender_user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 50 1282.5 C 6 1282.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.recipient_user_id → users (ON DELETE CASCADE)</title></path>
@@ -115,6 +116,9 @@
 <path class="rel" d="M 3200 2002.5 C 1931 2002.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>profile_views.profile_user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 3200 2021.5 C 1931 2021.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>profile_views.viewer_user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 3200 2229.5 C 1931 2229.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_ai_usage.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 2300 1150.5 C 1436 1150.5, 1244 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>content_screenings.submitted_by_user_id → users (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 500 1073.5 C 440 1073.5, 440 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>professional_profile_revisions.user_id → users (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 830 1168.5 C 1491.5 1168.5, 1638.5 1042, 2300 1042" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>professional_profile_revisions.screening_id → content_screenings (ON DELETE NO ACTION)</title></path>
 </g>
 <g class="entity entity-account" id="entity-users">
 <rect class="box" x="50" y="190" width="330" height="295" rx="10"/>
@@ -869,6 +873,36 @@
 <text class="col" x="2818" y="1135">action_at *</text>
 <text class="type" x="3068" y="1135" text-anchor="end">TIMESTAMPTZ</text>
 </g>
+<g class="entity entity-jobs" id="entity-job_application_resumes">
+<rect class="box" x="2750" y="1194" width="330" height="200" rx="10"/>
+<rect class="head" x="2750" y="1194" width="330" height="38" rx="10"/>
+<rect class="head" x="2750" y="1220" width="330" height="12"/>
+<text class="entity-name" x="2764" y="1219">JOB_APPLICATION_RESUMES</text>
+<text class="flag" x="2762" y="1248">PK FK</text>
+<text class="col col-pk" x="2818" y="1248">application_id *</text>
+<text class="type" x="3068" y="1248" text-anchor="end">BIGINT</text>
+<text class="flag" x="2762" y="1267"></text>
+<text class="col" x="2818" y="1267">original_file_name *</text>
+<text class="type" x="3068" y="1267" text-anchor="end">VARCHAR(255)</text>
+<text class="flag" x="2762" y="1286"></text>
+<text class="col" x="2818" y="1286">mime_type *</text>
+<text class="type" x="3068" y="1286" text-anchor="end">VARCHAR(100)</text>
+<text class="flag" x="2762" y="1305"></text>
+<text class="col" x="2818" y="1305">file_size_bytes *</text>
+<text class="type" x="3068" y="1305" text-anchor="end">INTEGER</text>
+<text class="flag" x="2762" y="1324"></text>
+<text class="col" x="2818" y="1324">sha256_hex *</text>
+<text class="type" x="3068" y="1324" text-anchor="end">CHAR(64)</text>
+<text class="flag" x="2762" y="1343"></text>
+<text class="col" x="2818" y="1343">pdf_data *</text>
+<text class="type" x="3068" y="1343" text-anchor="end">BYTEA</text>
+<text class="flag" x="2762" y="1362"></text>
+<text class="col" x="2818" y="1362">uploaded_at *</text>
+<text class="type" x="3068" y="1362" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2762" y="1381"></text>
+<text class="col" x="2818" y="1381">updated_at *</text>
+<text class="type" x="3068" y="1381" text-anchor="end">TIMESTAMPTZ</text>
+</g>
 <g class="entity entity-audit" id="entity-announcements">
 <rect class="box" x="2300" y="720" width="330" height="257" rx="10"/>
 <rect class="head" x="2300" y="720" width="330" height="38" rx="10"/>
@@ -1247,14 +1281,199 @@
 <text class="col" x="3268" y="2327">created_at *</text>
 <text class="type" x="3518" y="2327" text-anchor="end">TIMESTAMPTZ</text>
 </g>
+<g class="entity entity-audit" id="entity-ml_model_registry">
+<rect class="box" x="2300" y="1573" width="330" height="428" rx="10"/>
+<rect class="head" x="2300" y="1573" width="330" height="38" rx="10"/>
+<rect class="head" x="2300" y="1599" width="330" height="12"/>
+<text class="entity-name" x="2314" y="1598">ML_MODEL_REGISTRY</text>
+<text class="flag" x="2312" y="1627">PK</text>
+<text class="col col-pk" x="2368" y="1627">model_id *</text>
+<text class="type" x="2618" y="1627" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1646">UK UK*</text>
+<text class="col" x="2368" y="1646">model_key *</text>
+<text class="type" x="2618" y="1646" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1665"></text>
+<text class="col" x="2368" y="1665">content_type *</text>
+<text class="type" x="2618" y="1665" text-anchor="end">VARCHAR(16)</text>
+<text class="flag" x="2312" y="1684"></text>
+<text class="col" x="2368" y="1684">scope_key</text>
+<text class="type" x="2618" y="1684" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1703">UK</text>
+<text class="col" x="2368" y="1703">model_version *</text>
+<text class="type" x="2618" y="1703" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1722"></text>
+<text class="col" x="2368" y="1722">artifact_uri *</text>
+<text class="type" x="2618" y="1722" text-anchor="end">TEXT</text>
+<text class="flag" x="2312" y="1741"></text>
+<text class="col" x="2368" y="1741">artifact_sha256 *</text>
+<text class="type" x="2618" y="1741" text-anchor="end">CHAR(64)</text>
+<text class="flag" x="2312" y="1760"></text>
+<text class="col" x="2368" y="1760">feature_schema_version *</text>
+<text class="type" x="2618" y="1760" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1779"></text>
+<text class="col" x="2368" y="1779">training_dataset_fingerprint *</text>
+<text class="type" x="2618" y="1779" text-anchor="end">CHAR(64)</text>
+<text class="flag" x="2312" y="1798"></text>
+<text class="col" x="2368" y="1798">trained_at *</text>
+<text class="type" x="2618" y="1798" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1817"></text>
+<text class="col" x="2368" y="1817">training_sample_count *</text>
+<text class="type" x="2618" y="1817" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="1836"></text>
+<text class="col" x="2368" y="1836">approved_sample_count *</text>
+<text class="type" x="2618" y="1836" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="1855"></text>
+<text class="col" x="2368" y="1855">rejected_sample_count *</text>
+<text class="type" x="2618" y="1855" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="1874"></text>
+<text class="col" x="2368" y="1874">metrics *</text>
+<text class="type" x="2618" y="1874" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="1893"></text>
+<text class="col" x="2368" y="1893">auto_publish_threshold</text>
+<text class="type" x="2618" y="1893" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1912"></text>
+<text class="col" x="2368" y="1912">ood_threshold</text>
+<text class="type" x="2618" y="1912" text-anchor="end">NUMERIC</text>
+<text class="flag" x="2312" y="1931"></text>
+<text class="col" x="2368" y="1931">status *</text>
+<text class="type" x="2618" y="1931" text-anchor="end">VARCHAR(12)</text>
+<text class="flag" x="2312" y="1950"></text>
+<text class="col" x="2368" y="1950">activated_at</text>
+<text class="type" x="2618" y="1950" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1969"></text>
+<text class="col" x="2368" y="1969">retired_at</text>
+<text class="type" x="2618" y="1969" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1988"></text>
+<text class="col" x="2368" y="1988">created_at *</text>
+<text class="type" x="2618" y="1988" text-anchor="end">TIMESTAMPTZ</text>
+</g>
+<g class="entity entity-audit" id="entity-content_screenings">
+<rect class="box" x="2300" y="1023" width="330" height="504" rx="10"/>
+<rect class="head" x="2300" y="1023" width="330" height="38" rx="10"/>
+<rect class="head" x="2300" y="1049" width="330" height="12"/>
+<text class="entity-name" x="2314" y="1048">CONTENT_SCREENINGS</text>
+<text class="flag" x="2312" y="1077">PK</text>
+<text class="col col-pk" x="2368" y="1077">screening_id *</text>
+<text class="type" x="2618" y="1077" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1096">UK</text>
+<text class="col" x="2368" y="1096">entity_type *</text>
+<text class="type" x="2618" y="1096" text-anchor="end">VARCHAR(16)</text>
+<text class="flag" x="2312" y="1115">UK</text>
+<text class="col" x="2368" y="1115">entity_id *</text>
+<text class="type" x="2618" y="1115" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1134">UK</text>
+<text class="col" x="2368" y="1134">revision_no *</text>
+<text class="type" x="2618" y="1134" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="1153">FK</text>
+<text class="col" x="2368" y="1153">submitted_by_user_id</text>
+<text class="type" x="2618" y="1153" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1172"></text>
+<text class="col" x="2368" y="1172">model_key</text>
+<text class="type" x="2618" y="1172" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1191"></text>
+<text class="col" x="2368" y="1191">model_version</text>
+<text class="type" x="2618" y="1191" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1210"></text>
+<text class="col" x="2368" y="1210">feature_schema_version</text>
+<text class="type" x="2618" y="1210" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1229"></text>
+<text class="col" x="2368" y="1229">screening_status *</text>
+<text class="type" x="2618" y="1229" text-anchor="end">VARCHAR(16)</text>
+<text class="flag" x="2312" y="1248"></text>
+<text class="col" x="2368" y="1248">risk_probability</text>
+<text class="type" x="2618" y="1248" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1267"></text>
+<text class="col" x="2368" y="1267">safe_probability</text>
+<text class="type" x="2618" y="1267" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1286"></text>
+<text class="col" x="2368" y="1286">confidence</text>
+<text class="type" x="2618" y="1286" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1305"></text>
+<text class="col" x="2368" y="1305">reason_codes *</text>
+<text class="type" x="2618" y="1305" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="1324"></text>
+<text class="col" x="2368" y="1324">model_metadata *</text>
+<text class="type" x="2618" y="1324" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="1343"></text>
+<text class="col" x="2368" y="1343">publication_state *</text>
+<text class="type" x="2618" y="1343" text-anchor="end">VARCHAR(12)</text>
+<text class="flag" x="2312" y="1362"></text>
+<text class="col" x="2368" y="1362">manual_review_status *</text>
+<text class="type" x="2618" y="1362" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="2312" y="1381"></text>
+<text class="col" x="2368" y="1381">screened_at</text>
+<text class="type" x="2618" y="1381" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1400"></text>
+<text class="col" x="2368" y="1400">provisional_published_at</text>
+<text class="type" x="2618" y="1400" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1419"></text>
+<text class="col" x="2368" y="1419">human_review_due_at</text>
+<text class="type" x="2618" y="1419" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1438"></text>
+<text class="col" x="2368" y="1438">reviewed_at</text>
+<text class="type" x="2618" y="1438" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1457">FK</text>
+<text class="col" x="2368" y="1457">reviewed_by</text>
+<text class="type" x="2618" y="1457" text-anchor="end">BIGINT → users</text>
+<text class="flag" x="2312" y="1476"></text>
+<text class="col" x="2368" y="1476">human_decision_note</text>
+<text class="type" x="2618" y="1476" text-anchor="end">TEXT</text>
+<text class="flag" x="2312" y="1495"></text>
+<text class="col" x="2368" y="1495">created_at *</text>
+<text class="type" x="2618" y="1495" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1514"></text>
+<text class="col" x="2368" y="1514">updated_at *</text>
+<text class="type" x="2618" y="1514" text-anchor="end">TIMESTAMPTZ</text>
+</g>
+<g class="entity entity-profile" id="entity-professional_profile_revisions">
+<rect class="box" x="500" y="1003" width="330" height="257" rx="10"/>
+<rect class="head" x="500" y="1003" width="330" height="38" rx="10"/>
+<rect class="head" x="500" y="1029" width="330" height="12"/>
+<text class="entity-name" x="514" y="1028" textLength="302" lengthAdjust="spacingAndGlyphs">PROFESSIONAL_PROFILE_REVISIONS</text>
+<text class="flag" x="512" y="1057">PK</text>
+<text class="col col-pk" x="568" y="1057">revision_id *</text>
+<text class="type" x="818" y="1057" text-anchor="end">BIGINT</text>
+<text class="flag" x="512" y="1076">FK UK</text>
+<text class="col" x="568" y="1076">user_id *</text>
+<text class="type" x="818" y="1076" text-anchor="end">BIGINT</text>
+<text class="flag" x="512" y="1095">UK</text>
+<text class="col" x="568" y="1095">revision_no *</text>
+<text class="type" x="818" y="1095" text-anchor="end">INTEGER</text>
+<text class="flag" x="512" y="1114"></text>
+<text class="col" x="568" y="1114">previous_public_snapshot *</text>
+<text class="type" x="818" y="1114" text-anchor="end">JSONB</text>
+<text class="flag" x="512" y="1133"></text>
+<text class="col" x="568" y="1133">proposed_public_snapshot *</text>
+<text class="type" x="818" y="1133" text-anchor="end">JSONB</text>
+<text class="flag" x="512" y="1152"></text>
+<text class="col" x="568" y="1152">applied_at</text>
+<text class="type" x="818" y="1152" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="512" y="1171">FK</text>
+<text class="col" x="568" y="1171">screening_id</text>
+<text class="type" x="818" y="1171" text-anchor="end">BIGINT</text>
+<text class="flag" x="512" y="1190"></text>
+<text class="col" x="568" y="1190">review_status *</text>
+<text class="type" x="818" y="1190" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="512" y="1209"></text>
+<text class="col" x="568" y="1209">reviewed_at</text>
+<text class="type" x="818" y="1209" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="512" y="1228">FK</text>
+<text class="col" x="568" y="1228">reviewed_by</text>
+<text class="type" x="818" y="1228" text-anchor="end">BIGINT → users</text>
+<text class="flag" x="512" y="1247"></text>
+<text class="col" x="568" y="1247">created_at *</text>
+<text class="type" x="818" y="1247" text-anchor="end">TIMESTAMPTZ</text>
+</g>
 <g class="views">
-  <rect class="views-box" x="50" y="2396" width="3480" height="200" rx="12"/>
+  <rect class="views-box" x="50" y="2396" width="3480" height="252" rx="12"/>
   <text class="views-title" x="70" y="2428">VIEWS — derived, never stored; public views expose no account identity or private evidence</text>
   <text class="view-name" x="70" y="2458">vw_public_companies</text><text class="view-src" x="380" y="2458">reads companies</text>
 <text class="view-name" x="70" y="2484">vw_public_approved_reviews</text><text class="view-src" x="380" y="2484">reads submissions, company_reviews, companies, job_roles</text>
 <text class="view-name" x="70" y="2510">vw_verified_salary_summary</text><text class="view-src" x="380" y="2510">reads submissions, salary_submissions, companies, job_roles</text>
 <text class="view-name" x="70" y="2536">vw_community_salary_summary</text><text class="view-src" x="380" y="2536">reads submissions, salary_submissions, companies, job_roles</text>
 <text class="view-name" x="70" y="2562">vw_public_open_jobs</text><text class="view-src" x="380" y="2562">reads job_postings, companies, job_roles</text>
+<text class="view-name" x="70" y="2588">vw_public_visible_submissions</text><text class="view-src" x="380" y="2588">reads submissions, content_screenings</text>
+<text class="view-name" x="70" y="2614">vw_ml_human_reviewed_real_submissions</text><text class="view-src" x="380" y="2614">reads submissions, users</text>
 </g>
 </svg>
 </body>

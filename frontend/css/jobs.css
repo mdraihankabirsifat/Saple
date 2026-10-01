@@ -78,7 +78,7 @@
 
 .job-card-link:hover {
   color: var(--saple-green-700);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .job-card-company {
@@ -304,7 +304,7 @@
 }
 
 .application-title a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .application-company {
@@ -397,5 +397,37 @@
 
   .job-detail-facts {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Attached application resume: name, size, View and Download. */
+.application-resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.88rem;
+}
+
+.application-resume-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.application-resume-meta {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.application-resume-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 560px) {
+  .application-resume-actions {
+    width: 100%;
   }
 }

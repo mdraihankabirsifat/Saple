@@ -107,7 +107,7 @@
 }
 
 .card-link::after { position: absolute; inset: 0; border-radius: inherit; content: ""; }
-.card-link:hover { text-decoration: underline; text-underline-offset: 0.2rem; }
+.card-link:hover { text-decoration: none; }
 .company-grid[aria-busy="true"] { min-height: 160px; }
 
 @media (max-width: 960px) {

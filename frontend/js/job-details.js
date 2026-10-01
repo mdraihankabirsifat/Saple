@@ -170,6 +170,30 @@ function renderApplyForm(job) {
     counter.textContent = `${textarea.value.trim().length} / 4000 characters (minimum 30)`;
   });
 
+  // Optional PDF resume. These checks only help the applicant; the server
+  // checks size, type, name and the PDF signature again.
+  const MAX_RESUME_BYTES = 2 * 1024 * 1024;
+  const resumeInput = el('input', {
+    className: 'input',
+    attrs: { id: 'application-resume', name: 'resume', type: 'file', accept: 'application/pdf,.pdf' }
+  });
+  const resumeInfo = el('p', { className: 'field-hint', text: 'PDF only · Max 2 MB', attrs: { 'aria-live': 'polite' } });
+  const formatSize = (bytes) => (bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`);
+  function resumeProblem(file) {
+    if (!file) return '';
+    if (file.type !== 'application/pdf' || !/\.pdf$/i.test(file.name)) return 'Please select a PDF resume.';
+    if (file.size === 0) return 'The selected file is not a valid PDF.';
+    if (file.size > MAX_RESUME_BYTES) return 'Resume must be 2 MB or smaller. Please upload a smaller PDF.';
+    return '';
+  }
+  resumeInput.addEventListener('change', () => {
+    const file = resumeInput.files?.[0];
+    const problem = resumeProblem(file);
+    resumeInput.setCustomValidity(problem);
+    resumeInfo.classList.toggle('is-error', Boolean(problem));
+    resumeInfo.textContent = problem || (file ? `${file.name} · ${formatSize(file.size)}` : 'PDF only · Max 2 MB');
+  });
+
   const submit = el('button', { className: 'button button-primary', text: 'Submit application', attrs: { type: 'submit' } });
   const feedback = el('p', { className: 'form-feedback', attrs: { role: 'status', 'aria-live': 'polite' } });
 
@@ -179,9 +203,14 @@ function renderApplyForm(job) {
       textarea,
       counter
     ]),
+    el('div', { className: 'form-group' }, [
+      el('label', { text: 'Resume / CV (PDF, optional)', attrs: { for: 'application-resume' } }),
+      resumeInput,
+      resumeInfo
+    ]),
     el('p', {
       className: 'field-hint',
-      text: 'Job applications do not accept CV attachments. Do not include identity documents, national ID numbers or passwords.'
+      text: 'Only the representatives of this company can open your resume. Do not upload a national ID, passport, passwords or other unrelated documents.'
     }),
     submit,
     feedback
@@ -191,14 +220,27 @@ function renderApplyForm(job) {
     event.preventDefault();
     feedback.textContent = '';
     feedback.className = 'form-feedback';
+    const resumeFile = resumeInput.files?.[0] || null;
+    const problem = resumeProblem(resumeFile);
+    if (problem) {
+      feedback.className = 'form-feedback is-error';
+      feedback.textContent = problem;
+      resumeInput.focus();
+      return;
+    }
     submit.disabled = true;
     submit.textContent = 'Submitting…';
+
+    // Multipart form data, so the browser sets the boundary itself.
+    const body = new FormData();
+    body.append('coverLetter', textarea.value);
+    if (resumeFile) body.append('resume', resumeFile, resumeFile.name);
 
     try {
       await apiRequest(`/api/jobs/${encodeURIComponent(job.jobId)}/applications`, {
         method: 'POST',
         auth: true,
-        body: { coverLetter: textarea.value }
+        body
       });
       showToast('Application submitted.', 'success');
       renderApplied();

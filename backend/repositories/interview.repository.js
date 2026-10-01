@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { recordSubmission } = require('./ml-screening.repository');
 
 function repositoryError(code, message) {
   const error = new Error(message);
@@ -10,7 +11,7 @@ async function createInterview(input) {
   const {
     userId, companyId, roleId, interviewDate, difficultyLevel, roundsCount,
     interviewMode, resultStatus, durationDays, processDescription,
-    questionsSummary, isAnonymous
+    questionsSummary, isAnonymous, screening
   } = input;
   const client = await database.getClient();
 
@@ -73,8 +74,10 @@ async function createInterview(input) {
       interviewMode, resultStatus, durationDays, processDescription, questionsSummary
     ]);
 
+    const publicationState = await recordSubmission(client, { type: 'INTERVIEW', submissionId, userId, screening });
     await client.query('COMMIT');
-    return { submissionId, submissionStatus: 'PENDING', verificationStatus: 'VERIFIED' };
+    return { submissionId, submissionStatus: 'PENDING', verificationStatus: 'VERIFIED',
+      publicationState: publicationState || 'HELD' };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -92,15 +95,15 @@ async function findApprovedInterviews(companyId) {
       ie.duration_days AS "durationDays", ie.process_description AS "processDescription",
       ie.questions_summary AS "questionsSummary",
       s.verification_status AS "verificationStatus", s.submitted_at AS "submittedAt",
-      s.approved_at AS "approvedAt", s.is_anonymous AS "isAnonymous",
+      COALESCE(s.approved_at, s.submitted_at) AS "approvedAt",
+      s.awaiting_moderator_review AS "awaitingModeratorReview", s.is_anonymous AS "isAnonymous",
       CASE WHEN s.is_anonymous = 0 THEN u.full_name ELSE NULL END AS "authorName"
-    FROM submissions s
+    FROM vw_public_visible_submissions s
     JOIN interview_experiences ie ON ie.submission_id = s.submission_id
     JOIN job_roles jr ON jr.role_id = ie.role_id
     JOIN users u ON u.user_id = s.user_id
     WHERE s.company_id = $1 AND s.submission_type = 'INTERVIEW'
-      AND s.submission_status = 'APPROVED'
-    ORDER BY s.approved_at DESC, s.submission_id DESC
+    ORDER BY COALESCE(s.approved_at, s.submitted_at) DESC, s.submission_id DESC
   `, [companyId]);
   return result.rows;
 }

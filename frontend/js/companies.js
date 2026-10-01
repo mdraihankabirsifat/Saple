@@ -1,6 +1,6 @@
 import { fetchApi } from './api.js';
 import { createCompanyLogo } from './company-logo.js';
-import { paginate, pageNumbers, sortCompanies, SORT_OPTIONS } from './company-directory.js';
+import { paginate, pageNumbers, sortCompanies, SORT_OPTIONS, DEFAULT_SORT } from './company-directory.js';
 import { createSalaryRange } from './salary-range.js';
 import { mountFilterDrawer } from './browse-controls.js';
 
@@ -88,7 +88,7 @@ function queryFromForm() {
       : name === 'minSalary' ? range.values.min : name === 'maxSalary' ? range.values.max : input.value.trim();
     if (value !== null && value !== '' && !(name === 'salarySource' && value === 'COMMUNITY')) query.set(name, value);
   });
-  if (sortInput.value !== 'name-asc') query.set('sort', sortInput.value);
+  if (sortInput.value !== DEFAULT_SORT) query.set('sort', sortInput.value);
   return query;
 }
 function writeUrl(push = false) {
@@ -103,7 +103,8 @@ function focusResults() {
   heading.scrollIntoView({ block: 'start', behavior: 'instant' });
 }
 function renderResults(focus = false) {
-  const result = paginate(sortCompanies(companies, appliedQuery.get('sort') || 'name-asc', appliedQuery.get('salarySource')), page);
+  const result = paginate(sortCompanies(companies, appliedQuery.get('sort') || DEFAULT_SORT, appliedQuery.get('salarySource'),
+    appliedQuery.get('search') || ''), page);
   page = result.page;
   companyList.replaceChildren(...result.items.map(createCompanyCard));
   summary.textContent = `Showing ${result.start}–${result.end} of ${result.total} companies.`;
@@ -171,7 +172,7 @@ function restoreQuery() {
     else input.value = query.get(name) ?? (name === 'salarySource' ? 'COMMUNITY' : '');
     input.setCustomValidity('');
   });
-  sortInput.value = SORT_OPTIONS.includes(query.get('sort')) ? query.get('sort') : 'name-asc';
+  sortInput.value = SORT_OPTIONS.includes(query.get('sort')) ? query.get('sort') : DEFAULT_SORT;
   range.sync(); appliedQuery = queryFromForm(); page = Number(query.get('page')) || 1;
 }
 // The shared drawer moves this sidebar into a modal dialog below 1050px.

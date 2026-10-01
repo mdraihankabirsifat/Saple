@@ -13,30 +13,30 @@ function handle(work) { return async (request, response, next) => {
   }
 }; }
 
+function sendProfileResult(res, successStatus, message, key, value) {
+  const pending = value?.pendingReview === true;
+  return sendSuccess(res, pending ? 202 : successStatus,
+    pending ? 'Profile change is waiting for manual review' : message, { [key]: value });
+}
+
 const own = handle(async (req, res) => sendSuccess(res, 200, 'Profile sections retrieved',
   await repository.listSections(req.user.userId)));
-const addEducation = handle(async (req, res) => sendSuccess(res, 201, 'Education added',
-  { education: await service.createEducation(req.user.userId, req.body) }));
-const editEducation = handle(async (req, res) => sendSuccess(res, 200, 'Education updated',
-  { education: await service.updateEducation(req.user.userId, req.params.recordId, req.body) }));
-const removeEducation = handle(async (req, res) => {
-  await service.deleteEducation(req.user.userId, req.params.recordId);
-  return sendSuccess(res, 200, 'Education removed', { deleted: true });
-});
-const addExperience = handle(async (req, res) => sendSuccess(res, 201, 'Experience added',
-  { experience: await service.createExperience(req.user.userId, req.body) }));
-const editExperience = handle(async (req, res) => sendSuccess(res, 200, 'Experience updated',
-  { experience: await service.updateExperience(req.user.userId, req.params.recordId, req.body) }));
-const removeExperience = handle(async (req, res) => {
-  await service.deleteExperience(req.user.userId, req.params.recordId);
-  return sendSuccess(res, 200, 'Experience removed', { deleted: true });
-});
-const addSkill = handle(async (req, res) => sendSuccess(res, 201, 'Skill added',
-  { skill: await service.addSkill(req.user.userId, req.body) }));
-const removeSkill = handle(async (req, res) => {
-  await service.removeSkill(req.user.userId, req.params.skillId);
-  return sendSuccess(res, 200, 'Skill removed', { deleted: true });
-});
+const addEducation = handle(async (req, res) => sendProfileResult(res, 201, 'Education added',
+  'education', await service.createEducation(req.user.userId, req.body)));
+const editEducation = handle(async (req, res) => sendProfileResult(res, 200, 'Education updated',
+  'education', await service.updateEducation(req.user.userId, req.params.recordId, req.body)));
+const removeEducation = handle(async (req, res) => sendProfileResult(res, 200, 'Education removed',
+  'result', await service.deleteEducation(req.user.userId, req.params.recordId)));
+const addExperience = handle(async (req, res) => sendProfileResult(res, 201, 'Experience added',
+  'experience', await service.createExperience(req.user.userId, req.body)));
+const editExperience = handle(async (req, res) => sendProfileResult(res, 200, 'Experience updated',
+  'experience', await service.updateExperience(req.user.userId, req.params.recordId, req.body)));
+const removeExperience = handle(async (req, res) => sendProfileResult(res, 200, 'Experience removed',
+  'result', await service.deleteExperience(req.user.userId, req.params.recordId)));
+const addSkill = handle(async (req, res) => sendProfileResult(res, 201, 'Skill added',
+  'skill', await service.addSkill(req.user.userId, req.body)));
+const removeSkill = handle(async (req, res) => sendProfileResult(res, 200, 'Skill removed',
+  'result', await service.removeSkill(req.user.userId, req.params.skillId)));
 
 module.exports = { own, addEducation, editEducation, removeEducation,
   addExperience, editExperience, removeExperience, addSkill, removeSkill };

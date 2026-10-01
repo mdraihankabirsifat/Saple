@@ -45,6 +45,11 @@ function companyDetailsLink(companyId, label = 'View company details') {
   link.className = 'card-link';
   link.href = `company-details.html?id=${encodeURIComponent(companyId)}`;
   link.textContent = label;
+  // An action link: the arrow, not an underline, says it goes somewhere.
+  const arrow = document.createElement('span');
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.textContent = ' →';
+  link.append(arrow);
   return link;
 }
 

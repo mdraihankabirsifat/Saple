@@ -1,5 +1,6 @@
 const salaryRepository = require('../repositories/salary.repository');
 const createHttpError = require('../utils/httpError');
+const mlScreening = require('./ml-screening.service');
 
 const PAY_PERIODS = new Set(['MONTHLY', 'YEARLY']);
 const EMPLOYMENT_TYPES = new Set(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN']);
@@ -111,11 +112,19 @@ function validateSalaryInput(companyIdValue, input = {}) {
 
 async function submitSalary(userId, companyIdValue, input) {
   const validated = validateSalaryInput(companyIdValue, input);
+  const screening = await mlScreening.screen('SALARY', {
+    companyId: validated.companyId, roleId: validated.roleId,
+    baseSalary: validated.baseSalary, additionalCompensation: validated.additionalCompensation,
+    currency: validated.currency, payPeriod: validated.payPeriod,
+    yearsOfExperience: validated.yearsOfExperience, employmentType: validated.employmentType,
+    workMode: validated.workMode, salaryYear: validated.salaryYear
+  });
 
   try {
     return await salaryRepository.createSalarySubmission({
       userId,
-      ...validated
+      ...validated,
+      screening
     });
   } catch (error) {
     if (['ACCOUNT_UNAVAILABLE', 'VERIFICATION_REQUIRED'].includes(error.sapleCode)) {

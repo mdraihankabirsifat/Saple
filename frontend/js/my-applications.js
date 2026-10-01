@@ -1,5 +1,6 @@
 import { apiRequest } from './api.js';
 import { requireSession } from './require-session.js';
+import { resumeSection } from './resume-file.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState,
   renderPagination, formatDate, formatDateTime, humanizeEnum, showToast
@@ -112,6 +113,7 @@ function applicationCard(application) {
       el('div', {}, [el('dt', { text: 'Last update' }), el('dd', { text: formatDate(application.updatedAt) })]),
       el('div', {}, [el('dt', { text: 'Vacancy' }), el('dd', { text: humanizeEnum(application.jobStatus) })])
     ]),
+    resumeSection(application, `/api/me/applications/${application.applicationId}/resume`, (error) => showToast(error.message, 'error')),
     details
   ]);
 

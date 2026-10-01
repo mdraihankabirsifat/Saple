@@ -88,7 +88,8 @@ test('successful salary transaction commits once and releases its client', async
   assert.deepEqual(result, {
     submissionId: 12,
     submissionStatus: 'PENDING',
-    verificationStatus: 'VERIFIED'
+    verificationStatus: 'VERIFIED',
+    publicationState: 'HELD'
   });
   assert.deepEqual(client.state, { commits: 1, rollbacks: 0, releases: 1 });
 });

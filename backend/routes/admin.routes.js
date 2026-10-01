@@ -7,6 +7,7 @@ const announcementController = require('../controllers/announcement.controller')
 const jobController = require('../controllers/job.controller');
 const applicationController = require('../controllers/application.controller');
 const premiumController = require('../controllers/premium.controller');
+const mlModerationController = require('../controllers/ml-moderation.controller');
 
 const router = express.Router();
 
@@ -14,6 +15,9 @@ const router = express.Router();
 // here already has an administrator identity. Administrators are ordinary
 // accounts with the ADMIN role: nothing below assumes a particular account.
 router.get('/submissions/pending', adminController.getPendingSubmissions);
+router.get('/ml/health', adminController.getMlHealth);
+router.get('/ml/screenings/pending', mlModerationController.queue);
+router.patch('/ml/screenings/:screeningId/decision', mlModerationController.decide);
 router.get('/submissions/:submissionId/moderation-history', adminController.getModerationHistory);
 router.patch('/submissions/:submissionId/status', adminController.updateSubmissionStatus);
 router.get('/submissions/:submissionId', adminController.getSubmission);

@@ -1,180 +1,116 @@
-# Saple optional ML moderation-risk demo
+# Saple ML-assisted moderation
 
-This folder is a small, removable extension to Saple's database project. It demonstrates how an explainable model could assist salary-submission moderation without changing the PostgreSQL schema, Node backend, frontend, or existing moderation workflow.
+This is a separate, explainable moderation-risk layer. Saple’s Node backend
+remains the application authority and human moderators remain final. The
+service may return a high-confidence low-risk suggestion, but it never returns
+`AUTO_REJECT` and never makes a final moderation decision.
 
-The model reports **moderation risk**, not whether a submission is definitively fake. It never approves, rejects, flags, deletes, or otherwise changes a submission. A human moderator remains the final authority.
+## What is screened
 
-## Activation and safety rules
+The architecture supports salary submissions, company reviews, interview
+experiences, representative-created jobs and public professional-profile text.
+Normal validation, authorization, duplicate checks and rate limits run first.
+When the service is unavailable or a model is not eligible, the submission is
+saved and held for manual review.
 
-Training is role-specific. A role is eligible only when its CSV contains at least **50 final moderator-reviewed salary submissions** and both training classes exist.
+The model never receives passwords, JWTs, reset tokens, payment data,
+verification evidence, direct messages, application statements, applicant PDF
+resumes, CV text, or private email addresses. Images use the existing MIME,
+size and magic-byte checks; no biometric or brand classification is performed.
 
-| Reviewed role data | Result |
-|---|---|
-| Fewer than 50 `APPROVED`/`REJECTED` rows | Disabled: `INSUFFICIENT_DATA` |
-| At least 50 rows but only one label | Disabled: `INSUFFICIENT_CLASS_DIVERSITY` |
-| At least 50 rows and both labels | Eligible to train for that role only |
+## States and safety controls
 
-`PENDING` and `FLAGGED` rows are excluded before the reviewed count. A flag is not treated as final truth.
+Each screening is recorded in `content_screenings` with the model version,
+feature schema, probabilities, reason codes and publication state. A low-risk
+result can be `PROVISIONAL` only when the model is active, fresh, in
+distribution, trained on enough final real labels, the content type is enabled,
+`ML_AUTO_PUBLISH_ENABLED=true`, and `ML_SHADOW_MODE=false`.
 
-## Labels and features
+The emergency kill switch is `ML_AUTO_PUBLISH_ENABLED=false`. Shadow mode is
+the default (`ML_SHADOW_MODE=true`): scores are recorded, but every item stays
+held. Public provisional content is visibly marked as awaiting moderator review.
+Human approval changes it to `CONFIRMED`; rejection changes it to `REMOVED`.
+ML retries cannot override a final human decision.
 
-The final moderated submission status becomes the binary training label:
+Profile and job changes are revision-safe: a held change is not applied to the
+public profile or job, while a provisional change is visible with a pending
+review state. Administrators review those revisions from the ML queue and can
+confirm or remove them. A profile revision superseded by a newer revision is
+never allowed to overwrite the current profile. Company descriptive content is
+manual-only until a separate model has enough real labels.
 
-- `APPROVED` -> `0` (legitimate example)
-- `REJECTED` -> `1` (suspicious example)
-- `FLAGGED` and `PENDING` -> excluded
+## Training data and models
 
-The pipeline uses eight small, explainable fields already present in Saple:
+Training labels are only final human `APPROVED` and `REJECTED` rows. Pending,
+flagged, provisional and ML-generated states are excluded. Demo accounts are
+excluded both by the SQL view and by defense-in-depth marker checks. Private
+content is never exported. Salary models keep role-specific structured
+features; review and interview models use small TF-IDF plus LogisticRegression
+pipelines when enough labels exist.
 
-- Numeric: `base_salary`, `additional_compensation`, `years_of_experience`, `salary_year`
-- Categorical: `pay_period`, `employment_type`, `work_mode`, `verification_status`
+The gates are at least 50 real reviewed rows and both classes to train, and at
+least 200 real rows with 30 of each class plus valid holdout evidence for
+auto-publish. Candidate reports include a deterministic dataset fingerprint,
+validation method, metrics, coverage and false auto-publishes. Candidates are
+private artifacts and `CANDIDATE` registry rows; training never activates one.
 
-Numeric values receive median imputation and standard scaling. Categorical values receive most-frequent imputation and one-hot encoding with unknown categories ignored. A `ColumnTransformer` keeps preprocessing together with a class-balanced scikit-learn `LogisticRegression` in one `Pipeline`.
+The current training command covers the labelled salary, review and interview
+families. JOB, PROFILE and COMPANY remain `MANUAL_REVIEW` only when their
+model is absent or fails the eligibility gates; no synthetic model is created
+to enable publication.
 
-## Dataset format
+## Manual commands
 
-Input is a CSV with these columns:
-
-```text
-submission_id
-role_id
-role_name
-base_salary
-additional_compensation
-years_of_experience
-pay_period
-employment_type
-work_mode
-verification_status
-salary_year
-moderation_status
-```
-
-The read-only [data/export_reviewed_salary.sql](data/export_reviewed_salary.sql) helper exports final moderator-reviewed salary rows from PostgreSQL through `psql`. Run it from `ml/data/` as `psql "$DATABASE_URL" -X -q -f export_reviewed_salary.sql > salary_training.csv`. CSV files in that folder are ignored by Git; inspect exports for privacy before moving or sharing them. Never commit private production data.
-
-## Setup on Windows
-
-Run all commands from the `ml` folder:
+Install service dependencies from `ml`:
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements-service.txt
 ```
 
-For Command Prompt, activate with:
-
-```bat
-.venv\Scripts\activate.bat
-```
-
-## Synthetic classroom demo
-
-The live database may not yet have 50 reviewed examples for one role. Generate 100 fictional Software Engineer records (80 approved, 20 rejected) without touching the database:
+Audit with a read-only database role first:
 
 ```powershell
-python -m src.generate_demo_data --output data/salary_training.csv
+python -m src.audit_training_data
 ```
 
-The file is explicitly printed as `SYNTHETIC DEMO DATA`. Its patterns and model accuracy are designed only to exercise the pipeline; they are not evidence of real-world performance.
-
-## Train and evaluate
-
-Train role 1:
+After reviewing that report, create private candidate artifacts:
 
 ```powershell
-python -m src.train --data data/salary_training.csv --role-id 1
+python -m src.train_all
 ```
 
-The command filters role 1, enforces the 50-row and two-class rules, makes a reproducible 80/20 split (`random_state=42`), trains Logistic Regression, prints metrics, and saves `models/role_1_logistic_regression.joblib`. Generated model files are ignored by Git and can be regenerated.
+Run the separate service with `uvicorn service.app:app --host 0.0.0.0 --port 8000`.
+Set `ML_SERVICE_URL` and `ML_SERVICE_TOKEN` only in backend runtime settings.
+The browser never receives the service token. `/health` is safe to expose;
+`/screen` requires the token and strict Pydantic input. `ml/Dockerfile` is the
+container deployment baseline.
 
-Evaluation reports:
+Administrators can inspect pending screening metadata at
+`GET /api/admin/ml/screenings/pending` and record a human decision for profile
+or job revisions with `PATCH /api/admin/ml/screenings/:screeningId/decision`.
+Salary, review and interview decisions continue through the existing audited
+submission moderation panel.
 
-- Accuracy
-- Precision
-- Recall
-- F1 score
-- Confusion matrix (`[[true 0/predicted 0, true 0/predicted 1], [true 1/predicted 0, true 1/predicted 1]]`)
+## Database and rollout
 
-For potentially imbalanced suspicious examples, precision, recall, and F1 are more informative than accuracy alone. None of these demo metrics imply production readiness.
+Run `database/postgres/migrations/011_ml_moderation.sql` manually in Supabase
+after migration 010. It adds the model registry, screening audit,
+professional-profile revisions, public visibility and real-training views. It
+is additive and is not applied by deployment scripts. Verified salary and
+rating aggregates remain final-human-only.
 
-## Predict one moderation-risk score
+Roll out in three stages: shadow mode, one mature content type with explicit
+auto-publish opt-in, then expansion only after overturn metrics remain
+acceptable. If no service is deployed, ordinary manual moderation continues.
 
-After training role 1:
-
-```powershell
-python -m src.predict --role-id 1 --base-salary 300000 --additional-compensation 0 --years-of-experience 1.5 --pay-period MONTHLY --employment-type FULL_TIME --work-mode REMOTE --verification-status UNVERIFIED --salary-year 2026
-```
-
-Example output shape:
-
-```json
-{
-  "eligible": true,
-  "roleId": 1,
-  "reviewedSamples": 100,
-  "suspiciousProbability": 0.82,
-  "riskLevel": "HIGH"
-}
-```
-
-Risk bands are demonstration thresholds only:
-
-- Probability below `0.40`: `LOW`
-- Probability from `0.40` to below `0.70`: `MEDIUM`
-- Probability at or above `0.70`: `HIGH`
-
-Pass `--data data/salary_training.csv` to prediction when diagnosing an untrained role. It can then return `INSUFFICIENT_DATA` or `INSUFFICIENT_CLASS_DIVERSITY`; otherwise, an absent artifact returns `MODEL_NOT_FOUND`.
-
-## Tests
+## Tests and limitations
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-The lightweight suite checks the below-50 rule, exact-50 eligibility, one-class rejection, preprocessing, probability bounds, and risk-band boundaries.
-
-## Educational notebook
-
-Start Jupyter and open `notebooks/saple_ml_demo.ipynb`:
-
-```powershell
-jupyter notebook
-```
-
-The notebook walks through loading data, role counts, eligibility, class balance, preprocessing, training, the confusion matrix and metrics, and one example risk score.
-
-## Limitations
-
-- Synthetic data is intentionally simplified and cannot validate real moderation quality.
-- A 50-record threshold makes training possible, not necessarily reliable.
-- Sparse rejected examples can make metrics unstable; human review remains mandatory.
-- Moderator decisions may contain historical bias or inconsistency.
-- The model uses no text, user profiling, behavioral tracking, or role-median feature.
-- Models can become stale as salaries and job markets change.
-- There is no HTTP API, model server, Node/Python bridge, automatic retraining, monitoring, or production deployment.
-
-## Future integration (documentation only)
-
-```text
-PostgreSQL reviewed submissions
-        |
-export training CSV
-        |
-role has >= 50 final reviewed records and both classes?
-        |
-NO -> ML disabled
-YES -> train/load that role's model
-        |
-new salary submission
-        |
-model risk probability + LOW/MEDIUM/HIGH label
-        |
-admin moderation UI
-        |
-human moderator makes the final decision
-```
-
-A later milestone could expose `risk_probability` and `risk_level` to the admin moderation screen. This prototype deliberately adds no database columns, changes no `submissions` schema, and does not call Python from Node.
-
+Classical models identify patterns associated with reviewed Saple content.
+They do not determine truth, fraud, intent or whether a person is trustworthy.
+Human review, user reports and existing authorization rules remain decisive.

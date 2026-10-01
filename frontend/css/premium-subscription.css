@@ -44,6 +44,20 @@
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3Cpath d='M8 10V7a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* The Saple Guide's Premium indicator: informational only. */
+.guide-tier-badge {
+  margin-left: 0.45rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--saple-gold-soft);
+  color: var(--saple-gold-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.guide-tier-badge[hidden] { display: none; }
+
 /* Locked interview questions: a short preview that fades out, then the lock. */
 .questions-locked { margin-top: 0.5rem; }
 
@@ -69,7 +83,7 @@
   font-weight: 600;
 }
 
-.questions-lock a { color: inherit; text-decoration: underline; text-underline-offset: 0.18em; }
+.questions-lock a { color: inherit; text-decoration: none; }
 
 /* Premium job teaser */
 .job-premium-badge { margin-left: 0.35rem; }
@@ -410,46 +424,66 @@
 .compare-table thead th:not(:first-child) { text-align: center; }
 .compare-table td:last-child { color: var(--brand-solid); font-weight: 600; }
 
-.tools-grid {
+/* Shortcuts for active members on the Premium page. */
+.shortcut-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
 }
 
-.tool-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  min-width: 0;
-  padding: 1.25rem;
+.shortcut-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
+}
+
+.shortcut-card:hover { border-color: var(--saple-gold); transform: translateY(-1px); }
+.shortcut-card:focus-visible { outline: none; box-shadow: var(--ring); }
+.shortcut-title { color: var(--brand-solid); font-weight: 700; }
+.shortcut-text { color: var(--text-secondary); font-size: 0.88rem; }
+
+/* Resume generator page. */
+.resume-page { padding-bottom: var(--section-space); }
+.resume-hero { max-width: 46rem; margin-bottom: 1.5rem; }
+.resume-hero h1 { margin: 0.25rem 0 0.6rem; }
+.resume-lead { margin: 0; font-size: 1.12rem; color: var(--text-primary); }
+.resume-hero p + p { margin-top: 0.5rem; color: var(--text-secondary); }
+.resume-promise { font-weight: 600; color: var(--brand-solid) !important; }
+
+.resume-card {
+  max-width: 52rem;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
-.tool-card h3 { margin: 0; }
-.tool-intro { margin: 0; color: var(--text-secondary); }
+.resume-gate { max-width: 34rem; }
+.resume-quota { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+.resume-quota strong { color: var(--text-primary); }
 
-.ai-transcript {
-  display: grid;
-  gap: 0.6rem;
-  max-height: 24rem;
-  overflow-y: auto;
+.pdf-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.ai-transcript:empty { display: none; }
+.pdf-upsell { margin: 0.6rem 0 0; color: var(--text-secondary); font-size: 0.9rem; }
+.pdf-upsell a { margin-left: 0.35rem; }
 
-.ai-turn { padding: 0.65rem 0.8rem; border-radius: var(--radius-md); overflow-wrap: anywhere; }
-.ai-turn p { margin: 0; }
-.ai-turn p + p { margin-top: 0.5rem; }
-.ai-turn-user { background: var(--surface-muted); }
-.ai-turn-assistant { border: 1px solid var(--border); }
-.ai-turn-label { color: var(--text-tertiary); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; }
-
-.ai-form,
 .resume-form { display: grid; gap: 0.6rem; }
 
-.ai-form .button,
 .resume-form .button { justify-self: start; }
 
 .resume-options {
@@ -534,22 +568,6 @@
 .payment-result[data-state="success"] h1 { color: var(--brand-solid); }
 .payment-result[data-state="failed"] h1 { color: #a2402f; }
 :root[data-theme="dark"] .payment-result[data-state="failed"] h1 { color: #e59a8a; }
-
-/* 4. Printing a generated resume -------------------------------------------- */
-
-@media print {
-  html.printing-resume body > *:not(main),
-  html.printing-resume main > .container > *:not(#premium-tools),
-  html.printing-resume #premium-tools > *:not(#resume-output),
-  html.printing-resume .resume-output-bar,
-  html.printing-resume #resume-output > .premium-fineprint,
-  html.printing-resume dialog { display: none !important; }
-
-  html.printing-resume body,
-  html.printing-resume .premium-page { padding: 0; margin: 0; background: #fff; }
-
-  html.printing-resume .resume-preview { border: 0; padding: 0; }
-}
 
 @media (max-width: 480px) {
   .promo-row { flex-direction: column; }

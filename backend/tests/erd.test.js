@@ -10,8 +10,8 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 test('the ERD generator reads the full active schema', () => {
   const { tables, views } = erd.parseSchema(read('database/postgres/01_final_schema_postgres.sql').replace(/\r\n/g, '\n'));
 
-  assert.equal(tables.size, 34);
-  assert.equal(views.length, 5);
+  assert.equal(tables.size, 38);
+  assert.equal(views.length, 7);
   assert.deepEqual(tables.get('job_applications').uniqueKeys, [['job_id', 'applicant_user_id']]);
   assert.deepEqual(tables.get('company_representatives').partialUnique.columns, ['user_id', 'company_id']);
 
@@ -43,7 +43,7 @@ test('the ERD describes the PostgreSQL schema and every table', () => {
 
   assert.match(html, /<title>Saple PostgreSQL ERD<\/title>/);
   assert.doesNotMatch(html, /Oracle 19c Entity|Fourteen Oracle relations/);
-  assert.match(md, /34 tables and 5 views/);
+  assert.match(md, /38 tables and 7 views/);
 
   for (const table of [
     'users', 'employees', 'companies', 'submissions', 'company_representatives',

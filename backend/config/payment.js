@@ -75,7 +75,10 @@ function readLimit(name, fallback) {
 function getPremiumAiLimits() {
   return {
     chatPerDay: readLimit('PREMIUM_AI_DAILY_CHAT_LIMIT', 30),
-    resumePerDay: readLimit('PREMIUM_RESUME_DAILY_LIMIT', 5)
+    // Resume generation is open to every signed-in member; Premium and trial
+    // members get the larger daily allowance.
+    resumePerDay: readLimit('PREMIUM_RESUME_DAILY_LIMIT', 10),
+    freeResumePerDay: readLimit('RESUME_FREE_DAILY_LIMIT', 3)
   };
 }
 

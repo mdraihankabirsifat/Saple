@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const { recordSubmission } = require('./ml-screening.repository');
 
 function repositoryError(code, message) {
   const error = new Error(message);
@@ -10,7 +11,7 @@ async function createReview(input) {
   const {
     userId, companyId, roleId, reviewTitle, overallRating, workLifeBalanceRating,
     careerGrowthRating, managementRating, cultureRating, pros, cons,
-    adviceToManagement, employmentStatus, reviewDate, isAnonymous
+    adviceToManagement, employmentStatus, reviewDate, isAnonymous, screening
   } = input;
   const client = await database.getClient();
 
@@ -77,8 +78,10 @@ async function createReview(input) {
       adviceToManagement, employmentStatus, reviewDate
     ]);
 
+    const publicationState = await recordSubmission(client, { type: 'REVIEW', submissionId, userId, screening });
     await client.query('COMMIT');
-    return { submissionId, submissionStatus: 'PENDING', verificationStatus: 'VERIFIED' };
+    return { submissionId, submissionStatus: 'PENDING', verificationStatus: 'VERIFIED',
+      publicationState: publicationState || 'HELD' };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -99,15 +102,15 @@ async function findApprovedReviews(companyId) {
         cr.pros, cr.cons, cr.advice_to_management AS "adviceToManagement",
         cr.employment_status AS "employmentStatus", cr.review_date AS "reviewDate",
         s.verification_status AS "verificationStatus", s.submitted_at AS "submittedAt",
-        s.approved_at AS "approvedAt", s.is_anonymous AS "isAnonymous",
+        COALESCE(s.approved_at, s.submitted_at) AS "approvedAt",
+        s.awaiting_moderator_review AS "awaitingModeratorReview", s.is_anonymous AS "isAnonymous",
         CASE WHEN s.is_anonymous = 0 THEN u.full_name ELSE NULL END AS "authorName"
-      FROM submissions s
+      FROM vw_public_visible_submissions s
       JOIN company_reviews cr ON cr.submission_id = s.submission_id
       LEFT JOIN job_roles jr ON jr.role_id = cr.role_id
       JOIN users u ON u.user_id = s.user_id
       WHERE s.company_id = $1 AND s.submission_type = 'REVIEW'
-        AND s.submission_status = 'APPROVED'
-      ORDER BY s.approved_at DESC, s.submission_id DESC
+      ORDER BY COALESCE(s.approved_at, s.submitted_at) DESC, s.submission_id DESC
     `, [companyId]),
     database.query(`
       SELECT COUNT(*)::INTEGER AS "reviewCount",

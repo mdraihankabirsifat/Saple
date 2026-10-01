@@ -1,5 +1,5 @@
 const premiumService = require('../services/premium.service');
-const premiumAiService = require('../services/premium-ai.service');
+const aiService = require('../services/ai.service');
 const { sendSuccess } = require('../utils/apiResponse');
 
 function handle(work) {
@@ -9,7 +9,7 @@ function handle(work) {
 }
 
 const plans = handle(async (req, res) => sendSuccess(res, 200, 'Premium plans retrieved',
-  { ...await premiumService.listPlans(), premiumAiAvailable: premiumAiService.isAvailable() }));
+  { ...await premiumService.listPlans(), premiumAiAvailable: aiService.isPremiumModelConfigured() }));
 
 const status = handle(async (req, res) => sendSuccess(res, 200, 'Premium status retrieved',
   await premiumService.getPremiumAccess(req.user.userId)));
@@ -48,12 +48,6 @@ const viewers = handle(async (req, res) => sendSuccess(res, 200, 'Profile viewer
 const talent = handle(async (req, res) => sendSuccess(res, 200, 'Talent retrieved',
   await premiumService.listTalent(req.user, req.query)));
 
-const aiChat = handle(async (req, res) => sendSuccess(res, 200, 'Premium AI answered',
-  await premiumAiService.chat(req.user.userId, req.body)));
-
-const generateResume = handle(async (req, res) => sendSuccess(res, 200, 'Resume generated',
-  await premiumAiService.generateResume(req.user.userId, req.body)));
-
 const adminOverview = handle(async (req, res) => sendSuccess(res, 200, 'Premium overview retrieved',
   await premiumService.getOverview()));
 
@@ -68,6 +62,6 @@ const adminSetPromoActive = handle(async (req, res) => sendSuccess(res, 200, 'Pr
 
 module.exports = {
   plans, status, startTrial, quote, checkout, payment, paymentReturn, sslcommerzIpn,
-  viewSummary, viewers, talent, aiChat, generateResume,
+  viewSummary, viewers, talent,
   adminOverview, adminPromoCodes, adminCreatePromoCode, adminSetPromoActive
 };

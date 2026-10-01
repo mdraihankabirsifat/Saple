@@ -87,6 +87,71 @@ test('bulk demo data loads cleanly, is re-runnable, and the cleanup removes only
       (SELECT COUNT(DISTINCT overall_rating)::int FROM company_reviews) AS rating_levels`);
     assert.ok(shape.verified_pairs > 50 && shape.open_jobs > 80 && shape.rating_levels >= 7, JSON.stringify(shape));
 
+    // Verified salaries are a meaningful subset of the community range, not a
+    // copy of it, in the dense synthetic company-role groups.
+    const salaryGroups = () => db.query(`SELECT s.company_id, ss.role_id, ss.currency, ss.pay_period,
+        COUNT(*)::int AS community, COUNT(*) FILTER (WHERE s.verification_status = 'VERIFIED')::int AS verified,
+        MIN(ss.base_salary)::text AS cmin, MAX(ss.base_salary)::text AS cmax,
+        MIN(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')::text AS vmin,
+        MAX(ss.base_salary) FILTER (WHERE s.verification_status = 'VERIFIED')::text AS vmax,
+        BOOL_AND(u.password_hash = '${MARKER}') AS synthetic
+      FROM submissions s JOIN salary_submissions ss USING (submission_id) JOIN users u ON u.user_id = s.user_id
+      WHERE s.submission_type = 'SALARY' AND s.submission_status = 'APPROVED'
+      GROUP BY 1, 2, 3, 4`).then((result) => result.rows);
+    const dense = (await salaryGroups()).filter((group) => group.synthetic && group.community >= 8);
+    assert.ok(dense.length >= 20, `dense groups ${dense.length}`);
+    assert.ok(dense.every((group) => group.community > group.verified), 'community exceeds verified in every dense group');
+    const differing = dense.filter((group) => group.vmin !== group.cmin || group.vmax !== group.cmax);
+    assert.ok(differing.length / dense.length >= 0.6, `ranges differ in ${differing.length} of ${dense.length}`);
+    for (const group of dense.filter((item) => item.verified >= 4)) {
+      assert.ok(group.verified / group.community <= 0.7, JSON.stringify(group));
+    }
+    // Verified rows only ever come from contributors with a verified scope.
+    const unbacked = await one(`SELECT COUNT(*)::int AS n FROM submissions s
+      JOIN users u ON u.user_id = s.user_id
+      WHERE u.password_hash = '${MARKER}' AND s.submission_type = 'SALARY' AND s.verification_status = 'VERIFIED'
+        AND NOT EXISTS (SELECT 1 FROM employment_verifications ev JOIN employees e ON e.employee_id = ev.employee_id
+          WHERE e.user_id = s.user_id AND ev.company_id = s.company_id AND ev.verification_status IN ('VERIFIED', 'EXPIRED'))`);
+    assert.equal(unbacked.n, 0);
+
+    // The optional 07 script adds nothing to a database 04 already balanced,
+    // and restores the balance on older demo data, without touching real rows.
+    const balance = read('07_balance_demo_salary_ranges.sql');
+    const realSalaries = () => one(`SELECT COUNT(*)::int AS n, COALESCE(SUM(ss.base_salary), 0)::text AS total
+      FROM submissions s JOIN salary_submissions ss USING (submission_id) JOIN users u ON u.user_id = s.user_id
+      WHERE u.password_hash <> '${MARKER}'`);
+    const realBefore = await realSalaries();
+    const verifiedBefore = await one(`SELECT COUNT(*)::int AS n FROM submissions WHERE verification_status = 'VERIFIED'`);
+    const salaryCount = async () => (await one('SELECT COUNT(*)::int AS n FROM salary_submissions')).n;
+    const balancedCount = await salaryCount();
+    await db.exec(balance);
+    assert.equal(await salaryCount(), balancedCount, '07 is a no-op on balanced data');
+    // Remove the community-only rows to recreate an older, unbalanced load.
+    await db.exec(`DELETE FROM salary_submissions WHERE submission_id IN (
+        SELECT s.submission_id FROM submissions s JOIN users u ON u.user_id = s.user_id
+        WHERE u.password_hash = '${MARKER}' AND s.submission_type = 'SALARY' AND s.verification_status = 'UNVERIFIED'
+          AND NOT EXISTS (SELECT 1 FROM employment_verifications ev JOIN employees e ON e.employee_id = ev.employee_id
+            WHERE e.user_id = s.user_id AND ev.company_id = s.company_id));
+      DELETE FROM submissions s USING users u WHERE u.user_id = s.user_id AND u.password_hash = '${MARKER}'
+        AND s.submission_type = 'SALARY' AND NOT EXISTS (SELECT 1 FROM salary_submissions ss WHERE ss.submission_id = s.submission_id);`);
+    const unbalancedCount = await salaryCount();
+    assert.ok(unbalancedCount < balancedCount);
+    await db.exec(balance);
+    const rebalancedCount = await salaryCount();
+    assert.ok(rebalancedCount > unbalancedCount, '07 adds community-only rows to unbalanced data');
+    await db.exec(balance);
+    assert.equal(await salaryCount(), rebalancedCount, 're-running 07 adds nothing');
+    assert.deepEqual(await realSalaries(), realBefore, 'real salaries are never touched');
+    assert.equal((await one(`SELECT COUNT(*)::int AS n FROM submissions WHERE verification_status = 'VERIFIED'`)).n, verifiedBefore.n);
+    assert.ok((await salaryGroups()).filter((group) => group.synthetic && group.community >= 8)
+      .every((group) => group.community > group.verified));
+    assert.doesNotMatch(balance, /^\s*(UPDATE|DELETE|TRUNCATE|DROP|ALTER)\b/im);
+    assert.match(balance, /'UNVERIFIED'/);
+    assert.doesNotMatch(balance, /'APPROVED', 'VERIFIED'/);
+    // The round trip above changed the synthetic rows; later checks compare
+    // against this state (a re-run of 04 must still add nothing to it).
+    Object.assign(loaded, await counts());
+
     // About a third of the synthetic vacancies are Premium-only; no real one is.
     const premiumShare = () => db.query(`SELECT u.password_hash = '${MARKER}' AS synthetic, COUNT(*)::int AS jobs,
       COUNT(*) FILTER (WHERE j.access_level = 'PREMIUM')::int AS premium

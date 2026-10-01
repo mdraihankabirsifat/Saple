@@ -1,6 +1,7 @@
 const reviewRepository = require('../repositories/review.repository');
 const companyRepository = require('../repositories/company.repository');
 const createHttpError = require('../utils/httpError');
+const mlScreening = require('./ml-screening.service');
 
 function positiveId(value, label, optional = false) {
   if (optional && (value === null || value === undefined || value === '')) return null;
@@ -53,7 +54,12 @@ async function submitReview(userId, companyIdValue, input = {}) {
     reviewDate: dateValue(input.reviewDate, 'Review date'),
     isAnonymous: input.isAnonymous
   };
-  try { return await reviewRepository.createReview(data); }
+  const screening = await mlScreening.screen('REVIEW', {
+    companyId: data.companyId, roleId: data.roleId, reviewTitle: data.reviewTitle,
+    pros: data.pros, cons: data.cons, adviceToManagement: data.adviceToManagement,
+    overallRating: data.overallRating, employmentStatus: data.employmentStatus
+  });
+  try { return await reviewRepository.createReview({ ...data, screening }); }
   catch (error) {
     const map = { EMPLOYEE_REQUIRED: 403, VERIFICATION_REQUIRED: 403, EMPLOYMENT_STATUS_MISMATCH: 400, COMPANY_NOT_FOUND: 404, ROLE_NOT_FOUND: 404 };
     if (map[error.sapleCode]) throw createHttpError(map[error.sapleCode], error.message);

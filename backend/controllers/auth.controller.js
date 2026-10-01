@@ -54,7 +54,9 @@ async function getCurrentUser(request, response, next) {
 async function updateProfile(request, response, next) {
   try {
     const user = await authService.updateProfile(request.user.userId, request.body);
-    return sendSuccess(response, 200, 'Profile updated successfully', { user });
+    const held = user.profileModeration && user.profileModeration.applied === false;
+    return sendSuccess(response, held ? 202 : 200,
+      held ? 'Profile update is waiting for manual review' : 'Profile updated successfully', { user });
   } catch (error) {
     return next(error);
   }

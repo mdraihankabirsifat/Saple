@@ -2,6 +2,7 @@ import { fetchApi } from './api.js';
 import { clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination } from './ui.js';
 import { buildQuery, companyDetailsLink, createMeta, loadCompanyAndRoleOptions } from './browse-shared.js';
 import { createBrowseController, paginateList, describeRange } from './browse-controls.js';
+import { sortByPopularity } from './popularity.js';
 
 const form = document.querySelector('#review-filters');
 const company = document.querySelector('#review-company-filter');
@@ -29,6 +30,12 @@ function reviewCard(item) {
   const grid = document.createElement('div');
   card.className = 'content-card card';
   heading.textContent = item.reviewTitle;
+  if (item.awaitingModeratorReview) {
+    const pending = document.createElement('span');
+    pending.className = 'badge moderation-pending';
+    pending.textContent = 'Awaiting moderator review';
+    heading.append(' ', pending);
+  }
   grid.className = 'content-grid';
   grid.append(textBlock('Pros', item.pros), textBlock('Cons', item.cons));
   if (item.adviceToManagement) grid.append(textBlock('Advice to management', item.adviceToManagement));
@@ -52,6 +59,8 @@ const PAGE_SIZE = 10;
 const NOUN = {"singular":"review","plural":"reviews"};
 // Sorting happens in the browser over the approved set the API returned; the
 // server keeps its own stable order and receives only the filters it accepts.
+// Popular is the default: company activity plus each review's recency
+// (popularity.js). Newest keeps the server's approval order.
 const SORTS = {
   newest: () => 0,
   'rating-desc': (a, b) => Number(b.overallRating) - Number(a.overallRating),
@@ -70,7 +79,8 @@ async function load(state, controller) {
 
   try {
     if (cached.query !== query) cached = { query, items: await fetchApi(`/api/reviews${query}`) };
-    const sorted = [...cached.items].sort(SORTS[filters.sort] || SORTS['newest']);
+    const sorted = filters.sort in SORTS ? [...cached.items].sort(SORTS[filters.sort])
+      : sortByPopularity(cached.items, (item) => item.companyId);
     const { items, pagination } = paginateList(sorted, state.page, PAGE_SIZE);
     status.textContent = describeRange(pagination, NOUN);
     results.removeAttribute('aria-busy');
@@ -100,7 +110,7 @@ const browse = createBrowseController({
   form,
   toggle: document.querySelector('[data-filter-toggle]'),
   fields: ['companyId', 'roleId', 'location', 'minRating', 'sort'],
-  defaults: { sort: 'newest' },
+  defaults: { sort: 'popular' },
   load
 });
 

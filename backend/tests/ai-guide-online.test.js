@@ -203,6 +203,7 @@ test('the guide never blocks the rest of the site when the provider is down', ()
   const nav = readFrontend('js/nav.js');
   const mount = nav.slice(nav.indexOf('import(assistantModuleUrl.href)'));
   assert.match(mount.slice(0, 200), /\.catch\(\(\) => \{\}\)/);
-  const statusFailure = client.slice(client.indexOf('await fetchApi(\'/api/assistant/status\')'));
-  assert.match(statusFailure.slice(0, 400), /catch \(error\) \{[\s\S]*?return;/);
+  const statusFailure = client.slice(client.indexOf("await apiRequest('/api/assistant/status'"));
+  assert.match(statusFailure.slice(0, 500), /if \(!allowUnavailable\) return;/);
+  assert.match(statusFailure.slice(0, 500), /status = \{ aiEnabled: false/);
 });

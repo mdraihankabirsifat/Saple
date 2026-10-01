@@ -115,8 +115,18 @@ svg {
   max-width: 100%;
 }
 
+/* Saple draws no underlines. Links are told apart by colour, weight and a
+   hover tint (premium.css), and every one keeps the full focus ring. */
 a {
   color: inherit;
+  text-decoration: none;
+}
+
+.moderation-pending {
+  color: var(--warning);
+  border-color: var(--warning);
+  font-size: 0.72rem;
+  vertical-align: middle;
 }
 
 h1,
@@ -554,7 +564,6 @@ main {
   margin-top: 0.35rem;
   color: var(--saple-green-700);
   font-weight: 750;
-  text-underline-offset: 0.2rem;
 }
 
 .state-message:empty,
@@ -679,7 +688,6 @@ main {
   align-items: center;
   color: var(--footer-link);
   text-decoration: none;
-  text-underline-offset: 0.22rem;
 }
 
 .footer-column a:hover,
@@ -687,7 +695,7 @@ main {
 .footer-repository:hover,
 .footer-repository:focus-visible {
   color: #ffffff;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .footer-repository:hover,
@@ -1236,7 +1244,7 @@ dialog { color: var(--text-primary); }
 }
 
 a.notification-title:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .notification-message {
@@ -1272,7 +1280,7 @@ a.notification-title:hover {
   border: 0;
   font-size: 0.78rem;
   font-weight: 700;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -1541,7 +1549,7 @@ a.notification-title:hover {
   border: 0;
   font-size: 0.76rem;
   font-weight: 700;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -1977,7 +1985,7 @@ a.notification-title:hover {
 }
 
 .breadcrumb a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Inline navigation link used across pages. */
@@ -1985,11 +1993,10 @@ a.notification-title:hover {
   color: var(--saple-green-700);
   font-weight: 750;
   text-decoration: none;
-  text-underline-offset: 0.2rem;
 }
 
 .text-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 /* Identity notice beside account and verification forms. */
@@ -2272,7 +2279,7 @@ a.notification-title:hover {
 .messages-bubble p { margin: 0; white-space: pre-wrap; }
 .messages-bubble small { display: block; margin-top: .25rem; opacity: .75; }
 .messages-actions { display: flex; gap: .5rem; }
-.messages-actions button { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; }
+.messages-actions button { border: 0; background: transparent; color: inherit; text-decoration: none; cursor: pointer; }
 .messages-form { padding: .65rem; border-top: 1px solid var(--border); }
 .messages-form textarea { width: 100%; resize: vertical; }
 .messages-form-actions { display: flex; justify-content: flex-end; gap: .35rem; margin-top: .35rem; }

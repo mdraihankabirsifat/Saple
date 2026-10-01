@@ -79,10 +79,10 @@ function renderSection(kind) {
       if (!window.confirm(`Delete this ${kind} record?`)) return;
       remove.disabled = true;
       try {
-        await apiRequest(`${config.endpoint}/${item[config.idField]}`, { method: 'DELETE', auth: true });
+        const result = await apiRequest(`${config.endpoint}/${item[config.idField]}`, { method: 'DELETE', auth: true });
         if (byId(`profile-${kind}-form`).dataset.recordId === String(item[config.idField])) resetForm(kind);
         await reload();
-        notice(`${kind}-status`, `${kind[0].toUpperCase()}${kind.slice(1)} removed.`);
+        notice(`${kind}-status`, result?.result?.pendingReview ? 'Delete request is waiting for moderator review.' : `${kind[0].toUpperCase()}${kind.slice(1)} removed.`);
       } catch (error) { notice(`${kind}-status`, error.message, true); }
       finally { remove.disabled = false; }
     });
@@ -139,11 +139,12 @@ function mountSection(kind) {
     const button = form.querySelector('[type="submit"]');
     button.disabled = true;
     try {
-      await apiRequest(id ? `${config.endpoint}/${id}` : config.endpoint,
+      const result = await apiRequest(id ? `${config.endpoint}/${id}` : config.endpoint,
         { method: id ? 'PATCH' : 'POST', auth: true, body: value });
       resetForm(kind);
       await reload();
-      notice(`${kind}-status`, `${kind[0].toUpperCase()}${kind.slice(1)} saved.`);
+      notice(`${kind}-status`, result?.education?.pendingReview || result?.experience?.pendingReview
+        ? 'Profile change is waiting for moderator review.' : `${kind[0].toUpperCase()}${kind.slice(1)} saved.`);
     } catch (error) { notice(`${kind}-status`, error.message, true); }
     finally { button.disabled = false; }
   });
@@ -161,11 +162,11 @@ export async function mountProfessionalProfile() {
     const button = form.querySelector('[type="submit"]');
     button.disabled = true;
     try {
-      await apiRequest('/api/me/skills', { method: 'POST', auth: true,
+      const result = await apiRequest('/api/me/skills', { method: 'POST', auth: true,
         body: { name: byId('profile-skill-name').value } });
       form.reset();
       await reload();
-      notice('profile-skills-status', 'Skill added.');
+      notice('profile-skills-status', result?.skill?.pendingReview ? 'Skill change is waiting for moderator review.' : 'Skill added.');
     } catch (error) { notice('profile-skills-status', error.message, true); }
     finally { button.disabled = false; }
   });

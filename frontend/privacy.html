@@ -58,7 +58,7 @@
             <li>Account: your name, email address and a BCrypt hash of your password. The password itself is never stored.</li>
             <li>Employee profile: whether you are a current or former employee, and the company and job role of each verification request you make.</li>
             <li>Contributions: the salary, review and interview records you submit, with their moderation status and history.</li>
-            <li>Jobs: the applications you send, their status history and the statement you wrote.</li>
+            <li>Jobs: the applications you send, their status history, the statement you wrote and any optional PDF resume you attach.</li>
             <li>Notifications: the decisions about your own account, contributions, verifications and applications.</li>
             <li>Images: optional profile pictures and company logos in Supabase Storage; the database keeps object paths.</li>
             <li>Direct messages: text, sender, recipient, timestamps and read state. Only the two participants can read a conversation.</li>
@@ -69,8 +69,8 @@
           <h2>What is never collected</h2>
           <p>Saple deliberately does not collect these, and there is no code path that could:</p>
           <ul class="info-list">
-            <li>CVs, identity documents and message attachments. Only profile pictures and company logos can be uploaded.</li>
-            <li>Payment details. Saple has no payment feature.</li>
+            <li>Identity documents and message attachments. Job applications may include one optional private PDF resume, up to 2 MB.</li>
+            <li>Payment card numbers and mobile-wallet credentials. Checkout takes place on the payment provider's pages.</li>
             <li>Third-party sign-in identities. Saple has its own account system and no social login.</li>
             <li>Advertising or cross-site tracking identifiers. The site loads no third-party script and no analytics.</li>
             <li>Your location, camera, microphone or other device sensors. The browser is told to deny all of these.</li>
@@ -88,7 +88,7 @@
           <ul class="info-list">
               <li>The public sees approved contributions and published, in-deadline vacancies only, plus each active member's public profile: anyone can find a member by name and see their name, profile picture, public role and any headline, about text, experience, education and skills that member chooses to add. Email addresses are never shown, and member profiles are kept out of search engines. Only signed-in members can send messages.</li>
             <li>You see your own profile, your own contributions, your own applications and your own notifications.</li>
-            <li>A company representative sees verification requests, vacancies and applications for the companies assigned to them, and nothing from any other company.</li>
+            <li>A company representative sees verification requests, vacancies and applications for the companies assigned to them, including an attached PDF resume when one was submitted, and nothing from any other company. Applicants can access their own attached resume. Application PDFs are never public or sent to AI or moderation ML.</li>
             <li>Administrators see the moderation, verification, report and assignment queues needed to run the project, and every privileged decision they make is recorded with actor, previous state, new state, reason and timestamp.</li>
           </ul>
         </article>
@@ -117,8 +117,8 @@
           <p>Every member can see how many signed-in members viewed their profile in the last 30 days. Only Premium members can see who those viewers were.</p>
         </article>
         <article class="info-card card">
-          <h2>Premium AI and the resume generator</h2>
-          <p>Resume text is sent to the configured AI provider to generate the result. Saple does not store the text you paste or the resume it returns; it keeps only a count of Premium AI requests per day, used to enforce the daily limit.</p>
+          <h2>Resume Generator</h2>
+          <p>Every signed-in member can draft a resume. The facts you enter are sent to the configured AI provider to generate the result. Saple does not store those facts or the generated resume; it keeps only a daily usage count to enforce limits. PDF export requires Premium. This generator is separate from an optional PDF you attach to a job application, which is stored privately in PostgreSQL.</p>
           <p>The generator is told to use only the facts you supply, and names, dates, employers, skills and institutions that do not appear in your text are removed from the result. Check every line before you use it.</p>
         </article>
         <article class="info-card card">

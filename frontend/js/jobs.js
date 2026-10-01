@@ -139,7 +139,7 @@ const browse = createBrowseController({
   form: filterForm,
   toggle: document.querySelector('[data-filter-toggle]'),
   fields: FILTER_FIELDS,
-  defaults: { sort: 'NEWEST' },
+  defaults: { sort: 'POPULAR' },
   load: loadJobs
 });
 

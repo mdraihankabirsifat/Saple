@@ -67,6 +67,18 @@
 
         <p id="admin-status" class="state-message" role="status" aria-live="polite" hidden></p>
 
+        <section class="admin-ml-health card" aria-labelledby="ml-health-heading">
+          <div class="panel-heading"><div><p class="eyebrow">Safety controls</p><h2 id="ml-health-heading">ML moderation health</h2></div><button id="refresh-ml-health" class="button button-secondary button-small" type="button">Refresh</button></div>
+          <p id="ml-health-status" class="state-panel-hint" role="status">Loading moderation health…</p>
+          <dl id="ml-health-values" class="meta-grid" hidden></dl>
+        </section>
+
+        <section class="admin-ml-queue card" aria-labelledby="ml-queue-heading">
+          <div class="panel-heading"><div><p class="eyebrow">Human final authority</p><h2 id="ml-queue-heading">ML-assisted review queue</h2></div><button id="refresh-ml-queue" class="button button-secondary button-small" type="button">Refresh</button></div>
+          <p id="ml-queue-status" class="state-panel-hint" role="status">Loading pending screenings…</p>
+          <div id="ml-queue-list" class="admin-item-list" aria-live="polite"></div>
+        </section>
+
         <div class="moderation-layout">
           <section class="queue-panel" aria-labelledby="pending-heading">
             <div class="panel-heading">
@@ -262,6 +274,7 @@
   </footer>
   <script src="js/nav.js" defer></script>
   <script type="module" src="js/admin.js"></script>
+  <script type="module" src="js/admin-ml.js"></script>
   <script type="module" src="js/admin-oversight.js"></script>
 </body>
 

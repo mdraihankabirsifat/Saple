@@ -1,5 +1,7 @@
 const repository = require('../repositories/professional-profile.repository');
 const createHttpError = require('../utils/httpError');
+const mlScreening = require('./ml-screening.service');
+const profileModeration = require('./profile-moderation.service');
 
 // Enough for any real career, and a bound on what one public profile returns.
 const LIMITS = { education: 20, experience: 40, skills: 50 };
@@ -81,36 +83,120 @@ function created(record, label, limit) {
   return record;
 }
 
+async function moderatedChange(userId, change) {
+  if (!mlScreening.enabled()) return { result: await change(null), moderation: null };
+  const previous = await profileModeration.loadSnapshot(userId);
+  if (!previous) throw createHttpError(401, 'Authenticated account is unavailable');
+  const proposed = change(previous);
+  const moderation = await profileModeration.submit(userId, previous, proposed);
+  if (!moderation.applied) return { result: null, moderation };
+  return { result: await repository.listSections(userId), moderation };
+}
+
+function pending(moderation) {
+  return { pendingReview: true, moderation: {
+    state: moderation.publicationState,
+    screeningStatus: moderation.screening?.screeningStatus || null,
+    reasonCodes: moderation.screening?.reasonCodes || []
+  } };
+}
+
 async function createEducation(userId, input) {
-  return created(await repository.createEducation(userId, educationValue(input), LIMITS.education),
+  const value = educationValue(input);
+  if (!mlScreening.enabled()) return created(await repository.createEducation(userId, value, LIMITS.education),
     'education records', LIMITS.education);
+  const output = await moderatedChange(userId, (current) => {
+    if (current.education.length >= LIMITS.education) throw createHttpError(400, `A profile can list at most ${LIMITS.education} education records`);
+    return { ...current, education: [...current.education, value] };
+  });
+  if (!output.moderation.applied) return pending(output.moderation);
+  return output.result.education.at(-1);
 }
 async function updateEducation(userId, id, input) {
-  const record = await repository.updateEducation(userId, recordId(id), educationValue(input));
-  if (!record) throw createHttpError(404, 'Education record not found');
-  return record;
+  const educationId = recordId(id); const value = educationValue(input);
+  if (!mlScreening.enabled()) {
+    const record = await repository.updateEducation(userId, educationId, value);
+    if (!record) throw createHttpError(404, 'Education record not found');
+    return record;
+  }
+  const output = await moderatedChange(userId, (current) => {
+    if (!current.education.some((item) => Number(item.educationId) === educationId)) throw createHttpError(404, 'Education record not found');
+    return { ...current, education: current.education.map((item) => Number(item.educationId) === educationId ? { ...item, ...value } : item) };
+  });
+  if (!output.moderation.applied) return pending(output.moderation);
+  return output.result.education.find((item) => item.institution === value.institution) || output.result.education[0];
 }
 async function deleteEducation(userId, id) {
-  if (!await repository.deleteEducation(userId, recordId(id))) throw createHttpError(404, 'Education record not found');
+  const educationId = recordId(id);
+  if (!mlScreening.enabled()) {
+    if (!await repository.deleteEducation(userId, educationId)) throw createHttpError(404, 'Education record not found');
+    return { deleted: true };
+  }
+  const output = await moderatedChange(userId, (current) => {
+    if (!current.education.some((item) => Number(item.educationId) === educationId)) throw createHttpError(404, 'Education record not found');
+    return { ...current, education: current.education.filter((item) => Number(item.educationId) !== educationId) };
+  });
+  return output.moderation.applied ? { deleted: true } : pending(output.moderation);
 }
 async function createExperience(userId, input) {
-  return created(await repository.createExperience(userId, experienceValue(input), LIMITS.experience),
+  const value = experienceValue(input);
+  if (!mlScreening.enabled()) return created(await repository.createExperience(userId, value, LIMITS.experience),
     'experience records', LIMITS.experience);
+  const output = await moderatedChange(userId, (current) => {
+    if (current.experience.length >= LIMITS.experience) throw createHttpError(400, `A profile can list at most ${LIMITS.experience} experience records`);
+    return { ...current, experience: [...current.experience, value] };
+  });
+  if (!output.moderation.applied) return pending(output.moderation);
+  return output.result.experience.at(-1);
 }
 async function updateExperience(userId, id, input) {
-  const record = await repository.updateExperience(userId, recordId(id), experienceValue(input));
-  if (!record) throw createHttpError(404, 'Experience record not found');
-  return record;
+  const experienceId = recordId(id); const value = experienceValue(input);
+  if (!mlScreening.enabled()) {
+    const record = await repository.updateExperience(userId, experienceId, value);
+    if (!record) throw createHttpError(404, 'Experience record not found');
+    return record;
+  }
+  const output = await moderatedChange(userId, (current) => {
+    if (!current.experience.some((item) => Number(item.experienceId) === experienceId)) throw createHttpError(404, 'Experience record not found');
+    return { ...current, experience: current.experience.map((item) => Number(item.experienceId) === experienceId ? { ...item, ...value } : item) };
+  });
+  if (!output.moderation.applied) return pending(output.moderation);
+  return output.result.experience.find((item) => item.organization === value.organization) || output.result.experience[0];
 }
 async function deleteExperience(userId, id) {
-  if (!await repository.deleteExperience(userId, recordId(id))) throw createHttpError(404, 'Experience record not found');
+  const experienceId = recordId(id);
+  if (!mlScreening.enabled()) {
+    if (!await repository.deleteExperience(userId, experienceId)) throw createHttpError(404, 'Experience record not found');
+    return { deleted: true };
+  }
+  const output = await moderatedChange(userId, (current) => {
+    if (!current.experience.some((item) => Number(item.experienceId) === experienceId)) throw createHttpError(404, 'Experience record not found');
+    return { ...current, experience: current.experience.filter((item) => Number(item.experienceId) !== experienceId) };
+  });
+  return output.moderation.applied ? { deleted: true } : pending(output.moderation);
 }
 async function addSkill(userId, input) {
   const name = text(recordInput(input).name, 'Skill', 80, true).replace(/\s+/g, ' ');
-  return created(await repository.addSkill(userId, name, LIMITS.skills), 'skills', LIMITS.skills);
+  if (!mlScreening.enabled()) return created(await repository.addSkill(userId, name, LIMITS.skills), 'skills', LIMITS.skills);
+  const output = await moderatedChange(userId, (current) => {
+    if (current.skills.some((item) => item.name.toLowerCase() === name.toLowerCase())) return current;
+    if (current.skills.length >= LIMITS.skills) throw createHttpError(400, `A profile can list at most ${LIMITS.skills} skills`);
+    return { ...current, skills: [...current.skills, { name }] };
+  });
+  if (!output.moderation.applied) return pending(output.moderation);
+  return output.result.skills.find((item) => item.name.toLowerCase() === name.toLowerCase());
 }
 async function removeSkill(userId, id) {
-  if (!await repository.removeSkill(userId, recordId(id))) throw createHttpError(404, 'Skill not found on this profile');
+  const skillId = recordId(id);
+  if (!mlScreening.enabled()) {
+    if (!await repository.removeSkill(userId, skillId)) throw createHttpError(404, 'Skill not found on this profile');
+    return { deleted: true };
+  }
+  const output = await moderatedChange(userId, (current) => {
+    if (!current.skills.some((item) => Number(item.skillId) === skillId)) throw createHttpError(404, 'Skill not found on this profile');
+    return { ...current, skills: current.skills.filter((item) => Number(item.skillId) !== skillId) };
+  });
+  return output.moderation.applied ? { deleted: true } : pending(output.moderation);
 }
 
 module.exports = { LIMITS, educationValue, experienceValue, recordId, createEducation, updateEducation,

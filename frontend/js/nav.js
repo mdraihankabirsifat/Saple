@@ -736,9 +736,11 @@ function renderAccountMenu(navigationActions, currentUser, { auth, workspace, ca
   summary.className = 'account-summary';
   summary.append(accountAvatar(currentUser, 'account-avatar account-avatar-large'), summaryText);
 
+  // Order: profile, tools every member has, then items that depend on the
+  // account's role or verification, then the role workspace.
   const items = [];
-  if (workspace) items.push(menuLink(workspace.href, workspace.label, 'account-menu-workspace'));
   items.push(menuLink('profile.html', 'Profile'));
+  items.push(menuLink('resume-generator.html', 'Resume Generator'));
   const premium = menuLink('premium.html', 'Premium');
   const premiumBadge = document.createElement('span');
   premiumBadge.className = 'account-menu-badge';
@@ -748,6 +750,7 @@ function renderAccountMenu(navigationActions, currentUser, { auth, workspace, ca
   items.push(premium);
   // Only job-seeker accounts apply to vacancies; workspaces replace this.
   if (!workspace) items.push(menuLink('my-applications.html', 'My applications'));
+  if (currentUser?.userType === 'EMPLOYEE') items.push(menuLink('employee-verification.html', 'Verification'));
 
   if (canContribute) {
     const toggle = document.createElement('button');
@@ -772,7 +775,7 @@ function renderAccountMenu(navigationActions, currentUser, { auth, workspace, ca
     });
     items.push(toggle, group);
   }
-  if (currentUser?.userType === 'EMPLOYEE') items.push(menuLink('employee-verification.html', 'Verification'));
+  if (workspace) items.push(menuLink(workspace.href, workspace.label, 'account-menu-workspace'));
 
   const signOutButton = document.createElement('button');
   signOutButton.type = 'button';

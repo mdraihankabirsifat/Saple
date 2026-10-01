@@ -129,10 +129,12 @@ test('public job sort is a whitelisted name that never reaches SQL as text', asy
   jobRepository.findPublicJobs = async (filters, options) => { seen.push(options.sort); return []; };
   jobRepository.countPublicJobs = async () => 0;
 
+  // No sort means Popular; an explicit sort is respected.
   await jobService.listPublicJobs({});
+  await jobService.listPublicJobs({ sort: 'newest' });
   await jobService.listPublicJobs({ sort: 'deadline' });
   await jobService.listPublicJobs({ sort: 'Company' });
-  assert.deepEqual(seen, ['NEWEST', 'DEADLINE', 'COMPANY']);
+  assert.deepEqual(seen, ['POPULAR', 'NEWEST', 'DEADLINE', 'COMPANY']);
 
   for (const sort of ['salary', 'published_at; DROP TABLE job_postings', 'NEWEST DESC']) {
     await assert.rejects(jobService.listPublicJobs({ sort }), (error) => error.statusCode === 400);

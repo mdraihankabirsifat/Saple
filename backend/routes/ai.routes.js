@@ -1,6 +1,7 @@
 const express = require('express');
 const aiController = require('../controllers/ai.controller');
 const { createRateLimit } = require('../middleware/rateLimit');
+const { optionalAuthenticate } = require('../middleware/authenticate');
 
 const router = express.Router();
 
@@ -12,8 +13,10 @@ const guideRateLimit = createRateLimit({
   message: 'The Saple Guide is busy. Please wait a moment and ask again.'
 });
 
-router.get('/status', aiController.getStatus);
-router.post('/messages', guideRateLimit, aiController.ask);
+// A signed-in caller is identified (optionally) so the server can answer
+// Premium and trial members with the Premium model in the same guide.
+router.get('/status', optionalAuthenticate, aiController.getStatus);
+router.post('/messages', optionalAuthenticate, guideRateLimit, aiController.ask);
 
 module.exports = router;
 module.exports.guideRateLimit = guideRateLimit;

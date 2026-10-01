@@ -121,7 +121,9 @@ profileForm.addEventListener('submit', async (event) => {
         bio: document.querySelector('#profile-bio').value
       }
     });
-    setStoredUser(data.user); render(data.user); show(profileStatus, 'Profile updated successfully.', 'success');
+    setStoredUser(data.user); render(data.user);
+    show(profileStatus, data.user.profileModeration?.applied === false
+      ? 'Profile update is waiting for moderator review.' : 'Profile updated successfully.', 'success');
   } catch (error) { show(profileStatus, error.message, 'error'); }
   finally { button.disabled = false; }
 });

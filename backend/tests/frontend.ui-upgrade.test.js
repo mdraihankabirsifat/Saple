@@ -5,7 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.join(__dirname, '../../frontend');
 const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
-const moduleFrom = (name) => import(`data:text/javascript;base64,${Buffer.from(read(name)).toString('base64')}`);
+const { pathToFileURL } = require('node:url');
+const moduleFrom = (name) => import(`${pathToFileURL(path.join(root, name)).href}?test=${Date.now()}`);
 
 test('pagination clamps invalid pages, limits DOM candidates to 20 and provides compact page links', async () => {
   const { paginate, pageNumbers } = await moduleFrom('js/company-directory.js');

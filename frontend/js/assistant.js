@@ -1,4 +1,4 @@
-import { apiRequest, fetchApi } from './api.js';
+import { apiRequest } from './api.js';
 import { el, clear, trapFocus } from './ui.js';
 
 // Saple Guide.
@@ -7,6 +7,18 @@ import { el, clear, trapFocus } from './ui.js';
 // storage, nothing is sent anywhere except Saple's own /api/assistant route,
 // and every reply is rendered with textContent, so a model can never inject
 // markup into the page.
+
+// Informational only: shows which tier answered. The server decides it from
+// the member's current Premium or trial access on every message.
+const tierBadge = el('span', {
+  className: 'guide-tier-badge',
+  text: '✦ Premium',
+  attrs: { title: 'Advanced answers for Premium members', hidden: true }
+});
+
+function setTierIndicator(tier) {
+  tierBadge.hidden = tier !== 'PREMIUM';
+}
 
 const MAX_TURNS = 8;
 const conversation = [];
@@ -103,10 +115,14 @@ async function submitQuestion(event) {
   pending.classList.add('is-pending');
 
   try {
+    // A signed-in session is sent when there is one, so the server can pick
+    // the Premium tier for Premium and trial members. The browser never asks.
     const result = await apiRequest('/api/assistant/messages', {
       method: 'POST',
+      auth: 'optional',
       body: { messages: conversation }
     });
+    setTierIndicator(result.tier);
     pending.classList.remove('is-pending');
     pending.querySelector('.guide-text').textContent = result.answer;
 
@@ -266,7 +282,7 @@ function buildPanel() {
     id: 'saple-guide-view', role: 'tabpanel', 'aria-labelledby': 'saple-guide-tab'
   } }, [
     el('div', { className: 'guide-view-heading guide-heading-row' }, [
-      el('h2', { className: 'guide-heading', text: 'Saple Guide' }), statusPill
+      el('h2', { className: 'guide-heading' }, ['Saple Guide', tierBadge]), statusPill
     ]),
     transcript,
     form,
@@ -318,7 +334,8 @@ export function mountAssistant({ allowUnavailable = false } = {}) {
   if (document.querySelector('[data-saple-guide]')) return root;
 
   try {
-    status = await fetchApi('/api/assistant/status');
+    status = await apiRequest('/api/assistant/status', { auth: 'optional' });
+    setTierIndicator(status?.tier);
   } catch (error) {
     // Keep the original public guide behavior, but allow signed-in Messages
     // to mount the shared panel when the status endpoint is unavailable.

@@ -8,7 +8,7 @@
   text-decoration: none;
 }
 
-.back-link:hover { text-decoration: underline; text-underline-offset: 0.2rem; }
+.back-link:hover { text-decoration: none; }
 
 .company-profile {
   padding: clamp(1.5rem, 5vw, 3rem);
@@ -137,7 +137,6 @@
   z-index: 1;
   color: var(--saple-green-700);
   font-weight: 750;
-  text-underline-offset: 0.2rem;
 }
 
 .profile-nav {

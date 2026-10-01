@@ -25,6 +25,7 @@ const RETURN_PAGES = new Set([
   'job-details.html',
   'premium.html',
   'payment-result.html',
+  'resume-generator.html',
   'index.html'
 ]);
 

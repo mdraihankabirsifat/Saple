@@ -1,10 +1,15 @@
 const aiConfig = require('../config/ai');
+const paymentConfig = require('../config/payment');
 const knowledge = require('./ai-knowledge');
+const aiProvider = require('./ai-provider');
+const premiumService = require('./premium.service');
+const premiumRepository = require('../repositories/premium.repository');
 const createHttpError = require('../utils/httpError');
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_TURNS = 8;
 const MAX_ANSWER_LENGTH = 1200;
+const PREMIUM_MAX_ANSWER_LENGTH = 2400;
 
 // Requests that must never reach a provider, because answering them would be
 // a privacy or safety problem regardless of what a model would have said.
@@ -49,7 +54,7 @@ function redactSensitiveText(value) {
 // Plain text out, always. Control characters, markup and over-long answers are
 // all cut here so the browser only ever receives text it can render with
 // textContent.
-function sanitizeAnswer(value) {
+function sanitizeAnswer(value, maxLength = MAX_ANSWER_LENGTH) {
   const text = String(value ?? '')
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
     .replace(/[<>]/g, '')
@@ -57,7 +62,7 @@ function sanitizeAnswer(value) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  return text.length > MAX_ANSWER_LENGTH ? `${text.slice(0, MAX_ANSWER_LENGTH).trimEnd()}…` : text;
+  return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}…` : text;
 }
 
 function parseConversation(input = {}) {
@@ -100,50 +105,54 @@ function fallbackResponse(latestMessage, reason) {
 
 // One fixed provider URL from configuration, one fixed path, one fixed shape.
 // Nothing here is influenced by the request beyond the message text itself.
-async function callProvider(config, messages) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
+async function callProvider(config, messages, { systemPrompt = knowledge.buildSystemPrompt(), maxTokens, maxLength } = {}) {
+  const result = await aiProvider.chatCompletion(config, [
+    { role: 'system', content: systemPrompt },
+    ...messages
+  ], { maxTokens: maxTokens || config.maxOutputTokens });
+  const answer = sanitizeAnswer(result.content, maxLength);
+  if (!answer) throw aiProvider.providerError('AI_PROVIDER_ERROR');
+  return { ...result, answer };
+}
 
+// Premium or trial members get the Premium model in the same guide. The tier
+// comes from the server's entitlement check for the signed-in account; a
+// browser cannot ask for it. Over the daily Premium allowance, or when the
+// Premium model is missing or failing, the same question is answered by the
+// standard guide instead of failing.
+async function premiumAnswer(userId, baseConfig, messages) {
+  const config = aiProvider.premiumModelConfig(baseConfig);
+  if (!config) return null;
+  const { chatPerDay } = paymentConfig.getPremiumAiLimits();
   try {
-    const response = await fetch(`${config.baseUrl}/chat/completions`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${config.apiKey}`
-      },
-      body: JSON.stringify({
-        model: config.model,
-        temperature: 0.2,
-        max_tokens: config.maxOutputTokens,
-        messages: [
-          { role: 'system', content: knowledge.buildSystemPrompt() },
-          ...messages
-        ]
-      })
+    if (await premiumRepository.countAiUsageToday(userId, 'ADVANCED_CHAT') >= chatPerDay) return null;
+    const result = await callProvider(config, messages, {
+      systemPrompt: knowledge.buildPremiumSystemPrompt(),
+      maxTokens: Math.min(Math.max(config.maxOutputTokens, 700), 1200),
+      maxLength: PREMIUM_MAX_ANSWER_LENGTH
     });
-
-    if (!response.ok) {
-      const providerError = new Error(`AI provider responded with status ${response.status}`);
-      providerError.sapleCode = response.status === 429 ? 'AI_RATE_LIMITED' : 'AI_PROVIDER_ERROR';
-      throw providerError;
-    }
-
-    const body = await response.json();
-    const answer = sanitizeAnswer(body?.choices?.[0]?.message?.content);
-    if (!answer) {
-      const emptyError = new Error('AI provider returned an empty answer');
-      emptyError.sapleCode = 'AI_PROVIDER_ERROR';
-      throw emptyError;
-    }
-    return answer;
-  } finally {
-    clearTimeout(timeout);
+    // Usage metadata only, for the daily allowance: never the conversation.
+    await premiumRepository.recordAiUsage({
+      userId, featureType: 'ADVANCED_CHAT', model: config.model,
+      inputTokens: result.inputTokens, outputTokens: result.outputTokens
+    }).catch(() => {});
+    return result.answer;
+  } catch (error) {
+    console.warn(`Premium Saple Guide unavailable (${error.sapleCode || 'ERROR'}); using the standard guide.`);
+    return null;
   }
 }
 
-async function ask(input = {}) {
+async function isPremiumMember(user) {
+  if (!user?.userId) return false;
+  try {
+    return await premiumService.hasPremium(user.userId);
+  } catch (error) {
+    return false;
+  }
+}
+
+async function ask(input = {}, user = null) {
   const messages = parseConversation(input);
   const latest = messages[messages.length - 1].content;
 
@@ -154,8 +163,10 @@ async function ask(input = {}) {
     (Array.isArray(input.messages) ? input.messages[input.messages.length - 1]?.content : '') || latest
   );
   const refusal = findRefusal(rawLatest) || findRefusal(latest);
+  const premiumMember = await isPremiumMember(user);
+  const withTier = (result, tier) => ({ ...result, tier, premiumMember });
   if (refusal) {
-    return { answer: refusal.reply, source: 'POLICY', reason: refusal.id };
+    return withTier({ answer: refusal.reply, source: 'POLICY', reason: refusal.id }, 'STANDARD');
   }
 
   let config;
@@ -163,13 +174,18 @@ async function ask(input = {}) {
     config = aiConfig.getAiConfig();
   } catch (error) {
     // A misconfigured provider must not break the guide or the site.
-    return fallbackResponse(latest, 'NOT_CONFIGURED');
+    return withTier(fallbackResponse(latest, 'NOT_CONFIGURED'), 'STANDARD');
   }
 
-  if (!config) return fallbackResponse(latest, 'DISABLED');
+  if (!config) return withTier(fallbackResponse(latest, 'DISABLED'), 'STANDARD');
+
+  if (premiumMember) {
+    const answer = await premiumAnswer(user.userId, config, messages);
+    if (answer) return withTier({ answer, source: 'AI', reason: null }, 'PREMIUM');
+  }
 
   try {
-    return { answer: await callProvider(config, messages), source: 'AI', reason: null };
+    return withTier({ answer: (await callProvider(config, messages)).answer, source: 'AI', reason: null }, 'STANDARD');
   } catch (error) {
     // Provider failures are never surfaced verbatim: the message could contain
     // request details, and none of it helps the reader.
@@ -177,13 +193,21 @@ async function ask(input = {}) {
       ? 'TIMEOUT'
       : error.sapleCode || 'AI_PROVIDER_ERROR';
     console.warn(`Saple Guide provider unavailable (${reason}).`);
-    return fallbackResponse(latest, reason);
+    return withTier(fallbackResponse(latest, reason), 'STANDARD');
   }
 }
 
-function getStatus() {
+function isPremiumModelConfigured() {
+  return Boolean(aiProvider.premiumModelConfig(aiProvider.standardConfig()));
+}
+
+async function getStatus(user = null) {
+  const premiumMember = await isPremiumMember(user);
   return {
     ...aiConfig.getPublicStatus(),
+    // Informational only: the server picks the tier again on every message.
+    tier: premiumMember && isPremiumModelConfigured() ? 'PREMIUM' : 'STANDARD',
+    premiumMember,
     label: 'Saple Guide (AI-assisted)',
     privacyNotice: [
       'Messages you type here are sent to the AI provider configured by the site owner.',
@@ -200,11 +224,13 @@ module.exports = {
   MAX_MESSAGE_LENGTH,
   MAX_TURNS,
   MAX_ANSWER_LENGTH,
+  PREMIUM_MAX_ANSWER_LENGTH,
   REFUSAL_PATTERNS,
   redactSensitiveText,
   sanitizeAnswer,
   parseConversation,
   findRefusal,
   ask,
-  getStatus
+  getStatus,
+  isPremiumModelConfigured
 };

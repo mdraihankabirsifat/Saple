@@ -53,6 +53,28 @@ async function findPendingSubmissions() {
   return result.rows;
 }
 
+async function findMlHealth() {
+  const result = await database.query(`
+    SELECT
+      (SELECT COUNT(*)::int FROM ml_model_registry WHERE status = 'ACTIVE') AS "activeModels",
+      (SELECT MAX(trained_at) FROM ml_model_registry WHERE status = 'ACTIVE') AS "lastTrainedAt",
+      (SELECT COUNT(*)::int FROM content_screenings WHERE publication_state = 'PROVISIONAL') AS "provisionalItems",
+      (SELECT COUNT(*)::int FROM content_screenings WHERE publication_state = 'HELD') AS "heldItems",
+      (SELECT COUNT(*)::int FROM content_screenings WHERE screening_status = 'UNAVAILABLE') AS "unavailableCount",
+      (SELECT COUNT(*)::int FROM content_screenings WHERE manual_review_status IN ('APPROVED','REJECTED')) AS "reviewedItems",
+      (SELECT COUNT(*)::int FROM content_screenings WHERE manual_review_status = 'REJECTED'
+        AND model_metadata->>'initialPublicationState' = 'PROVISIONAL') AS "provisionalRejected"
+  `);
+  const row = result.rows[0] || {};
+  const reviewed = Number(row.reviewedItems || 0);
+  return { activeModels: Number(row.activeModels || 0), lastTrainedAt: row.lastTrainedAt || null,
+    provisionalItems: Number(row.provisionalItems || 0), heldItems: Number(row.heldItems || 0),
+    unavailableCount: Number(row.unavailableCount || 0),
+    manualOverturnRate: reviewed ? Number((Number(row.provisionalRejected || 0) / reviewed).toFixed(4)) : null,
+    screeningEnabled: process.env.ML_SCREENING_ENABLED === 'true',
+    shadowMode: process.env.ML_SHADOW_MODE !== 'false', autoPublishEnabled: process.env.ML_AUTO_PUBLISH_ENABLED === 'true' };
+}
+
 async function findSubmissionById(submissionId) {
   const result = await database.query(
     `${SUBMISSION_SELECT} WHERE s.submission_id = $1`,
@@ -123,12 +145,30 @@ async function updateSubmissionStatusWithAudit(input) {
       current.submissionStatus, newStatus, actionNote
     ]);
 
+    if (process.env.ML_SCREENING_ENABLED === 'true') {
+      // Final human decisions override provisional publication. A later ML
+      // retry can only touch still-PENDING rows, never this final state.
+      await client.query(`
+        UPDATE content_screenings SET
+          publication_state = CASE WHEN $3 = 'APPROVED' THEN 'CONFIRMED'
+                                   WHEN $3 = 'REJECTED' THEN 'REMOVED' ELSE 'HELD' END,
+          manual_review_status = CASE WHEN $3 = 'APPROVED' THEN 'APPROVED'
+                                      WHEN $3 = 'REJECTED' THEN 'REJECTED' ELSE 'PENDING' END,
+          reviewed_at = CASE WHEN $3 IN ('APPROVED','REJECTED') THEN CURRENT_TIMESTAMP ELSE NULL END,
+          reviewed_by = CASE WHEN $3 IN ('APPROVED','REJECTED') THEN $4 ELSE NULL END,
+          human_decision_note = $5, updated_at = CURRENT_TIMESTAMP
+        WHERE entity_type = $1 AND entity_id = $2
+          AND revision_no = (SELECT MAX(revision_no) FROM content_screenings
+            WHERE entity_type = $1 AND entity_id = $2)
+      `, [current.submissionType, submissionId, newStatus, moderatorUserId, actionNote]);
+    }
+
     // The contributor learns the outcome in the same transaction as the
     // decision. The internal moderation note stays internal.
     if (current.ownerUserId) {
       const outcomes = {
-        APPROVED: 'is now published',
-        REJECTED: 'was not published',
+        APPROVED: 'has completed manual review and is now confirmed',
+        REJECTED: 'was removed after manual review',
         FLAGGED: 'is under review again'
       };
       await insertNotification(client, {
@@ -158,6 +198,6 @@ async function updateSubmissionStatusWithAudit(input) {
 }
 
 module.exports = {
-  findPendingSubmissions, findSubmissionById, findModerationHistory,
+  findPendingSubmissions, findMlHealth, findSubmissionById, findModerationHistory,
   updateSubmissionStatusWithAudit
 };

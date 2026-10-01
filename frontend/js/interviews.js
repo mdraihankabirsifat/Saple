@@ -3,6 +3,7 @@ import { lockedQuestions } from './premium-ui.js';
 import { clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination } from './ui.js';
 import { buildQuery, companyDetailsLink, createMeta, loadCompanyAndRoleOptions } from './browse-shared.js';
 import { createBrowseController, paginateList, describeRange } from './browse-controls.js';
+import { sortByPopularity } from './popularity.js';
 
 const form = document.querySelector('#interview-filters');
 const company = document.querySelector('#interview-company-filter');
@@ -28,6 +29,12 @@ function interviewCard(item) {
   const grid = document.createElement('div');
   card.className = 'content-card card'; heading.textContent = `${item.companyName} · ${item.roleName}`;
   grid.className = 'content-grid';
+  if (item.awaitingModeratorReview) {
+    const pending = document.createElement('span');
+    pending.className = 'badge moderation-pending';
+    pending.textContent = 'Awaiting moderator review';
+    heading.append(' ', pending);
+  }
   const questions = textBlock('Questions or topics', item.questionsSummary);
   // Without Premium the API sends only a short preview, never the full text.
   if (item.questionsLocked) questions.querySelector('p').replaceWith(lockedQuestions(item.questionsPreview));
@@ -67,7 +74,9 @@ async function load(state, controller) {
 
   try {
     if (cached.query !== query) cached = { query, items: await apiRequest(`/api/interviews${query}`, { auth: 'optional' }) };
-    const sorted = [...cached.items].sort(SORTS[filters.sort] || SORTS['newest']);
+    // Popular (default): company and role density plus recency (popularity.js).
+    const sorted = filters.sort in SORTS ? [...cached.items].sort(SORTS[filters.sort])
+      : sortByPopularity(cached.items, (item) => `${item.companyId}:${item.roleId}`);
     const { items, pagination } = paginateList(sorted, state.page, PAGE_SIZE);
     status.textContent = describeRange(pagination, NOUN);
     results.removeAttribute('aria-busy');
@@ -97,7 +106,7 @@ const browse = createBrowseController({
   form,
   toggle: document.querySelector('[data-filter-toggle]'),
   fields: ['companyId', 'roleId', 'location', 'difficultyLevel', 'interviewMode', 'sort'],
-  defaults: { sort: 'newest' },
+  defaults: { sort: 'popular' },
   load
 });
 

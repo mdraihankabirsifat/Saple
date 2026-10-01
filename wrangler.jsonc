@@ -58,6 +58,13 @@
     "PUBLIC_API_ORIGIN": "https://saple.www-raihankabireusc.workers.dev",
     "PREMIUM_AI_MODEL": "openai/gpt-oss-120b",
     "PREMIUM_AI_DAILY_CHAT_LIMIT": "30",
-    "PREMIUM_RESUME_DAILY_LIMIT": "5"
+    "PREMIUM_RESUME_DAILY_LIMIT": "10",
+    "RESUME_FREE_DAILY_LIMIT": "3",
+    "ML_SCREENING_ENABLED": "false",
+    "ML_AUTO_PUBLISH_ENABLED": "false",
+    "ML_SHADOW_MODE": "true",
+    "ML_SCREEN_TIMEOUT_MS": "1500",
+    "ML_AUTO_PUBLISH_DAILY_CAP": "3",
+    "ML_AUTO_PUBLISH_TYPES": ""
   }
 }

@@ -9,6 +9,8 @@ const userRepository = require('../repositories/user.repository');
 const passwordResetRepository = require('../repositories/password-reset.repository');
 const mailService = require('./mail.service');
 const createHttpError = require('../utils/httpError');
+const mlScreening = require('./ml-screening.service');
+const profileModeration = require('./profile-moderation.service');
 const storage = require('../config/supabase-storage');
 
 // bcryptjs normally uses Node's crypto module. Workers provides WebCrypto but
@@ -321,9 +323,9 @@ async function updateProfile(userId, input = {}) {
   }
   const hasSections = Object.hasOwn(input, 'headline') || Object.hasOwn(input, 'bio');
   let updated;
-  if (!hasSections) {
+  if (!mlScreening.enabled() && !hasSections) {
     updated = await userRepository.updateFullName(userId, fullName);
-  } else {
+  } else if (!mlScreening.enabled()) {
     // A field left out of the request keeps its stored value.
     const existing = await userRepository.findSafeUserById(userId);
     const headline = Object.hasOwn(input, 'headline')
@@ -335,6 +337,30 @@ async function updateProfile(userId, input = {}) {
     } catch (error) {
       // A code rollout can precede the owner's manual migration 008.
       if (error.code === '42703') throw createHttpError(503, 'Profile headline and about are temporarily unavailable');
+      throw error;
+    }
+  } else {
+    const existing = await profileModeration.loadSnapshot(userId);
+    if (!existing) throw createHttpError(401, 'Authenticated account is unavailable');
+    const headline = Object.hasOwn(input, 'headline')
+      ? optionalProfileText(input.headline, 160, 'Headline') : existing.headline;
+    const bio = Object.hasOwn(input, 'bio')
+      ? optionalProfileText(input.bio, 2000, 'About') : existing.bio;
+    const proposed = { ...existing, fullName, headline, bio };
+    try {
+      const moderation = await profileModeration.submit(userId, existing, proposed);
+      const user = await getCurrentUser(userId);
+      user.profileModeration = {
+        state: moderation.publicationState,
+        applied: moderation.applied,
+        screeningStatus: moderation.screening?.screeningStatus || null,
+        reasonCodes: moderation.screening?.reasonCodes || []
+      };
+      return user;
+    } catch (error) {
+      if (error.code === '42703' || error.code === '42P01') {
+        throw createHttpError(503, 'Profile moderation is temporarily unavailable');
+      }
       throw error;
     }
   }

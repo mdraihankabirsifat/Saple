@@ -35,3 +35,6 @@ ml/**/__pycache__/
 ml/.pytest_cache/
 ml/data/*.csv
 ml/models/*.joblib
+ml/models/*.json
+ml/data/*.json
+ml/data/*.parquet

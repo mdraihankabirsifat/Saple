@@ -1,6 +1,7 @@
 const interviewRepository = require('../repositories/interview.repository');
 const companyRepository = require('../repositories/company.repository');
 const createHttpError = require('../utils/httpError');
+const mlScreening = require('./ml-screening.service');
 
 function positiveInteger(value, label, min = 1, max = Number.MAX_SAFE_INTEGER) {
   if (!/^\d+$/.test(String(value))) throw createHttpError(400, `${label} must be an integer`);
@@ -46,7 +47,13 @@ async function submitInterview(userId, companyIdValue, input = {}) {
     questionsSummary: text(input.questionsSummary, 'Questions summary', 5000, false),
     isAnonymous: input.isAnonymous
   };
-  try { return await interviewRepository.createInterview(data); }
+  const screening = await mlScreening.screen('INTERVIEW', {
+    companyId: data.companyId, roleId: data.roleId,
+    processDescription: data.processDescription, questionsSummary: data.questionsSummary,
+    difficultyLevel: data.difficultyLevel, roundsCount: data.roundsCount,
+    interviewMode: data.interviewMode, resultStatus: data.resultStatus
+  });
+  try { return await interviewRepository.createInterview({ ...data, screening }); }
   catch (error) {
     const map = { ACCOUNT_UNAVAILABLE: 403, VERIFICATION_REQUIRED: 403, COMPANY_NOT_FOUND: 404, ROLE_NOT_FOUND: 404 };
     if (map[error.sapleCode]) throw createHttpError(map[error.sapleCode], error.message);

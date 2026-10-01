@@ -4,6 +4,7 @@ const applicationController = require('../controllers/application.controller');
 const authenticate = require('../middleware/authenticate');
 const { optionalAuthenticate } = require('../middleware/authenticate');
 const { createRateLimit, accountOrAddressKey } = require('../middleware/rateLimit');
+const { resumeUpload } = require('../middleware/resumeUpload');
 
 const router = express.Router();
 
@@ -23,8 +24,9 @@ router.get('/filter-options', jobController.getFilterOptions);
 router.get('/:jobId', optionalAuthenticate, jobController.getPublic);
 
 // Applying requires a signed-in job-seeker account; the applicant identity is
-// taken from the token, never from the request body.
-router.post('/:jobId/applications', authenticate, applyRateLimit, applicationController.apply);
+// taken from the token, never from the request body. An optional PDF resume
+// arrives as multipart form data, parsed only on this route.
+router.post('/:jobId/applications', authenticate, applyRateLimit, resumeUpload, applicationController.apply);
 
 module.exports = router;
 module.exports.applyRateLimit = applyRateLimit;

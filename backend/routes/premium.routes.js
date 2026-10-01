@@ -1,6 +1,5 @@
 const express = require('express');
 const authenticate = require('../middleware/authenticate');
-const requirePremium = require('../middleware/requirePremium');
 const controller = require('../controllers/premium.controller');
 const { createRateLimit, accountOrAddressKey } = require('../middleware/rateLimit');
 
@@ -13,8 +12,6 @@ const quoteLimit = limit(30, 10, 'Too many price checks. Please wait a few minut
 const checkoutLimit = limit(10, 60, 'Too many checkout attempts. Please wait a while.');
 const pollLimit = limit(60, 10, 'Too many status checks. Please wait a few minutes.');
 const returnLimit = limit(30, 10, 'Too many payment returns. Please wait a few minutes.');
-const aiLimit = limit(20, 10, 'Too many Premium AI requests. Please slow down.');
-const resumeLimit = limit(5, 10, 'Too many resume requests. Please wait a few minutes.');
 
 const router = express.Router();
 
@@ -30,8 +27,8 @@ router.post('/quote', authenticate, quoteLimit, controller.quote);
 router.post('/checkout', authenticate, checkoutLimit, controller.checkout);
 router.get('/payments/:publicId', authenticate, pollLimit, controller.payment);
 
-router.post('/ai/chat', authenticate, requirePremium, aiLimit, controller.aiChat);
-router.post('/resume/generate', authenticate, requirePremium, resumeLimit, controller.generateResume);
+// Premium AI now lives in the Saple Guide (/api/assistant), which picks the
+// Premium model from the member's entitlement; resumes are at /api/resume.
 
 const webhookRouter = express.Router();
 const ipnLimit = createRateLimit({ limit: 120, windowMs: 60 * 1000, message: 'Too many notifications.' });
@@ -39,4 +36,4 @@ webhookRouter.post('/payments/sslcommerz', ipnLimit, controller.sslcommerzIpn);
 
 module.exports = router;
 module.exports.webhookRouter = webhookRouter;
-module.exports.limits = { trialLimit, quoteLimit, checkoutLimit, pollLimit, returnLimit, aiLimit, resumeLimit, ipnLimit };
+module.exports.limits = { trialLimit, quoteLimit, checkoutLimit, pollLimit, returnLimit, ipnLimit };

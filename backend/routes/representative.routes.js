@@ -35,6 +35,7 @@ router.patch('/jobs/:jobId/status', jobController.updateStatus);
 
 router.get('/applications', applicationController.listScoped);
 router.get('/applications/:applicationId', applicationController.getScoped);
+router.get('/applications/:applicationId/resume', applicationController.getScopedResume);
 router.patch('/applications/:applicationId/status', applicationController.decide);
 
 module.exports = router;

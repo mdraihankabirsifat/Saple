@@ -9,7 +9,7 @@ test.afterEach(() => {
   database.query = originalQuery;
 });
 
-test('public browse SQL enforces approved-only rows and binds every filter', async () => {
+test('public browse SQL uses visible submissions, keeps verified salaries final and binds every filter', async () => {
   const calls = [];
   database.query = async (sql, values) => {
     calls.push({ sql, values });
@@ -40,7 +40,7 @@ test('public browse SQL enforces approved-only rows and binds every filter', asy
 
   assert.equal(calls.length, 3);
   calls.forEach(({ sql, values }) => {
-    assert.match(sql, /s\.submission_status = 'APPROVED'/);
+    assert.match(sql, /FROM vw_public_visible_submissions s/);
     assert.match(sql, /\$1/);
     assert.match(sql, /\$2/);
     assert.match(sql, /\$3/);
@@ -49,6 +49,7 @@ test('public browse SQL enforces approved-only rows and binds every filter', asy
     assert.equal(sql.includes('90000'), false);
   });
   assert.deepEqual(calls[0].values, [4, 2, '%DHAKA%', 40000, 90000]);
+  assert.match(calls[0].sql, /s\.verification_status = 'VERIFIED' AND s\.submission_status = 'APPROVED'/);
   assert.deepEqual(calls[1].values, [4, 2, '%DHAKA%', 4]);
   assert.deepEqual(calls[2].values, [4, 2, '%DHAKA%', 'MEDIUM', 'ONLINE']);
 });
