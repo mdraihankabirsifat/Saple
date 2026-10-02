@@ -19,7 +19,7 @@ test('signed-in account actions live under one accessible avatar menu', () => {
   assert.match(nav, /image\.addEventListener\('error', showInitial, \{ once: true \}\)/);
   // Items and their eligibility.
   assert.match(nav, /menuLink\('profile\.html', 'Profile'\)/);
-  assert.match(nav, /menuLink\('premium\.html', 'Premium'\)/);
+  assert.match(nav, /menuLink\('premium\.html', 'Subscription'\)/);
   assert.match(nav, /if \(!workspace\) items\.push\(menuLink\('my-applications\.html', 'My applications'\)\)/);
   assert.match(nav, /if \(currentUser\?\.userType === 'EMPLOYEE'\) items\.push\(menuLink\('employee-verification\.html', 'Verification'\)\)/);
   assert.match(nav, /const canContribute = verificationRefreshed\s*&& Array\.isArray\(currentUser\?\.verifiedScopes\) && currentUser\.verifiedScopes\.length > 0;/);
@@ -27,8 +27,10 @@ test('signed-in account actions live under one accessible avatar menu', () => {
   // Sign out reuses the existing logout and cannot be double-clicked.
   assert.match(nav, /signOutButton\.textContent = 'Signing out…';/);
   assert.match(nav, /await auth\.logout\(\);/);
-  // Premium state is fetched once, not on every open.
+  // Subscription state is fetched once, not on every open, and respects admin access.
   assert.match(nav, /premiumMenuRequest \|\|= import\(apiModuleUrl\.href\)/);
+  assert.match(nav, /access\.administratorAccess/);
+  assert.match(nav, /label: \{ admin: 'Admin access', trial: 'PRO', premium: 'Active', upgrade: 'Upgrade' \}/);
   // Outside click and Escape close it; Escape returns focus to the avatar.
   assert.match(nav, /if \(menu && !menu\.contains\(event\.target\)\) setAccountMenuOpen\(menu, false\);/);
   assert.match(nav, /setAccountMenuOpen\(menu, false, \{ focus: 'button' \}\)/);

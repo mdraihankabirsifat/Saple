@@ -577,7 +577,7 @@ const WORKSPACE_LINKS = {
 
 // --- Account menu ---------------------------------------------------------------
 // Everything personal to the signed-in account sits under the avatar: profile,
-// Premium, applications, contributing, verification, the role workspace and
+// subscription, applications, contributing, verification, the role workspace and
 // signing out. Which items appear follows the account the server reported; the
 // backend still decides what every page and request may actually do.
 const apiModuleUrl = new URL('./api.js', moduleBase);
@@ -633,7 +633,7 @@ function menuSeparator() {
   return separator;
 }
 
-// Premium state is fetched once, the first time the menu opens, and reused.
+// Subscription state is fetched once, the first time the menu opens, and reused.
 function applyPremiumMenuState(menu) {
   if (!premiumMenuState) return;
   menu.querySelectorAll('[data-premium-menu-badge]').forEach((badge) => {
@@ -644,7 +644,11 @@ function applyPremiumMenuState(menu) {
   const headerBadge = menu.querySelector('[data-premium-header-badge]');
   if (headerBadge) {
     headerBadge.hidden = !premiumMenuState.active;
-    headerBadge.textContent = premiumMenuState.state === 'trial' ? 'Premium trial' : 'Premium';
+    headerBadge.textContent = premiumMenuState.state === 'trial'
+      ? 'PRO'
+      : premiumMenuState.state === 'admin'
+        ? 'Admin access'
+        : 'Active';
   }
 }
 
@@ -656,8 +660,16 @@ function loadPremiumMenuState(menu) {
   premiumMenuRequest ||= import(apiModuleUrl.href)
     .then(({ apiRequest }) => apiRequest('/api/premium/status', { auth: true }))
     .then((access) => {
-      const state = access.hasPremium ? (access.source === 'TRIAL' ? 'trial' : 'premium') : 'upgrade';
-      premiumMenuState = { state, active: Boolean(access.hasPremium), label: { trial: 'Trial', premium: 'Premium', upgrade: 'Upgrade' }[state] };
+      const state = access.administratorAccess
+        ? 'admin'
+        : access.hasPremium
+          ? (access.source === 'TRIAL' ? 'trial' : 'premium')
+          : 'upgrade';
+      premiumMenuState = {
+        state,
+        active: state !== 'upgrade',
+        label: { admin: 'Admin access', trial: 'PRO', premium: 'Active', upgrade: 'Upgrade' }[state]
+      };
     })
     .catch(() => { premiumMenuRequest = null; });
   premiumMenuRequest.then(() => applyPremiumMenuState(document.querySelector('[data-account-menu]')));
@@ -741,7 +753,7 @@ function renderAccountMenu(navigationActions, currentUser, { auth, workspace, ca
   const items = [];
   items.push(menuLink('profile.html', 'Profile'));
   items.push(menuLink('resume-generator.html', 'Resume Generator'));
-  const premium = menuLink('premium.html', 'Premium');
+  const premium = menuLink('premium.html', 'Subscription');
   const premiumBadge = document.createElement('span');
   premiumBadge.className = 'account-menu-badge';
   premiumBadge.dataset.premiumMenuBadge = '';

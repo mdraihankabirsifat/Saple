@@ -2459,6 +2459,7 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 .account-menu-badge[data-state="upgrade"] { background: var(--saple-gold-soft); color: var(--saple-gold-ink); }
 .account-menu-badge[data-state="trial"],
 .account-menu-badge[data-state="premium"] { background: var(--saple-gold); color: #1b1405; }
+.account-menu-badge[data-state="admin"] { background: var(--saple-green-100); color: var(--saple-green-800); }
 
 .account-menu-name { display: none; }
 
