@@ -13,6 +13,7 @@ const FIXTURE_PASS = ['synthetic', 'smtp', 'value'].join('-');
 const originalInfo = console.info;
 const environmentNames = [
   'SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM',
+  'RESEND_API_KEY', 'RESEND_FROM_EMAIL',
   'FRONTEND_URL', 'PASSWORD_RESET_TOKEN_TTL_MINUTES', 'RENDER', 'RENDER_EXTERNAL_URL'
 ];
 const originalEnvironment = Object.fromEntries(environmentNames.map((name) => [name, process.env[name]]));
@@ -25,6 +26,8 @@ test.beforeEach(() => {
     SMTP_USER: FIXTURE_USER,
     SMTP_PASS: FIXTURE_PASS,
     SMTP_FROM: 'Saple <no-reply@example.test>',
+    RESEND_API_KEY: 'synthetic-resend-key',
+    RESEND_FROM_EMAIL: 'Saple <no-reply@example.test>',
     FRONTEND_URL: 'http://localhost:5500',
     PASSWORD_RESET_TOKEN_TTL_MINUTES: '15'
   });
@@ -50,6 +53,10 @@ test('mail configuration parses typed SMTP and reset values', () => {
   });
   assert.equal(mailConfig.getPasswordResetTokenTtlMinutes(), 15);
   assert.equal(mailConfig.getFrontendUrl(), 'http://localhost:5500/');
+  assert.deepEqual(mailConfig.getResendConfig(), {
+    apiKey: 'synthetic-resend-key',
+    from: 'Saple <no-reply@example.test>'
+  });
 
   process.env.SMTP_SECURE = 'yes';
   assert.throws(() => mailConfig.getSmtpConfig(), /must be true or false/);
@@ -75,20 +82,18 @@ test('password recovery uses Render external URL only when FRONTEND_URL is absen
   assert.throws(mailConfig.getFrontendUrl, /without credentials/);
 });
 
-test('mail service sends text and HTML without logging credentials or the raw reset token', async () => {
+test('mail service sends the reset message through Resend without logging credentials or the raw reset token', async () => {
   const rawToken = 'raw-token-must-not-be-logged';
   const resetUrl = `http://localhost:5500/reset-password.html?token=${rawToken}`;
-  let transportOptions;
   let message;
-  let closed = false;
   const logs = [];
-
-  nodemailer.createTransport = (options) => {
-    transportOptions = options;
-    return {
-      sendMail: async (input) => { message = input; },
-      close: () => { closed = true; }
-    };
+  const originalFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    assert.equal(url, 'https://api.resend.com/emails');
+    assert.equal(options.method, 'POST');
+    assert.equal(options.headers.Authorization, 'Bearer synthetic-resend-key');
+    message = JSON.parse(options.body);
+    return { ok: true, status: 200 };
   };
   console.info = (...values) => { logs.push(values.join(' ')); };
 
@@ -99,14 +104,13 @@ test('mail service sends text and HTML without logging credentials or the raw re
     expiresMinutes: 15
   });
 
-  assert.equal(transportOptions.port, 587);
-  assert.equal(transportOptions.secure, false);
-  assert.equal(transportOptions.auth.pass, FIXTURE_PASS);
+  global.fetch = originalFetch;
+  assert.equal(message.from, 'Saple <no-reply@example.test>');
+  assert.deepEqual(message.to, ['person@example.test']);
   assert.match(message.text, /Reset|reset/);
   assert.match(message.text, new RegExp(rawToken));
   assert.match(message.html, /single-use|only once/);
   assert.match(message.html, /Test &lt;Person&gt;/);
-  assert.equal(closed, true);
   assert.equal(logs.join(' ').includes(rawToken), false);
-  assert.equal(logs.join(' ').includes(FIXTURE_PASS), false);
+  assert.equal(logs.join(' ').includes('synthetic-resend-key'), false);
 });

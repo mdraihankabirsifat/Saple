@@ -187,7 +187,7 @@ async function forgotPassword(input = {}) {
 
   if (!validateEmail(email)) throw createHttpError(400, 'A valid email address is required');
 
-  // Recovery readiness is decided before the account is looked up, and SMTP
+  // Recovery readiness is decided before the account is looked up, and email
   // is part of readiness. Checking it later would answer an unknown address
   // with the generic success while a real one hit a delivery error, which is
   // exactly the difference an attacker needs to enumerate accounts.
@@ -196,7 +196,7 @@ async function forgotPassword(input = {}) {
   try {
     expiresMinutes = mailConfig.getPasswordResetTokenTtlMinutes();
     frontendUrl = mailConfig.getFrontendUrl();
-    mailConfig.getSmtpConfig();
+    mailConfig.getResendConfig();
   } catch (error) {
     throw createHttpError(503, 'Password recovery is not configured. Please try again later.');
   }

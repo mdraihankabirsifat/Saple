@@ -17,6 +17,8 @@ const app = require('../app');
 const saved = {
   FRONTEND_URL: process.env.FRONTEND_URL,
   RENDER: process.env.RENDER,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
   findUserForPasswordResetByEmail: userRepository.findUserForPasswordResetByEmail,
   findUserByEmail: userRepository.findUserByEmail,
   createTokenWithDelivery: passwordResetRepository.createTokenWithDelivery,
@@ -34,7 +36,7 @@ test.before(async () => {
 });
 
 test.after(async () => {
-  for (const name of ['FRONTEND_URL', 'RENDER']) {
+  for (const name of ['FRONTEND_URL', 'RENDER', 'RESEND_API_KEY', 'RESEND_FROM_EMAIL']) {
     if (saved[name] === undefined) delete process.env[name];
     else process.env[name] = saved[name];
   }
@@ -82,11 +84,16 @@ const syntheticSmtp = {
   SMTP_PASS: ['synthetic', 'smtp', 'value'].join('-'),
   SMTP_FROM: 'Saple <no-reply@example.test>'
 };
+const syntheticResend = {
+  RESEND_API_KEY: 'synthetic-resend-key',
+  RESEND_FROM_EMAIL: 'Saple <no-reply@example.test>'
+};
 
 test('the emailed link points at reset-password.html on the configured origin only', async () => {
   delete process.env.RENDER;
   process.env.FRONTEND_URL = 'https://saple.example.test/';
   Object.assign(process.env, syntheticSmtp);
+  Object.assign(process.env, syntheticResend);
   let delivered;
   userRepository.findUserForPasswordResetByEmail = async (email) => ({
     userId: 8, fullName: 'Test Person', email, accountStatus: 'ACTIVE'

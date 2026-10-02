@@ -205,7 +205,8 @@ Supabase PostgreSQL
 Alongside the database:
 
 - **Supabase Storage** holds profile pictures and company logos.
-- **SMTP** (Gmail, through Nodemailer) sends password recovery emails.
+- **Resend HTTPS API** sends password recovery emails; legacy SMTP settings
+  remain for the local diagnostic.
 - **Groq**, or any OpenAI-compatible API, answers Saple Guide questions through the backend.
 
 The backend is written in layers. Routes only map URLs, controllers handle HTTP, services hold the rules and authorization, and repositories are the only place SQL is written, always with `$1`-style parameters and never string-built. The browser never talks to the database or holds a database credential, and authentication is Saple's own (JWT), not Supabase Auth.
@@ -221,7 +222,7 @@ The backend is written in layers. Routes only map URLs, controllers handle HTTP,
 | Hosting | Cloudflare Workers (static assets and the API) |
 | Storage | Supabase Storage |
 | Authentication | JWT and bcrypt |
-| Email | Nodemailer with Gmail SMTP |
+| Email | Resend HTTPS API |
 | AI | Groq (OpenAI-compatible API) |
 
 The [`ml/`](ml/) folder contains the separately deployed moderation-risk service and read-only training workflow. Worker screening starts disabled and in shadow mode; human moderation remains final, and private messages, verification evidence and applicant resumes are excluded.

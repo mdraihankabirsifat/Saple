@@ -18,7 +18,9 @@ const originals = {
 };
 
 const SMTP_VARIABLES = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
+const RESEND_VARIABLES = ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'];
 const savedSmtp = Object.fromEntries(SMTP_VARIABLES.map((name) => [name, process.env[name]]));
+const savedResend = Object.fromEntries(RESEND_VARIABLES.map((name) => [name, process.env[name]]));
 const syntheticSmtp = {
   SMTP_HOST: 'smtp.example.test',
   SMTP_USER: ['synthetic', 'smtp', 'login'].join('-'),
@@ -31,12 +33,18 @@ function restoreSmtp() {
     if (savedSmtp[name] === undefined) delete process.env[name];
     else process.env[name] = savedSmtp[name];
   }
+  for (const name of RESEND_VARIABLES) {
+    if (savedResend[name] === undefined) delete process.env[name];
+    else process.env[name] = savedResend[name];
+  }
 }
 
 test.beforeEach(() => {
   process.env.FRONTEND_URL = 'http://localhost:5500/';
   process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES = '15';
   Object.assign(process.env, syntheticSmtp);
+  process.env.RESEND_API_KEY = 'synthetic-resend-key';
+  process.env.RESEND_FROM_EMAIL = 'Saple <no-reply@example.test>';
 });
 
 test.afterEach(() => {
@@ -138,7 +146,7 @@ test('SMTP failure becomes a controlled recovery-only error that leaks nothing',
 test('an unconfigured mailer answers every address the same way, known or not', async () => {
   // Without this, an unknown address would get the generic success while a
   // real one got a delivery error: an account-enumeration oracle.
-  delete process.env.SMTP_PASS;
+  delete process.env.RESEND_API_KEY;
   let lookups = 0;
   userRepository.findUserForPasswordResetByEmail = async (email) => {
     lookups += 1;

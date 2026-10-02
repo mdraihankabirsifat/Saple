@@ -85,16 +85,31 @@ function buildPasswordResetMessage({ recipientName, resetUrl, expiresMinutes }) 
 }
 
 async function sendPasswordResetEmail({ recipientName, recipientEmail, resetUrl, expiresMinutes }) {
-  const smtp = mailConfig.getSmtpConfig();
-  const transport = createTransport(smtp);
+  const resend = mailConfig.getResendConfig();
   const message = buildPasswordResetMessage({ recipientName, resetUrl, expiresMinutes });
-
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    await transport.sendMail({ from: smtp.from, to: recipientEmail, ...message });
-    // Deliberately says nothing about the recipient, the link or the server.
-    console.info('Password-reset email accepted by the configured SMTP service.');
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${resend.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: resend.from,
+        to: [recipientEmail],
+        subject: message.subject,
+        text: message.text,
+        html: message.html
+      })
+    });
+    if (!response.ok) throw new Error('Password-reset email provider rejected the request');
+    // Deliberately says nothing about the recipient, link, key or provider response.
+    console.info('Password-reset email accepted by the configured email service.');
   } finally {
-    if (typeof transport.close === 'function') transport.close();
+    clearTimeout(timeout);
   }
 }
 

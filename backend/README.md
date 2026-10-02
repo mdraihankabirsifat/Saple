@@ -1,6 +1,6 @@
 # Saple Backend
 
-The Saple backend connects Express 5 to Supabase-hosted PostgreSQL through the `pg` driver and raw SQL. It provides public approved company/salary/review/interview browsing, JWT authentication, SMTP password recovery, safe profile changes, exact company-and-designation verified contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
+The Saple backend connects Express 5 to Supabase-hosted PostgreSQL through the `pg` driver and raw SQL. It provides public approved company/salary/review/interview browsing, JWT authentication, Resend HTTPS password recovery, safe profile changes, exact company-and-designation verified contributions, reporting, and ADMIN workflows with immutable submission-moderation history.
 
 ## Database objects and transactions
 
@@ -57,11 +57,13 @@ SMTP_SECURE=false
 SMTP_USER=replace_with_smtp_username
 SMTP_PASS=replace_with_smtp_password
 SMTP_FROM=Saple <no-reply@example.com>
+RESEND_API_KEY=replace_with_resend_api_key
+RESEND_FROM_EMAIL=Saple <no-reply@example.com>
 FRONTEND_URL=http://localhost:5500/
 PASSWORD_RESET_TOKEN_TTL_MINUTES=15
 ```
 
-Install dependencies with `npm install`; Nodemailer is included in `package.json`. For Gmail, enable two-step verification, create an App Password, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and `SMTP_SECURE=false`, then put the account and App Password in `SMTP_USER` and `SMTP_PASS`. Use provider-specific values for another SMTP service. Port `465` normally requires `SMTP_SECURE=true`. Never commit `backend/.env`.
+Password-reset delivery uses the Resend HTTPS API. Set `RESEND_API_KEY` as a server-side secret and `RESEND_FROM_EMAIL` to a sender identity verified in Resend. Legacy SMTP settings remain for the local diagnostic. Never commit `backend/.env`.
 
 For a completely fresh Supabase project, execute the PostgreSQL files in this order:
 

@@ -69,8 +69,23 @@ function getSmtpConfig() {
   };
 }
 
+function getResendConfig() {
+  const required = ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'];
+  const missing = required.filter((name) => !process.env[name]?.trim());
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required Resend configuration: ${missing.join(', ')}`);
+  }
+
+  return {
+    apiKey: process.env.RESEND_API_KEY.trim(),
+    from: process.env.RESEND_FROM_EMAIL.trim()
+  };
+}
+
 module.exports = {
   getFrontendUrl,
   getPasswordResetTokenTtlMinutes,
-  getSmtpConfig
+  getSmtpConfig,
+  getResendConfig
 };

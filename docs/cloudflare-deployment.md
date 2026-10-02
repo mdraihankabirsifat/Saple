@@ -99,7 +99,7 @@ Secrets**:
 | `SUPABASE_URL` | Supabase project URL used for Storage public URLs |
 | `SUPABASE_AVATAR_BUCKET` | Avatar bucket name, normally `avatar` |
 | `SUPABASE_COMPANY_LOGO_BUCKET` | Company-logo bucket name, normally `Company_logos` |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_FROM` | Existing mail transport settings |
+| `RESEND_FROM_EMAIL` | Verified sender identity used for password-reset mail |
 
 Keep `SAPLE_RUNTIME=cloudflare`, `DB_FALLBACK_ENABLED=false`, and
 `DB_PRIMARY_SOURCE=supabase` as the values in `wrangler.jsonc`. The Worker never
@@ -176,11 +176,10 @@ The frontend keeps same-origin API resolution, so it calls
 - `multer` remains the existing in-memory multipart path. Run the dry-run and
   an authenticated upload against the Worker before treating image uploads as
   production-ready.
-- Nodemailer/SMTP remains the Node/Render transport. Cloudflare Workers do not
-  provide a general SMTP socket environment; if the current bundle rejects the
-  transport, password recovery returns its existing controlled `503` on the
-  Worker while Node/Render continues to send mail. Do not fake delivery or move
-  SMTP credentials into client code.
+- Password-reset mail uses the Resend HTTPS API on both runtimes. Set
+  `RESEND_API_KEY` as a Worker secret and `RESEND_FROM_EMAIL` as a verified
+  sender identity. Legacy SMTP values remain for the local diagnostic and are
+  never sent to the browser.
 - In-memory rate limits are per Worker isolate. Authentication, authorization,
   validation and all database constraints remain enforced; a distributed rate
   limiter can be added later if the deployment needs cross-isolate quotas.
