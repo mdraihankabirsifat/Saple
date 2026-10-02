@@ -102,62 +102,60 @@ Job applications may include an optional PDF resume, up to 2 MB. The PDF is stor
 
 ## Screenshots
 
-### Explore companies and careers
-
 <table>
 <tr>
 <td width="50%" valign="top">
-<img src="assets/screenshots/companies.webp" alt="Company directory with filters and company cards showing ratings, location and community pay" width="100%">
-<br><sub><b>Company directory</b>: search, filter and sort.</sub>
+<img src="assets/screenshots/homepage.webp" alt="Saple homepage with clearer recommendation cards beside the company search" width="100%">
+<br><sub><b>Homepage</b>: career search and live recommendations.</sub>
 </td>
 <td width="50%" valign="top">
-<img src="assets/screenshots/company-details.webp" alt="Company page showing the Verified Salary Range per role with minimum, maximum, average and contribution count" width="100%">
-<br><sub><b>Company details</b>: verified and community salary ranges.</sub>
+<img src="assets/screenshots/companies.webp" alt="Company directory filtered to Banglalink, showing its stored public logo" width="100%">
+<br><sub><b>Company directory</b>: a live stored logo and filters.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/company-details.webp" alt="Banglalink company profile with its public logo and salary insights navigation" width="100%">
+<br><sub><b>Company details</b>: profile, logo and salary context.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/salaries.webp" alt="Salary insights page comparing verified and community ranges" width="100%">
+<br><sub><b>Salaries</b>: verified and community ranges.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/jobs.webp" alt="Jobs page showing published openings and filters" width="100%">
+<br><sub><b>Jobs</b>: published openings.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/premium.webp" alt="Saple Premium page with trial terms and plan choices" width="100%">
+<br><sub><b>Premium</b>: trial and prepaid plans.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/professional-profile.webp" alt="Synthetic member profile showing headline, about, experience, education, skills and Message action" width="100%">
+<br><sub><b>Professional profile</b>: synthetic member data.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/messages-guide.webp" alt="Synthetic Premium Guide conversation with a PRO badge in the shared Messages and Guide panel" width="100%">
+<br><sub><b>Messages and Guide</b>: synthetic PRO demo.</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="assets/screenshots/admin-dashboard.webp" alt="Admin control center displaying a synthetic sample account" width="100%">
+<br><sub><b>Admin control center</b>: synthetic account data.</sub>
+</td>
+<td width="50%" valign="top">
+<img src="assets/screenshots/contact.webp" alt="Contact page with the developer's supplied portrait in a green and gold frame" width="100%">
+<br><sub><b>Contact</b>: the developer portrait.</sub>
 </td>
 </tr>
 </table>
 
-### Search and connect
-
-<table>
-<tr>
-<td width="50%" valign="top">
-<img src="assets/screenshots/home-search.webp" alt="Homepage search showing live company suggestions for the word bank" width="100%">
-<br><sub><b>Homepage search</b>: company suggestions while you type.</sub>
-</td>
-<td width="50%" valign="top">
-<img src="assets/screenshots/global-search.webp" alt="Navigation search results grouped into People and Companies" width="100%">
-<br><sub><b>Global search</b>: people and companies from any page.</sub>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-<img src="assets/screenshots/professional-profile.webp" alt="Member profile with headline, about, experience, education, skills and a Message button" width="100%">
-<br><sub><b>Professional profile</b>: experience, education and skills.</sub>
-</td>
-<td width="50%" valign="top">
-<img src="assets/screenshots/messages-guide.webp" alt="Messages and Saple Guide panel open on a conversation with a company representative" width="100%">
-<br><sub><b>Messages and Saple Guide</b>: one panel for both.</sub>
-</td>
-</tr>
-</table>
-
-### Work and moderate
-
-<table>
-<tr>
-<td width="50%" valign="top">
-<img src="assets/screenshots/jobs.webp" alt="Jobs page listing open vacancies with salary, work mode and application deadline" width="100%">
-<br><sub><b>Jobs</b>: published vacancies still inside their deadline.</sub>
-</td>
-<td width="50%" valign="top">
-<img src="assets/screenshots/admin-dashboard.webp" alt="Administrator moderation workspace with the pending queue and a salary submission's details" width="100%">
-<br><sub><b>Admin moderation</b>: review queue with full submission context.</sub>
-</td>
-</tr>
-</table>
-
-<sub>Public pages were captured from the live site. The profile, messages, jobs, search and admin views use the synthetic demo accounts.</sub>
+<sub>Public pages were captured from the deployed site. The profile, Guide and admin views use synthetic browser fixtures; they contain no live private account data.</sub>
 
 ## Database design
 
