@@ -146,6 +146,15 @@ async function premiumAnswer(userId, baseConfig, messages) {
 async function isPremiumMember(user) {
   if (!user?.userId) return false;
   try {
+    return await premiumService.hasPremium(user.userId);
+  } catch (error) {
+    return false;
+  }
+}
+
+async function hasAdvancedGuideAccess(user) {
+  if (!user?.userId) return false;
+  try {
     return await premiumService.hasPremiumFeatureAccess(user.userId);
   } catch (error) {
     return false;
@@ -163,8 +172,10 @@ async function ask(input = {}, user = null) {
     (Array.isArray(input.messages) ? input.messages[input.messages.length - 1]?.content : '') || latest
   );
   const refusal = findRefusal(rawLatest) || findRefusal(latest);
-  const premiumMember = await isPremiumMember(user);
-  const withTier = (result, tier) => ({ ...result, tier, premiumMember });
+  const [premiumMember, proAccess] = await Promise.all([
+    isPremiumMember(user), hasAdvancedGuideAccess(user)
+  ]);
+  const withTier = (result, tier) => ({ ...result, tier, premiumMember, proAccess });
   if (refusal) {
     return withTier({ answer: refusal.reply, source: 'POLICY', reason: refusal.id }, 'STANDARD');
   }
@@ -179,7 +190,7 @@ async function ask(input = {}, user = null) {
 
   if (!config) return withTier(fallbackResponse(latest, 'DISABLED'), 'STANDARD');
 
-  if (premiumMember) {
+  if (proAccess) {
     const answer = await premiumAnswer(user.userId, config, messages);
     if (answer) return withTier({ answer, source: 'AI', reason: null }, 'PREMIUM');
   }
@@ -202,12 +213,15 @@ function isPremiumModelConfigured() {
 }
 
 async function getStatus(user = null) {
-  const premiumMember = await isPremiumMember(user);
+  const [premiumMember, proAccess] = await Promise.all([
+    isPremiumMember(user), hasAdvancedGuideAccess(user)
+  ]);
   return {
     ...aiConfig.getPublicStatus(),
     // Informational only: the server picks the tier again on every message.
-    tier: premiumMember && isPremiumModelConfigured() ? 'PREMIUM' : 'STANDARD',
+    tier: proAccess && isPremiumModelConfigured() ? 'PREMIUM' : 'STANDARD',
     premiumMember,
+    proAccess,
     label: 'Saple Guide (AI-assisted)',
     privacyNotice: [
       'Messages you type here are sent to the AI provider configured by the site owner.',

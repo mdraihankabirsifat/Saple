@@ -9,11 +9,11 @@ import { el, clear, trapFocus } from './ui.js';
 // markup into the page.
 
 // Informational only: shows which tier answered. The server decides it from
-// the member's current Premium or trial access on every message.
+// the member's current Premium, trial or administrator access on every message.
 const tierBadge = el('span', {
   className: 'guide-tier-badge',
   text: 'PRO',
-  attrs: { title: 'Advanced answers for Premium members', hidden: true }
+  attrs: { title: 'Advanced Saple Guide access', hidden: true }
 });
 
 function setTierIndicator(access) {
@@ -122,7 +122,7 @@ async function submitQuestion(event) {
       auth: 'optional',
       body: { messages: conversation }
     });
-    setTierIndicator(result.premiumMember);
+    setTierIndicator(result.proAccess);
     pending.classList.remove('is-pending');
     pending.querySelector('.guide-text').textContent = result.answer;
 
@@ -207,7 +207,7 @@ function openPanel(view = 'guide') {
   else messagesView?.querySelector('input, button')?.focus();
   // Recheck entitlement whenever the panel opens, including after expiry.
   apiRequest('/api/assistant/status', { auth: 'optional' })
-    .then((fresh) => { status = fresh; setTierIndicator(fresh.premiumMember); })
+    .then((fresh) => { status = fresh; setTierIndicator(fresh.proAccess); })
     .catch(() => setTierIndicator(false));
 }
 
@@ -339,7 +339,7 @@ export function mountAssistant({ allowUnavailable = false } = {}) {
 
   try {
     status = await apiRequest('/api/assistant/status', { auth: 'optional' });
-    setTierIndicator(status?.premiumMember);
+    setTierIndicator(status?.proAccess);
   } catch (error) {
     // Keep the original public guide behavior, but allow signed-in Messages
     // to mount the shared panel when the status endpoint is unavailable.

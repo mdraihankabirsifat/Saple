@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v18';
+const SHELL_CACHE = 'saple-shell-v19';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',

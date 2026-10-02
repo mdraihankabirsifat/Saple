@@ -649,15 +649,23 @@ test('the one Saple Guide answers free members with the standard model and Premi
     const free = await ask(tokens.dave);
     assert.equal(free.status, 200);
     assert.deepEqual([free.json.data.tier, free.json.data.premiumMember], ['STANDARD', false]);
+    assert.equal(free.json.data.proAccess, false);
     assert.equal(aiRequests.at(-1).model, 'guide-model');
 
     const paid = await ask(tokens.carol);
     assert.deepEqual([paid.json.data.tier, paid.json.data.premiumMember], ['PREMIUM', true]);
+    assert.equal(paid.json.data.proAccess, true);
     assert.equal(aiRequests.at(-1).model, 'test-premium-model');
     assert.match(aiRequests.at(-1).messages[0].content, /Premium mode/);
 
     const trial = await ask(tokens.bob);
     assert.equal(trial.json.data.tier, 'PREMIUM');
+    assert.equal(trial.json.data.proAccess, true);
+    assert.equal(aiRequests.at(-1).model, 'test-premium-model');
+
+    const admin = await ask(tokens.admin);
+    assert.deepEqual([admin.json.data.tier, admin.json.data.premiumMember, admin.json.data.proAccess],
+      ['PREMIUM', false, true]);
     assert.equal(aiRequests.at(-1).model, 'test-premium-model');
 
     // An expired trial is back on the standard guide with no sign-in change.
@@ -676,6 +684,9 @@ test('the one Saple Guide answers free members with the standard model and Premi
 
     const status = await api('/api/assistant/status', { token: tokens.carol });
     assert.equal(status.json.data.tier, 'PREMIUM');
+    const adminStatus = await api('/api/assistant/status', { token: tokens.admin });
+    assert.deepEqual([adminStatus.json.data.tier, adminStatus.json.data.premiumMember, adminStatus.json.data.proAccess],
+      ['PREMIUM', false, true]);
     assert.equal((await api('/api/assistant/status')).json.data.tier, 'STANDARD');
   });
 });
