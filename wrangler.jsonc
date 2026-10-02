@@ -10,7 +10,7 @@
       "JWT_SECRET",
       "AI_API_KEY",
       "SUPABASE_SECRET_KEY",
-      "RESEND_API_KEY"
+      "SMTP_PASS"
     ]
   },
   "assets": {
