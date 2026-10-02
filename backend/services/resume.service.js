@@ -120,7 +120,7 @@ function shapeResume(raw, sourceText = null) {
 }
 
 async function allowanceFor(userId) {
-  const premium = await premiumService.hasPremium(userId);
+  const premium = await premiumService.hasPremiumFeatureAccess(userId);
   const limits = paymentConfig.getPremiumAiLimits();
   const dailyLimit = premium ? limits.resumePerDay : limits.freeResumePerDay;
   const usedToday = await premiumRepository.countAiUsageToday(userId, 'RESUME_GENERATION');

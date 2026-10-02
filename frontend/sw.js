@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v17';
+const SHELL_CACHE = 'saple-shell-v18';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -17,7 +17,7 @@ const ASSETS = [
   'css/auth.css', 'css/forms.css', 'css/browse.css', 'css/profile.css', 'css/salary-form.css',
   'css/jobs.css', 'css/premium.css', 'css/premium-subscription.css', 'favicon.svg', 'assets/hero/homepage.png',
   'assets/hero/login.png', 'assets/hero/singup.png',
-  'assets/hero/companies.png', 'assets/hero/salaries.png', 'assets/hero/Reviews.png',
+  'assets/hero/companies.png', 'assets/hero/salaries.png', 'assets/hero/Reviews.png', 'assets/contact/sifat.jpg',
   'assets/hero/Interviews.png', 'assets/hero/job.png', 'assets/hero/FAQ.png',
   'js/nav.js', 'js/theme.js', 'js/api.js', 'js/auth.js', 'js/ui.js', 'js/offline-cache.js',
   'js/announcements.js', 'js/assistant.js', 'js/global-search.js', 'js/reveal.js', 'js/companies.js', 'js/company-directory.js',
@@ -36,7 +36,7 @@ const PRIVATE_PATHS = [
   'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
   'employee-verification.html', 'submit-salary.html', 'submit-review.html',
   'interview-experience.html', 'payment-result.html', 'resume-generator.html',
-  'js/profile.js', 'js/professional-profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js',
+  'js/profile.js', 'js/avatar-cropper.js', 'js/professional-profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js',
   'js/admin-control-ui.js', 'js/admin-users.js', 'js/admin-queues.js', 'js/admin-subscriptions.js',
   'js/representative.js', 'js/my-applications.js',
   'js/notifications.js', 'js/verification.js', 'js/submit-salary.js', 'js/review.js',

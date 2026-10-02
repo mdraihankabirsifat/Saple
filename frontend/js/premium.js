@@ -57,7 +57,10 @@ function renderStatus() {
     return;
   }
   const lines = [];
-  if (access.hasPremium) {
+  if (access.administratorAccess) {
+    lines.push(el('p', { className: 'premium-status-title', text: 'Administrator access' }));
+    lines.push(el('p', { text: 'Premium features are available to administrator accounts.' }));
+  } else if (access.hasPremium) {
     lines.push(el('p', { className: 'premium-status-title' }, [
       el('span', { className: 'premium-badge', text: access.source === 'TRIAL' ? 'Premium trial' : 'Premium' }),
       access.source === 'TRIAL' ? ' Your free trial is active.' : ' Your Premium is active.'
@@ -70,13 +73,18 @@ function renderStatus() {
     lines.push(el('p', { className: 'premium-status-title', text: 'You are on the free plan.' }));
   }
   nodes.status.replaceChildren(...lines);
-  nodes.status.classList.toggle('is-active', Boolean(access.hasPremium));
+  nodes.status.classList.toggle('is-active', Boolean(access.featureAccess));
   nodes.status.hidden = false;
 }
 
 function renderTrial() {
   const access = state.access;
   if (!state.signedIn || !access) return;
+  document.getElementById('trial-panel').hidden = Boolean(access.administratorAccess);
+  if (access.administratorAccess) {
+    nodes.trialAction.replaceChildren(el('p', { className: 'premium-trial-state', text: 'Administrator access is active.' }));
+    return;
+  }
 
   if (access.hasPremium && access.source === 'TRIAL') {
     nodes.trialAction.replaceChildren(el('p', {
@@ -141,7 +149,9 @@ async function loadStatus() {
 // ---- Plans and checkout ----------------------------------------------------
 
 function renderPlans() {
+  document.querySelector('.premium-plans').hidden = Boolean(state.access?.administratorAccess);
   nodes.planGrid.querySelectorAll('.plan-card-paid').forEach((card) => card.remove());
+  if (state.access?.administratorAccess) return;
   for (const plan of state.plans) {
     const action = state.signedIn
       ? el('button', { className: 'button button-primary', text: `Choose ${plan.name}`, attrs: { type: 'button' } })
@@ -278,7 +288,7 @@ nodes.checkoutCancel.addEventListener('click', () => {
 
 // Premium works where the features live; this page only links to them.
 function renderShortcuts() {
-  nodes.shortcuts.hidden = !(state.signedIn && state.access?.hasPremium);
+  nodes.shortcuts.hidden = !(state.signedIn && state.access?.featureAccess);
 }
 
 nodes.openGuide?.addEventListener('click', async () => {

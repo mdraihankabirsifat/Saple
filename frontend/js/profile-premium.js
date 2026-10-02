@@ -40,7 +40,9 @@ export async function mountProfilePremium() {
     access = null;
   }
 
-  if (access?.hasPremium) {
+  if (access?.administratorAccess) {
+    stateLine.textContent = 'Administrator access: Premium features are available.';
+  } else if (access?.hasPremium) {
     stateLine.replaceChildren(
       premiumBadge({ premium: true, label: access.source === 'TRIAL' ? 'Premium trial' : 'Premium Saple member' }),
       ` Active until ${formatDateTime(access.endsAt)}.`

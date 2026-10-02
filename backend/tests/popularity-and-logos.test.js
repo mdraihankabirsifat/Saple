@@ -91,6 +91,22 @@ test('SVG logos are rasterized to WebP; dry runs never upload or update', async 
   assert.equal(updates, 0);
 });
 
+test('favicon-only discovery is reported but never imported as a company logo', async () => {
+  const icon = await sharp({ create: { width: 64, height: 64, channels: 4, background: '#27634a' } }).png().toBuffer();
+  const fetch = async (url) => new Response(url.endsWith('favicon.png') ? icon : Buffer.from('<title>Acme Labs</title><link rel="icon" href="/favicon.png">'),
+    { headers: { 'content-type': url.endsWith('favicon.png') ? 'image/png' : 'text/html' } });
+  let uploads = 0;
+  const deps = { fetch, sharp, logoIsValid: async () => false,
+    upload: async () => { uploads++; }, updateLogoPath: async () => true };
+  const company = { companyId: 27, companyName: 'Acme Labs', website: 'https://acme.com' };
+  const dry = await importer.processCompany(company, { ...deps, dryRun: true });
+  assert.equal(dry.status, importer.STATUS.FOUND);
+  assert.equal(dry.faviconOnly, true);
+  const live = await importer.processCompany(company, { ...deps, dryRun: false });
+  assert.equal(live.status, importer.STATUS.NO_RELIABLE_LOGO);
+  assert.equal(uploads, 0);
+});
+
 test('a race with another logo keeps the other company choice', async () => {
   const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40" fill="green"/></svg>');
   let updated;

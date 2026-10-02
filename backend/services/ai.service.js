@@ -146,7 +146,7 @@ async function premiumAnswer(userId, baseConfig, messages) {
 async function isPremiumMember(user) {
   if (!user?.userId) return false;
   try {
-    return await premiumService.hasPremium(user.userId);
+    return await premiumService.hasPremiumFeatureAccess(user.userId);
   } catch (error) {
     return false;
   }

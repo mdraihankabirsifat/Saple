@@ -73,6 +73,16 @@ async function hasPremium(userId) {
   return (await getPremiumAccess(userId)).hasPremium;
 }
 
+// Feature privileges are separate from subscriptions. Resolve the role from
+// PostgreSQL so neither a browser value nor an old token can grant access.
+async function hasPremiumFeatureAccess(userId) {
+  if (!userId) return false;
+  const account = await userRepository.findAuthorizationById(userId);
+  if (!account || account.accountStatus !== 'ACTIVE') return false;
+  if (account.accountRole === 'ADMIN') return true;
+  return hasPremium(userId);
+}
+
 // Map of userId -> 'PAID' | 'TRIAL' for accounts whose Premium is active now.
 async function getBadgeSources(userIds) {
   const ids = [...new Set((userIds || []).map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))];
@@ -120,7 +130,7 @@ function lockInterview(item) {
 }
 
 async function gateInterviews(items, userId) {
-  const premium = userId ? await hasPremium(userId) : false;
+  const premium = userId ? await hasPremiumFeatureAccess(userId) : false;
   return (items || []).map((item) => (premium ? { ...item, questionsLocked: false } : lockInterview(item)));
 }
 
@@ -398,12 +408,12 @@ async function recordProfileView(profileUserId, viewerUserId) {
 }
 
 async function getViewSummary(userId) {
-  const access = await getPremiumAccess(userId);
+  const canSeeIdentities = await hasPremiumFeatureAccess(userId);
   try {
-    return { ...await premiumRepository.findViewSummary(userId), canSeeIdentities: access.hasPremium };
+    return { ...await premiumRepository.findViewSummary(userId), canSeeIdentities };
   } catch (error) {
     if (missingPremiumSchema(error)) {
-      return { signedInViewersLast30Days: 0, totalViewEventsLast30Days: 0, canSeeIdentities: access.hasPremium };
+      return { signedInViewersLast30Days: 0, totalViewEventsLast30Days: 0, canSeeIdentities };
     }
     throw error;
   }
@@ -552,7 +562,7 @@ async function getOverview() {
 module.exports = {
   MINIMUM_CHARGE_BDT,
   missingPremiumSchema,
-  getPremiumAccess, hasPremium, getBadgeSources, badgeFor, withBadges,
+  getPremiumAccess, hasPremium, hasPremiumFeatureAccess, getBadgeSources, badgeFor, withBadges,
   questionsPreview, gateInterviews,
   startTrial,
   listPlans, quote, computeDiscount, checkout,

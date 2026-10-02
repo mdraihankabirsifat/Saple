@@ -135,6 +135,9 @@ async function processCompany(company, deps) {
 
   let downloadFailures = 0;
   for (const candidate of candidates) {
+    // A favicon alone is not reliable company branding for the live directory.
+    // Keep it visible in the dry-run report, but never import it as a logo.
+    if (!deps.dryRun && candidate.faviconOnly) continue;
     let image;
     try {
       image = await fetchLimited(deps.fetch, candidate.url, { accept: 'image/png,image/jpeg,image/webp,image/svg+xml', limit: IMAGE_LIMIT_BYTES });

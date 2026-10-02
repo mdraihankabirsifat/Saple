@@ -12,7 +12,9 @@ const plans = handle(async (req, res) => sendSuccess(res, 200, 'Premium plans re
   { ...await premiumService.listPlans(), premiumAiAvailable: aiService.isPremiumModelConfigured() }));
 
 const status = handle(async (req, res) => sendSuccess(res, 200, 'Premium status retrieved',
-  await premiumService.getPremiumAccess(req.user.userId)));
+  { ...await premiumService.getPremiumAccess(req.user.userId),
+    featureAccess: await premiumService.hasPremiumFeatureAccess(req.user.userId),
+    administratorAccess: req.user.role === 'ADMIN' }));
 
 const startTrial = handle(async (req, res) => sendSuccess(res, 201, 'Your 24-hour Premium trial has started',
   await premiumService.startTrial(req.user.userId)));

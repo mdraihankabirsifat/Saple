@@ -99,7 +99,7 @@ test('the service worker never caches a private page, script or stylesheet', () 
   }
 
   // The cache name is versioned and older versions are deleted on activation.
-  assert.match(source, /const SHELL_CACHE = 'saple-shell-v17'/);
+  assert.match(source, /const SHELL_CACHE = 'saple-shell-v18'/);
   assert.match(source, /caches\.delete\(key\)/);
   assert.match(source, /cache\.delete\(href\)/);
 });

@@ -12,12 +12,12 @@ import { el, clear, trapFocus } from './ui.js';
 // the member's current Premium or trial access on every message.
 const tierBadge = el('span', {
   className: 'guide-tier-badge',
-  text: '✦ Premium',
+  text: 'PRO',
   attrs: { title: 'Advanced answers for Premium members', hidden: true }
 });
 
-function setTierIndicator(tier) {
-  tierBadge.hidden = tier !== 'PREMIUM';
+function setTierIndicator(access) {
+  tierBadge.hidden = !access;
 }
 
 const MAX_TURNS = 8;
@@ -122,7 +122,7 @@ async function submitQuestion(event) {
       auth: 'optional',
       body: { messages: conversation }
     });
-    setTierIndicator(result.tier);
+    setTierIndicator(result.premiumMember);
     pending.classList.remove('is-pending');
     pending.querySelector('.guide-text').textContent = result.answer;
 
@@ -205,6 +205,10 @@ function openPanel(view = 'guide') {
   if (wasClosed) releaseFocus = trapFocus(panel, { onEscape: closePanel });
   if (view === 'guide') input.focus();
   else messagesView?.querySelector('input, button')?.focus();
+  // Recheck entitlement whenever the panel opens, including after expiry.
+  apiRequest('/api/assistant/status', { auth: 'optional' })
+    .then((fresh) => { status = fresh; setTierIndicator(fresh.premiumMember); })
+    .catch(() => setTierIndicator(false));
 }
 
 export function openSharedView(view = 'guide') {
@@ -335,7 +339,7 @@ export function mountAssistant({ allowUnavailable = false } = {}) {
 
   try {
     status = await apiRequest('/api/assistant/status', { auth: 'optional' });
-    setTierIndicator(status?.tier);
+    setTierIndicator(status?.premiumMember);
   } catch (error) {
     // Keep the original public guide behavior, but allow signed-in Messages
     // to mount the shared panel when the status endpoint is unavailable.

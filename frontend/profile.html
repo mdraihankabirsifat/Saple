@@ -174,6 +174,18 @@
       </div>
     </div>
   </main>
+  <dialog id="avatar-crop-dialog" class="avatar-crop-dialog" aria-labelledby="avatar-crop-title">
+    <h2 id="avatar-crop-title">Adjust profile photo</h2>
+    <p>Drag the image to position it inside the square, then adjust the zoom.</p>
+    <canvas width="320" height="320" aria-label="Photo crop preview"></canvas>
+    <label for="avatar-crop-zoom">Zoom</label>
+    <input id="avatar-crop-zoom" type="range" min="1" max="3" step="0.01" value="1">
+    <div class="form-actions">
+      <button id="avatar-crop-cancel" class="button button-secondary" type="button">Cancel</button>
+      <button id="avatar-crop-use" class="button button-primary" type="button">Use photo</button>
+    </div>
+  </dialog>
+
   <footer class="site-footer">
     <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->
     <p class="footer-fallback container">&copy; 2026 Saple. BUET CSE Database Project.</p>

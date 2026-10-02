@@ -59,9 +59,8 @@ function premiumJobAccess(viewer) {
   return async (job) => {
     if (job.accessLevel !== 'PREMIUM') return true;
     if (!viewer) return false;
-    if (viewer.role === 'ADMIN') return true;
     if ((viewer.representativeCompanyIds || []).map(Number).includes(Number(job.companyId))) return true;
-    if (premium === undefined) premium = await premiumService.hasPremium(viewer.userId);
+    if (premium === undefined) premium = await premiumService.hasPremiumFeatureAccess(viewer.userId);
     return premium;
   };
 }

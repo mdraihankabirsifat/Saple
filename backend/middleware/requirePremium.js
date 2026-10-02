@@ -6,7 +6,7 @@ const { sendFailure } = require('../utils/apiResponse');
 async function requirePremium(request, response, next) {
   try {
     const access = await premiumService.getPremiumAccess(request.user?.userId);
-    if (!access.hasPremium) {
+    if (!await premiumService.hasPremiumFeatureAccess(request.user?.userId)) {
       return sendFailure(response, 403, 'This feature is part of Saple Premium.', { code: 'PREMIUM_REQUIRED' });
     }
     request.premium = access;

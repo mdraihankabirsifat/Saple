@@ -74,17 +74,16 @@ function jobCard(row, { locked }) {
 async function getRecommendations(user) {
   const userId = user?.userId || null;
   const viewerKey = userId ? `user:${userId}` : 'public';
-  const isAdmin = user?.role === 'ADMIN';
 
   let signals = { headline: null, experience: [], skills: [], roleIds: [], industries: [], appliedJobIds: [] };
   let premium = false;
   if (userId) {
     [signals, premium] = await Promise.all([
       homeRepository.findProfileSignals(userId),
-      premiumService.hasPremium(userId)
+      premiumService.hasPremiumFeatureAccess(userId)
     ]);
   }
-  const fullJobAccess = premium || isAdmin;
+  const fullJobAccess = premium;
   const titleTerms = termsFrom([signals.headline, ...signals.experience.map((item) => item.jobTitle)]);
   const terms = termsFrom([...titleTerms, ...signals.skills], 16);
   const location = userId ? locationFrom(signals.experience) : null;

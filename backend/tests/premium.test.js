@@ -506,6 +506,26 @@ test('interview questions: a preview for free visitors, the full text for Premiu
   const premium = await api('/api/interviews', { token: tokens.carol });
   assert.equal(premium.json.data[0].questionsSummary, ids.questions);
   assert.equal(premium.json.data[0].questionsLocked, false);
+  const admin = await api('/api/interviews', { token: tokens.admin });
+  assert.equal(admin.json.data[0].questionsSummary, ids.questions);
+});
+
+test('administrator feature access is independent of payment, trial and public badge', async () => {
+  const status = await api('/api/premium/status', { token: tokens.admin });
+  assert.equal(status.status, 200);
+  assert.equal(status.json.data.hasPremium, false);
+  assert.equal(status.json.data.featureAccess, true);
+  assert.equal(status.json.data.administratorAccess, true);
+  const resume = await api('/api/resume/status', { token: tokens.admin });
+  assert.equal(resume.status, 200);
+  assert.equal(resume.json.data.pdfAvailable, true);
+  assert.equal((await api('/api/me/profile-viewers', { token: tokens.admin })).status, 200);
+  assert.equal((await premiumService.hasPremiumFeatureAccess(ids.dave)), false);
+  assert.equal((await premiumService.hasPremiumFeatureAccess(ids.carol)), true);
+  assert.equal((await premiumService.hasPremiumFeatureAccess(ids.bob)), true);
+  assert.equal((await one('SELECT COUNT(*)::int AS n FROM premium_payments WHERE user_id = $1', [ids.admin])).n, 0);
+  assert.equal((await one('SELECT COUNT(*)::int AS n FROM premium_trial_claims WHERE user_id = $1', [ids.admin])).n, 0);
+  assert.equal((await api(`/api/users/${ids.admin}/profile`)).json.data.user.premiumBadge, null);
 });
 
 test('Premium vacancies: a teaser without details for free visitors, full access for Premium and the owning company', async () => {

@@ -2,6 +2,7 @@ import { apiRequest } from './api.js';
 import { getCurrentUser, isAuthenticated, setStoredUser } from './auth.js';
 import { mountProfessionalProfile } from './professional-profile.js';
 import { mountProfilePremium } from './profile-premium.js';
+import { cropAvatar } from './avatar-cropper.js';
 
 const loadStatus = document.querySelector('#profile-load-status');
 const content = document.querySelector('#profile-content');
@@ -73,7 +74,9 @@ avatarFile.addEventListener('change', async () => {
   const button = document.querySelector('#profile-avatar-change');
   button.disabled = true;
   try {
-    const body = new FormData(); body.append('avatar', file);
+    const cropped = await cropAvatar(file, document.querySelector('#avatar-crop-dialog'));
+    if (!cropped) return;
+    const body = new FormData(); body.append('avatar', cropped);
     const result = await apiRequest('/api/me/avatar', { method: 'PUT', auth: true, body });
     const user = { ...currentUser, ...result };
     setStoredUser(user); render(user);
