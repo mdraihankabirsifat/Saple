@@ -1,433 +1,110 @@
 import { apiRequest } from './api.js';
 import { getCurrentUser, isAuthenticated } from './auth.js';
+import { mountUsers } from './admin-users.js';
+import { mountSubscriptions } from './admin-subscriptions.js';
+import { mountSubmissions, mountVerifications, mountReports } from './admin-queues.js';
+import { loadPremiumAdmin } from './admin-premium.js';
 
-const loadingMessage = document.querySelector('#admin-loading');
-const accessDenied = document.querySelector('#admin-access-denied');
 const dashboard = document.querySelector('#admin-dashboard');
-const adminStatus = document.querySelector('#admin-status');
-const pendingCount = document.querySelector('#pending-count');
-const pendingList = document.querySelector('#pending-list');
-const refreshButton = document.querySelector('#refresh-queue');
-const queueSort = document.querySelector('#queue-sort');
-let queueItems = [];
-const reviewPlaceholder = document.querySelector('#review-placeholder');
-const reviewContent = document.querySelector('#review-content');
-const reviewTitle = document.querySelector('#review-title');
-const reviewStatusBadge = document.querySelector('#review-status-badge');
-const submissionDetail = document.querySelector('#submission-detail');
-const noteInput = document.querySelector('#moderation-note');
-const noteError = document.querySelector('#moderation-note-error');
-const historyContainer = document.querySelector('#moderation-history');
-const decisionDialog = document.querySelector('#decision-dialog');
-const decisionDialogMessage = document.querySelector('#decision-dialog-message');
-const confirmDecisionButton = document.querySelector('#confirm-decision');
-const decisionButtons = [...document.querySelectorAll('[data-decision]')];
-const verificationList = document.querySelector('#verification-list');
-const verificationCount = document.querySelector('#verification-count');
-const reportList = document.querySelector('#report-list');
-const reportCount = document.querySelector('#report-count');
-const mlHealthStatus = document.querySelector('#ml-health-status');
-const mlHealthValues = document.querySelector('#ml-health-values');
-const refreshMlHealth = document.querySelector('#refresh-ml-health');
+const tabs = document.querySelector('#admin-primary-tabs');
+const summary = document.querySelector('#admin-summary-strip');
+const validSections = ['users', 'submissions', 'verification', 'reports', 'subscriptions'];
+let activeSection = null;
+const loaded = new Set();
+const modules = {};
 
-let selectedSubmissionId = null;
-let pendingDecision = null;
+async function loadSummary() {
+  try {
+    const counts = await apiRequest('/api/admin/summary', { auth: true });
+    summary.textContent = `Users ${counts.users} | Pending ${counts.submissions} | Verifications ${counts.verifications} | Reports ${counts.reports} | Premium ${counts.premium}`;
+  } catch (error) { summary.textContent = 'Platform counts are temporarily unavailable.'; }
+}
 
 async function loadMlHealth() {
-  if (!mlHealthStatus) return;
+  const status = document.querySelector('#ml-health-status');
+  const values = document.querySelector('#ml-health-values');
   try {
     const health = await apiRequest('/api/admin/ml/health', { auth: true });
-    if (health.available === false) {
-      mlHealthStatus.textContent = 'Migration 011 is not installed; manual moderation remains active.';
-      return;
+    if (health.available === false) { status.textContent = 'ML migration is unavailable; manual moderation remains active.'; return; }
+    status.textContent = health.shadowMode ? 'Shadow mode: human review controls publication.' : 'Model output is subject to human review.';
+    values.hidden = false; values.replaceChildren();
+    for (const [label, value] of [['Active models', health.activeModels], ['Provisional live', health.provisionalItems],
+      ['Held', health.heldItems], ['Unavailable', health.unavailableCount],
+      ['Overturn rate', health.manualOverturnRate === null ? 'Insufficient data' : `${(health.manualOverturnRate * 100).toFixed(1)}%`]]) {
+      const key = document.createElement('dt'); key.textContent = label;
+      const data = document.createElement('dd'); data.textContent = String(value);
+      values.append(key, data);
     }
-    mlHealthStatus.textContent = health.shadowMode
-      ? 'Shadow mode: scores are recorded, and content stays held.'
-      : 'Auto-publish is controlled per model and can be disabled immediately.';
-    mlHealthValues.hidden = false;
-    mlHealthValues.replaceChildren();
-    for (const [label, value] of [['Active models', health.activeModels], ['Provisional live', health.provisionalItems], ['Held', health.heldItems], ['Unavailable', health.unavailableCount], ['Manual overturn rate', health.manualOverturnRate === null ? 'Not enough reviewed items' : `${(health.manualOverturnRate * 100).toFixed(1)}%`]]) {
-      const key = document.createElement('dt'); const data = document.createElement('dd');
-      key.textContent = label; data.textContent = String(value); mlHealthValues.append(key, data);
-    }
-  } catch { mlHealthStatus.textContent = 'Moderation health is temporarily unavailable; the normal review queue is still available.'; }
+  } catch (error) { status.textContent = 'Moderation health is temporarily unavailable.'; }
 }
 
-refreshMlHealth?.addEventListener('click', loadMlHealth);
+document.querySelector('#refresh-ml-health')?.addEventListener('click', loadMlHealth);
 
-function showStatus(message, type = '') {
-  adminStatus.textContent = message;
-  adminStatus.className = 'state-message';
-  if (type) adminStatus.classList.add(type);
-  adminStatus.hidden = false;
-}
-
-function formatDate(value) {
-  if (!value) return 'Not set';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? 'Unavailable' : date.toLocaleString();
-}
-
-function formatMoney(value, currency) {
-  if (value === null || value === undefined) return 'None';
-  try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(value);
-  } catch (error) {
-    return `${value} ${currency}`;
+function selectSection(name, { updateUrl = true, focus = false } = {}) {
+  const chosen = validSections.includes(name) ? name : 'users';
+  for (const section of validSections) {
+    const tab = tabs.querySelector(`[data-section="${section}"]`);
+    const panel = document.querySelector(`#admin-panel-${section}`);
+    const selected = section === chosen;
+    tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
+    panel.hidden = !selected;
+    if (selected && focus) tab.focus();
+  }
+  activeSection = chosen;
+  if (!loaded.has(chosen)) {
+    loaded.add(chosen); modules[chosen]?.load();
+    if (chosen === 'submissions') loadMlHealth();
+  }
+  if (updateUrl) {
+    const url = new URL(window.location.href); url.searchParams.set('section', chosen);
+    history.pushState({ section: chosen }, '', url);
   }
 }
 
-function createDefinitionList(entries) {
-  const list = document.createElement('dl');
-  list.className = 'detail-grid';
-
-  entries.forEach(([label, value]) => {
-    const item = document.createElement('div');
-    const term = document.createElement('dt');
-    const description = document.createElement('dd');
-    term.textContent = label;
-    description.textContent = value ?? 'Not available';
-    item.append(term, description);
-    list.append(item);
+function bindTabs() {
+  tabs.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-section]');
+    if (tab && tab.dataset.section !== activeSection) selectSection(tab.dataset.section);
   });
-
-  return list;
-}
-
-function roleOf(submission) {
-  return submission.salary?.roleName || submission.review?.roleName || submission.interview?.roleName || '';
-}
-
-// The queue is sorted in the browser; the server always returns it oldest first.
-const QUEUE_ORDER = {
-  oldest: (a, b) => new Date(a.submittedAt) - new Date(b.submittedAt),
-  newest: (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
-  'company-asc': (a, b) => a.companyName.localeCompare(b.companyName),
-  'company-desc': (a, b) => b.companyName.localeCompare(a.companyName),
-  type: (a, b) => a.submissionType.localeCompare(b.submissionType) || QUEUE_ORDER.oldest(a, b),
-  // Submissions without a role go last.
-  role: (a, b) => (!roleOf(a) - !roleOf(b)) || roleOf(a).localeCompare(roleOf(b)) || QUEUE_ORDER.oldest(a, b)
-};
-
-function sortedQueue() {
-  return [...queueItems].sort(QUEUE_ORDER[queueSort?.value] || QUEUE_ORDER.oldest);
-}
-
-function renderQueue(submissions) {
-  pendingList.replaceChildren();
-  pendingCount.textContent = String(submissions.length);
-  pendingList.setAttribute('aria-busy', 'false');
-
-  if (submissions.length === 0) {
-    const empty = document.createElement('p');
-    empty.className = 'empty-state';
-    empty.textContent = 'There are no pending submissions.';
-    pendingList.append(empty);
-    return;
-  }
-
-  submissions.forEach((submission) => {
-    const card = document.createElement('article');
-    const title = document.createElement('h3');
-    const meta = document.createElement('p');
-    const role = document.createElement('p');
-    const button = document.createElement('button');
-
-    card.className = 'pending-card card';
-    title.textContent = submission.companyName;
-    meta.className = 'pending-card-meta';
-    meta.textContent = `#${submission.submissionId} · ${submission.submissionType} · ${submission.verificationStatus} · ${formatDate(submission.submittedAt)}`;
-    role.textContent = roleOf(submission) || 'No job role supplied';
-    button.className = 'button button-secondary button-small';
-    button.type = 'button';
-    button.textContent = 'Review';
-    button.addEventListener('click', () => loadSubmission(submission.submissionId));
-    card.append(title, meta, role, button);
-    pendingList.append(card);
+  tabs.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault(); const index = validSections.indexOf(activeSection);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? validSections.length - 1
+      : (index + (event.key === 'ArrowRight' ? 1 : -1) + validSections.length) % validSections.length;
+    selectSection(validSections[next], { focus: true });
   });
+  window.addEventListener('popstate', () => selectSection(new URL(window.location.href).searchParams.get('section'), { updateUrl: false }));
 }
 
-async function loadQueue() {
-  pendingList.setAttribute('aria-busy', 'true');
-  refreshButton.disabled = true;
-
-  try {
-    queueItems = await apiRequest('/api/admin/submissions/pending', { auth: true });
-    renderQueue(sortedQueue());
-  } catch (error) {
-    pendingList.setAttribute('aria-busy', 'false');
-    showStatus(error.message, 'error');
-  } finally {
-    refreshButton.disabled = false;
-  }
-}
-
-async function decideVerification(verificationId, status, input) {
-  const reason = input.value.trim();
-  if (status === 'REJECTED' && !reason) { input.setCustomValidity('A rejection reason is required.'); input.reportValidity(); return; }
-  input.setCustomValidity('');
-  try {
-    await apiRequest(`/api/admin/verifications/${verificationId}/status`, { method: 'PATCH', auth: true, body: { status, rejectionReason: reason } });
-    showStatus(`Verification #${verificationId} is now ${status}.`, 'success'); await loadVerifications();
-  } catch (error) { showStatus(error.message, 'error'); }
-}
-
-async function loadVerifications() {
-  try {
-    const items = await apiRequest('/api/admin/verifications/pending', { auth: true });
-    verificationList.replaceChildren(); verificationCount.textContent = String(items.length);
-    if (!items.length) { const empty = document.createElement('p'); empty.className = 'empty-state'; empty.textContent = 'No pending verification requests.'; verificationList.append(empty); return; }
-    items.forEach((item) => {
-      const card = document.createElement('article'); card.className = 'admin-item';
-      const title = document.createElement('h3'); title.textContent = `#${item.verificationId} · ${item.employeeName}`;
-      const context = document.createElement('p'); context.textContent = `${item.companyName} · ${item.roleName || 'Legacy designation missing'} · ${item.employmentStatus} · ${item.verificationMethod}`;
-      const evidence = document.createElement('p'); evidence.textContent = item.verificationMethod === 'COMPANY_EMAIL_OTP' ? `Company email: ${item.companyEmail}` : `${item.proofType}: ${item.proofReference}`;
-      const reason = document.createElement('input'); reason.className = 'input'; reason.maxLength = 500; reason.placeholder = 'Rejection reason (required only to reject)'; reason.setAttribute('aria-label', `Rejection reason for verification ${item.verificationId}`);
-      const actions = document.createElement('div'); actions.className = 'admin-item-actions';
-      const verify = document.createElement('button'); verify.className = 'button button-primary button-small'; verify.type = 'button'; verify.textContent = 'Verify'; verify.addEventListener('click', () => decideVerification(item.verificationId, 'VERIFIED', reason));
-      verify.disabled = !item.roleId;
-      if (!item.roleId) verify.title = 'A legacy request without a designation must be rejected and re-requested.';
-      const reject = document.createElement('button'); reject.className = 'button button-danger button-small'; reject.type = 'button'; reject.textContent = 'Reject'; reject.addEventListener('click', () => decideVerification(item.verificationId, 'REJECTED', reason));
-      actions.append(verify, reject); card.append(title, context, evidence, reason, actions); verificationList.append(card);
-    });
-  } catch (error) { showStatus(error.message, 'error'); }
-}
-
-async function updateReport(reportId, status, note) {
-  try {
-    await apiRequest(`/api/admin/reports/${reportId}/status`, { method: 'PATCH', auth: true, body: { status, resolutionNote: note.value } });
-    showStatus(`Report #${reportId} is now ${status}.`, 'success'); await loadReports();
-  } catch (error) { showStatus(error.message, 'error'); }
-}
-
-async function loadReports() {
-  try {
-    const items = await apiRequest('/api/admin/reports', { auth: true });
-    reportList.replaceChildren(); const active = items.filter((item) => ['OPEN', 'REVIEWING'].includes(item.reportStatus)); reportCount.textContent = String(active.length);
-    if (!items.length) { const empty = document.createElement('p'); empty.className = 'empty-state'; empty.textContent = 'No reports have been submitted.'; reportList.append(empty); return; }
-    items.forEach((item) => {
-      const card = document.createElement('article'); card.className = 'admin-item';
-      const title = document.createElement('h3'); title.textContent = `#${item.reportId} · ${item.reasonCategory} · ${item.reportStatus}`;
-      const context = document.createElement('p'); context.textContent = `${item.companyName} · ${item.submissionType} #${item.submissionId}`;
-      const reporter = document.createElement('p'); reporter.textContent = `Reporter: ${item.reporterName} (${item.reporterEmail})`;
-      const description = document.createElement('p'); description.textContent = item.description || 'No description supplied.';
-      card.append(title, context, reporter, description);
-      if (['OPEN', 'REVIEWING'].includes(item.reportStatus)) {
-        const note = document.createElement('textarea'); note.maxLength = 1000; note.placeholder = 'Resolution note (required to resolve or dismiss)'; note.setAttribute('aria-label', `Resolution note for report ${item.reportId}`);
-        const actions = document.createElement('div'); actions.className = 'admin-item-actions';
-        const review = document.createElement('button'); review.className = 'button button-secondary button-small'; review.type = 'button'; review.textContent = 'Inspect submission'; review.addEventListener('click', async () => { await loadSubmission(item.submissionId); const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; document.querySelector('#review-panel').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' }); });
-        actions.append(review);
-        if (item.reportStatus === 'OPEN') { const reviewing = document.createElement('button'); reviewing.className = 'button button-secondary button-small'; reviewing.type = 'button'; reviewing.textContent = 'Mark reviewing'; reviewing.addEventListener('click', () => updateReport(item.reportId, 'REVIEWING', note)); actions.append(reviewing); }
-        const resolve = document.createElement('button'); resolve.className = 'button button-primary button-small'; resolve.type = 'button'; resolve.textContent = 'Resolve'; resolve.addEventListener('click', () => updateReport(item.reportId, 'RESOLVED', note));
-        const dismiss = document.createElement('button'); dismiss.className = 'button button-warning button-small'; dismiss.type = 'button'; dismiss.textContent = 'Dismiss'; dismiss.addEventListener('click', () => updateReport(item.reportId, 'DISMISSED', note));
-        actions.append(resolve, dismiss); card.append(note, actions);
-      }
-      reportList.append(card);
-    });
-  } catch (error) { showStatus(error.message, 'error'); }
-}
-
-function renderHistory(history) {
-  historyContainer.replaceChildren();
-
-  if (history.length === 0) {
-    const empty = document.createElement('p');
-    empty.className = 'empty-state';
-    empty.textContent = 'No moderation decisions have been recorded.';
-    historyContainer.append(empty);
-    return;
-  }
-
-  const list = document.createElement('ol');
-  list.className = 'history-list';
-  history.forEach((action) => {
-    const item = document.createElement('li');
-    const transition = document.createElement('p');
-    const note = document.createElement('p');
-    const meta = document.createElement('p');
-    item.className = 'history-item';
-    transition.textContent = `${action.actionType}: ${action.previousStatus || 'None'} to ${action.newStatus}`;
-    note.textContent = action.actionNote || 'No note supplied.';
-    meta.className = 'history-meta';
-    meta.textContent = `${action.moderatorName} · ${formatDate(action.actionAt)}`;
-    item.append(transition, note, meta);
-    list.append(item);
-  });
-  historyContainer.append(list);
-}
-
-function renderSubmission(submission, history) {
-  const commonEntries = [
-    ['Company', submission.companyName],
-    ['Submission type', submission.submissionType],
-    ['Submitted', formatDate(submission.submittedAt)],
-    ['Verification', submission.verificationStatus],
-    ['Anonymous publicly', submission.isAnonymous ? 'Yes' : 'No'],
-    ['Internal submitter', `${submission.submitter.fullName} (${submission.submitter.email})`]
-  ];
-
-  if (submission.salary) {
-    commonEntries.push(
-      ['Job role', submission.salary.roleName],
-      ['Base salary', formatMoney(submission.salary.baseSalary, submission.salary.currency)],
-      ['Additional compensation', formatMoney(submission.salary.additionalCompensation, submission.salary.currency)],
-      ['Pay period', submission.salary.payPeriod],
-      ['Experience', `${submission.salary.yearsOfExperience} years`],
-      ['Employment type', submission.salary.employmentType],
-      ['Work mode', submission.salary.workMode],
-      ['Salary year', String(submission.salary.salaryYear)]
-    );
-  }
-
-  if (submission.review) {
-    commonEntries.push(
-      ['Job role', submission.review.roleName || 'Not supplied'],
-      ['Review title', submission.review.title],
-      ['Overall rating', String(submission.review.overallRating)],
-      ['Work-life balance', String(submission.review.workLifeBalanceRating)],
-      ['Career growth', String(submission.review.careerGrowthRating)],
-      ['Management', String(submission.review.managementRating)],
-      ['Culture', String(submission.review.cultureRating)],
-      ['Pros', submission.review.pros],
-      ['Cons', submission.review.cons],
-      ['Advice to management', submission.review.adviceToManagement || 'None'],
-      ['Employment status', submission.review.employmentStatus],
-      ['Review date', formatDate(submission.review.reviewDate)]
-    );
-  }
-
-  if (submission.interview) {
-    commonEntries.push(
-      ['Job role', submission.interview.roleName],
-      ['Interview date', formatDate(submission.interview.interviewDate)],
-      ['Difficulty', submission.interview.difficultyLevel],
-      ['Rounds', String(submission.interview.roundsCount)],
-      ['Interview mode', submission.interview.interviewMode],
-      ['Result', submission.interview.resultStatus],
-      ['Duration', `${submission.interview.durationDays} days`],
-      ['Process', submission.interview.processDescription],
-      ['Questions summary', submission.interview.questionsSummary || 'None']
-    );
-  }
-
-  selectedSubmissionId = submission.submissionId;
-  reviewPlaceholder.hidden = true;
-  reviewContent.hidden = false;
-  reviewTitle.textContent = `Submission #${submission.submissionId}`;
-  reviewStatusBadge.textContent = submission.submissionStatus;
-  submissionDetail.replaceChildren(createDefinitionList(commonEntries));
-  renderHistory(history);
-
-  const allowedDecisions = {
-    PENDING: ['APPROVED', 'REJECTED', 'FLAGGED'],
-    APPROVED: ['REJECTED', 'FLAGGED'],
-    FLAGGED: ['REJECTED']
-  }[submission.submissionStatus] || [];
-  decisionButtons.forEach((button) => {
-    button.disabled = !allowedDecisions.includes(button.dataset.decision);
-  });
-  noteInput.disabled = allowedDecisions.length === 0;
-  if (allowedDecisions.length === 0) noteInput.value = '';
-  noteError.textContent = allowedDecisions.length === 0
-    ? 'No further moderation transition is available for this submission.'
-    : '';
-  reviewTitle.focus();
-}
-
-async function loadSubmission(submissionId) {
-  showStatus('Loading submission details…');
-
-  try {
-    const [submission, history] = await Promise.all([
-      apiRequest(`/api/admin/submissions/${submissionId}`, { auth: true }),
-      apiRequest(`/api/admin/submissions/${submissionId}/moderation-history`, { auth: true })
-    ]);
-    renderSubmission(submission, history);
-    adminStatus.hidden = true;
-  } catch (error) {
-    showStatus(error.message, 'error');
-  }
-}
-
-function requestDecision(status) {
-  const note = noteInput.value.trim();
-  noteError.textContent = '';
-
-  if ((status === 'REJECTED' || status === 'FLAGGED') && !note) {
-    noteError.textContent = `A moderation note is required when marking a submission ${status}.`;
-    noteInput.focus();
-    return;
-  }
-
-  pendingDecision = { status, note };
-  const verb = { APPROVED: 'Approve', REJECTED: 'Reject', FLAGGED: 'Flag' }[status];
-  decisionDialogMessage.textContent = `${verb} submission #${selectedSubmissionId}? This decision will be written to the immutable moderation history.`;
-  decisionDialog.showModal();
-}
-
-async function confirmDecision() {
-  if (!pendingDecision || !selectedSubmissionId) return;
-  const submissionId = selectedSubmissionId;
-  const decision = pendingDecision;
-  decisionDialog.close();
-  decisionButtons.forEach((button) => { button.disabled = true; });
-  confirmDecisionButton.disabled = true;
-
-  try {
-    await apiRequest(`/api/admin/submissions/${submissionId}/status`, {
-      method: 'PATCH',
-      auth: true,
-      body: decision
-    });
-    noteInput.value = '';
-    await Promise.all([loadQueue(), loadSubmission(submissionId)]);
-    showStatus(`Submission #${submissionId} is now ${decision.status}.`, 'success');
-  } catch (error) {
-    await loadSubmission(submissionId);
-    showStatus(error.message, 'error');
-  } finally {
-    pendingDecision = null;
-    confirmDecisionButton.disabled = false;
-  }
-}
-
-decisionButtons.forEach((button) => {
-  button.addEventListener('click', () => requestDecision(button.dataset.decision));
-});
-refreshButton.addEventListener('click', loadQueue);
-queueSort?.addEventListener('change', () => renderQueue(sortedQueue()));
-document.querySelector('#refresh-verifications').addEventListener('click', loadVerifications);
-document.querySelector('#refresh-reports').addEventListener('click', loadReports);
-confirmDecisionButton.addEventListener('click', confirmDecision);
-decisionDialog.addEventListener('close', () => {
-  if (decisionDialog.returnValue === 'cancel') pendingDecision = null;
-});
-
-async function initializeAdmin() {
-  if (!isAuthenticated()) {
-    window.location.replace('login.html?returnTo=admin.html');
-    return;
-  }
-
+async function start() {
+  if (!isAuthenticated()) { window.location.replace('login.html?returnTo=admin.html'); return; }
   try {
     const user = await getCurrentUser();
-    if (user?.accountRole !== 'ADMIN') {
-      loadingMessage.hidden = true;
-      accessDenied.hidden = false;
-      return;
-    }
-
-    loadingMessage.hidden = true;
+    document.querySelector('#admin-loading').hidden = true;
+    if (user?.accountRole !== 'ADMIN') { document.querySelector('#admin-access-denied').hidden = false; return; }
     dashboard.hidden = false;
-    await Promise.all([loadQueue(), loadVerifications(), loadReports(), loadMlHealth()]);
+    const refresh = () => loadSummary();
+    const usersHost = document.querySelector('#admin-panel-users');
+    modules.subscriptions = mountSubscriptions(document.querySelector('#admin-panel-subscriptions'), refresh);
+    modules.users = mountUsers(usersHost, refresh, async (userId) => {
+      selectSection('subscriptions'); await modules.subscriptions.view(userId);
+    });
+    modules.submissions = mountSubmissions(document.querySelector('#admin-panel-submissions'), refresh);
+    modules.verification = mountVerifications(document.querySelector('#admin-panel-verification'), refresh);
+    modules.reports = mountReports(document.querySelector('#admin-panel-reports'), refresh, async (submissionId) => {
+      selectSection('submissions'); await modules.submissions.view({ submissionId });
+    });
+    document.querySelector('#admin-promo-tools').addEventListener('toggle', (event) => {
+      if (event.currentTarget.open) loadPremiumAdmin(document.querySelector('#panel-premium'));
+    });
+    const secondary = dashboard.querySelector('details.admin-secondary:last-child');
+    usersHost.append(secondary);
+    bindTabs();
+    selectSection(new URL(window.location.href).searchParams.get('section'), { updateUrl: false });
+    await loadSummary();
   } catch (error) {
-    if (error.status === 401) {
-      window.location.replace('login.html?returnTo=admin.html');
-      return;
-    }
-    loadingMessage.textContent = error.message;
-    loadingMessage.classList.add('error');
+    if (error.status === 401) { window.location.replace('login.html?returnTo=admin.html'); return; }
+    const loading = document.querySelector('#admin-loading'); loading.textContent = error.message; loading.classList.add('error');
   }
 }
-
-initializeAdmin();
+start();

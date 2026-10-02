@@ -89,7 +89,8 @@ test('the service worker never caches a private page, script or stylesheet', () 
   // cached shell and named in the purge list, so an older worker's copy goes.
   for (const file of [
     'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
-    'employee-verification.html', 'js/notifications.js', 'js/admin.js',
+    'employee-verification.html', 'js/notifications.js', 'js/admin.js', 'js/admin-control-ui.js',
+    'js/admin-users.js', 'js/admin-queues.js', 'js/admin-subscriptions.js',
     'js/representative.js', 'js/profile.js', 'js/professional-profile.js', 'js/messages.js', 'js/user-profile.js',
     'payment-result.html', 'js/payment-result.js', 'js/profile-premium.js', 'js/admin-premium.js'
   ]) {
@@ -98,7 +99,7 @@ test('the service worker never caches a private page, script or stylesheet', () 
   }
 
   // The cache name is versioned and older versions are deleted on activation.
-  assert.match(source, /const SHELL_CACHE = 'saple-shell-v16'/);
+  assert.match(source, /const SHELL_CACHE = 'saple-shell-v17'/);
   assert.match(source, /caches\.delete\(key\)/);
   assert.match(source, /cache\.delete\(href\)/);
 });

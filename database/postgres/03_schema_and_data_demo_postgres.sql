@@ -1,7 +1,7 @@
 -- SAPLE SUPABASE POSTGRESQL READ-ONLY DEMONSTRATION QUERIES
 -- Run after the PostgreSQL schema and demonstration data scripts.
 
--- 1. Expected project shape: 38 base tables and 7 views.
+-- 1. Expected project shape: 39 base tables and 7 views.
 SELECT
   COUNT(*) FILTER (WHERE table_type = 'BASE TABLE') AS base_table_count,
   COUNT(*) FILTER (WHERE table_type = 'VIEW') AS view_count
@@ -11,7 +11,7 @@ WHERE table_schema = 'public'
     'users', 'employees', 'password_reset_tokens', 'companies', 'job_roles',
     'benefits', 'company_benefits', 'employment_verifications', 'submissions',
     'salary_submissions', 'company_reviews', 'interview_experiences',
-    'reports', 'moderation_actions', 'company_representatives',
+    'reports', 'moderation_actions', 'admin_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
     'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
     'user_education', 'user_experience', 'skills', 'user_skills',
@@ -33,7 +33,7 @@ WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
     'users', 'employees', 'password_reset_tokens', 'companies', 'job_roles',
     'benefits', 'company_benefits', 'employment_verifications', 'submissions',
     'salary_submissions', 'company_reviews', 'interview_experiences',
-    'reports', 'moderation_actions', 'company_representatives',
+    'reports', 'moderation_actions', 'admin_actions', 'company_representatives',
     'representative_assignment_actions', 'job_postings', 'job_applications',
     'job_application_status_history', 'announcements', 'notifications', 'direct_messages',
     'user_education', 'user_experience', 'skills', 'user_skills',

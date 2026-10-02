@@ -8,8 +8,23 @@ const jobController = require('../controllers/job.controller');
 const applicationController = require('../controllers/application.controller');
 const premiumController = require('../controllers/premium.controller');
 const mlModerationController = require('../controllers/ml-moderation.controller');
+const controlController = require('../controllers/admin-control.controller');
 
 const router = express.Router();
+
+router.get('/summary', controlController.summary);
+router.get('/submissions', controlController.submissions);
+router.get('/submissions/:submissionId/screening', controlController.screening);
+router.get('/verifications/table', controlController.verifications);
+router.get('/reports/table', controlController.reports);
+router.get('/users', controlController.users);
+router.get('/users/:userId', controlController.user);
+router.patch('/users/:userId/status', controlController.userStatus);
+router.get('/subscriptions', controlController.subscriptions);
+router.get('/subscriptions/:userId', controlController.subscription);
+router.post('/subscriptions/:userId/grant', controlController.grant);
+router.post('/subscriptions/:userId/extend', controlController.grant);
+router.post('/subscriptions/:userId/revoke', controlController.revoke);
 
 // This router is mounted behind authenticate + requireAdmin, so every route
 // here already has an administrator identity. Administrators are ordinary

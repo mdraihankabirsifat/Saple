@@ -212,6 +212,15 @@ async function decideVerification({ verificationId, reviewerUserId, status, reje
       WHERE verification_id = $4
     `, [status, reviewerUserId, rejectionReason, verificationId]);
 
+    const actor = (await client.query(`SELECT account_role AS role FROM users WHERE user_id = $1`, [reviewerUserId])).rows[0];
+    if (actor?.role === 'ADMIN') {
+      await client.query(`INSERT INTO admin_actions
+        (admin_user_id, action_type, target_type, target_id, before_state, after_state, reason)
+        VALUES ($1,$2,'VERIFICATION',$3,$4::jsonb,$5::jsonb,$6)`,
+      [reviewerUserId, status === 'VERIFIED' ? 'VERIFICATION_APPROVE' : 'VERIFICATION_REJECT', verificationId,
+        JSON.stringify({ status: 'PENDING' }), JSON.stringify({ status }), rejectionReason || 'Verification approved after review']);
+    }
+
     // The employee is notified inside the same transaction, so a decision and
     // its notification are never out of step. The rejection reason is included
     // because the employee wrote the request it answers.

@@ -102,6 +102,12 @@ async function updateReportStatus(input) {
       WHERE report_id = $5
     `, [status, terminal, resolverUserId, resolutionNote, reportId]);
 
+    if (terminal) await client.query(`INSERT INTO admin_actions
+      (admin_user_id, action_type, target_type, target_id, before_state, after_state, reason)
+      VALUES ($1,$2,'REPORT',$3,$4::jsonb,$5::jsonb,$6)`,
+    [resolverUserId, status === 'RESOLVED' ? 'REPORT_RESOLVE' : 'REPORT_DISMISS', reportId,
+      JSON.stringify({ status: current.reportStatus }), JSON.stringify({ status }), resolutionNote]);
+
     // The reporter is told the outcome, but never the internal resolution note
     // and never anything about the reported contributor.
     if (terminal && current.reporterUserId) {

@@ -153,7 +153,7 @@ const DOMAINS = [
   { title: 'Verification and representatives', tone: 'trust', tables: ['employment_verifications', 'company_representatives', 'representative_assignment_actions'] },
   { title: 'Company reference', tone: 'reference', tables: ['companies', 'job_roles', 'benefits', 'company_benefits'] },
   { title: 'Contributions', tone: 'content', tables: ['submissions', 'salary_submissions', 'company_reviews', 'interview_experiences'] },
-  { title: 'Moderation and announcements', tone: 'audit', tables: ['reports', 'moderation_actions', 'announcements', 'content_screenings', 'ml_model_registry'] },
+  { title: 'Moderation and announcements', tone: 'audit', tables: ['reports', 'moderation_actions', 'admin_actions', 'announcements', 'content_screenings', 'ml_model_registry'] },
   { title: 'Jobs and applications', tone: 'jobs', tables: ['job_postings', 'job_applications', 'job_application_status_history', 'job_application_resumes'] },
   { title: 'Premium', tone: 'premium', tables: ['premium_plans', 'premium_payments', 'premium_access_periods', 'premium_trial_claims', 'premium_promo_codes', 'premium_promo_redemptions', 'profile_views', 'premium_ai_usage'] }
 ];

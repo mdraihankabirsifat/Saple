@@ -302,7 +302,7 @@ async function updateJob(jobId, input) {
 
 // Closing or archiving never deletes applications. Open applicants are told
 // in the same transaction that produced the closure.
-async function changeJobStatus({ jobId, actorUserId, newStatus, allowedPreviousStatuses }) {
+async function changeJobStatus({ jobId, actorUserId, newStatus, allowedPreviousStatuses, actorIsAdmin = false, auditReason = null }) {
   const client = await database.getClient();
 
   try {
@@ -345,6 +345,11 @@ async function changeJobStatus({ jobId, actorUserId, newStatus, allowedPreviousS
         updated_at = CURRENT_TIMESTAMP
       WHERE job_id = $2
     `, [newStatus, jobId]);
+
+    if (actorIsAdmin && newStatus === 'CLOSED') await client.query(`INSERT INTO admin_actions
+      (admin_user_id, action_type, target_type, target_id, before_state, after_state, reason)
+      VALUES ($1,'JOB_CLOSE','JOB',$2,$3::jsonb,$4::jsonb,$5)`,
+    [actorUserId, jobId, JSON.stringify({ status: current.jobStatus }), JSON.stringify({ status: newStatus }), auditReason]);
 
     let notifiedCount = 0;
     if (newStatus === 'CLOSED') {

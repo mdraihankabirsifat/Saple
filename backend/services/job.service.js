@@ -257,13 +257,20 @@ async function changeJobStatus(user, jobIdValue, input = {}) {
   const { jobId } = await loadScopedJob(user, jobIdValue);
   const newStatus = validate.enumValue(input.jobStatus, ['PUBLISHED', 'CLOSED', 'ARCHIVED'], 'Job status');
   const allowedPreviousStatuses = STATUS_TRANSITIONS[newStatus];
+  const actorIsAdmin = user.accountRole === 'ADMIN';
+  const auditReason = typeof input.reason === 'string' ? input.reason.trim() : '';
+  if (actorIsAdmin && newStatus === 'CLOSED' && (!auditReason || auditReason.length > 1000)) {
+    throw createHttpError(400, 'An administrator reason is required to close a vacancy');
+  }
 
   try {
     return await jobRepository.changeJobStatus({
       jobId,
       actorUserId: user.userId,
       newStatus,
-      allowedPreviousStatuses
+      allowedPreviousStatuses,
+      actorIsAdmin,
+      auditReason
     });
   } catch (error) {
     return rethrow(error);

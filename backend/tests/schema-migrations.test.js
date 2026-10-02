@@ -12,6 +12,7 @@ const demoData = read('database/postgres/02_final_demo_data_postgres.sql');
 const validation = read('database/postgres/03_schema_and_data_demo_postgres.sql');
 
 const NEW_TABLES = [
+  'admin_actions',
   'company_representatives',
   'representative_assignment_actions',
   'job_postings',
@@ -63,7 +64,8 @@ test('migrations are numbered, ordered and each runs in one transaction', () => 
     '008_public_profiles_and_search.sql',
     '009_premium_subscriptions.sql',
     '010_job_application_resumes.sql',
-    '011_ml_moderation.sql'
+    '011_ml_moderation.sql',
+    '012_admin_control_center.sql'
   ]);
 
   for (const file of files) {
@@ -87,7 +89,7 @@ test('no migration destroys existing data', () => {
 
   const alters = source.match(/ALTER TABLE \w+/g) || [];
   for (const alter of alters) {
-    assert.match(alter, /ALTER TABLE (users|companies|job_postings|notifications)/, `${alter} touches an unexpected table`);
+    assert.match(alter, /ALTER TABLE (users|companies|job_postings|notifications|premium_access_periods|premium_trial_claims)/, `${alter} touches an unexpected table`);
   }
 });
 
@@ -187,7 +189,7 @@ test('a fresh install and a migrated install declare the same new tables', () =>
     assert.match(migrationSql, new RegExp(`CREATE TABLE IF NOT EXISTS ${table} \\(`), `${table} in migrations`);
   }
 
-  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 38);
+  assert.equal((schema.match(/^CREATE TABLE /gm) || []).length, 39);
   assert.equal((schema.match(/^CREATE OR REPLACE VIEW /gm) || []).length, 7);
   assert.match(schema, /CREATE OR REPLACE VIEW vw_public_open_jobs/);
   assert.match(migrationSql, /CREATE OR REPLACE VIEW vw_public_open_jobs/);
@@ -372,7 +374,7 @@ test('the demonstration data shows the rules rather than only the happy path', (
 });
 
 test('the read-only validation script checks the final shape and the new rules', () => {
-  assert.match(validation, /38 base tables and 7 views/);
+  assert.match(validation, /39 base tables and 7 views/);
   for (const table of NEW_TABLES) {
     assert.ok(validation.includes(`'${table}'`), table);
   }
@@ -395,6 +397,6 @@ test('the migration guide tells the owner to rehearse before touching live data'
   assert.match(guide, /001_account_roles_and_company_representatives\.sql/);
   assert.match(guide, /004_public_job_views_and_grants\.sql/);
   assert.match(guide, /backup/i);
-  assert.match(guide, /38 base tables and 7 views/);
+  assert.match(guide, /39 base tables and 7 views/);
   assert.match(guide, /ON DELETE RESTRICT/);
 });

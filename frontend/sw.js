@@ -7,7 +7,7 @@
 //
 // Bump SHELL_CACHE whenever the asset list changes. Old versions are deleted
 // on activation, so a previous worker's files cannot linger.
-const SHELL_CACHE = 'saple-shell-v16';
+const SHELL_CACHE = 'saple-shell-v17';
 const ASSETS = [
   'index.html', 'about.html', 'faq.html', 'companies.html', 'company-details.html',
   'salaries.html', 'reviews.html', 'interviews.html', 'jobs.html', 'job-details.html',
@@ -36,7 +36,9 @@ const PRIVATE_PATHS = [
   'profile.html', 'user-profile.html', 'admin.html', 'representative.html', 'my-applications.html',
   'employee-verification.html', 'submit-salary.html', 'submit-review.html',
   'interview-experience.html', 'payment-result.html', 'resume-generator.html',
-  'js/profile.js', 'js/professional-profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js', 'js/representative.js', 'js/my-applications.js',
+  'js/profile.js', 'js/professional-profile.js', 'js/user-profile.js', 'js/messages.js', 'js/admin.js',
+  'js/admin-control-ui.js', 'js/admin-users.js', 'js/admin-queues.js', 'js/admin-subscriptions.js',
+  'js/representative.js', 'js/my-applications.js',
   'js/notifications.js', 'js/verification.js', 'js/submit-salary.js', 'js/review.js',
   'js/interview.js', 'js/representative-request.js', 'js/admin-oversight.js',
   'js/require-session.js', 'js/payment-result.js', 'js/profile-premium.js', 'js/admin-premium.js', 'js/resume-generator.js', 'js/resume-file.js',

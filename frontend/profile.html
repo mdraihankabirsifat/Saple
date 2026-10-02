@@ -44,18 +44,17 @@
       </div>
       <p id="profile-load-status" class="state-message" role="status">Loading profile&hellip;</p>
       <div id="profile-content" class="profile-grid" hidden>
-        <section class="profile-card card">
-          <h2>Profile picture</h2>
-          <div id="profile-avatar" class="profile-avatar" role="img" aria-label="Your profile picture"></div>
-          <input id="profile-avatar-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp">
-          <div class="form-actions">
-            <button id="profile-avatar-change" class="button button-secondary button-small" type="button">Change photo</button>
-            <button id="profile-avatar-remove" class="button button-secondary button-small" type="button" hidden>Remove photo</button>
+        <section class="profile-card card profile-editor">
+          <div class="profile-editor-identity">
+            <div id="profile-avatar" class="profile-avatar" role="img" aria-label="Your profile picture"></div>
+            <div><h2>Your profile</h2><p id="profile-identity-name"></p><p id="profile-identity-headline" class="professional-meta"></p>
+              <input id="profile-avatar-file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp">
+              <div class="form-actions"><button id="profile-avatar-change" class="button button-secondary button-small" type="button">Change photo</button>
+                <button id="profile-avatar-remove" class="button button-secondary button-small" type="button" hidden>Remove photo</button></div>
+              <p id="profile-avatar-status" class="state-message form-status" role="status" hidden></p>
+            </div>
           </div>
-          <p id="profile-avatar-status" class="state-message form-status" role="status" hidden></p>
-        </section>
-        <section class="profile-card card">
-          <h2>Personal details</h2>
+          <div class="profile-editor-fields"><h2>Personal details</h2>
           <p>Email changes require a future verification flow, so email remains read-only.</p>
           <form id="profile-form">
             <div class="form-group"><label for="profile-name">Full name</label><input id="profile-name" maxlength="120"
@@ -64,12 +63,13 @@
                 readonly aria-readonly="true"></div>
             <div class="form-group"><label for="profile-headline">Headline</label><input id="profile-headline"
                 maxlength="160" placeholder="What you do or hope to do"></div>
-            <div class="form-group"><label for="profile-bio">About</label><textarea id="profile-bio" rows="5"
+            <div class="form-group"><label for="profile-bio">About</label><textarea id="profile-bio" rows="3"
                 maxlength="2000" placeholder="Introduce your work, interests and goals"></textarea></div>
             <p class="profile-note">Your name, picture, headline and about section are visible to signed-in Saple members.</p>
             <div class="form-actions"><button class="button button-primary" type="submit">Save profile</button></div>
           </form>
           <p id="profile-status" class="state-message form-status" role="status" hidden></p>
+          </div>
         </section>
         <section id="profile-premium" class="profile-card card profile-views-card">
           <h2>Premium and profile views</h2>
@@ -79,10 +79,11 @@
           <ul id="profile-viewers" class="viewer-list" hidden></ul>
           <p id="profile-viewers-action"></p>
         </section>
-        <section class="profile-card card profile-card-full">
+        <section class="profile-card card profile-experience-card">
           <h2>Experience</h2>
+          <button class="button button-secondary button-small professional-add" type="button" data-professional-add="experience">+ Add experience</button>
           <ul id="profile-experience-list" class="professional-list"></ul>
-          <form id="profile-experience-form" class="professional-form">
+          <form id="profile-experience-form" class="professional-form" hidden>
             <h3 id="profile-experience-form-title">Add experience</h3>
             <div class="professional-fields">
               <div class="form-group"><label for="experience-organization">Organization or company</label><input id="experience-organization" maxlength="180" required></div>
@@ -98,10 +99,11 @@
             <p id="experience-status" class="state-message form-status" role="status" hidden></p>
           </form>
         </section>
-        <section class="profile-card card profile-card-full">
+        <section class="profile-card card profile-education-card">
           <h2>Education</h2>
+          <button class="button button-secondary button-small professional-add" type="button" data-professional-add="education">+ Add education</button>
           <ul id="profile-education-list" class="professional-list"></ul>
-          <form id="profile-education-form" class="professional-form">
+          <form id="profile-education-form" class="professional-form" hidden>
             <h3 id="profile-education-form-title">Add education</h3>
             <div class="professional-fields">
               <div class="form-group"><label for="education-institution">Institution</label><input id="education-institution" maxlength="180" required></div>
@@ -116,7 +118,7 @@
             <p id="education-status" class="state-message form-status" role="status" hidden></p>
           </form>
         </section>
-        <section class="profile-card card profile-card-full">
+        <section class="profile-card card profile-skills-card">
           <h2>Skills</h2>
           <ul id="profile-skills-list" class="professional-skills"></ul>
           <form id="profile-skills-form" class="professional-skill-form">

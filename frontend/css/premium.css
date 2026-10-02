@@ -2581,13 +2581,15 @@ html.nav-drawer-open .nav-compact .nav-backdrop,
 .intel-card:focus-visible { box-shadow: var(--ring), 0 14px 36px rgba(15, 42, 33, 0.14); }
 .intel-card.is-swapping { opacity: 0; }
 
-.intel-card-1 { top: 2%; left: 4%; animation: intel-drift-y 12s ease-in-out infinite alternate; }
-.intel-card-2 { top: 24%; right: 0; animation: intel-drift-x 16s ease-in-out infinite alternate; }
-.intel-card-3 { top: 50%; left: 0; animation: intel-drift-y 20s ease-in-out infinite alternate-reverse; }
-.intel-card-4 { top: 70%; right: 6%; animation: intel-drift-x 14s ease-in-out infinite alternate-reverse; }
+.intel-card-1 { top: 2%; left: 4%; animation: intel-drift-one 10s ease-in-out -2s infinite alternate; }
+.intel-card-2 { top: 24%; right: 0; animation: intel-drift-two 13s ease-in-out -7s infinite alternate; }
+.intel-card-3 { top: 50%; left: 0; animation: intel-drift-three 16s ease-in-out -5s infinite alternate; }
+.intel-card-4 { top: 70%; right: 6%; animation: intel-drift-four 19s ease-in-out -11s infinite alternate; }
 
-@keyframes intel-drift-y { from { translate: 0 -7px; } to { translate: 0 8px; } }
-@keyframes intel-drift-x { from { translate: -8px 0; } to { translate: 7px 4px; } }
+@keyframes intel-drift-one { from { translate: -8px -11px; rotate: -0.8deg; } to { translate: 12px 14px; rotate: 0.7deg; } }
+@keyframes intel-drift-two { from { translate: 11px 10px; rotate: 0.9deg; } to { translate: -10px -16px; rotate: -0.5deg; } }
+@keyframes intel-drift-three { from { translate: -7px 13px; rotate: -0.6deg; } to { translate: 14px -12px; rotate: 1deg; } }
+@keyframes intel-drift-four { from { translate: 10px -13px; rotate: 0.6deg; } to { translate: -13px 15px; rotate: -1deg; } }
 
 .hero-intel:hover .intel-card,
 .hero-intel:focus-within .intel-card { animation-play-state: paused; }

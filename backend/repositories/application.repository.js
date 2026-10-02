@@ -176,9 +176,9 @@ async function createApplication({ jobId, applicantUserId, coverLetter, resume =
     if (job.accessLevel === 'PREMIUM') {
       const accessResult = await client.query(`
         SELECT (EXISTS (SELECT 1 FROM premium_access_periods ap WHERE ap.user_id = $1
-                  AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP)
+                  AND ap.revoked_at IS NULL AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP)
              OR EXISTS (SELECT 1 FROM premium_trial_claims t WHERE t.user_id = $1
-                  AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP)) AS "hasPremium"
+                  AND t.revoked_at IS NULL AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP)) AS "hasPremium"
       `, [applicantUserId]);
       if (!accessResult.rows[0]?.hasPremium) {
         throw repositoryError('PREMIUM_REQUIRED', 'This vacancy is open to Saple Premium members.');

@@ -165,11 +165,11 @@ The database is the heart of the project. It runs on **PostgreSQL**, hosted by *
 
 | | |
 |---|---|
-| Tables | **38**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, jobs and private application resumes, Premium subscriptions and ML screening audit |
+| Tables | **39**, covering accounts and profiles, verification and representatives, company reference data, contributions and moderation, jobs and private application resumes, Premium subscriptions, admin audit and ML screening audit |
 | Views | **7** public and training read models, including approved salary summaries and provisional visibility |
-| Keys and constraints | 59 foreign keys, 127 named `CHECK` constraints, unique and partial-unique keys |
-| Indexes | 52, including partial and case-insensitive unique indexes |
-| Migrations | **11** additive migrations from the original 14-table schema |
+| Keys and constraints | 70 foreign-key references, 154 named `CHECK` constraints, unique and partial-unique keys |
+| Indexes | 57 explicit indexes, including partial and case-insensitive unique indexes |
+| Migrations | **12** additive migrations from the original 14-table schema |
 | ERD | [`ERD.pdf`](ERD.pdf) and [`docs/ERD.md`](docs/ERD.md), generated from the schema file |
 
 Some design choices worth pointing out:

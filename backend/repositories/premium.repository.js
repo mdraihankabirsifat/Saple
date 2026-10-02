@@ -16,20 +16,21 @@ async function findAccess(userId) {
     SELECT u.account_status AS "accountStatus",
       t.user_id IS NOT NULL AS "trialUsed",
       t.starts_at AS "trialStartsAt", t.ends_at AS "trialEndsAt",
-      COALESCE(t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP, FALSE) AS "trialActive",
-      paid.plan_code AS "paidPlanCode", paid.starts_at AS "paidStartsAt",
+      COALESCE(t.revoked_at IS NULL AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP, FALSE) AS "trialActive",
+      paid.plan_code AS "paidPlanCode", paid.source_type AS "paidSource", paid.starts_at AS "paidStartsAt",
       (SELECT MAX(ap.ends_at) FROM premium_access_periods ap
-        WHERE ap.user_id = u.user_id AND ap.ends_at > CURRENT_TIMESTAMP) AS "paidEndsAt",
+        WHERE ap.user_id = u.user_id AND ap.revoked_at IS NULL AND ap.ends_at > CURRENT_TIMESTAMP) AS "paidEndsAt",
       (EXISTS (SELECT 1 FROM premium_access_periods ap WHERE ap.user_id = u.user_id)
         OR EXISTS (SELECT 1 FROM premium_payments pp WHERE pp.user_id = u.user_id AND pp.status = 'SUCCEEDED'))
         AS "hasPaidHistory"
     FROM users u
     LEFT JOIN premium_trial_claims t ON t.user_id = u.user_id
     LEFT JOIN LATERAL (
-      SELECT p.plan_code, ap.starts_at
+      SELECT p.plan_code, ap.source_type, ap.starts_at
       FROM premium_access_periods ap
       JOIN premium_plans p ON p.plan_id = ap.plan_id
-      WHERE ap.user_id = u.user_id AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP
+      WHERE ap.user_id = u.user_id AND ap.revoked_at IS NULL
+        AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP
       ORDER BY ap.ends_at DESC
       LIMIT 1
     ) paid ON TRUE
@@ -45,9 +46,13 @@ async function findBadgeSources(userIds) {
     SELECT u.user_id AS "userId",
       CASE
         WHEN EXISTS (SELECT 1 FROM premium_access_periods ap WHERE ap.user_id = u.user_id
-          AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP) THEN 'PAID'
+          AND ap.revoked_at IS NULL AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP)
+          THEN (SELECT CASE WHEN ap.source_type = 'ADMIN_GRANT' THEN 'ADMIN_GRANT' ELSE 'PAID' END
+            FROM premium_access_periods ap WHERE ap.user_id = u.user_id AND ap.revoked_at IS NULL
+              AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP
+            ORDER BY ap.ends_at DESC LIMIT 1)
         WHEN EXISTS (SELECT 1 FROM premium_trial_claims t WHERE t.user_id = u.user_id
-          AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP) THEN 'TRIAL'
+          AND t.revoked_at IS NULL AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP) THEN 'TRIAL'
       END AS source
     FROM users u
     WHERE u.user_id = ANY($1::bigint[]) AND u.account_status = 'ACTIVE'
@@ -228,8 +233,8 @@ async function grantPaidAccess(client, payment, gateway) {
     FROM (
       SELECT GREATEST(
         CURRENT_TIMESTAMP,
-        COALESCE((SELECT MAX(ends_at) FROM premium_access_periods WHERE user_id = $1), CURRENT_TIMESTAMP),
-        COALESCE((SELECT ends_at FROM premium_trial_claims WHERE user_id = $1), CURRENT_TIMESTAMP)
+        COALESCE((SELECT MAX(ends_at) FROM premium_access_periods WHERE user_id = $1 AND revoked_at IS NULL), CURRENT_TIMESTAMP),
+        COALESCE((SELECT ends_at FROM premium_trial_claims WHERE user_id = $1 AND revoked_at IS NULL), CURRENT_TIMESTAMP)
       ) AS start_at
     ) s
     ON CONFLICT (payment_id) DO NOTHING
@@ -335,9 +340,9 @@ async function findTalent({ excludeUserId, search = null, limit, offset }) {
           + EXISTS (SELECT 1 FROM user_skills x WHERE x.user_id = u.user_id)::int AS filled,
         CASE
           WHEN EXISTS (SELECT 1 FROM premium_access_periods ap WHERE ap.user_id = u.user_id
-            AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP) THEN 'PAID'
+            AND ap.revoked_at IS NULL AND ap.starts_at <= CURRENT_TIMESTAMP AND ap.ends_at > CURRENT_TIMESTAMP) THEN 'PAID'
           WHEN EXISTS (SELECT 1 FROM premium_trial_claims t WHERE t.user_id = u.user_id
-            AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP) THEN 'TRIAL'
+            AND t.revoked_at IS NULL AND t.starts_at <= CURRENT_TIMESTAMP AND t.ends_at > CURRENT_TIMESTAMP) THEN 'TRIAL'
         END AS premium
       FROM users u
       WHERE u.account_status = 'ACTIVE' AND u.account_role = 'USER' AND u.user_id <> $1
@@ -394,9 +399,9 @@ async function findOverview() {
     database.query(`
       SELECT
         (SELECT COUNT(DISTINCT user_id)::int FROM premium_access_periods
-          WHERE starts_at <= CURRENT_TIMESTAMP AND ends_at > CURRENT_TIMESTAMP) AS "activePaid",
+          WHERE revoked_at IS NULL AND starts_at <= CURRENT_TIMESTAMP AND ends_at > CURRENT_TIMESTAMP) AS "activePaid",
         (SELECT COUNT(*)::int FROM premium_trial_claims
-          WHERE starts_at <= CURRENT_TIMESTAMP AND ends_at > CURRENT_TIMESTAMP) AS "activeTrials",
+          WHERE revoked_at IS NULL AND starts_at <= CURRENT_TIMESTAMP AND ends_at > CURRENT_TIMESTAMP) AS "activeTrials",
         (SELECT COUNT(*)::int FROM premium_trial_claims) AS "trialsClaimed",
         (SELECT COALESCE(SUM(final_amount_bdt), 0) FROM premium_payments WHERE status = 'SUCCEEDED') AS "revenueBdt"
     `),

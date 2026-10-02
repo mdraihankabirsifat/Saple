@@ -1,7 +1,7 @@
 # Saple PostgreSQL migrations
 
 These migrations upgrade an **existing** Supabase PostgreSQL project from the
-14-table Saple schema to the current 38-table schema without touching a single
+14-table Saple schema to the current 39-table schema without touching a single
 existing row.
 
 A brand-new installation does **not** need them: `01_final_schema_postgres.sql`
@@ -29,8 +29,9 @@ Run exactly once, in this order, in the Supabase SQL editor or `psql`:
 | 9 | `009_premium_subscriptions.sql` | Saple Premium: `premium_plans` (seeded 1-month and 3-month plans), `premium_trial_claims`, `premium_promo_codes`, `premium_payments`, `premium_access_periods`, `premium_promo_redemptions`, `profile_views`, `premium_ai_usage`; `job_postings.access_level` (existing vacancies stay `FREE`); two Premium notification types; `vw_public_open_jobs` gains `access_level` |
 | 10 | `010_job_application_resumes.sql` | `job_application_resumes`: the optional PDF resume (at most 2 MB, `BYTEA`, SHA-256 recorded) of one job application |
 | 11 | `011_ml_moderation.sql` | ML model registry, versioned content screening, public profile revisions and public visibility/training views; human decisions remain final |
+| 12 | `012_admin_control_center.sql` | Admin audit, account status metadata, revocable trials and manual Premium access without payment records |
 
-The fresh schema already includes all eleven migrations' tables, columns,
+The fresh schema already includes all twelve migrations' tables, columns,
 views and routines. Run only the migrations that an existing database has not
 yet received.
 
@@ -62,14 +63,13 @@ Each file is a single transaction. If one fails, nothing in it is applied.
 ## Before running on the live project
 
 1. Take a Supabase backup, or restore a copy into a scratch project first.
-2. Apply all eleven files to the scratch project, in order.
+2. Apply all twelve files to the scratch project, in order.
 3. Run `03_schema_and_data_demo_postgres.sql` there and confirm section 1
-   reports **38 base tables and 7 views**, and that its last two sections list
+   reports **39 base tables and 7 views**, and that its last two sections list
    the three `saple_*` routines and the seven `trg_*_set_updated_at` triggers.
-4. Only then apply the same eleven files to the live project. If migrations 001–010
-   have already been applied, run only 011. New migrations are never applied
-   automatically: run them yourself in Supabase SQL Editor before deploying the
-   backend that needs them (010 before resume uploads, 011 before ML visibility).
+4. Apply only missing files to the live project. If migrations 001 through 011 have
+   already been applied, run only `012_admin_control_center.sql` in Supabase SQL
+   Editor before deploying this backend. Never apply migrations automatically.
 
 ### Verifying migration 005
 

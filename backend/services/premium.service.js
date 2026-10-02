@@ -59,7 +59,7 @@ async function getPremiumAccess(userId) {
 
   return {
     hasPremium: paidActive || trialActive,
-    source: paidActive ? 'PAID' : trialActive ? 'TRIAL' : null,
+    source: paidActive ? (row.paidSource === 'ADMIN_GRANT' ? 'ADMIN_GRANT' : 'PAID') : trialActive ? 'TRIAL' : null,
     planCode: paidActive ? row.paidPlanCode : null,
     startsAt: iso(paidActive ? row.paidStartsAt : trialActive ? row.trialStartsAt : null),
     endsAt: ends.length ? new Date(Math.max(...ends)).toISOString() : null,
@@ -88,7 +88,7 @@ async function getBadgeSources(userIds) {
 
 // Public badge shape: never an expiry date.
 function badgeFor(source) {
-  if (source === 'PAID') return { premium: true, label: 'Premium Saple member' };
+  if (source === 'PAID' || source === 'ADMIN_GRANT') return { premium: true, label: 'Premium Saple member' };
   if (source === 'TRIAL') return { premium: true, label: 'Premium trial' };
   return null;
 }

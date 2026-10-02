@@ -36,6 +36,8 @@ function show(element, message, type = '') {
 function render(user) {
   currentUser = user;
   renderAvatar(user);
+  document.querySelector('#profile-identity-name').textContent = user.fullName || '';
+  document.querySelector('#profile-identity-headline').textContent = user.headline || 'Add a professional headline';
   document.querySelector('#profile-name').value = user.fullName || '';
   document.querySelector('#profile-headline').value = user.headline || '';
   document.querySelector('#profile-bio').value = user.bio || '';

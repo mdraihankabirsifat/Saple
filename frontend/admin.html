@@ -42,8 +42,8 @@
     <section class="container" aria-labelledby="admin-heading">
       <div class="page-header">
         <p class="eyebrow">Administrator workspace</p>
-        <h1 id="admin-heading">Admin moderation</h1>
-        <p>Review pending community submissions and record every decision in the immutable moderation history.</p>
+        <h1 id="admin-heading">Admin control center</h1>
+        <p>Manage platform operations through focused, auditable workflows.</p>
       </div>
 
       <p id="admin-loading" class="state-message" role="status" aria-live="polite">Checking administrator access&hellip;
@@ -54,113 +54,40 @@
         <a class="button button-secondary" href="index.html">Return home</a>
       </section>
 
-      <div id="admin-dashboard" hidden>
-        <section class="admin-summary" aria-labelledby="queue-summary-heading">
-          <div class="card summary-card">
-            <p class="eyebrow">Current queue</p>
-            <h2 id="queue-summary-heading"><span id="pending-count">0</span> pending</h2>
-            <p>Oldest first by default; sort the queue below.</p>
-          </div>
-          <div class="trust-note"><strong>Atomic decisions</strong><span>Status changes and audit records commit
-              together or roll back together.</span></div>
+      <div id="admin-dashboard" class="admin-shell" hidden>
+        <nav id="admin-primary-tabs" class="admin-section-tabs" role="tablist" aria-label="Administrator sections">
+          <button type="button" role="tab" id="admin-tab-users" aria-controls="admin-panel-users" aria-selected="true" data-section="users">Users</button>
+          <button type="button" role="tab" id="admin-tab-submissions" aria-controls="admin-panel-submissions" aria-selected="false" tabindex="-1" data-section="submissions">Submissions</button>
+          <button type="button" role="tab" id="admin-tab-verification" aria-controls="admin-panel-verification" aria-selected="false" tabindex="-1" data-section="verification">Verification</button>
+          <button type="button" role="tab" id="admin-tab-reports" aria-controls="admin-panel-reports" aria-selected="false" tabindex="-1" data-section="reports">Reports</button>
+          <button type="button" role="tab" id="admin-tab-subscriptions" aria-controls="admin-panel-subscriptions" aria-selected="false" tabindex="-1" data-section="subscriptions">Subscriptions</button>
+        </nav>
+        <p id="admin-summary-strip" class="admin-summary-strip" role="status" aria-live="polite">Loading platform counts...</p>
+        <section id="admin-panel-users" role="tabpanel" aria-labelledby="admin-tab-users"></section>
+        <section id="admin-panel-submissions" role="tabpanel" aria-labelledby="admin-tab-submissions" hidden>
+          <details class="admin-secondary"><summary>ML moderation health and queue</summary>
+            <p id="ml-health-status" role="status">Loading moderation health...</p>
+            <dl id="ml-health-values" class="meta-grid" hidden></dl>
+            <button id="refresh-ml-health" class="button button-secondary button-small" type="button">Refresh health</button>
+            <p id="ml-queue-status" role="status"></p>
+            <div id="ml-queue-list" class="admin-item-list"></div>
+            <button id="refresh-ml-queue" class="button button-secondary button-small" type="button">Refresh ML queue</button>
+          </details>
         </section>
-
-        <p id="admin-status" class="state-message" role="status" aria-live="polite" hidden></p>
-
-        <section class="admin-ml-health card" aria-labelledby="ml-health-heading">
-          <div class="panel-heading"><div><p class="eyebrow">Safety controls</p><h2 id="ml-health-heading">ML moderation health</h2></div><button id="refresh-ml-health" class="button button-secondary button-small" type="button">Refresh</button></div>
-          <p id="ml-health-status" class="state-panel-hint" role="status">Loading moderation health…</p>
-          <dl id="ml-health-values" class="meta-grid" hidden></dl>
+        <section id="admin-panel-verification" role="tabpanel" aria-labelledby="admin-tab-verification" hidden></section>
+        <section id="admin-panel-reports" role="tabpanel" aria-labelledby="admin-tab-reports" hidden></section>
+        <section id="admin-panel-subscriptions" role="tabpanel" aria-labelledby="admin-tab-subscriptions" hidden>
+          <details id="admin-promo-tools" class="admin-secondary"><summary>Promo and referral codes</summary>
+            <section id="panel-premium" class="admin-premium-tools">
+              <p class="state-message" role="status" aria-live="polite" data-status></p>
+              <div data-premium-overview></div>
+              <h3>Promo and referral codes</h3>
+              <div data-promo-form></div>
+              <div class="queue-list" data-promo-list></div>
+            </section>
+          </details>
         </section>
-
-        <section class="admin-ml-queue card" aria-labelledby="ml-queue-heading">
-          <div class="panel-heading"><div><p class="eyebrow">Human final authority</p><h2 id="ml-queue-heading">ML-assisted review queue</h2></div><button id="refresh-ml-queue" class="button button-secondary button-small" type="button">Refresh</button></div>
-          <p id="ml-queue-status" class="state-panel-hint" role="status">Loading pending screenings…</p>
-          <div id="ml-queue-list" class="admin-item-list" aria-live="polite"></div>
-        </section>
-
-        <div class="moderation-layout">
-          <section class="queue-panel" aria-labelledby="pending-heading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Review queue</p>
-                <h2 id="pending-heading">Pending submissions</h2>
-              </div><button id="refresh-queue" class="button button-secondary button-small"
-                type="button">Refresh</button>
-            </div>
-            <div class="queue-sort form-group">
-              <label for="queue-sort">Sort by</label>
-              <select id="queue-sort">
-                <option value="oldest">Date submitted (oldest first)</option>
-                <option value="newest">Date submitted (newest first)</option>
-                <option value="company-asc">Company name (A–Z)</option>
-                <option value="company-desc">Company name (Z–A)</option>
-                <option value="type">Submission type</option>
-                <option value="role">Job role (A–Z)</option>
-              </select>
-            </div>
-            <div id="pending-list" class="pending-list" aria-live="polite" aria-busy="true"></div>
-          </section>
-
-          <section id="review-panel" class="review-panel card" aria-labelledby="review-title">
-            <div id="review-placeholder" class="review-placeholder">
-              <p class="eyebrow">Submission detail</p>
-              <h2>Choose a submission to review</h2>
-              <p>The complete salary context and moderation history will appear here.</p>
-            </div>
-            <div id="review-content" hidden>
-              <div class="panel-heading">
-                <div>
-                  <p class="eyebrow">Submission detail</p>
-                  <h2 id="review-title" tabindex="-1">Review submission</h2>
-                </div><span id="review-status-badge" class="badge"></span>
-              </div>
-              <div id="submission-detail"></div>
-              <section class="decision-section" aria-labelledby="decision-heading">
-                <h3 id="decision-heading">Record a decision</h3>
-                <div class="form-group"><label for="moderation-note">Moderation note</label><textarea
-                    id="moderation-note" maxlength="1000"
-                    placeholder="Optional for approval; required for rejection or flagging."></textarea>
-                  <p id="moderation-note-error" class="field-error" role="alert"></p>
-                </div>
-                <div class="decision-actions"><button class="button button-primary" type="button"
-                    data-decision="APPROVED">Approve</button><button class="button button-danger" type="button"
-                    data-decision="REJECTED">Reject</button><button class="button button-warning" type="button"
-                    data-decision="FLAGGED">Flag</button></div>
-              </section>
-              <section class="history-section" aria-labelledby="history-heading">
-                <h3 id="history-heading">Moderation history</h3>
-                <div id="moderation-history"></div>
-              </section>
-            </div>
-          </section>
-        </div>
-        <div class="admin-workflow-grid">
-          <section class="workflow-panel card" aria-labelledby="verification-queue-heading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Employee trust</p>
-                <h2 id="verification-queue-heading">Verification requests <span id="verification-count"
-                    class="badge">0</span></h2>
-              </div><button id="refresh-verifications" class="button button-secondary button-small"
-                type="button">Refresh</button>
-            </div>
-            <div id="verification-list" class="admin-item-list" aria-live="polite"></div>
-          </section>
-          <section class="workflow-panel card" aria-labelledby="report-queue-heading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Community safety</p>
-                <h2 id="report-queue-heading">Reports <span id="report-count" class="badge">0</span></h2>
-              </div><button id="refresh-reports" class="button button-secondary button-small"
-                type="button">Refresh</button>
-            </div>
-            <p class="field-help">Use the existing submission review panel to flag or reject reported content before
-              resolving the report.</p>
-            <div id="report-list" class="admin-item-list" aria-live="polite"></div>
-          </section>
-        </div>
-
+        <details class="admin-secondary"><summary>Representative assignments, announcements and jobs</summary>
         <section id="admin-oversight" class="admin-oversight" aria-labelledby="oversight-heading">
           <div class="panel-heading">
             <div>
@@ -180,8 +107,7 @@
                 aria-controls="panel-announcements" id="tab-announcements">Announcements</button>
               <button class="tab" type="button" role="tab" data-tab="jobs" aria-selected="false" tabindex="-1"
                 aria-controls="panel-jobs-oversight" id="tab-jobs-oversight">Job postings</button>
-              <button class="tab" type="button" role="tab" data-tab="premium" aria-selected="false" tabindex="-1"
-                aria-controls="panel-premium" id="tab-premium">Premium</button>
+
             </div>
 
             <section id="panel-representatives" class="tab-panel" role="tabpanel"
@@ -245,28 +171,13 @@
               <div class="pagination-host" data-pagination></div>
             </section>
 
-            <section id="panel-premium" class="tab-panel" role="tabpanel" aria-labelledby="tab-premium" hidden>
-              <p class="state-message" role="status" aria-live="polite" data-status></p>
-              <div data-premium-overview></div>
-              <h3>Promo and referral codes</h3>
-              <div data-promo-form></div>
-              <div class="queue-list" data-promo-list></div>
-            </section>
+
           </div>
         </section>
+        </details>
       </div>
     </section>
   </main>
-
-  <dialog id="decision-dialog" class="decision-dialog" aria-labelledby="decision-dialog-title"
-    aria-describedby="decision-dialog-message">
-    <form method="dialog">
-      <h2 id="decision-dialog-title">Confirm moderation decision</h2>
-      <p id="decision-dialog-message"></p>
-      <div class="dialog-actions"><button class="button button-secondary" value="cancel">Cancel</button><button
-          id="confirm-decision" class="button button-primary" type="button">Confirm</button></div>
-    </form>
-  </dialog>
 
   <footer class="site-footer">
     <!-- Rendered by js/nav.js (renderSiteFooter) so every page shares one footer. -->

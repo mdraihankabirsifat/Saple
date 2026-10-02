@@ -62,7 +62,7 @@ const database = async () => {
 // Installation: a fresh database and an upgraded one agree
 // ---------------------------------------------------------------------------
 
-test('a fresh install and migrations produce the same objects, 38 tables and 7 views', async () => {
+test('a fresh install and migrations produce the same objects, 39 tables and 7 views', async () => {
   const fresh = await database();
   const migrated = await createDatabase({ migrate: true });
 
@@ -85,7 +85,7 @@ test('a fresh install and migrations produce the same objects, 38 tables and 7 v
           WHERE table_schema = 'public' AND table_type = 'BASE TABLE') AS tables,
         (SELECT COUNT(*)::int FROM information_schema.views WHERE table_schema = 'public') AS views
     `);
-    assert.deepEqual(counts.rows[0], { tables: 38, views: 7 });
+    assert.deepEqual(counts.rows[0], { tables: 39, views: 7 });
   }
   await migrated.close();
 });

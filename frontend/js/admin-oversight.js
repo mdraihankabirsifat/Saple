@@ -1,6 +1,6 @@
 import { apiRequest } from './api.js';
 import { requireSession } from './require-session.js';
-import { loadPremiumAdmin } from './admin-premium.js';
+import { confirmAction } from './admin-control-ui.js';
 import {
   el, clear, renderSkeletons, renderEmptyState, renderErrorState, renderPagination,
   formatDate, formatDateTime, humanizeEnum, showToast, trapFocus
@@ -15,8 +15,7 @@ const tabList = document.querySelector('#oversight-tabs');
 const panels = {
   representatives: document.querySelector('#panel-representatives'),
   announcements: document.querySelector('#panel-announcements'),
-  jobs: document.querySelector('#panel-jobs-oversight'),
-  premium: document.querySelector('#panel-premium')
+  jobs: document.querySelector('#panel-jobs-oversight')
 };
 
 // ---------------------------------------------------------------------------
@@ -36,33 +35,19 @@ function assignmentCard(assignment, reload) {
   const actions = el('div', { className: 'queue-actions' });
 
   async function decide(action, label) {
-    if (action !== 'APPROVE' && !note.value.trim()) {
-      feedback.className = 'form-feedback is-error';
-      feedback.textContent = 'A reason is required to reject or revoke an assignment.';
-      note.focus();
-      return;
-    }
     const warning = action === 'REVOKE'
       ? ' The representative loses access to this company immediately, including on any existing session.'
       : '';
-    if (!window.confirm(
-      `${label} ${assignment.representativeName} for ${assignment.companyName}?${warning}`
-    )) return;
-
-    for (const button of actions.querySelectorAll('button')) button.disabled = true;
-    try {
-      await apiRequest(`/api/admin/representative-assignments/${assignment.assignmentId}/decision`, {
-        method: 'PATCH',
-        auth: true,
-        body: { action, note: note.value.trim() || undefined }
-      });
-      showToast('Representative decision recorded.', 'success');
-      reload();
-    } catch (error) {
-      for (const button of actions.querySelectorAll('button')) button.disabled = false;
-      feedback.className = 'form-feedback is-error';
-      feedback.textContent = error.message;
-    }
+    confirmAction({ title: `${label} representative scope?`,
+      message: `${assignment.representativeName} for ${assignment.companyName}.${warning}`,
+      confirmLabel: label, invoking: document.activeElement, danger: action !== 'APPROVE',
+      onConfirm: async (reason) => {
+        await apiRequest(`/api/admin/representative-assignments/${assignment.assignmentId}/decision`, {
+          method: 'PATCH', auth: true, body: { action, note: reason }
+        });
+        showToast('Representative decision recorded.', 'success'); reload();
+      }
+    });
   }
 
   const available = {
@@ -440,20 +425,16 @@ async function loadJobsOversight(page = 1) {
           attrs: { type: 'button' }
         });
         close.addEventListener('click', async () => {
-          if (!window.confirm(
-            `Close "${job.title}" at ${job.companyName}? Applicants are notified and every application is kept.`
-          )) return;
-          close.disabled = true;
-          try {
-            await apiRequest(`/api/admin/jobs/${job.jobId}/status`, {
-              method: 'PATCH', auth: true, body: { jobStatus: 'CLOSED' }
-            });
-            showToast('Vacancy closed.', 'success');
-            loadJobsOversight(page);
-          } catch (error) {
-            close.disabled = false;
-            showToast(error.message, 'error');
-          }
+          confirmAction({ title: `Close ${job.title}?`,
+            message: `Applicants are notified and every application is kept. Company: ${job.companyName}.`,
+            confirmLabel: 'Close vacancy', invoking: close,
+            onConfirm: async (reason) => {
+              await apiRequest(`/api/admin/jobs/${job.jobId}/status`, {
+                method: 'PATCH', auth: true, body: { jobStatus: 'CLOSED', reason }
+              });
+              showToast('Vacancy closed.', 'success'); loadJobsOversight(page);
+            }
+          });
         });
         actions.append(close);
       }
@@ -491,8 +472,7 @@ async function loadJobsOversight(page = 1) {
 const LOADERS = {
   representatives: loadAssignments,
   announcements: loadAnnouncements,
-  jobs: loadJobsOversight,
-  premium: () => loadPremiumAdmin(panels.premium)
+  jobs: loadJobsOversight
 };
 const loaded = new Set();
 

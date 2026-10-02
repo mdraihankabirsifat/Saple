@@ -40,18 +40,18 @@
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3580 2698" role="img" aria-labelledby="erd-title erd-desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3580 2812" role="img" aria-labelledby="erd-title erd-desc">
 <title id="erd-title">Saple PostgreSQL entity-relationship diagram</title>
-<desc id="erd-desc">38 tables and 7 views of the active Saple PostgreSQL schema, grouped by domain, with primary, foreign and unique keys and crow's-foot cardinalities.</desc>
+<desc id="erd-desc">39 tables and 7 views of the active Saple PostgreSQL schema, grouped by domain, with primary, foreign and unique keys and crow's-foot cardinalities.</desc>
 <defs>
   <marker id="child-zero-many" viewBox="0 0 28 20" refX="1" refY="10" markerWidth="22" markerHeight="16" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 16 10 L 2 2 M 16 10 L 2 18 M 16 10 L 2 10" class="mk"/><circle cx="22" cy="10" r="4" class="mk-open"/></marker>
   <marker id="child-zero-one" viewBox="0 0 28 20" refX="1" refY="10" markerWidth="22" markerHeight="16" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 8 2 L 8 18" class="mk"/><circle cx="20" cy="10" r="4" class="mk-open"/></marker>
   <marker id="parent-one" viewBox="0 0 20 20" refX="19" refY="10" markerWidth="16" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse"><path d="M 6 2 L 6 18 M 12 2 L 12 18" class="mk"/></marker>
   <marker id="parent-zero-one" viewBox="0 0 28 20" refX="27" refY="10" markerWidth="22" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse"><circle cx="8" cy="10" r="4" class="mk-open"/><path d="M 20 2 L 20 18" class="mk"/></marker>
 </defs>
-<rect class="canvas" x="0" y="0" width="3580" height="2698"/>
+<rect class="canvas" x="0" y="0" width="3580" height="2812"/>
 <text class="title" x="50" y="70">Saple — PostgreSQL entity-relationship diagram</text>
-<text class="subtitle" x="50" y="104">Active schema: database/postgres/01_final_schema_postgres.sql · 38 tables · 7 views · generated from the schema file by docs/tools/build-erd.js</text>
+<text class="subtitle" x="50" y="104">Active schema: database/postgres/01_final_schema_postgres.sql · 39 tables · 7 views · generated from the schema file by docs/tools/build-erd.js</text>
 <text class="subtitle" x="50" y="130">Saple is an independent BUET CSE216 academic project.</text>
 <g class="legend">
   <text x="2820" y="62">PK primary key · FK foreign key · UK unique key · UK* partial unique (open scope only) · * NOT NULL</text>
@@ -71,11 +71,11 @@
 <path class="rel" d="M 500 260.5 C 440 260.5, 440 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>user_experience.user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 500 790.5 C 440 790.5, 440 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>user_skills.user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel rel-restrict" d="M 500 809.5 C 456 809.5, 456 890, 500 890" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>user_skills.skill_id → skills (ON DELETE RESTRICT)</title></path>
-<path class="rel" d="M 50 601.5 C 6 601.5, 6 209, 50 209" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>employees.user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 771.5 C 6 771.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>password_reset_tokens.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 658.5 C 6 658.5, 6 209, 50 209" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>employees.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 828.5 C 6 828.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>password_reset_tokens.user_id → users (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 1400 884.5 C 1356 884.5, 1356 209, 1400 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>company_benefits.company_id → companies (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 1400 903.5 C 1356 903.5, 1356 682, 1400 682" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>company_benefits.benefit_id → benefits (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 950 260.5 C 693.5 260.5, 636.5 550, 380 550" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>employment_verifications.employee_id → employees (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 950 260.5 C 693.5 260.5, 636.5 607, 380 607" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>employment_verifications.employee_id → employees (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 1280 279.5 C 1340 279.5, 1340 209, 1400 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>employment_verifications.company_id → companies (ON DELETE CASCADE)</title></path>
 <path class="rel" d="M 1280 298.5 C 1340 298.5, 1340 512, 1400 512" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>employment_verifications.role_id → job_roles (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 1850 260.5 C 1188.5 260.5, 1041.5 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>submissions.user_id → users (ON DELETE NO ACTION)</title></path>
@@ -99,29 +99,29 @@
 <path class="rel" d="M 2750 791.5 C 1683.5 791.5, 1446.5 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_applications.applicant_user_id → users (ON DELETE NO ACTION)</title></path>
 <path class="rel rel-restrict" d="M 2750 1037.5 C 2706 1037.5, 2706 721, 2750 721" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>job_application_status_history.application_id → job_applications (ON DELETE RESTRICT)</title></path>
 <path class="rel" d="M 2750 1245.5 C 2706 1245.5, 2706 721, 2750 721" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>job_application_resumes.application_id → job_applications (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 998.5 C 6 998.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>notifications.user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 1263.5 C 6 1263.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.sender_user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 50 1282.5 C 6 1282.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.recipient_user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 3200 1188.5 C 1931 1188.5, 1649 209, 380 209" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>premium_trial_claims.user_id → users (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 1472.5 C 3156 1472.5, 3156 209, 3200 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>premium_promo_codes.applicable_plan_code → premium_plans (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 50 1055.5 C 6 1055.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>notifications.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 1320.5 C 6 1320.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.sender_user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 50 1339.5 C 6 1339.5, 6 209, 50 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>direct_messages.recipient_user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 3200 1264.5 C 1931 1264.5, 1649 209, 380 209" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>premium_trial_claims.user_id → users (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 1586.5 C 3156 1586.5, 3156 209, 3200 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>premium_promo_codes.applicable_plan_code → premium_plans (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 3200 544.5 C 1931 544.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_payments.user_id → users (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 3200 563.5 C 3156 563.5, 3156 209, 3200 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_payments.plan_id → premium_plans (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 582.5 C 3156 582.5, 3156 1326, 3200 1326" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>premium_payments.promo_code_id → premium_promo_codes (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 582.5 C 3156 582.5, 3156 1440, 3200 1440" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>premium_payments.promo_code_id → premium_promo_codes (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 3200 961.5 C 1931 961.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_access_periods.user_id → users (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 3200 999.5 C 3156 999.5, 3156 209, 3200 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_access_periods.plan_id → premium_plans (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 1018.5 C 3156 1018.5, 3156 474, 3200 474" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>premium_access_periods.payment_id → premium_payments (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 1756.5 C 3156 1756.5, 3156 1326, 3200 1326" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_promo_redemptions.promo_code_id → premium_promo_codes (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 1775.5 C 1931 1775.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_promo_redemptions.user_id → users (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 1794.5 C 3156 1794.5, 3156 474, 3200 474" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>premium_promo_redemptions.payment_id → premium_payments (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 3200 2002.5 C 1931 2002.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>profile_views.profile_user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 3200 2021.5 C 1931 2021.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>profile_views.viewer_user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 3200 2229.5 C 1931 2229.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_ai_usage.user_id → users (ON DELETE CASCADE)</title></path>
-<path class="rel" d="M 2300 1150.5 C 1436 1150.5, 1244 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>content_screenings.submitted_by_user_id → users (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 1018.5 C 3156 1018.5, 3156 474, 3200 474" marker-start="url(#child-zero-one)" marker-end="url(#parent-zero-one)"><title>premium_access_periods.payment_id → premium_payments (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 1870.5 C 3156 1870.5, 3156 1440, 3200 1440" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_promo_redemptions.promo_code_id → premium_promo_codes (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 1889.5 C 1931 1889.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_promo_redemptions.user_id → users (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 1908.5 C 3156 1908.5, 3156 474, 3200 474" marker-start="url(#child-zero-one)" marker-end="url(#parent-one)"><title>premium_promo_redemptions.payment_id → premium_payments (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 3200 2116.5 C 1931 2116.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>profile_views.profile_user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 3200 2135.5 C 1931 2135.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>profile_views.viewer_user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 3200 2343.5 C 1931 2343.5, 1649 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>premium_ai_usage.user_id → users (ON DELETE CASCADE)</title></path>
+<path class="rel" d="M 2300 1415.5 C 1436 1415.5, 1244 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>content_screenings.submitted_by_user_id → users (ON DELETE NO ACTION)</title></path>
 <path class="rel" d="M 500 1073.5 C 440 1073.5, 440 209, 380 209" marker-start="url(#child-zero-many)" marker-end="url(#parent-one)"><title>professional_profile_revisions.user_id → users (ON DELETE NO ACTION)</title></path>
-<path class="rel" d="M 830 1168.5 C 1491.5 1168.5, 1638.5 1042, 2300 1042" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>professional_profile_revisions.screening_id → content_screenings (ON DELETE NO ACTION)</title></path>
+<path class="rel" d="M 830 1168.5 C 1491.5 1168.5, 1638.5 1307, 2300 1307" marker-start="url(#child-zero-many)" marker-end="url(#parent-zero-one)"><title>professional_profile_revisions.screening_id → content_screenings (ON DELETE NO ACTION)</title></path>
 </g>
 <g class="entity entity-account" id="entity-users">
-<rect class="box" x="50" y="190" width="330" height="295" rx="10"/>
+<rect class="box" x="50" y="190" width="330" height="352" rx="10"/>
 <rect class="head" x="50" y="190" width="330" height="38" rx="10"/>
 <rect class="head" x="50" y="216" width="330" height="12"/>
 <text class="entity-name" x="64" y="215">USERS</text>
@@ -147,23 +147,65 @@
 <text class="col" x="118" y="358">account_status *</text>
 <text class="type" x="368" y="358" text-anchor="end">VARCHAR(15)</text>
 <text class="flag" x="62" y="377"></text>
-<text class="col" x="118" y="377">token_version *</text>
-<text class="type" x="368" y="377" text-anchor="end">INTEGER</text>
+<text class="col" x="118" y="377">status_reason</text>
+<text class="type" x="368" y="377" text-anchor="end">VARCHAR(1000)</text>
 <text class="flag" x="62" y="396"></text>
-<text class="col" x="118" y="396">avatar_path</text>
-<text class="type" x="368" y="396" text-anchor="end">VARCHAR(500)</text>
+<text class="col" x="118" y="396">status_changed_at</text>
+<text class="type" x="368" y="396" text-anchor="end">TIMESTAMPTZ</text>
 <text class="flag" x="62" y="415"></text>
-<text class="col" x="118" y="415">headline</text>
-<text class="type" x="368" y="415" text-anchor="end">VARCHAR(160)</text>
+<text class="col" x="118" y="415">status_changed_by</text>
+<text class="type" x="368" y="415" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="434"></text>
-<text class="col" x="118" y="434">bio</text>
-<text class="type" x="368" y="434" text-anchor="end">VARCHAR(2000)</text>
+<text class="col" x="118" y="434">token_version *</text>
+<text class="type" x="368" y="434" text-anchor="end">INTEGER</text>
 <text class="flag" x="62" y="453"></text>
-<text class="col" x="118" y="453">created_at *</text>
-<text class="type" x="368" y="453" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="453">avatar_path</text>
+<text class="type" x="368" y="453" text-anchor="end">VARCHAR(500)</text>
 <text class="flag" x="62" y="472"></text>
-<text class="col" x="118" y="472">updated_at *</text>
-<text class="type" x="368" y="472" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="472">headline</text>
+<text class="type" x="368" y="472" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="62" y="491"></text>
+<text class="col" x="118" y="491">bio</text>
+<text class="type" x="368" y="491" text-anchor="end">VARCHAR(2000)</text>
+<text class="flag" x="62" y="510"></text>
+<text class="col" x="118" y="510">created_at *</text>
+<text class="type" x="368" y="510" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="529"></text>
+<text class="col" x="118" y="529">updated_at *</text>
+<text class="type" x="368" y="529" text-anchor="end">TIMESTAMPTZ</text>
+</g>
+<g class="entity entity-audit" id="entity-admin_actions">
+<rect class="box" x="2300" y="720" width="330" height="219" rx="10"/>
+<rect class="head" x="2300" y="720" width="330" height="38" rx="10"/>
+<rect class="head" x="2300" y="746" width="330" height="12"/>
+<text class="entity-name" x="2314" y="745">ADMIN_ACTIONS</text>
+<text class="flag" x="2312" y="774"></text>
+<text class="col" x="2368" y="774">action_id</text>
+<text class="type" x="2618" y="774" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="793"></text>
+<text class="col" x="2368" y="793">admin_user_id *</text>
+<text class="type" x="2618" y="793" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="812"></text>
+<text class="col" x="2368" y="812">action_type *</text>
+<text class="type" x="2618" y="812" text-anchor="end">VARCHAR(40)</text>
+<text class="flag" x="2312" y="831"></text>
+<text class="col" x="2368" y="831">target_type *</text>
+<text class="type" x="2618" y="831" text-anchor="end">VARCHAR(30)</text>
+<text class="flag" x="2312" y="850"></text>
+<text class="col" x="2368" y="850">target_id *</text>
+<text class="type" x="2618" y="850" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="869"></text>
+<text class="col" x="2368" y="869">before_state *</text>
+<text class="type" x="2618" y="869" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="888"></text>
+<text class="col" x="2368" y="888">after_state *</text>
+<text class="type" x="2618" y="888" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="907"></text>
+<text class="col" x="2368" y="907">reason *</text>
+<text class="type" x="2618" y="907" text-anchor="end">VARCHAR(1000)</text>
+<text class="flag" x="2312" y="926"></text>
+<text class="col" x="2368" y="926">created_at *</text>
+<text class="type" x="2618" y="926" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-profile" id="entity-user_education">
 <rect class="box" x="500" y="474" width="330" height="219" rx="10"/>
@@ -259,49 +301,49 @@
 <text class="type" x="818" y="812" text-anchor="end">BIGINT</text>
 </g>
 <g class="entity entity-account" id="entity-employees">
-<rect class="box" x="50" y="531" width="330" height="124" rx="10"/>
-<rect class="head" x="50" y="531" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="557" width="330" height="12"/>
-<text class="entity-name" x="64" y="556">EMPLOYEES</text>
-<text class="flag" x="62" y="585">PK</text>
-<text class="col col-pk" x="118" y="585">employee_id *</text>
-<text class="type" x="368" y="585" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="604">FK UK</text>
-<text class="col" x="118" y="604">user_id *</text>
-<text class="type" x="368" y="604" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="623"></text>
-<text class="col" x="118" y="623">employment_status *</text>
-<text class="type" x="368" y="623" text-anchor="end">VARCHAR(10)</text>
-<text class="flag" x="62" y="642"></text>
-<text class="col" x="118" y="642">created_at *</text>
-<text class="type" x="368" y="642" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="50" y="588" width="330" height="124" rx="10"/>
+<rect class="head" x="50" y="588" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="614" width="330" height="12"/>
+<text class="entity-name" x="64" y="613">EMPLOYEES</text>
+<text class="flag" x="62" y="642">PK</text>
+<text class="col col-pk" x="118" y="642">employee_id *</text>
+<text class="type" x="368" y="642" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="661">FK UK</text>
+<text class="col" x="118" y="661">user_id *</text>
+<text class="type" x="368" y="661" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="680"></text>
+<text class="col" x="118" y="680">employment_status *</text>
+<text class="type" x="368" y="680" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="62" y="699"></text>
+<text class="col" x="118" y="699">created_at *</text>
+<text class="type" x="368" y="699" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-password_reset_tokens">
-<rect class="box" x="50" y="701" width="330" height="181" rx="10"/>
-<rect class="head" x="50" y="701" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="727" width="330" height="12"/>
-<text class="entity-name" x="64" y="726">PASSWORD_RESET_TOKENS</text>
-<text class="flag" x="62" y="755">PK</text>
-<text class="col col-pk" x="118" y="755">reset_token_id *</text>
-<text class="type" x="368" y="755" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="774">FK</text>
-<text class="col" x="118" y="774">user_id *</text>
-<text class="type" x="368" y="774" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="793">UK</text>
-<text class="col" x="118" y="793">token_hash *</text>
-<text class="type" x="368" y="793" text-anchor="end">VARCHAR(64)</text>
-<text class="flag" x="62" y="812"></text>
-<text class="col" x="118" y="812">expires_at *</text>
-<text class="type" x="368" y="812" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="62" y="831"></text>
-<text class="col" x="118" y="831">used_at</text>
-<text class="type" x="368" y="831" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="62" y="850"></text>
-<text class="col" x="118" y="850">revoked_at</text>
-<text class="type" x="368" y="850" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="50" y="758" width="330" height="181" rx="10"/>
+<rect class="head" x="50" y="758" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="784" width="330" height="12"/>
+<text class="entity-name" x="64" y="783">PASSWORD_RESET_TOKENS</text>
+<text class="flag" x="62" y="812">PK</text>
+<text class="col col-pk" x="118" y="812">reset_token_id *</text>
+<text class="type" x="368" y="812" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="831">FK</text>
+<text class="col" x="118" y="831">user_id *</text>
+<text class="type" x="368" y="831" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="850">UK</text>
+<text class="col" x="118" y="850">token_hash *</text>
+<text class="type" x="368" y="850" text-anchor="end">VARCHAR(64)</text>
 <text class="flag" x="62" y="869"></text>
-<text class="col" x="118" y="869">created_at *</text>
+<text class="col" x="118" y="869">expires_at *</text>
 <text class="type" x="368" y="869" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="888"></text>
+<text class="col" x="118" y="888">used_at</text>
+<text class="type" x="368" y="888" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="907"></text>
+<text class="col" x="118" y="907">revoked_at</text>
+<text class="type" x="368" y="907" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="926"></text>
+<text class="col" x="118" y="926">created_at *</text>
+<text class="type" x="368" y="926" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-reference" id="entity-companies">
 <rect class="box" x="1400" y="190" width="330" height="257" rx="10"/>
@@ -904,106 +946,106 @@
 <text class="type" x="3068" y="1381" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-audit" id="entity-announcements">
-<rect class="box" x="2300" y="720" width="330" height="257" rx="10"/>
-<rect class="head" x="2300" y="720" width="330" height="38" rx="10"/>
-<rect class="head" x="2300" y="746" width="330" height="12"/>
-<text class="entity-name" x="2314" y="745">ANNOUNCEMENTS</text>
-<text class="flag" x="2312" y="774">PK</text>
-<text class="col col-pk" x="2368" y="774">announcement_id *</text>
-<text class="type" x="2618" y="774" text-anchor="end">BIGINT</text>
-<text class="flag" x="2312" y="793"></text>
-<text class="col" x="2368" y="793">title *</text>
-<text class="type" x="2618" y="793" text-anchor="end">VARCHAR(160)</text>
-<text class="flag" x="2312" y="812"></text>
-<text class="col" x="2368" y="812">message *</text>
-<text class="type" x="2618" y="812" text-anchor="end">VARCHAR(600)</text>
-<text class="flag" x="2312" y="831"></text>
-<text class="col" x="2368" y="831">severity *</text>
-<text class="type" x="2618" y="831" text-anchor="end">VARCHAR(10)</text>
-<text class="flag" x="2312" y="850"></text>
-<text class="col" x="2368" y="850">is_dismissible *</text>
-<text class="type" x="2618" y="850" text-anchor="end">BOOLEAN</text>
-<text class="flag" x="2312" y="869"></text>
-<text class="col" x="2368" y="869">is_active *</text>
-<text class="type" x="2618" y="869" text-anchor="end">BOOLEAN</text>
-<text class="flag" x="2312" y="888"></text>
-<text class="col" x="2368" y="888">starts_at *</text>
-<text class="type" x="2618" y="888" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="907"></text>
-<text class="col" x="2368" y="907">ends_at</text>
-<text class="type" x="2618" y="907" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="926">FK</text>
-<text class="col" x="2368" y="926">created_by *</text>
-<text class="type" x="2618" y="926" text-anchor="end">BIGINT → users</text>
-<text class="flag" x="2312" y="945"></text>
-<text class="col" x="2368" y="945">created_at *</text>
-<text class="type" x="2618" y="945" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="964"></text>
-<text class="col" x="2368" y="964">updated_at *</text>
-<text class="type" x="2618" y="964" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="2300" y="985" width="330" height="257" rx="10"/>
+<rect class="head" x="2300" y="985" width="330" height="38" rx="10"/>
+<rect class="head" x="2300" y="1011" width="330" height="12"/>
+<text class="entity-name" x="2314" y="1010">ANNOUNCEMENTS</text>
+<text class="flag" x="2312" y="1039">PK</text>
+<text class="col col-pk" x="2368" y="1039">announcement_id *</text>
+<text class="type" x="2618" y="1039" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1058"></text>
+<text class="col" x="2368" y="1058">title *</text>
+<text class="type" x="2618" y="1058" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1077"></text>
+<text class="col" x="2368" y="1077">message *</text>
+<text class="type" x="2618" y="1077" text-anchor="end">VARCHAR(600)</text>
+<text class="flag" x="2312" y="1096"></text>
+<text class="col" x="2368" y="1096">severity *</text>
+<text class="type" x="2618" y="1096" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="2312" y="1115"></text>
+<text class="col" x="2368" y="1115">is_dismissible *</text>
+<text class="type" x="2618" y="1115" text-anchor="end">BOOLEAN</text>
+<text class="flag" x="2312" y="1134"></text>
+<text class="col" x="2368" y="1134">is_active *</text>
+<text class="type" x="2618" y="1134" text-anchor="end">BOOLEAN</text>
+<text class="flag" x="2312" y="1153"></text>
+<text class="col" x="2368" y="1153">starts_at *</text>
+<text class="type" x="2618" y="1153" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1172"></text>
+<text class="col" x="2368" y="1172">ends_at</text>
+<text class="type" x="2618" y="1172" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1191">FK</text>
+<text class="col" x="2368" y="1191">created_by *</text>
+<text class="type" x="2618" y="1191" text-anchor="end">BIGINT → users</text>
+<text class="flag" x="2312" y="1210"></text>
+<text class="col" x="2368" y="1210">created_at *</text>
+<text class="type" x="2618" y="1210" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1229"></text>
+<text class="col" x="2368" y="1229">updated_at *</text>
+<text class="type" x="2618" y="1229" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-notifications">
-<rect class="box" x="50" y="928" width="330" height="219" rx="10"/>
-<rect class="head" x="50" y="928" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="954" width="330" height="12"/>
-<text class="entity-name" x="64" y="953">NOTIFICATIONS</text>
-<text class="flag" x="62" y="982">PK</text>
-<text class="col col-pk" x="118" y="982">notification_id *</text>
-<text class="type" x="368" y="982" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1001">FK</text>
-<text class="col" x="118" y="1001">user_id *</text>
-<text class="type" x="368" y="1001" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1020"></text>
-<text class="col" x="118" y="1020">notification_type *</text>
-<text class="type" x="368" y="1020" text-anchor="end">VARCHAR(30)</text>
-<text class="flag" x="62" y="1039"></text>
-<text class="col" x="118" y="1039">title *</text>
-<text class="type" x="368" y="1039" text-anchor="end">VARCHAR(160)</text>
-<text class="flag" x="62" y="1058"></text>
-<text class="col" x="118" y="1058">message *</text>
-<text class="type" x="368" y="1058" text-anchor="end">VARCHAR(600)</text>
+<rect class="box" x="50" y="985" width="330" height="219" rx="10"/>
+<rect class="head" x="50" y="985" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="1011" width="330" height="12"/>
+<text class="entity-name" x="64" y="1010">NOTIFICATIONS</text>
+<text class="flag" x="62" y="1039">PK</text>
+<text class="col col-pk" x="118" y="1039">notification_id *</text>
+<text class="type" x="368" y="1039" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="1058">FK</text>
+<text class="col" x="118" y="1058">user_id *</text>
+<text class="type" x="368" y="1058" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="1077"></text>
-<text class="col" x="118" y="1077">related_entity_type</text>
+<text class="col" x="118" y="1077">notification_type *</text>
 <text class="type" x="368" y="1077" text-anchor="end">VARCHAR(30)</text>
 <text class="flag" x="62" y="1096"></text>
-<text class="col" x="118" y="1096">related_entity_id</text>
-<text class="type" x="368" y="1096" text-anchor="end">BIGINT</text>
+<text class="col" x="118" y="1096">title *</text>
+<text class="type" x="368" y="1096" text-anchor="end">VARCHAR(160)</text>
 <text class="flag" x="62" y="1115"></text>
-<text class="col" x="118" y="1115">read_at</text>
-<text class="type" x="368" y="1115" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="1115">message *</text>
+<text class="type" x="368" y="1115" text-anchor="end">VARCHAR(600)</text>
 <text class="flag" x="62" y="1134"></text>
-<text class="col" x="118" y="1134">created_at *</text>
-<text class="type" x="368" y="1134" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="1134">related_entity_type</text>
+<text class="type" x="368" y="1134" text-anchor="end">VARCHAR(30)</text>
+<text class="flag" x="62" y="1153"></text>
+<text class="col" x="118" y="1153">related_entity_id</text>
+<text class="type" x="368" y="1153" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="1172"></text>
+<text class="col" x="118" y="1172">read_at</text>
+<text class="type" x="368" y="1172" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="1191"></text>
+<text class="col" x="118" y="1191">created_at *</text>
+<text class="type" x="368" y="1191" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-account" id="entity-direct_messages">
-<rect class="box" x="50" y="1193" width="330" height="200" rx="10"/>
-<rect class="head" x="50" y="1193" width="330" height="38" rx="10"/>
-<rect class="head" x="50" y="1219" width="330" height="12"/>
-<text class="entity-name" x="64" y="1218">DIRECT_MESSAGES</text>
-<text class="flag" x="62" y="1247">PK</text>
-<text class="col col-pk" x="118" y="1247">message_id *</text>
-<text class="type" x="368" y="1247" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1266">FK</text>
-<text class="col" x="118" y="1266">sender_user_id *</text>
-<text class="type" x="368" y="1266" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1285">FK</text>
-<text class="col" x="118" y="1285">recipient_user_id *</text>
-<text class="type" x="368" y="1285" text-anchor="end">BIGINT</text>
-<text class="flag" x="62" y="1304"></text>
-<text class="col" x="118" y="1304">message_body</text>
-<text class="type" x="368" y="1304" text-anchor="end">VARCHAR(2000)</text>
-<text class="flag" x="62" y="1323"></text>
-<text class="col" x="118" y="1323">created_at *</text>
-<text class="type" x="368" y="1323" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="62" y="1342"></text>
-<text class="col" x="118" y="1342">edited_at</text>
-<text class="type" x="368" y="1342" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="50" y="1250" width="330" height="200" rx="10"/>
+<rect class="head" x="50" y="1250" width="330" height="38" rx="10"/>
+<rect class="head" x="50" y="1276" width="330" height="12"/>
+<text class="entity-name" x="64" y="1275">DIRECT_MESSAGES</text>
+<text class="flag" x="62" y="1304">PK</text>
+<text class="col col-pk" x="118" y="1304">message_id *</text>
+<text class="type" x="368" y="1304" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="1323">FK</text>
+<text class="col" x="118" y="1323">sender_user_id *</text>
+<text class="type" x="368" y="1323" text-anchor="end">BIGINT</text>
+<text class="flag" x="62" y="1342">FK</text>
+<text class="col" x="118" y="1342">recipient_user_id *</text>
+<text class="type" x="368" y="1342" text-anchor="end">BIGINT</text>
 <text class="flag" x="62" y="1361"></text>
-<text class="col" x="118" y="1361">deleted_at</text>
-<text class="type" x="368" y="1361" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="118" y="1361">message_body</text>
+<text class="type" x="368" y="1361" text-anchor="end">VARCHAR(2000)</text>
 <text class="flag" x="62" y="1380"></text>
-<text class="col" x="118" y="1380">read_at</text>
+<text class="col" x="118" y="1380">created_at *</text>
 <text class="type" x="368" y="1380" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="1399"></text>
+<text class="col" x="118" y="1399">edited_at</text>
+<text class="type" x="368" y="1399" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="1418"></text>
+<text class="col" x="118" y="1418">deleted_at</text>
+<text class="type" x="368" y="1418" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="62" y="1437"></text>
+<text class="col" x="118" y="1437">read_at</text>
+<text class="type" x="368" y="1437" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_plans">
 <rect class="box" x="3200" y="190" width="330" height="219" rx="10"/>
@@ -1039,73 +1081,79 @@
 <text class="type" x="3518" y="396" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_trial_claims">
-<rect class="box" x="3200" y="1137" width="330" height="124" rx="10"/>
-<rect class="head" x="3200" y="1137" width="330" height="38" rx="10"/>
-<rect class="head" x="3200" y="1163" width="330" height="12"/>
-<text class="entity-name" x="3214" y="1162">PREMIUM_TRIAL_CLAIMS</text>
-<text class="flag" x="3212" y="1191">PK FK</text>
-<text class="col col-pk" x="3268" y="1191">user_id *</text>
-<text class="type" x="3518" y="1191" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="1210"></text>
-<text class="col" x="3268" y="1210">claimed_at *</text>
-<text class="type" x="3518" y="1210" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="3212" y="1229"></text>
-<text class="col" x="3268" y="1229">starts_at *</text>
-<text class="type" x="3518" y="1229" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="3212" y="1248"></text>
-<text class="col" x="3268" y="1248">ends_at *</text>
-<text class="type" x="3518" y="1248" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="3200" y="1213" width="330" height="162" rx="10"/>
+<rect class="head" x="3200" y="1213" width="330" height="38" rx="10"/>
+<rect class="head" x="3200" y="1239" width="330" height="12"/>
+<text class="entity-name" x="3214" y="1238">PREMIUM_TRIAL_CLAIMS</text>
+<text class="flag" x="3212" y="1267">PK FK</text>
+<text class="col col-pk" x="3268" y="1267">user_id *</text>
+<text class="type" x="3518" y="1267" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1286"></text>
+<text class="col" x="3268" y="1286">claimed_at *</text>
+<text class="type" x="3518" y="1286" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1305"></text>
+<text class="col" x="3268" y="1305">starts_at *</text>
+<text class="type" x="3518" y="1305" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1324"></text>
+<text class="col" x="3268" y="1324">ends_at *</text>
+<text class="type" x="3518" y="1324" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1343"></text>
+<text class="col" x="3268" y="1343">revoked_at</text>
+<text class="type" x="3518" y="1343" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1362"></text>
+<text class="col" x="3268" y="1362">revoked_by</text>
+<text class="type" x="3518" y="1362" text-anchor="end">BIGINT</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_promo_codes">
-<rect class="box" x="3200" y="1307" width="330" height="333" rx="10"/>
-<rect class="head" x="3200" y="1307" width="330" height="38" rx="10"/>
-<rect class="head" x="3200" y="1333" width="330" height="12"/>
-<text class="entity-name" x="3214" y="1332">PREMIUM_PROMO_CODES</text>
-<text class="flag" x="3212" y="1361">PK</text>
-<text class="col col-pk" x="3268" y="1361">promo_code_id *</text>
-<text class="type" x="3518" y="1361" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="1380">UK</text>
-<text class="col" x="3268" y="1380">code *</text>
-<text class="type" x="3518" y="1380" text-anchor="end">VARCHAR(40)</text>
-<text class="flag" x="3212" y="1399"></text>
-<text class="col" x="3268" y="1399">description</text>
-<text class="type" x="3518" y="1399" text-anchor="end">VARCHAR(300)</text>
-<text class="flag" x="3212" y="1418"></text>
-<text class="col" x="3268" y="1418">discount_type *</text>
-<text class="type" x="3518" y="1418" text-anchor="end">VARCHAR(10)</text>
-<text class="flag" x="3212" y="1437"></text>
-<text class="col" x="3268" y="1437">discount_value *</text>
-<text class="type" x="3518" y="1437" text-anchor="end">NUMERIC(10,2)</text>
-<text class="flag" x="3212" y="1456"></text>
-<text class="col" x="3268" y="1456">max_discount_bdt</text>
-<text class="type" x="3518" y="1456" text-anchor="end">NUMERIC(10,2)</text>
-<text class="flag" x="3212" y="1475">FK</text>
-<text class="col" x="3268" y="1475">applicable_plan_code</text>
-<text class="type" x="3518" y="1475" text-anchor="end">VARCHAR(30)</text>
-<text class="flag" x="3212" y="1494"></text>
-<text class="col" x="3268" y="1494">max_redemptions</text>
-<text class="type" x="3518" y="1494" text-anchor="end">INTEGER</text>
+<rect class="box" x="3200" y="1421" width="330" height="333" rx="10"/>
+<rect class="head" x="3200" y="1421" width="330" height="38" rx="10"/>
+<rect class="head" x="3200" y="1447" width="330" height="12"/>
+<text class="entity-name" x="3214" y="1446">PREMIUM_PROMO_CODES</text>
+<text class="flag" x="3212" y="1475">PK</text>
+<text class="col col-pk" x="3268" y="1475">promo_code_id *</text>
+<text class="type" x="3518" y="1475" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1494">UK</text>
+<text class="col" x="3268" y="1494">code *</text>
+<text class="type" x="3518" y="1494" text-anchor="end">VARCHAR(40)</text>
 <text class="flag" x="3212" y="1513"></text>
-<text class="col" x="3268" y="1513">per_user_limit *</text>
-<text class="type" x="3518" y="1513" text-anchor="end">INTEGER</text>
+<text class="col" x="3268" y="1513">description</text>
+<text class="type" x="3518" y="1513" text-anchor="end">VARCHAR(300)</text>
 <text class="flag" x="3212" y="1532"></text>
-<text class="col" x="3268" y="1532">valid_from *</text>
-<text class="type" x="3518" y="1532" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="3268" y="1532">discount_type *</text>
+<text class="type" x="3518" y="1532" text-anchor="end">VARCHAR(10)</text>
 <text class="flag" x="3212" y="1551"></text>
-<text class="col" x="3268" y="1551">valid_until</text>
-<text class="type" x="3518" y="1551" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="3268" y="1551">discount_value *</text>
+<text class="type" x="3518" y="1551" text-anchor="end">NUMERIC(10,2)</text>
 <text class="flag" x="3212" y="1570"></text>
-<text class="col" x="3268" y="1570">is_active *</text>
-<text class="type" x="3518" y="1570" text-anchor="end">BOOLEAN</text>
+<text class="col" x="3268" y="1570">max_discount_bdt</text>
+<text class="type" x="3518" y="1570" text-anchor="end">NUMERIC(10,2)</text>
 <text class="flag" x="3212" y="1589">FK</text>
-<text class="col" x="3268" y="1589">created_by</text>
-<text class="type" x="3518" y="1589" text-anchor="end">BIGINT → users</text>
+<text class="col" x="3268" y="1589">applicable_plan_code</text>
+<text class="type" x="3518" y="1589" text-anchor="end">VARCHAR(30)</text>
 <text class="flag" x="3212" y="1608"></text>
-<text class="col" x="3268" y="1608">created_at *</text>
-<text class="type" x="3518" y="1608" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="3268" y="1608">max_redemptions</text>
+<text class="type" x="3518" y="1608" text-anchor="end">INTEGER</text>
 <text class="flag" x="3212" y="1627"></text>
-<text class="col" x="3268" y="1627">updated_at *</text>
-<text class="type" x="3518" y="1627" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="3268" y="1627">per_user_limit *</text>
+<text class="type" x="3518" y="1627" text-anchor="end">INTEGER</text>
+<text class="flag" x="3212" y="1646"></text>
+<text class="col" x="3268" y="1646">valid_from *</text>
+<text class="type" x="3518" y="1646" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1665"></text>
+<text class="col" x="3268" y="1665">valid_until</text>
+<text class="type" x="3518" y="1665" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1684"></text>
+<text class="col" x="3268" y="1684">is_active *</text>
+<text class="type" x="3518" y="1684" text-anchor="end">BOOLEAN</text>
+<text class="flag" x="3212" y="1703">FK</text>
+<text class="col" x="3268" y="1703">created_by</text>
+<text class="type" x="3518" y="1703" text-anchor="end">BIGINT → users</text>
+<text class="flag" x="3212" y="1722"></text>
+<text class="col" x="3268" y="1722">created_at *</text>
+<text class="type" x="3518" y="1722" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1741"></text>
+<text class="col" x="3268" y="1741">updated_at *</text>
+<text class="type" x="3518" y="1741" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_payments">
 <rect class="box" x="3200" y="455" width="330" height="390" rx="10"/>
@@ -1168,7 +1216,7 @@
 <text class="type" x="3518" y="832" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_access_periods">
-<rect class="box" x="3200" y="891" width="330" height="200" rx="10"/>
+<rect class="box" x="3200" y="891" width="330" height="276" rx="10"/>
 <rect class="head" x="3200" y="891" width="330" height="38" rx="10"/>
 <rect class="head" x="3200" y="917" width="330" height="12"/>
 <text class="entity-name" x="3214" y="916">PREMIUM_ACCESS_PERIODS</text>
@@ -1180,250 +1228,262 @@
 <text class="type" x="3518" y="964" text-anchor="end">BIGINT</text>
 <text class="flag" x="3212" y="983"></text>
 <text class="col" x="3268" y="983">source_type *</text>
-<text class="type" x="3518" y="983" text-anchor="end">VARCHAR(10)</text>
+<text class="type" x="3518" y="983" text-anchor="end">VARCHAR(20)</text>
 <text class="flag" x="3212" y="1002">FK</text>
 <text class="col" x="3268" y="1002">plan_id *</text>
 <text class="type" x="3518" y="1002" text-anchor="end">BIGINT</text>
 <text class="flag" x="3212" y="1021">FK UK</text>
-<text class="col" x="3268" y="1021">payment_id *</text>
+<text class="col" x="3268" y="1021">payment_id</text>
 <text class="type" x="3518" y="1021" text-anchor="end">BIGINT</text>
 <text class="flag" x="3212" y="1040"></text>
-<text class="col" x="3268" y="1040">starts_at *</text>
+<text class="col" x="3268" y="1040">revoked_at</text>
 <text class="type" x="3518" y="1040" text-anchor="end">TIMESTAMPTZ</text>
 <text class="flag" x="3212" y="1059"></text>
-<text class="col" x="3268" y="1059">ends_at *</text>
-<text class="type" x="3518" y="1059" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="3268" y="1059">granted_by</text>
+<text class="type" x="3518" y="1059" text-anchor="end">BIGINT</text>
 <text class="flag" x="3212" y="1078"></text>
-<text class="col" x="3268" y="1078">created_at *</text>
-<text class="type" x="3518" y="1078" text-anchor="end">TIMESTAMPTZ</text>
+<text class="col" x="3268" y="1078">revoked_by</text>
+<text class="type" x="3518" y="1078" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1097"></text>
+<text class="col" x="3268" y="1097">admin_reason</text>
+<text class="type" x="3518" y="1097" text-anchor="end">VARCHAR(1000)</text>
+<text class="flag" x="3212" y="1116"></text>
+<text class="col" x="3268" y="1116">starts_at *</text>
+<text class="type" x="3518" y="1116" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1135"></text>
+<text class="col" x="3268" y="1135">ends_at *</text>
+<text class="type" x="3518" y="1135" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1154"></text>
+<text class="col" x="3268" y="1154">created_at *</text>
+<text class="type" x="3518" y="1154" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_promo_redemptions">
-<rect class="box" x="3200" y="1686" width="330" height="219" rx="10"/>
-<rect class="head" x="3200" y="1686" width="330" height="38" rx="10"/>
-<rect class="head" x="3200" y="1712" width="330" height="12"/>
-<text class="entity-name" x="3214" y="1711">PREMIUM_PROMO_REDEMPTIONS</text>
-<text class="flag" x="3212" y="1740">PK</text>
-<text class="col col-pk" x="3268" y="1740">redemption_id *</text>
-<text class="type" x="3518" y="1740" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="1759">FK</text>
-<text class="col" x="3268" y="1759">promo_code_id *</text>
-<text class="type" x="3518" y="1759" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="1778">FK</text>
-<text class="col" x="3268" y="1778">user_id *</text>
-<text class="type" x="3518" y="1778" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="1797">FK UK</text>
-<text class="col" x="3268" y="1797">payment_id *</text>
-<text class="type" x="3518" y="1797" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="1816"></text>
-<text class="col" x="3268" y="1816">discount_amount_bdt *</text>
-<text class="type" x="3518" y="1816" text-anchor="end">NUMERIC(10,2)</text>
-<text class="flag" x="3212" y="1835"></text>
-<text class="col" x="3268" y="1835">status *</text>
-<text class="type" x="3518" y="1835" text-anchor="end">VARCHAR(10)</text>
-<text class="flag" x="3212" y="1854"></text>
-<text class="col" x="3268" y="1854">reserved_at *</text>
-<text class="type" x="3518" y="1854" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="3212" y="1873"></text>
-<text class="col" x="3268" y="1873">redeemed_at</text>
-<text class="type" x="3518" y="1873" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="3212" y="1892"></text>
-<text class="col" x="3268" y="1892">released_at</text>
-<text class="type" x="3518" y="1892" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="3200" y="1800" width="330" height="219" rx="10"/>
+<rect class="head" x="3200" y="1800" width="330" height="38" rx="10"/>
+<rect class="head" x="3200" y="1826" width="330" height="12"/>
+<text class="entity-name" x="3214" y="1825">PREMIUM_PROMO_REDEMPTIONS</text>
+<text class="flag" x="3212" y="1854">PK</text>
+<text class="col col-pk" x="3268" y="1854">redemption_id *</text>
+<text class="type" x="3518" y="1854" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1873">FK</text>
+<text class="col" x="3268" y="1873">promo_code_id *</text>
+<text class="type" x="3518" y="1873" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1892">FK</text>
+<text class="col" x="3268" y="1892">user_id *</text>
+<text class="type" x="3518" y="1892" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1911">FK UK</text>
+<text class="col" x="3268" y="1911">payment_id *</text>
+<text class="type" x="3518" y="1911" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="1930"></text>
+<text class="col" x="3268" y="1930">discount_amount_bdt *</text>
+<text class="type" x="3518" y="1930" text-anchor="end">NUMERIC(10,2)</text>
+<text class="flag" x="3212" y="1949"></text>
+<text class="col" x="3268" y="1949">status *</text>
+<text class="type" x="3518" y="1949" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="3212" y="1968"></text>
+<text class="col" x="3268" y="1968">reserved_at *</text>
+<text class="type" x="3518" y="1968" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="1987"></text>
+<text class="col" x="3268" y="1987">redeemed_at</text>
+<text class="type" x="3518" y="1987" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="2006"></text>
+<text class="col" x="3268" y="2006">released_at</text>
+<text class="type" x="3518" y="2006" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-premium" id="entity-profile_views">
-<rect class="box" x="3200" y="1951" width="330" height="162" rx="10"/>
-<rect class="head" x="3200" y="1951" width="330" height="38" rx="10"/>
-<rect class="head" x="3200" y="1977" width="330" height="12"/>
-<text class="entity-name" x="3214" y="1976">PROFILE_VIEWS</text>
-<text class="flag" x="3212" y="2005">PK FK</text>
-<text class="col col-pk" x="3268" y="2005">profile_user_id *</text>
-<text class="type" x="3518" y="2005" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="2024">PK FK</text>
-<text class="col col-pk" x="3268" y="2024">viewer_user_id *</text>
-<text class="type" x="3518" y="2024" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="2043">PK</text>
-<text class="col col-pk" x="3268" y="2043">view_date *</text>
-<text class="type" x="3518" y="2043" text-anchor="end">DATE</text>
-<text class="flag" x="3212" y="2062"></text>
-<text class="col" x="3268" y="2062">first_viewed_at *</text>
-<text class="type" x="3518" y="2062" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="3212" y="2081"></text>
-<text class="col" x="3268" y="2081">last_viewed_at *</text>
-<text class="type" x="3518" y="2081" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="3212" y="2100"></text>
-<text class="col" x="3268" y="2100">view_count *</text>
-<text class="type" x="3518" y="2100" text-anchor="end">INTEGER</text>
+<rect class="box" x="3200" y="2065" width="330" height="162" rx="10"/>
+<rect class="head" x="3200" y="2065" width="330" height="38" rx="10"/>
+<rect class="head" x="3200" y="2091" width="330" height="12"/>
+<text class="entity-name" x="3214" y="2090">PROFILE_VIEWS</text>
+<text class="flag" x="3212" y="2119">PK FK</text>
+<text class="col col-pk" x="3268" y="2119">profile_user_id *</text>
+<text class="type" x="3518" y="2119" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="2138">PK FK</text>
+<text class="col col-pk" x="3268" y="2138">viewer_user_id *</text>
+<text class="type" x="3518" y="2138" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="2157">PK</text>
+<text class="col col-pk" x="3268" y="2157">view_date *</text>
+<text class="type" x="3518" y="2157" text-anchor="end">DATE</text>
+<text class="flag" x="3212" y="2176"></text>
+<text class="col" x="3268" y="2176">first_viewed_at *</text>
+<text class="type" x="3518" y="2176" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="2195"></text>
+<text class="col" x="3268" y="2195">last_viewed_at *</text>
+<text class="type" x="3518" y="2195" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="3212" y="2214"></text>
+<text class="col" x="3268" y="2214">view_count *</text>
+<text class="type" x="3518" y="2214" text-anchor="end">INTEGER</text>
 </g>
 <g class="entity entity-premium" id="entity-premium_ai_usage">
-<rect class="box" x="3200" y="2159" width="330" height="181" rx="10"/>
-<rect class="head" x="3200" y="2159" width="330" height="38" rx="10"/>
-<rect class="head" x="3200" y="2185" width="330" height="12"/>
-<text class="entity-name" x="3214" y="2184">PREMIUM_AI_USAGE</text>
-<text class="flag" x="3212" y="2213">PK</text>
-<text class="col col-pk" x="3268" y="2213">usage_id *</text>
-<text class="type" x="3518" y="2213" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="2232">FK</text>
-<text class="col" x="3268" y="2232">user_id *</text>
-<text class="type" x="3518" y="2232" text-anchor="end">BIGINT</text>
-<text class="flag" x="3212" y="2251"></text>
-<text class="col" x="3268" y="2251">feature_type *</text>
-<text class="type" x="3518" y="2251" text-anchor="end">VARCHAR(20)</text>
-<text class="flag" x="3212" y="2270"></text>
-<text class="col" x="3268" y="2270">model</text>
-<text class="type" x="3518" y="2270" text-anchor="end">VARCHAR(120)</text>
-<text class="flag" x="3212" y="2289"></text>
-<text class="col" x="3268" y="2289">input_tokens</text>
-<text class="type" x="3518" y="2289" text-anchor="end">INTEGER</text>
-<text class="flag" x="3212" y="2308"></text>
-<text class="col" x="3268" y="2308">output_tokens</text>
-<text class="type" x="3518" y="2308" text-anchor="end">INTEGER</text>
-<text class="flag" x="3212" y="2327"></text>
-<text class="col" x="3268" y="2327">created_at *</text>
-<text class="type" x="3518" y="2327" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="3200" y="2273" width="330" height="181" rx="10"/>
+<rect class="head" x="3200" y="2273" width="330" height="38" rx="10"/>
+<rect class="head" x="3200" y="2299" width="330" height="12"/>
+<text class="entity-name" x="3214" y="2298">PREMIUM_AI_USAGE</text>
+<text class="flag" x="3212" y="2327">PK</text>
+<text class="col col-pk" x="3268" y="2327">usage_id *</text>
+<text class="type" x="3518" y="2327" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="2346">FK</text>
+<text class="col" x="3268" y="2346">user_id *</text>
+<text class="type" x="3518" y="2346" text-anchor="end">BIGINT</text>
+<text class="flag" x="3212" y="2365"></text>
+<text class="col" x="3268" y="2365">feature_type *</text>
+<text class="type" x="3518" y="2365" text-anchor="end">VARCHAR(20)</text>
+<text class="flag" x="3212" y="2384"></text>
+<text class="col" x="3268" y="2384">model</text>
+<text class="type" x="3518" y="2384" text-anchor="end">VARCHAR(120)</text>
+<text class="flag" x="3212" y="2403"></text>
+<text class="col" x="3268" y="2403">input_tokens</text>
+<text class="type" x="3518" y="2403" text-anchor="end">INTEGER</text>
+<text class="flag" x="3212" y="2422"></text>
+<text class="col" x="3268" y="2422">output_tokens</text>
+<text class="type" x="3518" y="2422" text-anchor="end">INTEGER</text>
+<text class="flag" x="3212" y="2441"></text>
+<text class="col" x="3268" y="2441">created_at *</text>
+<text class="type" x="3518" y="2441" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-audit" id="entity-ml_model_registry">
-<rect class="box" x="2300" y="1573" width="330" height="428" rx="10"/>
-<rect class="head" x="2300" y="1573" width="330" height="38" rx="10"/>
-<rect class="head" x="2300" y="1599" width="330" height="12"/>
-<text class="entity-name" x="2314" y="1598">ML_MODEL_REGISTRY</text>
-<text class="flag" x="2312" y="1627">PK</text>
-<text class="col col-pk" x="2368" y="1627">model_id *</text>
-<text class="type" x="2618" y="1627" text-anchor="end">BIGINT</text>
-<text class="flag" x="2312" y="1646">UK UK*</text>
-<text class="col" x="2368" y="1646">model_key *</text>
-<text class="type" x="2618" y="1646" text-anchor="end">VARCHAR(160)</text>
-<text class="flag" x="2312" y="1665"></text>
-<text class="col" x="2368" y="1665">content_type *</text>
-<text class="type" x="2618" y="1665" text-anchor="end">VARCHAR(16)</text>
-<text class="flag" x="2312" y="1684"></text>
-<text class="col" x="2368" y="1684">scope_key</text>
-<text class="type" x="2618" y="1684" text-anchor="end">VARCHAR(160)</text>
-<text class="flag" x="2312" y="1703">UK</text>
-<text class="col" x="2368" y="1703">model_version *</text>
-<text class="type" x="2618" y="1703" text-anchor="end">VARCHAR(80)</text>
-<text class="flag" x="2312" y="1722"></text>
-<text class="col" x="2368" y="1722">artifact_uri *</text>
-<text class="type" x="2618" y="1722" text-anchor="end">TEXT</text>
-<text class="flag" x="2312" y="1741"></text>
-<text class="col" x="2368" y="1741">artifact_sha256 *</text>
-<text class="type" x="2618" y="1741" text-anchor="end">CHAR(64)</text>
-<text class="flag" x="2312" y="1760"></text>
-<text class="col" x="2368" y="1760">feature_schema_version *</text>
-<text class="type" x="2618" y="1760" text-anchor="end">VARCHAR(80)</text>
-<text class="flag" x="2312" y="1779"></text>
-<text class="col" x="2368" y="1779">training_dataset_fingerprint *</text>
-<text class="type" x="2618" y="1779" text-anchor="end">CHAR(64)</text>
-<text class="flag" x="2312" y="1798"></text>
-<text class="col" x="2368" y="1798">trained_at *</text>
-<text class="type" x="2618" y="1798" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1817"></text>
-<text class="col" x="2368" y="1817">training_sample_count *</text>
-<text class="type" x="2618" y="1817" text-anchor="end">INTEGER</text>
-<text class="flag" x="2312" y="1836"></text>
-<text class="col" x="2368" y="1836">approved_sample_count *</text>
-<text class="type" x="2618" y="1836" text-anchor="end">INTEGER</text>
-<text class="flag" x="2312" y="1855"></text>
-<text class="col" x="2368" y="1855">rejected_sample_count *</text>
-<text class="type" x="2618" y="1855" text-anchor="end">INTEGER</text>
-<text class="flag" x="2312" y="1874"></text>
-<text class="col" x="2368" y="1874">metrics *</text>
-<text class="type" x="2618" y="1874" text-anchor="end">JSONB</text>
-<text class="flag" x="2312" y="1893"></text>
-<text class="col" x="2368" y="1893">auto_publish_threshold</text>
-<text class="type" x="2618" y="1893" text-anchor="end">NUMERIC(6,5)</text>
-<text class="flag" x="2312" y="1912"></text>
-<text class="col" x="2368" y="1912">ood_threshold</text>
-<text class="type" x="2618" y="1912" text-anchor="end">NUMERIC</text>
-<text class="flag" x="2312" y="1931"></text>
-<text class="col" x="2368" y="1931">status *</text>
-<text class="type" x="2618" y="1931" text-anchor="end">VARCHAR(12)</text>
-<text class="flag" x="2312" y="1950"></text>
-<text class="col" x="2368" y="1950">activated_at</text>
-<text class="type" x="2618" y="1950" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1969"></text>
-<text class="col" x="2368" y="1969">retired_at</text>
-<text class="type" x="2618" y="1969" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1988"></text>
-<text class="col" x="2368" y="1988">created_at *</text>
-<text class="type" x="2618" y="1988" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="2300" y="1838" width="330" height="428" rx="10"/>
+<rect class="head" x="2300" y="1838" width="330" height="38" rx="10"/>
+<rect class="head" x="2300" y="1864" width="330" height="12"/>
+<text class="entity-name" x="2314" y="1863">ML_MODEL_REGISTRY</text>
+<text class="flag" x="2312" y="1892">PK</text>
+<text class="col col-pk" x="2368" y="1892">model_id *</text>
+<text class="type" x="2618" y="1892" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1911">UK UK*</text>
+<text class="col" x="2368" y="1911">model_key *</text>
+<text class="type" x="2618" y="1911" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1930"></text>
+<text class="col" x="2368" y="1930">content_type *</text>
+<text class="type" x="2618" y="1930" text-anchor="end">VARCHAR(16)</text>
+<text class="flag" x="2312" y="1949"></text>
+<text class="col" x="2368" y="1949">scope_key</text>
+<text class="type" x="2618" y="1949" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1968">UK</text>
+<text class="col" x="2368" y="1968">model_version *</text>
+<text class="type" x="2618" y="1968" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1987"></text>
+<text class="col" x="2368" y="1987">artifact_uri *</text>
+<text class="type" x="2618" y="1987" text-anchor="end">TEXT</text>
+<text class="flag" x="2312" y="2006"></text>
+<text class="col" x="2368" y="2006">artifact_sha256 *</text>
+<text class="type" x="2618" y="2006" text-anchor="end">CHAR(64)</text>
+<text class="flag" x="2312" y="2025"></text>
+<text class="col" x="2368" y="2025">feature_schema_version *</text>
+<text class="type" x="2618" y="2025" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="2044"></text>
+<text class="col" x="2368" y="2044">training_dataset_fingerprint *</text>
+<text class="type" x="2618" y="2044" text-anchor="end">CHAR(64)</text>
+<text class="flag" x="2312" y="2063"></text>
+<text class="col" x="2368" y="2063">trained_at *</text>
+<text class="type" x="2618" y="2063" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="2082"></text>
+<text class="col" x="2368" y="2082">training_sample_count *</text>
+<text class="type" x="2618" y="2082" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="2101"></text>
+<text class="col" x="2368" y="2101">approved_sample_count *</text>
+<text class="type" x="2618" y="2101" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="2120"></text>
+<text class="col" x="2368" y="2120">rejected_sample_count *</text>
+<text class="type" x="2618" y="2120" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="2139"></text>
+<text class="col" x="2368" y="2139">metrics *</text>
+<text class="type" x="2618" y="2139" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="2158"></text>
+<text class="col" x="2368" y="2158">auto_publish_threshold</text>
+<text class="type" x="2618" y="2158" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="2177"></text>
+<text class="col" x="2368" y="2177">ood_threshold</text>
+<text class="type" x="2618" y="2177" text-anchor="end">NUMERIC</text>
+<text class="flag" x="2312" y="2196"></text>
+<text class="col" x="2368" y="2196">status *</text>
+<text class="type" x="2618" y="2196" text-anchor="end">VARCHAR(12)</text>
+<text class="flag" x="2312" y="2215"></text>
+<text class="col" x="2368" y="2215">activated_at</text>
+<text class="type" x="2618" y="2215" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="2234"></text>
+<text class="col" x="2368" y="2234">retired_at</text>
+<text class="type" x="2618" y="2234" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="2253"></text>
+<text class="col" x="2368" y="2253">created_at *</text>
+<text class="type" x="2618" y="2253" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-audit" id="entity-content_screenings">
-<rect class="box" x="2300" y="1023" width="330" height="504" rx="10"/>
-<rect class="head" x="2300" y="1023" width="330" height="38" rx="10"/>
-<rect class="head" x="2300" y="1049" width="330" height="12"/>
-<text class="entity-name" x="2314" y="1048">CONTENT_SCREENINGS</text>
-<text class="flag" x="2312" y="1077">PK</text>
-<text class="col col-pk" x="2368" y="1077">screening_id *</text>
-<text class="type" x="2618" y="1077" text-anchor="end">BIGINT</text>
-<text class="flag" x="2312" y="1096">UK</text>
-<text class="col" x="2368" y="1096">entity_type *</text>
-<text class="type" x="2618" y="1096" text-anchor="end">VARCHAR(16)</text>
-<text class="flag" x="2312" y="1115">UK</text>
-<text class="col" x="2368" y="1115">entity_id *</text>
-<text class="type" x="2618" y="1115" text-anchor="end">BIGINT</text>
-<text class="flag" x="2312" y="1134">UK</text>
-<text class="col" x="2368" y="1134">revision_no *</text>
-<text class="type" x="2618" y="1134" text-anchor="end">INTEGER</text>
-<text class="flag" x="2312" y="1153">FK</text>
-<text class="col" x="2368" y="1153">submitted_by_user_id</text>
-<text class="type" x="2618" y="1153" text-anchor="end">BIGINT</text>
-<text class="flag" x="2312" y="1172"></text>
-<text class="col" x="2368" y="1172">model_key</text>
-<text class="type" x="2618" y="1172" text-anchor="end">VARCHAR(160)</text>
-<text class="flag" x="2312" y="1191"></text>
-<text class="col" x="2368" y="1191">model_version</text>
-<text class="type" x="2618" y="1191" text-anchor="end">VARCHAR(80)</text>
-<text class="flag" x="2312" y="1210"></text>
-<text class="col" x="2368" y="1210">feature_schema_version</text>
-<text class="type" x="2618" y="1210" text-anchor="end">VARCHAR(80)</text>
-<text class="flag" x="2312" y="1229"></text>
-<text class="col" x="2368" y="1229">screening_status *</text>
-<text class="type" x="2618" y="1229" text-anchor="end">VARCHAR(16)</text>
-<text class="flag" x="2312" y="1248"></text>
-<text class="col" x="2368" y="1248">risk_probability</text>
-<text class="type" x="2618" y="1248" text-anchor="end">NUMERIC(6,5)</text>
-<text class="flag" x="2312" y="1267"></text>
-<text class="col" x="2368" y="1267">safe_probability</text>
-<text class="type" x="2618" y="1267" text-anchor="end">NUMERIC(6,5)</text>
-<text class="flag" x="2312" y="1286"></text>
-<text class="col" x="2368" y="1286">confidence</text>
-<text class="type" x="2618" y="1286" text-anchor="end">NUMERIC(6,5)</text>
-<text class="flag" x="2312" y="1305"></text>
-<text class="col" x="2368" y="1305">reason_codes *</text>
-<text class="type" x="2618" y="1305" text-anchor="end">JSONB</text>
-<text class="flag" x="2312" y="1324"></text>
-<text class="col" x="2368" y="1324">model_metadata *</text>
-<text class="type" x="2618" y="1324" text-anchor="end">JSONB</text>
-<text class="flag" x="2312" y="1343"></text>
-<text class="col" x="2368" y="1343">publication_state *</text>
-<text class="type" x="2618" y="1343" text-anchor="end">VARCHAR(12)</text>
-<text class="flag" x="2312" y="1362"></text>
-<text class="col" x="2368" y="1362">manual_review_status *</text>
-<text class="type" x="2618" y="1362" text-anchor="end">VARCHAR(10)</text>
-<text class="flag" x="2312" y="1381"></text>
-<text class="col" x="2368" y="1381">screened_at</text>
-<text class="type" x="2618" y="1381" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1400"></text>
-<text class="col" x="2368" y="1400">provisional_published_at</text>
-<text class="type" x="2618" y="1400" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1419"></text>
-<text class="col" x="2368" y="1419">human_review_due_at</text>
-<text class="type" x="2618" y="1419" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1438"></text>
-<text class="col" x="2368" y="1438">reviewed_at</text>
-<text class="type" x="2618" y="1438" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1457">FK</text>
-<text class="col" x="2368" y="1457">reviewed_by</text>
-<text class="type" x="2618" y="1457" text-anchor="end">BIGINT → users</text>
-<text class="flag" x="2312" y="1476"></text>
-<text class="col" x="2368" y="1476">human_decision_note</text>
-<text class="type" x="2618" y="1476" text-anchor="end">TEXT</text>
-<text class="flag" x="2312" y="1495"></text>
-<text class="col" x="2368" y="1495">created_at *</text>
-<text class="type" x="2618" y="1495" text-anchor="end">TIMESTAMPTZ</text>
-<text class="flag" x="2312" y="1514"></text>
-<text class="col" x="2368" y="1514">updated_at *</text>
-<text class="type" x="2618" y="1514" text-anchor="end">TIMESTAMPTZ</text>
+<rect class="box" x="2300" y="1288" width="330" height="504" rx="10"/>
+<rect class="head" x="2300" y="1288" width="330" height="38" rx="10"/>
+<rect class="head" x="2300" y="1314" width="330" height="12"/>
+<text class="entity-name" x="2314" y="1313">CONTENT_SCREENINGS</text>
+<text class="flag" x="2312" y="1342">PK</text>
+<text class="col col-pk" x="2368" y="1342">screening_id *</text>
+<text class="type" x="2618" y="1342" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1361">UK</text>
+<text class="col" x="2368" y="1361">entity_type *</text>
+<text class="type" x="2618" y="1361" text-anchor="end">VARCHAR(16)</text>
+<text class="flag" x="2312" y="1380">UK</text>
+<text class="col" x="2368" y="1380">entity_id *</text>
+<text class="type" x="2618" y="1380" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1399">UK</text>
+<text class="col" x="2368" y="1399">revision_no *</text>
+<text class="type" x="2618" y="1399" text-anchor="end">INTEGER</text>
+<text class="flag" x="2312" y="1418">FK</text>
+<text class="col" x="2368" y="1418">submitted_by_user_id</text>
+<text class="type" x="2618" y="1418" text-anchor="end">BIGINT</text>
+<text class="flag" x="2312" y="1437"></text>
+<text class="col" x="2368" y="1437">model_key</text>
+<text class="type" x="2618" y="1437" text-anchor="end">VARCHAR(160)</text>
+<text class="flag" x="2312" y="1456"></text>
+<text class="col" x="2368" y="1456">model_version</text>
+<text class="type" x="2618" y="1456" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1475"></text>
+<text class="col" x="2368" y="1475">feature_schema_version</text>
+<text class="type" x="2618" y="1475" text-anchor="end">VARCHAR(80)</text>
+<text class="flag" x="2312" y="1494"></text>
+<text class="col" x="2368" y="1494">screening_status *</text>
+<text class="type" x="2618" y="1494" text-anchor="end">VARCHAR(16)</text>
+<text class="flag" x="2312" y="1513"></text>
+<text class="col" x="2368" y="1513">risk_probability</text>
+<text class="type" x="2618" y="1513" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1532"></text>
+<text class="col" x="2368" y="1532">safe_probability</text>
+<text class="type" x="2618" y="1532" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1551"></text>
+<text class="col" x="2368" y="1551">confidence</text>
+<text class="type" x="2618" y="1551" text-anchor="end">NUMERIC(6,5)</text>
+<text class="flag" x="2312" y="1570"></text>
+<text class="col" x="2368" y="1570">reason_codes *</text>
+<text class="type" x="2618" y="1570" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="1589"></text>
+<text class="col" x="2368" y="1589">model_metadata *</text>
+<text class="type" x="2618" y="1589" text-anchor="end">JSONB</text>
+<text class="flag" x="2312" y="1608"></text>
+<text class="col" x="2368" y="1608">publication_state *</text>
+<text class="type" x="2618" y="1608" text-anchor="end">VARCHAR(12)</text>
+<text class="flag" x="2312" y="1627"></text>
+<text class="col" x="2368" y="1627">manual_review_status *</text>
+<text class="type" x="2618" y="1627" text-anchor="end">VARCHAR(10)</text>
+<text class="flag" x="2312" y="1646"></text>
+<text class="col" x="2368" y="1646">screened_at</text>
+<text class="type" x="2618" y="1646" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1665"></text>
+<text class="col" x="2368" y="1665">provisional_published_at</text>
+<text class="type" x="2618" y="1665" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1684"></text>
+<text class="col" x="2368" y="1684">human_review_due_at</text>
+<text class="type" x="2618" y="1684" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1703"></text>
+<text class="col" x="2368" y="1703">reviewed_at</text>
+<text class="type" x="2618" y="1703" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1722">FK</text>
+<text class="col" x="2368" y="1722">reviewed_by</text>
+<text class="type" x="2618" y="1722" text-anchor="end">BIGINT → users</text>
+<text class="flag" x="2312" y="1741"></text>
+<text class="col" x="2368" y="1741">human_decision_note</text>
+<text class="type" x="2618" y="1741" text-anchor="end">TEXT</text>
+<text class="flag" x="2312" y="1760"></text>
+<text class="col" x="2368" y="1760">created_at *</text>
+<text class="type" x="2618" y="1760" text-anchor="end">TIMESTAMPTZ</text>
+<text class="flag" x="2312" y="1779"></text>
+<text class="col" x="2368" y="1779">updated_at *</text>
+<text class="type" x="2618" y="1779" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="entity entity-profile" id="entity-professional_profile_revisions">
 <rect class="box" x="500" y="1003" width="330" height="257" rx="10"/>
@@ -1465,15 +1525,15 @@
 <text class="type" x="818" y="1247" text-anchor="end">TIMESTAMPTZ</text>
 </g>
 <g class="views">
-  <rect class="views-box" x="50" y="2396" width="3480" height="252" rx="12"/>
-  <text class="views-title" x="70" y="2428">VIEWS — derived, never stored; public views expose no account identity or private evidence</text>
-  <text class="view-name" x="70" y="2458">vw_public_companies</text><text class="view-src" x="380" y="2458">reads companies</text>
-<text class="view-name" x="70" y="2484">vw_public_approved_reviews</text><text class="view-src" x="380" y="2484">reads submissions, company_reviews, companies, job_roles</text>
-<text class="view-name" x="70" y="2510">vw_verified_salary_summary</text><text class="view-src" x="380" y="2510">reads submissions, salary_submissions, companies, job_roles</text>
-<text class="view-name" x="70" y="2536">vw_community_salary_summary</text><text class="view-src" x="380" y="2536">reads submissions, salary_submissions, companies, job_roles</text>
-<text class="view-name" x="70" y="2562">vw_public_open_jobs</text><text class="view-src" x="380" y="2562">reads job_postings, companies, job_roles</text>
-<text class="view-name" x="70" y="2588">vw_public_visible_submissions</text><text class="view-src" x="380" y="2588">reads submissions, content_screenings</text>
-<text class="view-name" x="70" y="2614">vw_ml_human_reviewed_real_submissions</text><text class="view-src" x="380" y="2614">reads submissions, users</text>
+  <rect class="views-box" x="50" y="2510" width="3480" height="252" rx="12"/>
+  <text class="views-title" x="70" y="2542">VIEWS — derived, never stored; public views expose no account identity or private evidence</text>
+  <text class="view-name" x="70" y="2572">vw_public_companies</text><text class="view-src" x="380" y="2572">reads companies</text>
+<text class="view-name" x="70" y="2598">vw_public_approved_reviews</text><text class="view-src" x="380" y="2598">reads submissions, company_reviews, companies, job_roles</text>
+<text class="view-name" x="70" y="2624">vw_verified_salary_summary</text><text class="view-src" x="380" y="2624">reads submissions, salary_submissions, companies, job_roles</text>
+<text class="view-name" x="70" y="2650">vw_community_salary_summary</text><text class="view-src" x="380" y="2650">reads submissions, salary_submissions, companies, job_roles</text>
+<text class="view-name" x="70" y="2676">vw_public_open_jobs</text><text class="view-src" x="380" y="2676">reads job_postings, companies, job_roles</text>
+<text class="view-name" x="70" y="2702">vw_public_visible_submissions</text><text class="view-src" x="380" y="2702">reads submissions, content_screenings</text>
+<text class="view-name" x="70" y="2728">vw_ml_human_reviewed_real_submissions</text><text class="view-src" x="380" y="2728">reads submissions, users</text>
 </g>
 </svg>
 </body>

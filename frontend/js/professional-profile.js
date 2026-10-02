@@ -42,6 +42,7 @@ function resetForm(kind) {
   byId(`profile-${kind}-form-title`).textContent = `Add ${kind}`;
   byId(`${kind}-cancel`).hidden = true;
   toggleEnd(kind);
+  form.hidden = true;
 }
 function toggleEnd(kind) {
   const checked = byId(`${kind}-current`).checked;
@@ -53,6 +54,7 @@ function toggleEnd(kind) {
 function editItem(kind, item) {
   const config = sections[kind];
   const form = byId(`profile-${kind}-form`);
+  form.hidden = false;
   form.dataset.recordId = item[config.idField];
   for (const [key, inputId] of Object.entries(config.fields)) byId(inputId).value = item[key] || '';
   byId(`${kind}-current`).checked = item[config.currentField];
@@ -129,6 +131,9 @@ function mountSection(kind) {
   const form = byId(`profile-${kind}-form`);
   byId(`${kind}-current`).addEventListener('change', () => toggleEnd(kind));
   byId(`${kind}-cancel`).addEventListener('click', () => resetForm(kind));
+  document.querySelector(`[data-professional-add="${kind}"]`)?.addEventListener('click', () => {
+    resetForm(kind); form.hidden = false; byId(Object.values(config.fields)[0]).focus();
+  });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
