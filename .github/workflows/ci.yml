@@ -98,7 +98,7 @@ jobs:
           cache-dependency-path: ml/requirements.txt
 
       - name: Install
-        run: pip install pandas scikit-learn joblib
+        run: pip install pandas scikit-learn joblib fastapi pydantic
 
       - name: Unit tests
         run: python -m unittest discover -s tests -v
